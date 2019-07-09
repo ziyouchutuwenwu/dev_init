@@ -9,7 +9,7 @@ import sys
 sys.path.append("..")
 from py_mods import proc
 
-def buster_path_bug_fix():
+def add_usr_sbin_to_path_env():
     os.environ["PATH"] += ":/usr/sbin/"
 
 def do_apt_update():
@@ -232,7 +232,7 @@ def do_vim_config(user):
 
 if __name__ == "__main__":
 
-    buster_path_bug_fix()
+    add_usr_sbin_to_path_env()
 
     if False == proc.is_root():
         print("This program must be run as root. Aborting.")
