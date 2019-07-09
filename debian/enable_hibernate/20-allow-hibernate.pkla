@@ -1,0 +1,6 @@
+[allow hibernate]
+Identity=unix-group:sudo
+Action=org.freedesktop.login1.hibernate;org.freedesktop.login1.hibernate-multiple-sessions
+ResultAny=yes
+ResultInactive=yes
+ResultActive=yes

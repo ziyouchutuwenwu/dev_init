@@ -1,0 +1,19 @@
+### 编译
+```
+一般有编译脚本，不需要在vscode里面集成，自己写好以后，vscode直接调用即可
+```
+
+### 代码include和补全
+```
+在项目目录按F1, 输入edit configuration，includePath里面输入头文件目录
+```
+
+### 调试设置
+- 目标版运行gdbserver :1234 xxx，xxx为我们要调试的程序
+- 本地调试，vscode菜单上选择调试，打开配置，在launch.json里面修改
+```
+"program"字段，我一般会复制到nfs目录，便于调试
+"MIMode": "gdb",
+"miDebuggerPath": "/xxxxxx/arm-gdb/arm-himix200-linux-gdb",
+"miDebuggerServerAddress": "192.168.88.20:1234",
+```
