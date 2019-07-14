@@ -230,6 +230,9 @@ def do_vim_config(user):
     os.system("apt install vim -y")
     proc.run_as_user(user, "sh ./vim/install.sh")
 
+def fix_translation_bug():
+    os.system("./bug_fix/i18n_fix.sh")
+
 if __name__ == "__main__":
 
     add_usr_sbin_to_path_env()
@@ -293,6 +296,7 @@ if __name__ == "__main__":
     install_docker(login_user)
 
     install_k8s()
+    fix_translation_bug()
 
     # set_ustc_apt_config()
     # do_apt_update()
