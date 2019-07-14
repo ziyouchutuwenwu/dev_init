@@ -43,5 +43,7 @@ if __name__ == "__main__":
 
     cmd="pip install pyinotify"
     os.system(cmd)
-
     file.set_to_profile("alias pyfilemon=\"python -m pyinotify -v\"")
+
+    cmd="pip install binwalk"
+    os.system(cmd)
