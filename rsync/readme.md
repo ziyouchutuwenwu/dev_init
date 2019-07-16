@@ -7,5 +7,5 @@ iptables -P FORWARD ACCEPT
 
 - 备份机，执行脚本备份
 ```
-rsync -azP mmc@ip:/home/mmc ./
+rsync -azP --delete mmc@ip:/home/xxx/dev ./
 ```
