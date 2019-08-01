@@ -250,19 +250,21 @@ if __name__ == "__main__":
     add_apt_https_support()
     install_sudo(login_user)
 
+    # 需要确认的放前面，减少用户等待的时间
+    install_chinese()
+    install_wireshark(login_user)
+
     install_gdebi()
     install_useful_tools()
     install_serial_tools()
     install_gz_to_deb()
     install_theme()
     install_fonts()
-    install_chinese()
     set_shang_hai_timezone()
     install_doc()
     install_power_management_tool(login_user)
     install_audio_manager()
     install_bt_client()
-    install_wireshark(login_user)
     install_image_reader()
     install_wifi_driver()
     install_flow_chart_tool()
@@ -288,8 +290,6 @@ if __name__ == "__main__":
 
     # 这个必须在zprezto之前配置
     set_profile(login_user)
-
-    do_zprezto_config(login_user)
     do_vim_config(login_user)
 
     install_erlang(login_user)
@@ -297,6 +297,9 @@ if __name__ == "__main__":
 
     install_k8s()
     fix_translation_bug()
+
+    # 太卡了，放最后
+    do_zprezto_config(login_user)
 
     # set_ustc_apt_config()
     # do_apt_update()
