@@ -1,4 +1,4 @@
 {
-    "registry-mirrors": ["https://docker.mirrors.ustc.edu.cn"], 
+    "registry-mirrors": ["http://f1361db2.m.daocloud.io"],
     "exec-opts": ["native.cgroupdriver=systemd"]
 }
