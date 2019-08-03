@@ -112,7 +112,10 @@ def install_gdebi():
     os.system("apt install gdebi -y")
 
 def install_useful_tools():
-    os.system("apt install net-tools tree vim git wget curl axel galculator xfce4-screenshooter screenfetch gufw htop psensor -y")
+    os.system("apt install tree vim git wget curl axel galculator xfce4-screenshooter screenfetch gufw htop psensor -y")
+
+def install_net_tools():
+    os.system("apt install uml-utilities bridge-utils net-tools -y")
 
 def install_gz_to_deb():
     os.system("apt install java-package -y")
@@ -258,6 +261,7 @@ if __name__ == "__main__":
     install_wireshark(login_user)
 
     install_gdebi()
+    install_net_tools()
     install_useful_tools()
     install_serial_tools()
     install_gz_to_deb()
