@@ -69,6 +69,9 @@ def install_ntfs_support():
 def rm_unused_menu(user):
     proc.run_as_user(user, "rm -rf ~/.local/share/applications/*.wine")
 
+def install_embedded_compiler():
+    os.system("apt install gcc-arm-linux-gnueabi gcc-arm-none-eabi gcc-arm-linux-gnueabihf -y")
+
 def install_wireshark(user):
     os.system("apt install wireshark -y")
     cmd = "usermod -a -G wireshark %s" % user
@@ -264,6 +267,7 @@ if __name__ == "__main__":
     install_doc()
     install_power_management_tool(login_user)
     install_audio_manager()
+    install_embedded_compiler()
     install_bt_client()
     install_image_reader()
     install_wifi_driver()

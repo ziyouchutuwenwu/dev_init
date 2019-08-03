@@ -61,9 +61,9 @@ CURRENT_DIR=$(cd "$(dirname "$0")";pwd)
 $CURRENT_DIR/bin/openocd -f $CURRENT_DIR/jlink_board.cfg
 ```
 
-## 编译器，gcc-arm-none-eabi，解压以后，设置PATH变量
+## 编译器
 ```
-export PATH=~/dev/embedded/stm32/gcc-arm-none-eabi-8-2018-q4-major/bin:$PATH
+sudo apt install gcc-arm-none-eabi
 ```
 
 ## stm32CubeMX建立工程, 建立模板使用sw4stm32的
