@@ -112,7 +112,7 @@ def install_gdebi():
     os.system("apt install gdebi -y")
 
 def install_useful_tools():
-    os.system("apt install tree vim git wget curl axel galculator xfce4-screenshooter screenfetch gufw htop psensor -y")
+    os.system("apt install net-tools tree vim git wget curl axel galculator xfce4-screenshooter screenfetch gufw htop psensor -y")
 
 def install_gz_to_deb():
     os.system("apt install java-package -y")
