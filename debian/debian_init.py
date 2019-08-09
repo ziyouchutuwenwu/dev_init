@@ -72,6 +72,7 @@ def rm_unused_menu(user):
 def install_embedded_tools():
     os.system("apt install u-boot-tools qemu-system-arm -y")
     os.system("apt install i2c-tools spi-tools can-utils -y")
+    os.system("apt install gdb gdbserver gdb-multiarch -y")
     os.system("apt install gcc-arm-linux-gnueabi gcc-arm-none-eabi gcc-arm-linux-gnueabihf -y")
 
 def install_wireshark(user):
