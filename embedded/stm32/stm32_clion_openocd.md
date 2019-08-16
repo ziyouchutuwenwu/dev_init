@@ -11,11 +11,7 @@ https://blog.jetbrains.com/clion/2017/12/clion-for-embedded-development-part-ii/
 - gcc-arm-none-eabi
 - clion
 
-## stm32CubeMX，需要安装32位运行库
-
-```bash
-sudo apt-get install libc6:i386
-```
+## stm32CubeMX，自己搜索下载
 
 ## 准备编译openocd，里面的jlink支持需要libusb-1.0.0-dev
 
