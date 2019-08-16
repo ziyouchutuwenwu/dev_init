@@ -3,7 +3,7 @@
 - 转换deb包
 
 ```bash
-sudo apt-get install java-package
+sudo apt install java-package
 去oracle官网下载tar包
 fakeroot make-jpkg ./下载的tar包，生成deb包
 sudo dpkg -i 安装deb包
