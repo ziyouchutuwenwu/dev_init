@@ -228,6 +228,8 @@ def set_profile(user):
     proc.run_as_user(user, "echo \"alias unproxy='unset http_proxy https_proxy all_proxy'\" >> ~/.profile")
     proc.run_as_user(user, "echo \"alias get_ip='curl -i http://ipinfo.io/json'\" >> ~/.profile")
 
+    proc.run_as_user(user, "echo \"\nalias docker_binwalk='docker exec -it binwalk bash'\" >> ~/.profile")
+
 def do_zprezto_config(user):
     os.system("apt install zsh -y")
     proc.run_as_user(user, "sh ./zprezto/config.sh")
