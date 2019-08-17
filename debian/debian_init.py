@@ -228,7 +228,7 @@ def set_profile(user):
     proc.run_as_user(user, "echo \"alias unproxy='unset http_proxy https_proxy all_proxy'\" >> ~/.profile")
     proc.run_as_user(user, "echo \"alias get_ip='curl -i http://ipinfo.io/json'\" >> ~/.profile")
 
-    proc.run_as_user(user, "echo \"\nalias docker_binwalk='docker run --rm --name binwalk -v \"$(pwd)\":/binwalk rjocoleman/binwalk'\" >> ~/.profile")
+    proc.run_as_user(user, "echo \"\nalias binwalk='docker run --rm --name binwalk -v \"$(pwd)\":/binwalk rjocoleman/binwalk'\" >> ~/.profile")
 
 def do_zprezto_config(user):
     os.system("apt install zsh -y")
