@@ -16,35 +16,11 @@ def do_apt_update():
     os.system(
         "apt update -y; apt upgrade -y; apt install build-essential -y; apt autoremove -y; apt autoclean")
 
-def set_ustc_apt_config():
-    os.system("echo deb https://mirrors.ustc.edu.cn/debian stable main contrib non-free > /etc/apt/sources.list")
-    os.system("echo deb-src https://mirrors.ustc.edu.cn/debian stable main contrib non-free >> /etc/apt/sources.list")
-    os.system("echo '\r' >> /etc/apt/sources.list")
-
-    os.system(
-        "echo deb https://mirrors.ustc.edu.cn/debian stable-updates main contrib non-free >> /etc/apt/sources.list")
-    os.system(
-        "echo deb-src https://mirrors.ustc.edu.cn/debian stable-updates main contrib non-free >> /etc/apt/sources.list")
-    os.system("echo '\r' >> /etc/apt/sources.list")
-
-    os.system(
-        "echo deb https://mirrors.ustc.edu.cn/debian-security/ stable/updates main contrib non-free >> /etc/apt/sources.list")
-    os.system(
-        "echo deb-src https://mirrors.ustc.edu.cn/debian-security/ stable/updates main contrib non-free >> /etc/apt/sources.list")
-    os.system("echo '\r' >> /etc/apt/sources.list")
+def set_tsinghua_apt_config():
+    os.system("cp ./apt/tsinghua.list /etc/apt/sources.list")
 
 def set_aliyun_apt_config():
-    os.system("echo deb http://mirrors.aliyun.com/debian stable main contrib non-free > /etc/apt/sources.list")
-    os.system("echo deb-src http://mirrors.aliyun.com/debian stable main contrib non-free >> /etc/apt/sources.list")
-    os.system("echo '\r' >> /etc/apt/sources.list")
-
-    os.system("echo deb http://mirrors.aliyun.com/debian stable-updates main contrib non-free >> /etc/apt/sources.list")
-    os.system("echo deb-src http://mirrors.aliyun.com/debian stable-updates main contrib non-free >> /etc/apt/sources.list")
-    os.system("echo '\r' >> /etc/apt/sources.list")
-
-    os.system("echo deb http://mirrors.aliyun.com/debian-security/ stable/updates main contrib non-free >> /etc/apt/sources.list")
-    os.system("echo deb-src http://mirrors.aliyun.com/debian-security/ stable/updates main contrib non-free >> /etc/apt/sources.list")
-    os.system("echo '\r' >> /etc/apt/sources.list")
+    os.system("cp ./apt/aliyun.list /etc/apt/sources.list")
 
 def add_apt_https_support():
     os.system("apt install apt-transport-https -y")
@@ -204,8 +180,8 @@ def install_erlang(user):
 
 def install_docker(user):
     os.system("apt install software-properties-common -y")
-    os.system("curl -fsSL https://mirrors.ustc.edu.cn/docker-ce/linux/debian/gpg | apt-key add -")
-    os.system("add-apt-repository \"deb [arch=amd64] https://mirrors.ustc.edu.cn/docker-ce/linux/debian $(lsb_release -cs) stable\"")
+    os.system("curl -fsSL https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/debian/gpg | apt-key add -")
+    os.system("add-apt-repository \"deb [arch=amd64] https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/debian $(lsb_release -cs) stable\"")
     os.system("apt update; apt install docker-ce -y")
     cmd = "usermod -a -G docker %s" % user
     os.system(cmd)
@@ -314,6 +290,3 @@ if __name__ == "__main__":
 
     # 太卡了，放最后
     do_zprezto_config(login_user)
-
-    # set_ustc_apt_config()
-    # do_apt_update()
