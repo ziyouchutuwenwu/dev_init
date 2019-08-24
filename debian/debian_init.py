@@ -144,35 +144,7 @@ def add_monaco_font():
     os.system("fc-cache -f -v")
 
 def set_xterm_config(user):
-    proc.run_as_user(user, "echo 'xterm*locale: true' > ~/.Xdefaults")
-    proc.run_as_user(user, "echo 'xterm.utf8: true' >> ~/.Xdefaults")
-    proc.run_as_user(user, "echo 'xterm*utf8Title: true' >> ~/.Xdefaults")
-
-    proc.run_as_user(user, "echo '\r' >> ~/.Xdefaults")
-    proc.run_as_user(user, "echo '! 滚动条' >> ~/.Xdefaults")
-    proc.run_as_user(user, "echo 'XTerm*scrollBar: true' >> ~/.Xdefaults")
-    proc.run_as_user(user, "echo '! XTerm*rightScrollBar: true' >> ~/.Xdefaults")
-    proc.run_as_user(user, "echo 'XTerm*SaveLines: 4096' >> ~/.Xdefaults")
-
-    proc.run_as_user(user, "echo '\r' >> ~/.Xdefaults")
-    proc.run_as_user(user, "echo '! 颜色' >> ~/.Xdefaults")
-    proc.run_as_user(user, "echo '! XTerm*background: black' >> ~/.Xdefaults")
-    proc.run_as_user(user, "echo '! XTerm*foreground: green' >> ~/.Xdefaults")
-
-    proc.run_as_user(user, "echo '\r' >> ~/.Xdefaults")
-    proc.run_as_user(user, "echo '! 复制粘贴' >> ~/.Xdefaults")
-    proc.run_as_user(user, "echo 'XTerm*VT100.translations: #override <Btn1Up>: select-end(PRIMARY, CLIPBOARD, CUT_BUFFER0)' >> ~/.Xdefaults")
-
-    proc.run_as_user(user, "echo '\r' >> ~/.Xdefaults")
-    proc.run_as_user(user, "echo '! 查看本机上安装的字体使用fc-list' >> ~/.Xdefaults")
-    proc.run_as_user(user, "echo '! 英文字体' >> ~/.Xdefaults")
-    proc.run_as_user(user, "echo 'xterm*faceName: DejaVu Sans Mono:antialias=True:pixelsize=13' >> ~/.Xdefaults")
-    proc.run_as_user(user, "echo '! 中文字体' >> ~/.Xdefaults")
-    proc.run_as_user(user, "echo 'xterm*faceNameDoublesize:WenQuanYi Zen Hei Mono:antialias=True:pixelsize=13' >> ~/.Xdefaults")
-
-    proc.run_as_user(user, "echo '\r' >> ~/.Xdefaults")
-    proc.run_as_user(user, "echo '! 输入法' >> ~/.Xdefaults")
-    proc.run_as_user(user, "echo 'XTerm*inputMethod:fcitx' >> ~/.Xdefaults")
+    proc.run_as_user(user, "cp -rf ./xterm_config/default.conf ~/.Xdefaults")
 
 def install_erlang(user):
     os.system("apt install erlang rlwrap -y")
