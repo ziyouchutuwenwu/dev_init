@@ -1,6 +1,6 @@
 # 流程
 
-- 连接到openocd的shell
+- 连接到 openocd 的 shell
 
 ```bash
 telnet 127.0.0.1 4444

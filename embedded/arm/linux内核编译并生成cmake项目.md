@@ -1,4 +1,4 @@
-# linux内核编译并生成cmake项目
+# linux 内核编译并生成 cmake 项目
 
 ## 参考链接
 
@@ -14,7 +14,7 @@ pip install scan-build --user
 
 ## 下载源码
 
-- 生成compile_commands.json，这个用于给最后的ruby脚本转换为CMakeLists.txt
+- 生成 compile_commands.json，这个用于给最后的 ruby 脚本转换为 CMakeLists.txt
 
 ```bash
 make defconfig

@@ -1,6 +1,6 @@
-# jdk配置
+# jdk 配置
 
-- 转换deb包
+- 转换 deb 包
 
 ```bash
 sudo apt install java-package
@@ -9,7 +9,7 @@ fakeroot make-jpkg ./下载的tar包，生成deb包
 sudo dpkg -i 安装deb包
 ```
 
-- 如果你还安装了openjdk，那么配置下java即可
+- 如果你还安装了 openjdk，那么配置下 java 即可
 
 ```bash
 sudo update-alternatives --config java
