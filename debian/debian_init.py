@@ -69,7 +69,7 @@ def install_theme():
 
 def install_serial_tools():
     os.system("apt install picocom lrzsz -y")
-    os.system("cp ./serial/access_permission/* /etc/udev/rules.d/")
+    os.system("cp ./peripheral_permission/* /etc/udev/rules.d/")
 
 def install_chinese():
     os.system("apt install xfonts-intl-chinese fonts-wqy-microhei fonts-wqy-zenhei xfonts-wqy -y")
