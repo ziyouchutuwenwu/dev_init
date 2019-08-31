@@ -1,0 +1,5 @@
+# jlink openocd
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1366", ATTRS{idProduct}=="010[1234]", MODE="664", GROUP="plugdev"
+
+# daplink
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0d28", MODE="664", GROUP="plugdev"
