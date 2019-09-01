@@ -11,7 +11,7 @@
 		{
 			"label": "burn",
 			"type": "shell",
-			"command": "~/dev/embedded/stm32/JLink/JLinkExe -device STM32F103C8 -speed 4000 -if SWD -CommanderScript ~/downloads/断点调试/flash.jlink"
+			"command": "~/dev/embedded/stm32/JLink/JLinkExe -device STM32F103C8 -speed 4000 -if SWD -CommanderScript ${workspaceRoot}/flash.jlink"
 		}
 	]
 }

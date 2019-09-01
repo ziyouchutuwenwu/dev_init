@@ -7,7 +7,7 @@
 		{
 			"name": "Cortex Debug",
 			"cwd": "${workspaceRoot}",
-			"executable": "./build/makefile_demo.elf",
+			"executable": "${workspaceRoot}/build/makefile_demo.elf",
 			"request": "launch",
 			"type": "cortex-debug",
 			"servertype": "jlink",

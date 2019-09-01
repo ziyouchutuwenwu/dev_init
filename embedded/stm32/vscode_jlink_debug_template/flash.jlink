@@ -1,0 +1,6 @@
+speed 4000
+connect
+erase
+loadfile ./build/makefile_demo.elf, 0x08000000
+r
+exit
