@@ -14,7 +14,8 @@
 			"device": "stm32f103c8",
 			"interface": "swd",
 			"gdbpath": "/usr/bin/gdb-multiarch",
-			"preLaunchTask": "burn"
+			"preLaunchTask": "burn",
+			"runToMain": true
 		}
 	]
 }
