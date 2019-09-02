@@ -1,3 +1,4 @@
+vscode 需要安装 Cortex-Debug 插件
 stm32CubeMX 生成makefile的项目
 vscode打开
 参考 jlink 或者是 openocd 的模式配置即可
