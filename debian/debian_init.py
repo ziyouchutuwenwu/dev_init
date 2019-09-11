@@ -127,6 +127,9 @@ def install_flow_chart_tool():
 def install_disk_partition_tool():
     os.system("apt install gparted -y")
 
+def install_media_player():
+    os.system("apt install vlc smplayer -y")
+
 def install_zip_tool(user):
     os.system("apt install engrampa p7zip-full zip unzip rar unrar -y")
 
@@ -233,6 +236,7 @@ if __name__ == "__main__":
     install_disk_partition_tool()
     install_zip_tool(login_user)
     install_file_search_tool()
+    install_media_player()
     install_clipboard_tool()
     install_notes_tool()
     install_pdf_reader()
