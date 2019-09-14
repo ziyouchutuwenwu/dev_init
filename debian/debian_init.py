@@ -131,7 +131,7 @@ def install_media_player():
     os.system("apt install vlc smplayer -y")
 
 def install_zip_tool(user):
-    os.system("apt install engrampa p7zip-full zip unzip rar unrar -y")
+    os.system("apt install xarchiver engrampa p7zip-full zip unzip rar unrar -y")
 
     proc.run_as_user(user, "rm -rf ~/.local/share/recently-used.xbel")
     proc.run_as_user(user, "mkdir -p ~/.local/share/recently-used.xbel/")
