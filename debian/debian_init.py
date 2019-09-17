@@ -141,7 +141,7 @@ def remove_useless_applications():
     os.system("apt autoremove -y")
     os.system("apt install xfce4-taskmanager -y")
 
-def add_monaco_font():
+def add_amazing_fonts():
     os.system("mkdir -p /usr/share/fonts/truetype/custom")
     os.system("cp ./fonts/* /usr/share/fonts/truetype/custom")
     os.system("fc-cache -f -v")
@@ -245,7 +245,7 @@ if __name__ == "__main__":
     install_ntfs_support()
     install_mail_client()
 
-    add_monaco_font()
+    add_amazing_fonts()
     make_xfce_ftp_support()
 
     remove_useless_applications()
