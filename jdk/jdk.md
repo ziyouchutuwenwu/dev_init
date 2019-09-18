@@ -20,9 +20,8 @@ sudo update-alternatives --config javac
 
 ```bash
 # for JRE
-# export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+# export JAVA_HOME=/usr/lib/jvm/jdk-13
 # for JDK
 export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))
 export PATH=$JAVA_HOME/bin:$PATH
-export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
 ```
