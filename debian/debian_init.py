@@ -57,9 +57,9 @@ def install_wireshark(user):
     cmd = "usermod -a -G wireshark %s" % user
     os.system(cmd)
 
-def install_power_management_tool(user):
+def install_power_management_tool():
     os.system("apt install tlp -y")
-    proc.run_as_user(user, "sh ./enable_hibernate/config.sh")
+    os.system("python ./enable_hibernate/config.py")
 
 def install_fonts():
     os.system("apt install fonts-droid-fallback -y")
@@ -226,7 +226,7 @@ if __name__ == "__main__":
     install_fonts()
     set_shang_hai_timezone()
     install_doc()
-    install_power_management_tool(login_user)
+    install_power_management_tool()
     install_audio_manager()
     install_embedded_tools()
     install_bt_client()
