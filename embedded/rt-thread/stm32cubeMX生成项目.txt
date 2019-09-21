@@ -1,0 +1,14 @@
+参考
+https://www.rt-thread.org/document/site/tutorial/nano/cube/an0032-nano-mx5/，并不完全正确
+最后一步，不要取消 HardFault_Handler、PendSV_Handler、SysTick_Handler的重定义，在项目里面注释掉即可，否则会出现编译错误
+生成的项目模式，选择Makefile
+
+打开Makefile
+注释OPT = -Og，这样可以看到变量，否则会被编译器优化掉
+
+搜索/Middlewares,替换为Middlewares，
+Inc/rtconfig.h, 删除 #include "RTE_Components.h"
+删除 Middlewares/Third_Party/RT-Thread/include/libc/目录
+Middlewares/Third_Party/RT-Thread//include/rtlibc.h， 删除相关include的代码
+Middlewares/Third_Party/RT-Thread/bsp/board.c，添加 #include <stdint.h>
+Middlewares/Third_Party/RT-Thread/bsp/board.c，注释掉函数 SysTick_Handler(void)

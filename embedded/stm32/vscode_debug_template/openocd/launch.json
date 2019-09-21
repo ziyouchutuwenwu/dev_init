@@ -16,6 +16,7 @@
 			"configFiles":[
 				"/home/mmc/dev/embedded/stm32/openocd/jlink_board.cfg"
 			],
+			"preLaunchTask": "build",
 			"runToMain": true
 		}
 	]
