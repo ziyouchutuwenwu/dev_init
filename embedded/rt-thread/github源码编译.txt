@@ -12,8 +12,13 @@ https://developer.arm.com/tools-and-software/open-source-software/developer-tool
 在bsp/stm32/stm32f103-mini-system/目录
 修改rtconfig.py，EXEC_PATH，指向toolchian的bin目录即可
 
-scons --menuconfig; scons -c; scons;
+scons -c; scons;
 编译通过。
+
+如需修改配置
+scons --menuconfig;
+
+scons --dist可以生成独立源码包，可以复制到别的地方编译
 
 ----------------------------------------------------------
 断点调试设置：以stm32f103c8为例
