@@ -1,4 +1,5 @@
-github源码编译
+使用stm32CubeMX的方式，缺陷很多，不建议，下面使用官方的源码直接根据bsp构建项目
+
 构建工具
 pip install scons
 
@@ -9,7 +10,17 @@ toolchain：
 https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads
 
 在bsp/stm32/stm32f103-mini-system/目录
-修改rtconfig.py，EXEC_PATH
+修改rtconfig.py，EXEC_PATH，指向toolchian的bin目录即可
 
 scons --menuconfig; scons -c; scons;
 编译通过。
+
+----------------------------------------------------------
+断点调试设置：以stm32f103c8为例
+stm32f1xx_hal_msp.c里面
+
+void HAL_MspInit(void)函数
+__HAL_AFIO_REMAP_SWJ_DISABLE();
+换成
+__HAL_AFIO_REMAP_SWJ_NOJTAG();
+即可支持断点调试
