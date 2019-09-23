@@ -92,7 +92,7 @@ def install_gdebi():
     os.system("apt install gdebi -y")
 
 def install_useful_tools():
-    os.system("apt install rdesktop tree vim git wget curl axel galculator xfce4-screenshooter screenfetch gufw htop psensor -y")
+    os.system("apt install global rdesktop tree vim git wget curl axel galculator xfce4-screenshooter screenfetch gufw htop psensor -y")
 
 def install_net_tools():
     os.system("apt install uml-utilities bridge-utils net-tools -y")
