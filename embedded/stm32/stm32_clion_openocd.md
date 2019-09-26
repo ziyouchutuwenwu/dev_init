@@ -96,3 +96,4 @@ sudo apt install gcc-arm-none-eabi
 - Board config file：就是我们刚才建立的 daplink_board.cfg 和 jlink_board.cfg
 - 如果点击 debug 没有反应，记得按一下开发板上的 reset，重启，会马上中断；可以通过 daplink 上绿灯旁边的那个灯来判断，如果那个灯快速闪烁，就说明可以中断，否则，无法中断。
 - clion 里面 build 生成的 bin 文件是最终程序，可以是用 JFlashLite 烧录，手动亲测通过。
+- 从代码上看，以stm32f103c8为例，在stm32f1xx_hal_msp.c里面，void HAL_MspInit(void)函数，删除__HAL_AFIO_REMAP_SWJ_DISABLE();即可支持断点调试

@@ -25,7 +25,4 @@ scons --dist可以生成独立源码包，可以复制到别的地方编译
 stm32f1xx_hal_msp.c里面
 
 void HAL_MspInit(void)函数
-__HAL_AFIO_REMAP_SWJ_DISABLE();
-换成
-__HAL_AFIO_REMAP_SWJ_NOJTAG();
-即可支持断点调试
+__HAL_AFIO_REMAP_SWJ_DISABLE();删除即可支持断点调试
