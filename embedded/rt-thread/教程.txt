@@ -21,6 +21,23 @@ scons --menuconfig;
 scons --dist可以生成独立源码包，可以复制到别的地方编译
 
 ----------------------------------------------------------
+env工具配置，目前只支持python2
+
+sudo apt-get install make build-essential libssl-dev zlib1g-dev libbz2-dev \
+libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev \
+xz-utils tk-dev libffi-dev liblzma-dev python-openssl git
+pyenv install 2.7.16
+
+cd ~/.env/
+pyenv local 2.7.16
+
+code ~/.profile
+export PATH=~/.env/tools/scripts/:$PATH
+
+source ~/.profile
+
+pip install requests
+----------------------------------------------------------
 断点调试设置：以stm32f103c8为例
 stm32f1xx_hal_msp.c里面
 
