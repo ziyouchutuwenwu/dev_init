@@ -57,6 +57,9 @@ def install_wireshark(user):
     cmd = "usermod -a -G wireshark %s" % user
     os.system(cmd)
 
+def install_ios_tools():
+    os.system("apt install libimobiledevice-utils ideviceinstaller -y")
+
 def install_power_management_tool():
     os.system("apt install tlp -y")
     os.system("python ./enable_hibernate/config.py")
@@ -220,6 +223,7 @@ if __name__ == "__main__":
     install_gdebi()
     install_net_tools()
     install_useful_tools()
+    install_ios_tools()
     install_serial_tools()
     install_gz_to_deb()
     install_theme()
