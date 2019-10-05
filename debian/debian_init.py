@@ -58,7 +58,7 @@ def install_wireshark(user):
     os.system(cmd)
 
 def install_ios_tools():
-    os.system("apt install libimobiledevice-utils ideviceinstaller -y")
+    os.system("apt install libimobiledevice-utils ideviceinstaller ifuse -y")
 
 def install_power_management_tool():
     os.system("apt install tlp -y")
