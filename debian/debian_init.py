@@ -94,11 +94,14 @@ def make_xfce_ftp_support():
 def install_gdebi():
     os.system("apt install gdebi -y")
 
+def install_toys():
+    os.system("apt install cmatrix cowsay -y")
+
 def install_useful_tools():
     os.system("apt install global rdesktop tree vim git wget curl axel galculator xfce4-screenshooter screenfetch gufw htop psensor -y")
 
 def install_net_tools():
-    os.system("apt install uml-utilities bridge-utils net-tools -y")
+    os.system("apt install uml-utilities bridge-utils net-tools nmap -y")
 
 def install_gz_to_deb():
     os.system("apt install java-package -y")
@@ -199,6 +202,9 @@ def do_vim_config(user):
 def fix_translation_bug():
     os.system("./bug_fix/i18n_fix.sh")
 
+def fix_light_locker_bug():
+    os.system("rm -rf /usr/bin/light-locker")
+
 if __name__ == "__main__":
 
     add_usr_sbin_to_path_env()
@@ -233,6 +239,7 @@ if __name__ == "__main__":
     install_power_management_tool()
     install_audio_manager()
     install_embedded_tools()
+    install_toys()
     install_bt_client()
     install_image_reader()
     install_wifi_driver()
@@ -266,7 +273,9 @@ if __name__ == "__main__":
     install_docker(login_user)
 
     install_k8s()
+
     fix_translation_bug()
+    fix_light_locker_bug()
 
     # 太卡了，放最后
     do_zprezto_config(login_user)
