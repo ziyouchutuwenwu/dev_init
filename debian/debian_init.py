@@ -143,7 +143,7 @@ def install_zip_tool(user):
     proc.run_as_user(user, "mkdir -p ~/.local/share/recently-used.xbel/")
 
 def remove_useless_applications():
-    os.system("apt purge xarchiver tumbler libreoffice* xfburn evince sane* mousepad -y")
+    os.system("apt purge xarchiver libreoffice* xfburn evince sane* mousepad -y")
     os.system("apt autoremove -y")
     os.system("apt install xfce4-taskmanager -y")
 
