@@ -29,18 +29,6 @@ if __name__ == "__main__":
     cmd="pip install youtube-dl"
     os.system(cmd)
 
-    cmd="pip install flawfinder"
-    os.system(cmd)
-
-    cmd="pip install pocoui"
-    os.system(cmd)
-    adb_cmd = get_adb_path_through_airtest()
-    cmd="chmod +x %s" % adb_cmd
-    os.system(cmd)
-    adb_path = adb_cmd[:adb_cmd.rfind("/")]
-    new_sys_path = "export PATH=%s:$PATH" % adb_path
-    file.set_to_profile(new_sys_path)
-
     cmd="pip install pyinotify"
     os.system(cmd)
     file.set_to_profile("alias pyfilemon=\"python -m pyinotify -v\"")
