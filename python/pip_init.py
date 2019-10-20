@@ -6,17 +6,6 @@ import sys
 
 sys.path.append("..")
 from py_mods import file
-from py_mods import proc
-
-def get_adb_path_through_airtest():
-    adb_path = ""
-    results = proc.exec_cmd_with_result_list("find ~/.pyenv -name 'adb' | grep linux/")
-    for result in results:
-        info = str(result, 'utf-8')
-        if info.find("/linux/") != -1:
-            adb_path = info.replace(os.environ['HOME'], "~")
-            break
-    return adb_path
 
 if __name__ == "__main__":
 
