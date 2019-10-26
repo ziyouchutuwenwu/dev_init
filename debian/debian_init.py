@@ -143,6 +143,9 @@ def install_zip_tool(user):
     proc.run_as_user(user, "rm -rf ~/.local/share/recently-used.xbel")
     proc.run_as_user(user, "mkdir -p ~/.local/share/recently-used.xbel/")
 
+def install_video_recorder():
+    os.system("apt install vokoscreen -y")
+
 def remove_useless_applications():
     os.system("apt purge xarchiver libreoffice* xfburn evince sane* mousepad -y")
     os.system("apt autoremove -y")
@@ -244,6 +247,7 @@ if __name__ == "__main__":
     install_bt_client()
     install_image_reader()
     install_wifi_driver()
+    install_video_recorder()
     install_flow_chart_tool()
     install_disk_partition_tool()
     install_zip_tool(login_user)
