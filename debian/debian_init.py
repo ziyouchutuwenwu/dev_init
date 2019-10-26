@@ -46,6 +46,7 @@ def rm_unused_menu(user):
     proc.run_as_user(user, "rm -rf ~/.local/share/applications/*.wine")
 
 def install_embedded_tools():
+    os.system("apt install openocd -y")
     os.system("apt install u-boot-tools qemu-system-arm -y")
     os.system("apt install i2c-tools spi-tools can-utils -y")
     os.system("apt install gdb gdbserver gdb-multiarch -y")

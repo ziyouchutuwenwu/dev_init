@@ -1,2 +1,4 @@
+openocd默认脚本路径/usr/share/openocd
+
 其他脚本作为参考，不同的mcu需手工改配置文件路径
 protect.sh 可以保护芯片被读写
