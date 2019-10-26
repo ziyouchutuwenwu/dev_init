@@ -9,9 +9,20 @@
 			"command": "make -j4"
 		},
 		{
+			"label": "serial",
+			"type": "shell",
+			"command": "picocom -b 115200 -s 'sb -vv' -v 'rb -vv' /dev/ttyUSB0"
+		},
+		{
 			"label": "burn",
 			"type": "shell",
-			"command": "~/dev/embedded/stm32/JLink/JLinkExe -device STM32F103C8 -speed 4000 -if SWD -CommanderScript ${workspaceRoot}/flash.jlink"
+			//  请注意修改这里具体的板子配置文件
+			"command": "openocd -f /home/mmc/dev/embedded/stm32/openocd/stm32f1x/jlink_board.cfg -c init -c \"reset halt\" -c \"flash write_image erase rtthread.bin 0x08000000\" -c \"verify_image rtthread.bin 0x08000000\" -c \"reset run\" -c shutdown"
+		},
+		{
+			"label": "JFlashLiteExe",
+			"type": "shell",
+			"command": "~/dev/embedded/stm32/JLink/JFlashLiteExe"
 		}
 	]
 }
