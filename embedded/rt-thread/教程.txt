@@ -38,8 +38,10 @@ source ~/.profile
 
 pip install requests
 ----------------------------------------------------------
-断点调试设置：以stm32f103c8为例
+断点调试设置：
+以stm32f103c8为例
 stm32f1xx_hal_msp.c里面
 
 void HAL_MspInit(void)函数
 __HAL_AFIO_REMAP_SWJ_DISABLE();删除即可支持断点调试
+如果不删除，按住rst键，然后进行erase也可以
