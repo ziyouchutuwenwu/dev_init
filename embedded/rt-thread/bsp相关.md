@@ -1,4 +1,7 @@
-# [参考链接](https://github.com/RT-Thread/rt-thread/blob/master/bsp/stm32/docs/STM32%E7%B3%BB%E5%88%97BSP%E5%88%B6%E4%BD%9C%E6%95%99%E7%A8%8B.md)
+# [参考链接]
+
+- https://github.com/RT-Thread/rt-thread/blob/master/bsp/stm32/docs/STM32%E7%B3%BB%E5%88%97BSP%E5%88%B6%E4%BD%9C%E6%95%99%E7%A8%8B.md
+- https://github.com/RT-Thread/rt-thread/blob/master/bsp/stm32/docs/STM32%E7%B3%BB%E5%88%97%E5%A4%96%E8%AE%BE%E9%A9%B1%E5%8A%A8%E6%B7%BB%E5%8A%A0%E6%8C%87%E5%8D%97.md
 
 ## 复制模板
 
@@ -9,6 +12,11 @@
 - 打开创建的项目, main.c里面，复制 SystemClock_Config() 到 board/board.c里面，这是唯一一个需要手工复制的函数
 board.h 里面，存放着flash和ram的大小，需要检查这里是否需要修改
 - 或者创建一个项目，然后在cubeMX里面选择import已有的ioc，这样可以保留原来的配置
+
+## bsp部分的注意点
+
+- stm32XXxx_hal_conf.h 启用哪些外设驱动，比如，spi的编译错误，需要在这里手动开启
+- stm32XXxx_hal_msp.c 外设驱动的配置代码
 
 ## 修改board/Kconfig
 
