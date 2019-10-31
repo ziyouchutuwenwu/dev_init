@@ -11,10 +11,10 @@
 			"request": "launch",
 			"type": "cortex-debug",
 			"servertype": "openocd",
-			"device": "stm32f103c8",
+			"device": "stm32f411ce",
 			"gdbpath": "/usr/bin/gdb-multiarch",
 			"configFiles":[
-				"/home/mmc/dev/embedded/stm32/openocd/jlink_board.cfg"
+				"/home/mmc/dev/embedded/stm32/openocd/stm32f4x/jlink_board.cfg"
 			],
 			// "preLaunchTask": "build",
 			"runToMain": true

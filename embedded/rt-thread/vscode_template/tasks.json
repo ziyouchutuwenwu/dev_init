@@ -17,14 +17,14 @@
 			"label": "burn",
 			"type": "shell",
 			//  请注意修改这里具体的板子配置文件
-			"command": "openocd -f /home/mmc/dev/embedded/stm32/openocd/stm32f1x/jlink_board.cfg -c init -c 'reset halt' -c 'flash write_image erase rtthread.bin 0x08000000' -c 'verify_image rtthread.bin 0x08000000' -c 'reset run' -c shutdown"
+			"command": "openocd -f ~/dev/embedded/stm32/openocd/stm32f4x/jlink_board.cfg -c init -c 'reset halt' -c 'flash write_image erase rtthread.bin 0x08000000' -c 'verify_image rtthread.bin 0x08000000' -c 'reset run' -c shutdown"
 		},
 		{
 			"label": "erase",
 			"type": "shell",
 			//  请注意修改这里具体的板子配置文件
 			//  如果无法erase，请按住板子的reset键，再erase
-			"command": "openocd -f /home/mmc/dev/embedded/stm32/openocd/stm32f1x/jlink_board.cfg -c init -c 'reset halt' -c 'flash info 0' -c 'flash erase_sector 0 0 last' -c 'flash erase_check 0' -c shutdown"
+			"command": "openocd -f ~/dev/embedded/stm32/openocd/stm32f4x/jlink_board.cfg -c init -c 'reset halt' -c 'flash info 0' -c 'flash erase_sector 0 0 last' -c 'flash erase_check 0' -c shutdown"
 		}
 	]
 }
