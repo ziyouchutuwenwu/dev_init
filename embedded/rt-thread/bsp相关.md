@@ -9,9 +9,8 @@
 
 ## 生成cubeMX项目
 
-- 打开创建的项目, main.c里面，复制 SystemClock_Config() 到 board/board.c里面，这是唯一一个需要手工复制的函数
-board.h 里面，存放着flash和ram的大小，需要检查这里是否需要修改
-- 或者创建一个项目，然后在cubeMX里面选择import已有的ioc，这样可以保留原来的配置
+- 打开cubeMX项目, main.c里面，复制 SystemClock_Config() 到 board/board.c里面，这是唯一需要手工复制的函数，如果不复制，可能会出现烧录以后失去响应的问题
+- board.h 里面，存放着flash和ram的大小，需要检查这里是否需要修改
 
 ## bsp部分的注意点
 
