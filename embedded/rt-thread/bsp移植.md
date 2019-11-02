@@ -9,7 +9,10 @@
 
 ## 生成cubeMX项目
 
-- 打开cubeMX项目, main.c里面，复制 SystemClock_Config() 到 board/board.c里面，这是唯一需要手工复制的函数，如果不复制，可能会出现烧录以后失去响应的问题
+- 创建跟你mcu一样的项目，然后 `import` 导入 board/CubeMX_Config/CubeMX_Config.ioc 项目模板（这样才可以保留原来的cubeMX的配置）
+- 修改配置，生成代码。复制 Inc 和 Src 目录到 board/CubeMX_Config下覆盖
+- 修改 board/CubeMX_Config/Inc/stm32f4xx_hal_conf.h，注释掉 `#define HAL_EXTI_MODULE_ENABLED`， 否则编译失败
+- 从 board/CubeMX_Config 里面找到 main.c，复制 SystemClock_Config() 到 board/board.c 里面，这是唯一需要手工复制的函数，如果不复制，可能会出现烧录以后失去响应的问题
 - board.h 里面，存放着flash和ram的大小，需要检查这里是否需要修改
 
 ## bsp部分的注意点
