@@ -167,7 +167,7 @@ def install_erlang(user):
 def install_docker(user):
     os.system("apt install software-properties-common -y")
     os.system("curl -fsSL https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/debian/gpg | apt-key add -")
-    os.system("add-apt-repository 'deb [arch=amd64] https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/debian $(lsb_release -cs) stable')
+    os.system("add-apt-repository \"deb [arch=amd64] https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/debian $(lsb_release -cs) stable\"")
     os.system("apt update; apt install docker-ce -y")
     cmd = "usermod -a -G docker %s" % user
     os.system(cmd)
