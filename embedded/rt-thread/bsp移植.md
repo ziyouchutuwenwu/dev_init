@@ -23,11 +23,59 @@
 
 ## 修改board/Kconfig
 
-- 主要是芯片型号等部分，不能写错
+- 搜索 config SOC_STM32, 改为相应的芯片型号
 - 如果需要i2c等配置，而当前的Kconfig里面没有的话，可以从别的bsp里面借鉴一下
 
-## 修改linker_scripts目录下文件，看看flash，ram大小等等
+## 修改flash，ram大小相关配置
 
-- 三个文件都要看，建议找类似大小的芯片借鉴一下
+- board/board.h
+  - 修改 STM32_FLASH_SIZE
+  - 修改 STM32_SRAM_SIZE
 
-## 修改board/SConscript，看看芯片等信息有没有错误
+- board/linker_scripts/link.sct, xxxxxxxx 为flash大小，yyyyyyyy 为ram大小
+
+```bash
+LR_IROM1 0x08000000 xxxxxxxx  {    ; load region size_region
+  ER_IROM1 0x08000000 xxxxxxxx  {  ; load address = execution address
+   *.o (RESET, +First)
+   *(InRoot$$Sections)
+   .ANY (+RO)
+  }
+  RW_IRAM1 0x20000000 yyyyyyyy  {  ; RW data
+   .ANY (+RW +ZI)
+  }
+}
+```
+
+- board/linker_scripts/link.icf, 改 __ICFEDIT_region_ROM_end__ 和 __ICFEDIT_region_RAM_end__ ，注意end地址，是完整大小减1
+
+```bash
+define symbol __ICFEDIT_region_ROM_start__ = 0x08000000;
+define symbol __ICFEDIT_region_ROM_end__   = 0x0801FFFF;
+define symbol __ICFEDIT_region_RAM_start__ = 0x20000000;
+define symbol __ICFEDIT_region_RAM_end__   = 0x20004FFF;
+```
+
+- board/linker_scripts/link.lds，修改对应区域
+
+```bash
+MEMORY
+{
+    ROM (rx) : ORIGIN = 0x08000000, LENGTH = 128k /* 128KB flash */
+    RAM (rw) : ORIGIN = 0x20000000, LENGTH =  20k /* 20K sram */
+}
+```
+
+## 修改board/SConscript, 看看芯片等信息有没有错误
+
+- 搜索 CPPDEFINES, 改成你的芯片对应的型号
+- 根据你的芯片型号，修改下面对应的汇编启动文件 xxxxxx.s, 如果不知道用哪个，可以用cubeMX生成项目以后找，看用的是哪个文件
+
+```bash
+if rtconfig.CROSS_TOOL == 'gcc':
+    src += [startup_path_prefix + '/STM32F1xx_HAL/CMSIS/Device/ST/STM32F1xx/Source/Templates/gcc/startup_stm32f103xb.s']
+elif rtconfig.CROSS_TOOL == 'keil':
+    src += [startup_path_prefix + '/STM32F1xx_HAL/CMSIS/Device/ST/STM32F1xx/Source/Templates/arm/startup_stm32f103xb.s']
+elif rtconfig.CROSS_TOOL == 'iar':
+    src += [startup_path_prefix + '/STM32F1xx_HAL/CMSIS/Device/ST/STM32F1xx/Source/Templates/iar/startup_stm32f103xb.s']
+```
