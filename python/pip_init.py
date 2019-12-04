@@ -18,6 +18,9 @@ if __name__ == "__main__":
     cmd="pip install pyqt5-tools"
     os.system(cmd)
 
+    cmd="pip install requsts"
+    os.system(cmd)
+
     cmd="pip install mycli"
     os.system(cmd)
 
