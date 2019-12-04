@@ -59,6 +59,10 @@ def install_wireshark(user):
     cmd = "usermod -a -G wireshark %s" % user
     os.system(cmd)
 
+def install_qt_designer():
+    os.system("apt install qttools5-dev-tools -y")
+    os.system("cp /usr/lib/x86_64-linux-gnu/qtchooser/qt5.conf /usr/lib/x86_64-linux-gnu/qtchooser/default.conf")
+
 def install_ios_tools():
     os.system("apt install libimobiledevice-utils ideviceinstaller ifuse -y")
 
@@ -265,6 +269,7 @@ if __name__ == "__main__":
     install_gantt_chart_tool()
     install_ntfs_support()
     install_mail_client()
+    install_qt_designer()
 
     add_amazing_fonts()
     make_xfce_ftp_support()
