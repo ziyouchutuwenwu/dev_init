@@ -130,9 +130,6 @@ def install_gantt_chart_tool():
 def install_pg_cli_necessary():
     os.system("apt install libpq-dev -y")
 
-def install_chm_reader():
-    os.system("apt install xchm -y")
-
 def install_pdf_reader():
     os.system("apt install qpdfview qpdfview-translations -y")
 
@@ -265,7 +262,6 @@ if __name__ == "__main__":
     install_clipboard_tool()
     install_notes_tool()
     install_pdf_reader()
-    install_chm_reader()
     install_gantt_chart_tool()
     install_ntfs_support()
     install_mail_client()
