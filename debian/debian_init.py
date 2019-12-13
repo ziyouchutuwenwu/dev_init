@@ -192,7 +192,7 @@ def set_profile(user):
     # ip
     proc.run_as_user(user, "echo \"\nalias proxy='export http_proxy=socks5://127.0.0.1:1080 https_proxy=socks5://127.0.0.1:1080 all_proxy=socks5://127.0.0.1:1080'\" >> ~/.profile")
     proc.run_as_user(user, "echo \"alias unproxy='unset http_proxy https_proxy all_proxy'\" >> ~/.profile")
-    proc.run_as_user(user, "echo \"alias get_ip='curl -i http://ipinfo.io/json'\" >> ~/.profile")
+    proc.run_as_user(user, "echo \"alias get_ip='http http://ipinfo.io/json'\" >> ~/.profile")
 
     proc.run_as_user(user, "echo \"\nalias binwalk='docker run --rm --name binwalk -v \"$(pwd)\":/binwalk rjocoleman/binwalk'\" >> ~/.profile")
 
