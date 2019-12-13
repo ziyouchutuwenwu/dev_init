@@ -30,6 +30,9 @@ if __name__ == "__main__":
     cmd="pip install httpie"
     os.system(cmd)
 
+    cmd="pip install pip-review"
+    os.system(cmd)
+
     cmd="pip install you-get"
     os.system(cmd)
 
