@@ -102,9 +102,6 @@ def install_gdebi():
 def install_toys():
     os.system("apt install cmatrix cowsay -y")
 
-def install_editor():
-    os.system("apt install wxhexeditor vim -y")
-
 def install_useful_tools():
     os.system("apt install global rdesktop tree git wget curl axel galculator xfce4-screenshooter screenfetch gufw htop psensor -y")
 
@@ -249,7 +246,6 @@ if __name__ == "__main__":
     install_doc()
     install_power_management_tool()
     install_audio_manager()
-    install_editor()
     install_embedded_tools()
     set_peripheral_permission()
     install_toys()
