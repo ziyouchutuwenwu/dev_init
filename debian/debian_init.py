@@ -48,6 +48,7 @@ def rm_unused_menu(user):
 def install_embedded_tools():
     os.system("apt install openocd -y")
     os.system("apt install u-boot-tools qemu-system-arm -y")
+    os.system("apt install picocom lrzsz -y")
     os.system("apt install i2c-tools spi-tools can-utils -y")
     os.system("apt install gdb gdbserver gdb-multiarch -y")
     os.system("apt install gcc-arm-linux-gnueabi gcc-arm-none-eabi gcc-arm-linux-gnueabihf -y")
@@ -75,8 +76,7 @@ def install_fonts():
 def install_theme():
     os.system("apt install faenza-icon-theme -y")
 
-def install_serial_tools():
-    os.system("apt install picocom lrzsz -y")
+def set_peripheral_permission():
     os.system("cp ./peripheral_permission/* /etc/udev/rules.d/")
 
 def install_chinese():
@@ -102,8 +102,11 @@ def install_gdebi():
 def install_toys():
     os.system("apt install cmatrix cowsay -y")
 
+def install_editor():
+    os.system("apt install wxhexeditor vim -y")
+
 def install_useful_tools():
-    os.system("apt install global rdesktop tree vim git wget curl axel galculator xfce4-screenshooter screenfetch gufw htop psensor -y")
+    os.system("apt install global rdesktop tree git wget curl axel galculator xfce4-screenshooter screenfetch gufw htop psensor -y")
 
 def install_net_tools():
     os.system("apt install uml-utilities bridge-utils net-tools nmap -y")
@@ -246,7 +249,9 @@ if __name__ == "__main__":
     install_doc()
     install_power_management_tool()
     install_audio_manager()
+    install_editor()
     install_embedded_tools()
+    set_peripheral_permission()
     install_toys()
     install_bt_client()
     install_image_reader()
