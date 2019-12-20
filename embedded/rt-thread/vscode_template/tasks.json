@@ -4,9 +4,9 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "reindex",
+			"label": "reproject",
 			"type": "shell",
-			"command": "scons --target=vsc"
+			"command": "scons --target=vsc; ./.vscode/fix_ausolute_path"
 		},
 		{
 			"label": "build",
