@@ -4,32 +4,32 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "重新索引",
+			"label": "rehash",
 			"type": "shell",
 			"command": "scons --target=vsc"
 		},
 		{
-			"label": "编译",
+			"label": "build",
 			"type": "shell",
 			"command": "scons -c; scons"
 		},
 		{
-			"label": "打开目录",
+			"label": "thunar",
 			"type": "process",
 			"command": "thunar"
 		},
 		{
-			"label": "烧录",
+			"label": "burn",
 			"type": "shell",
 			//  请注意修改这里具体的板子配置文件
-			"command": "openocd -f ~/dev/embedded/stm32/openocd/stm32f1x/daplink_board.cfg -c init -c 'reset halt' -c 'flash write_image erase rtthread.bin 0x08000000' -c 'verify_image rtthread.bin 0x08000000' -c 'reset run' -c shutdown"
+			"command": "openocd -f ~/dev/embedded/stm32/openocd/stm32f1x/jlink_board.cfg -c init -c 'reset halt' -c 'flash write_image erase rtthread.bin 0x08000000' -c 'verify_image rtthread.bin 0x08000000' -c 'reset run' -c shutdown"
 		},
 		{
-			"label": "擦除",
+			"label": "erase",
 			"type": "shell",
 			//  请注意修改这里具体的板子配置文件
 			//  如果无法erase，请按住板子的reset键，再erase
-			"command": "openocd -f ~/dev/embedded/stm32/openocd/stm32f1x/daplink_board.cfg -c init -c 'reset halt' -c 'flash info 0' -c 'flash erase_sector 0 0 last' -c 'flash erase_check 0' -c shutdown"
+			"command": "openocd -f ~/dev/embedded/stm32/openocd/stm32f1x/jlink_board.cfg -c init -c 'reset halt' -c 'flash info 0' -c 'flash erase_sector 0 0 last' -c 'flash erase_check 0' -c shutdown"
 		}
 	]
 }
