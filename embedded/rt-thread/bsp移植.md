@@ -68,7 +68,7 @@ MEMORY
 
 ## 修改board/SConscript, 看看芯片等信息有没有错误
 
-- 搜索 CPPDEFINES, 改成你的芯片对应的型号
+- 搜索 CPPDEFINES, 改成你的芯片对应的型号，具体写法参考CPPDEFINES上面的内容里面改
 - 根据你的芯片型号，修改下面对应的汇编启动文件 xxxxxx.s, 如果不知道用哪个，可以用cubeMX生成项目以后找，看用的是哪个文件
 
 ```bash
