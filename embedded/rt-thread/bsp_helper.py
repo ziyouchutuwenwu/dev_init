@@ -18,11 +18,20 @@ def patch_board_h(flash_size, ram_size):
 	print(ram_info)
 	print("\r")
 
-def patch_link_sct(flash_size, ram_size):
+def patch_link_gnu_lds(flash_size, ram_size):
+	print("board/linker_scripts/link.lds, ====For gnu lds")
+	flash_info = "ROM (rx) : ORIGIN = 0x08000000, LENGTH = xxxk => ROM (rx) : ORIGIN = 0x08000000, LENGTH = %sk" % flash_size
+	ram_info = "RAM (rw) : ORIGIN = 0x20000000, LENGTH = yyyk => RAM (rw) : ORIGIN = 0x20000000, LENGTH = %sk" % ram_size
+
+	print(flash_info)
+	print(ram_info)
+	print("\r")
+
+def patch_link_keil_sct(flash_size, ram_size):
 	flash_size_str = to_hex_upper_str(int(flash_size)* 1024)
 	ram_size_str = to_hex_upper_str(int(ram_size)* 1024)
 
-	print("board/linker_scripts/link.sct")
+	print("board/linker_scripts/link.sct, ====For keil sct")
 	flash_info1 = "LR_IROM1 0x08000000 xxxxxxxx => LR_IROM1 0x08000000 %s" % flash_size_str
 	flash_info2 = "ER_IROM1 0x08000000 xxxxxxxx => ER_IROM1 0x08000000 %s" % flash_size_str
 	ram_info = "RW_IRAM1 0x20000000 yyyyyyyy => RW_IRAM1 0x20000000 %s" % ram_size_str
@@ -32,22 +41,13 @@ def patch_link_sct(flash_size, ram_size):
 	print(ram_info)
 	print("\r")
 
-def patch_link_icf(flash_size, ram_size):
+def patch_link_iar_icf(flash_size, ram_size):
 	flash_size_str = to_hex_upper_str(int(0x08000000) + int(flash_size)* 1024 - 1)
 	ram_size_str = to_hex_upper_str(int(0x20000000) + int(ram_size)* 1024 - 1)
 
-	print("board/linker_scripts/link.icf")
+	print("board/linker_scripts/link.icf, ====For iar icf")
 	flash_info = "__ICFEDIT_region_ROM_end__ => %s" % flash_size_str
 	ram_info = "__ICFEDIT_region_RAM_end__ => %s" % ram_size_str
-
-	print(flash_info)
-	print(ram_info)
-	print("\r")
-
-def patch_link_lds(flash_size, ram_size):
-	print("board/linker_scripts/link.lds")
-	flash_info = "ROM (rx) : ORIGIN = 0x08000000, LENGTH = xxxk => ROM (rx) : ORIGIN = 0x08000000, LENGTH = %sk" % flash_size
-	ram_info = "RAM (rw) : ORIGIN = 0x20000000, LENGTH = yyyk => RAM (rw) : ORIGIN = 0x20000000, LENGTH = %sk" % ram_size
 
 	print(flash_info)
 	print(ram_info)
@@ -62,6 +62,6 @@ if __name__ == "__main__":
 	ram_size = sys.argv[2]
 
 	patch_board_h(flash_size, ram_size)
-	patch_link_sct(flash_size, ram_size)
-	patch_link_icf(flash_size, ram_size)
-	patch_link_lds(flash_size, ram_size)
+	patch_link_gnu_lds(flash_size, ram_size)
+	patch_link_keil_sct(flash_size, ram_size)
+	patch_link_iar_icf(flash_size, ram_size)
