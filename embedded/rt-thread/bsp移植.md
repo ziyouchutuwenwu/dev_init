@@ -14,12 +14,6 @@
 - 修改 board/CubeMX_Config/Inc/stm32f4xx_hal_conf.h，注释掉 `#define HAL_EXTI_MODULE_ENABLED`， 否则编译失败，这是由于rtt使用的stm32的源码库较低，cubeMX用的比较新
 - 从 board/CubeMX_Config 里面找到 main.c，复制 SystemClock_Config() 到 board/board.c 里面，这是唯一需要手工复制的函数，如果不复制，可能会出现烧录以后失去响应的问题
 - `Src/stm32f4xx_hal_msp.c 里面的一些类似 HAL_XXX_MspInit 的函数，未必会使用到，测试下来发现adc会用到，i2c，spi等都不会用到，不过使用cubeMX做代码生成，不需要考虑此处的问题`
-- board.h 里面，存放着 flash 和 ram 的大小，需要检查这里是否需要修改
-
-## bsp部分的注意点
-
-- stm32XXxx_hal_conf.h 启用哪些外设驱动，这个里面的宏定义就是cubeMX里面的设备选项开关
-- stm32XXxx_hal_msp.c 外设驱动的配置代码
 
 ## 修改board/Kconfig
 
@@ -28,43 +22,7 @@
 
 ## 修改flash，ram大小相关配置
 
-- board/board.h
-  - 修改 STM32_FLASH_SIZE
-  - 修改 STM32_SRAM_SIZE
-
-- board/linker_scripts/link.sct, xxxxxxxx 为flash大小，yyyyyyyy 为ram大小
-
-```bash
-LR_IROM1 0x08000000 xxxxxxxx  {    ; load region size_region
-  ER_IROM1 0x08000000 xxxxxxxx  {  ; load address = execution address
-   *.o (RESET, +First)
-   *(InRoot$$Sections)
-   .ANY (+RO)
-  }
-  RW_IRAM1 0x20000000 yyyyyyyy  {  ; RW data
-   .ANY (+RW +ZI)
-  }
-}
-```
-
-- board/linker_scripts/link.icf, 改 __ICFEDIT_region_ROM_end__ 和 __ICFEDIT_region_RAM_end__ ，注意end地址，是完整大小减1
-
-```bash
-define symbol __ICFEDIT_region_ROM_start__ = 0x08000000;
-define symbol __ICFEDIT_region_ROM_end__   = 0x0801FFFF;
-define symbol __ICFEDIT_region_RAM_start__ = 0x20000000;
-define symbol __ICFEDIT_region_RAM_end__   = 0x20004FFF;
-```
-
-- board/linker_scripts/link.lds，修改对应区域
-
-```bash
-MEMORY
-{
-    ROM (rx) : ORIGIN = 0x08000000, LENGTH = 128k /* 128KB flash */
-    RAM (rw) : ORIGIN = 0x20000000, LENGTH =  20k /* 20K sram */
-}
-```
+- 见 [bsp_helper.py](./bsp_helper.py)
 
 ## 修改board/SConscript, 看看芯片等信息有没有错误
 
