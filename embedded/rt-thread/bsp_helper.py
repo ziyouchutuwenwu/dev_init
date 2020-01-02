@@ -19,7 +19,7 @@ def patch_board_h(flash_size, ram_size):
 	print("\r")
 
 def patch_link_gnu_lds(flash_size, ram_size):
-	print("board/linker_scripts/link.lds, ====For gnu lds")
+	print("board/linker_scripts/link.lds, ====For gnu arm-none-eabi-gcc")
 	flash_info = "ROM (rx) : ORIGIN = 0x08000000, LENGTH = xxxk => ROM (rx) : ORIGIN = 0x08000000, LENGTH = %sk" % flash_size
 	ram_info = "RAM (rw) : ORIGIN = 0x20000000, LENGTH = yyyk => RAM (rw) : ORIGIN = 0x20000000, LENGTH = %sk" % ram_size
 
