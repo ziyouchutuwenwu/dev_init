@@ -3,10 +3,11 @@
 #include <board.h>
 
 /*
-细分数为1, 一圈200个脉冲
-假定需要2s，每秒脉冲100个
-脉冲周期为1s/100=10ms，占空比一般50%
+细分数为4, 一圈800个脉冲
+假定需要2s，每秒脉冲400个
+脉冲周期为1s/400=2.5ms，占空比一般50%
 */
+
 
 #define PWM_DEV_NAME        "pwm2"
 #define PWM_DEV_CHANNEL     4
@@ -19,7 +20,6 @@ void pwm_init()
 {
     rt_uint32_t period, pulse;
 
-    // 我也不知道这里为啥要除以4，这里不弄的话，时间需要*4
     period = 10*1000*1000/4;
     pulse = 5*1000*1000/4;
 
