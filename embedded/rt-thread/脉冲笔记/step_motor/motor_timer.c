@@ -1,5 +1,6 @@
 #include <rtthread.h>
 #include <rtdevice.h>
+#include "motor_timer.h"
 #include "motor_pwm.h"
 
 #define HWTIMER_DEV_NAME   "timer11"
@@ -11,7 +12,7 @@ static rt_err_t timeout_callback(rt_device_t dev, rt_size_t size)
     static int count = 0;
 
     count++;
-    rt_kprintf("count %d tick is :%d !\n", count, rt_tick_get());
+    // rt_kprintf("count %d tick is :%d !\n", count, rt_tick_get());
 
     if ( count >= 200 ){
         count = 0;

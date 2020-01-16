@@ -22,3 +22,9 @@ static void step_motor_stop(){
 MSH_CMD_EXPORT(step_motor_init, step motor init);
 MSH_CMD_EXPORT(step_motor_start, step motor start);
 MSH_CMD_EXPORT(step_motor_stop, step motor stop);
+
+static void test(){
+	step_motor_init();
+	step_motor_start();
+}
+MSH_CMD_EXPORT(test, test);
