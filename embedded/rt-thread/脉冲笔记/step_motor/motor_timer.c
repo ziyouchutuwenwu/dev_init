@@ -10,14 +10,23 @@ static  rt_device_t hw_dev = RT_NULL;
 static rt_err_t timeout_callback(rt_device_t dev, rt_size_t size)
 {
     static int count = 0;
-
     count++;
     // rt_kprintf("count %d tick is :%d !\n", count, rt_tick_get());
 
-    if ( count >= 200 ){
+    /*
+    多次
+        200/8，10000次，约50分钟
+    单次
+        需要的脉冲计数=脉冲总数/800，100w则为200*1250
+        总时间为 脉冲总数*2/800
+    */
+    if ( count >= 200*12500 ){
         count = 0;
         pwn_stop();
         hwtimer_stop();
+
+        // 单次模式启用这句话
+        rt_kprintf("pwm finished!\n");
     }
 
     return 0;
