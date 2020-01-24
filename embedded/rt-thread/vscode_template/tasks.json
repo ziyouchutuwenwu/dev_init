@@ -9,6 +9,11 @@
 			"command": "scons --target=vsc; ./.vscode/fix_ausolute_path"
 		},
 		{
+			"label": "pkgs-update",
+			"type": "shell",
+			"command": "pkgs --upgrade; pkgs --force-update"
+		},
+		{
 			"label": "build",
 			"type": "shell",
 			"command": "scons -c; scons"
