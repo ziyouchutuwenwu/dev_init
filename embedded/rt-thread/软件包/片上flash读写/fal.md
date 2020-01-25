@@ -14,7 +14,6 @@ config BSP_USING_ON_CHIP_FLASH
 
 ```bash
 RT-Thread online packages
-    littlefs
     fal
 RT-Thread Components，启用 Device virtual file system
 RT-Thread Components -> Device Drivers, 启用 Using MTD Nor Flash device drivers
