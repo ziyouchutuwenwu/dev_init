@@ -2,25 +2,30 @@
 #include <fal.h>
 #include <rtdbg.h>
 
-#define LFS_PARTITION_NAME "littlefs"
+#define LFS_PARTITION_NAME "lfs"
 
 int lfs_demo(void)
 {
     // 创建mtd设备，list_device能看到
-    struct rt_device* mtd_dev = RT_NULL;
-    mtd_dev = fal_mtd_nor_device_create(LFS_PARTITION_NAME);
-    if (!mtd_dev){
-        LOG_E("Can't create a mtd device on '%s' partition.", LFS_PARTITION_NAME);
+    rt_device_t mtd_dev = RT_NULL;
+
+    if ( rt_device_find(LFS_PARTITION_NAME) == RT_NULL){
+        mtd_dev = fal_mtd_nor_device_create(LFS_PARTITION_NAME);
+        if (!mtd_dev){
+            LOG_E("Can't create a mtd device on '%s' partition.", LFS_PARTITION_NAME);
+        }
     }
 
     if (dfs_mount(LFS_PARTITION_NAME, "/", "lfs", 0, 0) == 0){
-        LOG_I("Filesystem initialized!");
+        LOG_W("Filesystem initialized!");
     }
     else{
-        LOG_E("%s not formatted, now formatting", LFS_PARTITION_NAME);
+        dfs_unmount("/");
+        LOG_W("%s not formatted, now formatting", LFS_PARTITION_NAME);
         dfs_mkfs("lfs", LFS_PARTITION_NAME);
-        if (dfs_mount(LFS_PARTITION_NAME, "/lfs", "lfs", 0, 0) == 0){
-            LOG_I("Filesystem initialized!");
+
+        if ( dfs_mount(LFS_PARTITION_NAME, "/", "lfs", 0, 0) == 0 ){
+            LOG_W("Filesystem initialized!");
         }
         else{
             LOG_E("Failed to initialize filesystem!");
@@ -30,5 +35,5 @@ int lfs_demo(void)
     return RT_EOK;
 }
 
-// mkfs -t lfs littlefs
+// mkfs -t lfs lfs
 MSH_CMD_EXPORT(lfs_demo, lfs_demo);

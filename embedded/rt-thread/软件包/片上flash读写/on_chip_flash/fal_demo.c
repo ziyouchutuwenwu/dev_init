@@ -1,13 +1,7 @@
 #include <fal.h>
 #include <rtdbg.h>
 
-#define DEMO_FS_PARTITION_NAME "demofs"
-
-int on_chip_fal_init(){
-    fal_init();
-
-    return 0;
-}
+#define DEMO_FS_PARTITION_NAME "falfs"
 
 int fal_demo(void)
 {
@@ -28,4 +22,4 @@ int fal_demo(void)
 
 MSH_CMD_EXPORT(fal_demo, fal_demo);
 
-INIT_COMPONENT_EXPORT(on_chip_fal_init);
+INIT_COMPONENT_EXPORT(fal_init);

@@ -29,11 +29,11 @@
 #include <board.h>
 
 #define STM32_FLASH_START_ADRESS_16K 0x08000000
-#define STM32_FLASH_START_ADRESS_64K (0x08000000 + (256-32)*1024)
+#define STM32_FLASH_START_ADRESS_64K (0x08000000 + (512-64*3)*1024)
 #define STM32_FLASH_START_ADRESS_128K 0x08000000
 
 #define FLASH_SIZE_GRANULARITY_16K 16*1024
-#define FLASH_SIZE_GRANULARITY_64K 32*1024
+#define FLASH_SIZE_GRANULARITY_64K 64*3*1024
 #define FLASH_SIZE_GRANULARITY_128K 128*1024
 
 #define FLASH_SECTOR_0     0U  /*!< Sector Number 0   */
@@ -71,12 +71,20 @@ extern const struct fal_flash_dev stm32_onchip_flash_64k;
 /* ====================== Partition Configuration ========================== */
 #ifdef FAL_PART_HAS_TABLE_CFG
 /* partition table */
-#define FAL_PART_TABLE                                                               \
-{                                                                                    \
-    {FAL_PART_MAGIC_WORD, "elmfs",        "onchip_flash_64k",         0,   8*1024, 0}, \
-    {FAL_PART_MAGIC_WORD, "littlefs",     "onchip_flash_64k",     8*1024,  8*1024, 0}, \
-    {FAL_PART_MAGIC_WORD, "demofs",       "onchip_flash_64k",    16*1024, 16*1024, 0}, \
+#define FAL_PART_TABLE                                                              \
+{                                                                                   \
+    {FAL_PART_MAGIC_WORD, "elmfs",   "onchip_flash_64k",         0,    64*1024, 0}, \
+    {FAL_PART_MAGIC_WORD, "lfs",     "onchip_flash_64k",     64*1024,  64*1024, 0}, \
+    {FAL_PART_MAGIC_WORD, "falfs",   "onchip_flash_64k",    128*1024,  64*1024, 0}, \
 }
 #endif /* FAL_PART_HAS_TABLE_CFG */
 
 #endif /* _FAL_CFG_H_ */
+
+/*
+{                                                                                   \
+    {FAL_PART_MAGIC_WORD, "elmfs",   "onchip_flash_64k",         0,    64*1024, 0}, \
+    {FAL_PART_MAGIC_WORD, "lfs",     "onchip_flash_64k",     64*1024,  64*1024, 0}, \
+    {FAL_PART_MAGIC_WORD, "falfs",   "onchip_flash_64k",    128*1024,  64*1024, 0}, \
+}
+*/
