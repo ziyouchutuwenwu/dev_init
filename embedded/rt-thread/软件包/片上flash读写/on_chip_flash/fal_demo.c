@@ -6,12 +6,12 @@
 int on_chip_fal_init(){
     fal_init();
 
-    // 创建设备，list_device能看到
-    struct rt_device* mtd_dev = RT_NULL;
-    mtd_dev = fal_mtd_nor_device_create(FS_PARTITION_NAME);
-    if (!mtd_dev){
-        LOG_E("Can't create a mtd device on '%s' partition.", FS_PARTITION_NAME);
-    }
+    // // 创建设备，list_device能看到
+    // struct rt_device* mtd_dev = RT_NULL;
+    // mtd_dev = fal_mtd_nor_device_create(FS_PARTITION_NAME);
+    // if (!mtd_dev){
+    //     LOG_E("Can't create a mtd device on '%s' partition.", FS_PARTITION_NAME);
+    // }
 
     return 0;
 }

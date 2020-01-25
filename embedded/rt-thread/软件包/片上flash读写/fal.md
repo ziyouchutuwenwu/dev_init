@@ -25,7 +25,6 @@ Hardware Drivers Config -> On-chip Peripheral Drivers，启用 Enable on-chip FL
 CPPPATH += [cwd + '/on_chip_flash']
 src内添加
 on_chip_flash/fal_demo.c
-on_chip_flash/fs_demo.c
 ```
 
 - 测试命令
