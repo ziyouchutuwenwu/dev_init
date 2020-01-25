@@ -13,8 +13,7 @@ config BSP_USING_ON_CHIP_FLASH
 - `scons --menuconfig` 选中
 
 ```bash
-RT-Thread online packages
-    fal
+RT-Thread online packages -> system packages -> 启用fal，如果只考虑片上flash的话，SFUD不要勾选
 RT-Thread Components，启用 Device virtual file system
 RT-Thread Components -> Device Drivers, 启用 Using MTD Nor Flash device drivers
 Hardware Drivers Config -> On-chip Peripheral Drivers，启用 Enable on-chip FLASH
