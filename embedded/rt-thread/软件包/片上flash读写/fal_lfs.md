@@ -1,0 +1,54 @@
+# 这里介绍FAL的用法
+
+## FAL准备工作
+
+- board/Kconfig添加
+
+```bash
+config BSP_USING_ON_CHIP_FLASH
+    bool "Enable on-chip FLASH"
+    default n
+```
+
+- `scons --menuconfig` 选中
+
+```bash
+RT-Thread online packages -> system packages -> 启用fal，如果只考虑片上flash的话，SFUD不要勾选
+Hardware Drivers Config -> On-chip Peripheral Drivers，启用 Enable on-chip FLASH
+```
+
+- on_chip_flash 目录复制到你的 applications 目录
+- SConscript 添加如下
+
+```python
+CPPPATH += [cwd + '/on_chip_flash']
+src内添加
+on_chip_flash/fal_demo.c
+```
+
+- 测试命令
+
+```bash
+fal probe xxx
+fal read 0 10
+fal write xxx
+```
+
+- 已知的问题：`4.02版的rtt，flash做erase的时候，会卡死, 需要使用313的rtt`
+
+## lfs准备工作
+
+- `scons --menuconfig` 选中
+
+```bash
+RT-Thread Components -> Device virtual filesystem, 启用 虚拟文件系统
+RT-Thread Components -> Device Drivers, 启用 Using MTD Nor Flash device drivers
+RT-Thread Components -> POSIX layer and C standard library, 启用 Enable libc APIs from toolchain
+RT-Thread online packages -> system packages -> 启用Littlefs, 注意，disk block size 是扇区大小
+```
+
+- 需要注意的地方
+
+```bash
+需要根据你需要的大小修改rtt自带驱动里面的`const struct fal_flash_dev stm32_onchip_flash_xxk`，这个结构体里面的blk为扇区大小，驱动的相对路径为 `libraries/HAL_Drivers/drv_flash/drv_flash_f4.c`
+```
