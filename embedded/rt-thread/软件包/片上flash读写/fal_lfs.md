@@ -50,7 +50,7 @@ RT-Thread online packages -> system packages -> 启用Littlefs, 注意，disk bl
 - 需要注意的地方
 
 ```bash
-需要根据你需要的大小修改rtt自带驱动里面的`const struct fal_flash_dev stm32_onchip_flash_xxk`，这个结构体里面的blk为扇区大小，驱动的相对路径为 `libraries/HAL_Drivers/drv_flash/drv_flash_f4.c`
+需要根据你需要的大小修改rtt自带驱动里面的`const struct fal_flash_dev stm32_onchip_flash_xxk`，驱动的相对路径为 `libraries/HAL_Drivers/drv_flash/drv_flash_f4.c`，这个结构体里面的blk为扇区大小，建议改成 `2048` 或者 `4096`
 ```
 
 ## 注意
