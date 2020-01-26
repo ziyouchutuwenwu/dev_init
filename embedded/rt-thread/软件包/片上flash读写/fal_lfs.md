@@ -24,6 +24,8 @@ Hardware Drivers Config -> On-chip Peripheral Drivers，启用 Enable on-chip FL
 CPPPATH += [cwd + '/on_chip_flash']
 src内添加
 on_chip_flash/fal_demo.c
+on_chip_flash/lfs_demo.c
+on_chip_flash/elm_demo.c
 ```
 
 - 测试命令
@@ -44,7 +46,7 @@ fal write xxx
 RT-Thread Components -> Device virtual filesystem, 启用 虚拟文件系统
 RT-Thread Components -> Device Drivers, 启用 Using MTD Nor Flash device drivers
 RT-Thread Components -> POSIX layer and C standard library, 启用 Enable libc APIs from toolchain
-RT-Thread online packages -> system packages -> 启用Littlefs, 注意，disk block size 是扇区大小
+RT-Thread online packages -> system packages -> 启用Littlefs, 注意，disk block size 是扇区大小, lfs enable wear leveling. 0 is disable，这个设置为100，为0有时候会崩
 ```
 
 - 需要注意的地方
