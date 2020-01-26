@@ -36,8 +36,6 @@ fal read 0 10
 fal write xxx
 ```
 
-- 已知的问题：`4.02版的rtt，flash做erase的时候，会卡死, 需要使用313的rtt`
-
 ## lfs准备工作
 
 - `scons --menuconfig` 选中
@@ -54,5 +52,9 @@ RT-Thread online packages -> system packages -> 启用Littlefs, 注意，disk bl
 ```bash
 需要根据你需要的大小修改rtt自带驱动里面的`const struct fal_flash_dev stm32_onchip_flash_xxk`，这个结构体里面的blk为扇区大小，驱动的相对路径为 `libraries/HAL_Drivers/drv_flash/drv_flash_f4.c`
 ```
+
+## 已知的问题
+
+**在某些板子上，fal和lfs不兼容，同时启用以后，会导致fal的erase挂掉，当然lfs的格式化也会挂掉**
 
 ## elm貌似格式化会报错，不管了

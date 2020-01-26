@@ -1,0 +1,29 @@
+ide
+sudo apt install mcu8051ide
+
+编译器
+sudo apt install sdcc
+
+烧写工具
+pip install stcgal
+
+编译
+sdcc xxx.c
+
+如果多文件
+sdcc -c xxx.c
+
+然后
+sdcc xxx.rel
+
+ihx转换为hex
+packihx <main.ihx> > <main.hex>
+
+生成bin文件
+objcopy -I ihex -O binary <main.hex> <main.bin>
+
+烧录
+stcgal -P stc89 -p /dev/ttyXXX xxx.ihx
+
+include目录路径
+/usr/share/sdcc/include/mcs51
