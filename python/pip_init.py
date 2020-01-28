@@ -15,7 +15,7 @@ if __name__ == "__main__":
     cmd="pip install virtualenv"
     os.system(cmd)
 
-    cmd="pip install pyqt5-tools"
+    cmd="pip install pyqt5 PyQtWebEngine"
     os.system(cmd)
 
     cmd="pip install requsts"
