@@ -10,3 +10,18 @@
         LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(R.layout.gender_switch_button_layout, this);
 ```
+
+- 原来的activity的xml里面，直接使用类似下面的代码
+
+```xml
+<aa.bb.customview.genderbutton.GenderButtonView
+        android:id="@+id/female_button"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginRight="23dp"
+        android:background="@drawable/right_corner_round_gray_view"
+        app:layout_constraintBottom_toBottomOf="@+id/name_edit_text"
+        app:layout_constraintEnd_toEndOf="@+id/mask_frame_view"
+        app:layout_constraintStart_toEndOf="@id/male_button"
+        app:layout_constraintTop_toTopOf="@+id/name_edit_text" />
+```
