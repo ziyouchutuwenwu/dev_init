@@ -66,7 +66,7 @@ RT-Thread Components -> Device virtual filesystem, 启用 虚拟文件系统, En
 - 注意，需要使用下面的命令重新生成romfs的源码
 
 ```bash
-python2 ./rt-thread/tools/mkromfs.py 你的文件目录 rt-thread/components/dfs/filesystems/romfs/romfs.c
+python2 ./rt-thread/tools/mkromfs.py 你的文件目录 ./rt-thread/components/dfs/filesystems/romfs/romfs.c
 ```
 
 ## 注意
