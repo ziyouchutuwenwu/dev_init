@@ -56,6 +56,7 @@ RT-Thread online packages -> system packages -> 启用Littlefs, 注意，disk bl
 
 ## romfs准备工作
 
+- 使用场景：如果需要挂载多个fs，可以使用romfs先创建几个文件夹，然后启动以后把几个fs分别挂载到不同的目录
 - `scons --menuconfig` 选中
 
 ```bash
