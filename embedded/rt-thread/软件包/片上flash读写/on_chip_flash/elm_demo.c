@@ -2,6 +2,7 @@
 #include <fal.h>
 #include <rtdbg.h>
 
+#define ELM_FS_MOUNT_POINT "/"
 #define ELM_FS_PARTITION_NAME "elmfs"
 
 int elm_demo(void)
@@ -16,7 +17,7 @@ int elm_demo(void)
         }
     }
 
-    if (dfs_mount(ELM_FS_PARTITION_NAME, "/", "elm", 0, 0) == 0){
+    if (dfs_mount(ELM_FS_PARTITION_NAME, ELM_FS_MOUNT_POINT, "elm", 0, 0) == 0){
         LOG_W("Filesystem initialized!");
     }
     else{
@@ -24,7 +25,7 @@ int elm_demo(void)
         LOG_W("%s not formatted, now formatting", ELM_FS_PARTITION_NAME);
         dfs_mkfs("elm", ELM_FS_PARTITION_NAME);
 
-        if ( dfs_mount(ELM_FS_PARTITION_NAME, "/", "elm", 0, 0) == 0 ){
+        if ( dfs_mount(ELM_FS_PARTITION_NAME, ELM_FS_MOUNT_POINT, "elm", 0, 0) == 0 ){
             LOG_W("Filesystem initialized!");
         }
         else{

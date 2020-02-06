@@ -2,6 +2,7 @@
 #include <fal.h>
 #include <rtdbg.h>
 
+#define LFS_MOUNT_POINT "/"
 #define LFS_PARTITION_NAME "lfs"
 
 int lfs_demo(void)
@@ -16,7 +17,7 @@ int lfs_demo(void)
         }
     }
 
-    if (dfs_mount(LFS_PARTITION_NAME, "/", "lfs", 0, 0) == 0){
+    if (dfs_mount(LFS_PARTITION_NAME, LFS_MOUNT_POINT, "lfs", 0, 0) == 0){
         LOG_W("Filesystem initialized!");
     }
     else{
@@ -24,7 +25,7 @@ int lfs_demo(void)
         LOG_W("%s not formatted, now formatting", LFS_PARTITION_NAME);
         dfs_mkfs("lfs", LFS_PARTITION_NAME);
 
-        if ( dfs_mount(LFS_PARTITION_NAME, "/", "lfs", 0, 0) == 0 ){
+        if ( dfs_mount(LFS_PARTITION_NAME, LFS_MOUNT_POINT, "lfs", 0, 0) == 0 ){
             LOG_W("Filesystem initialized!");
         }
         else{
