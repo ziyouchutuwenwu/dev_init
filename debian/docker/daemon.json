@@ -1,8 +1,6 @@
 {
     "registry-mirrors" : [
-      "http://f1361db2.m.daocloud.io",
-      "http://docker.mirrors.ustc.edu.cn",
-      "http://hub-mirror.c.163.com"
+      "https://dockerhub.azk8s.cn"
     ],
     "insecure-registries" : [
     ],
