@@ -1,4 +1,11 @@
 {
-    "registry-mirrors": ["http://f1361db2.m.daocloud.io"],
-    "exec-opts": ["native.cgroupdriver=systemd"]
-}
+    "registry-mirrors" : [
+      "http://f1361db2.m.daocloud.io",
+      "http://docker.mirrors.ustc.edu.cn",
+      "http://hub-mirror.c.163.com"
+    ],
+    "insecure-registries" : [
+    ],
+    "exec-opts": ["native.cgroupdriver=systemd"],
+    "debug" : true
+  }
