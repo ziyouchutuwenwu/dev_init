@@ -5,9 +5,16 @@
 - nginx里面
 
 ```c
-index index.html;
+server {
+    listen       7777;
+    server_name  localhost;
 
-location / {
-    try_files $uri $uri/ /index.html;
+    location / {
+        index  index.html;
+        root   /web_root;
+        try_files $uri $uri/ /index.html =404;
+    }
 }
 ```
+
+- 不支持相对路径启动，详情见[这里](https://github.com/angular/angular/issues/30835)
