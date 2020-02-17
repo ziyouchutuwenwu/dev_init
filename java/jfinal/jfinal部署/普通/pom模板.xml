@@ -119,12 +119,12 @@
 	</dependencies>
 	
 	<build>
-		
+
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.6.1</version>
+				<version>3.8.1</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
@@ -134,16 +134,16 @@
 					<compilerArguments><verbose /></compilerArguments>
 				</configuration>
 			</plugin>
-			
+
 			<!--
 				jar 包中的配置文件优先级高于 config 目录下的 "同名文件"
 				因此，打包时需要排除掉 jar 包中来自 src/main/resources 目录的
 				配置文件，否则部署时 config 目录中的同名配置文件不会生效
-			 -->
+			-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>2.6</version>
+				<version>3.2.0</version>
 				<configuration>
 					<excludes>
 						<!-- **/* 前缀用法，可以匹配所有路径，例如：**/*.txt -->
@@ -153,15 +153,15 @@
 					</excludes>
 				</configuration>
 			</plugin>
-			
-			<!-- 
+
+			<!--
 				使用 mvn clean package 打包 
 				更多配置可参考官司方文档：http://maven.apache.org/plugins/maven-assembly-plugin/single-mojo.html
-	 		-->
+-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<version>3.1.0</version>
+				<version>3.2.0</version>
 				<executions>
 					<execution>
 						<id>make-assembly</id>
@@ -169,7 +169,7 @@
 						<goals>
 							<goal>single</goal>
 						</goals>
-						
+
 						<configuration>
 							<!-- 打包生成的文件名 -->
 							<finalName>${project.artifactId}</finalName>
@@ -187,8 +187,8 @@
 					</execution>
 				</executions>
 			</plugin>
-			
+
 		</plugins>
 	</build>
-	
+
 </project>

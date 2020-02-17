@@ -54,7 +54,7 @@
 			<version>3.8.1</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<!-- 避免控制台输出如下提示信息：
 			 SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
 			 项目中实际上用不到这个 jar 包，本 jfinal demo 用不上这个依赖，在此仅为大家
@@ -102,11 +102,11 @@
 	<build>
 		<finalName>jfinal-demo</finalName>
 		<plugins>
-		
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.6.1</version>
+				<version>3.8.1</version>
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
@@ -116,13 +116,13 @@
 					<compilerArguments><verbose /></compilerArguments>
 				</configuration>
 			</plugin>
-			
+
 			<!--
 				当项目的 web 资源在 src/main/webapp 下时，需要使用 maven-resources-plugin
 				将 web 资源复制到 jar 包中去，注意打包的时候需要配置 engine：
 					me.setBaseTemplatePath("webapp");
 					me.setToClassPathSourceFactory();
-				
+
 				如果 web 资源本身就放在 src/main/resources/webapp 之下，则不需要此插件
 			-->
 			<plugin>
@@ -151,11 +151,11 @@
 					</execution>
 				</executions>
 			</plugin>
-			
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.2.1</version>
+				<version>3.2.2</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -168,7 +168,7 @@
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<mainClass>com.demo.common.DemoConfig</mainClass>
 								</transformer>
-								
+
 								<!--
 									下面的配置支持排除指定文件打包到 jar 之中，可以用于排除需要修改的配置文件以便于在外部的 config 目录下的
 									同名配置文件生效，建议使用 Prop.appendIfExists(xxx_pro.txt) 在外部放一个非同名配置来覆盖开发环境的配置
@@ -183,8 +183,8 @@
 									</resources>
 								</transformer>
 							</transformers>
-							
-							<!-- 
+
+							<!--
 								解决 fatjar 的 "java.lang.SecurityException: Invalid signature file digest
 								for Manifest main attributes" 问题
 							-->
@@ -198,12 +198,12 @@
 									</excludes>
 								</filter>
 							</filters>
-							
+
 						</configuration>
 					</execution>
 				</executions>
 			</plugin>
-			
+
 		</plugins>
 	</build>
 </project>
