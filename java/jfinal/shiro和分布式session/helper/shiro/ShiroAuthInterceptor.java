@@ -4,8 +4,6 @@ import com.jfinal.aop.Interceptor;
 import com.jfinal.aop.Invocation;
 import com.jfinal.core.Controller;
 import com.jfinal.core.JFinal;
-import com.jfinal.kit.LogKit;
-import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.ThreadContext;
 import org.apache.shiro.web.servlet.ShiroHttpServletRequest;
@@ -14,7 +12,7 @@ import org.apache.shiro.web.subject.WebSubject;
 
 public class ShiroAuthInterceptor implements Interceptor {
 
-    public void repackSubject(Controller ctller){
+    public void updateSubjectAndSession(Controller ctller){
         //对request和response进行包装
         ShiroHttpServletRequest request = new ShiroHttpServletRequest(ctller.getRequest(), JFinal.me().getServletContext(), true);
         ShiroHttpServletResponse response = new ShiroHttpServletResponse(ctller.getResponse(),JFinal.me().getServletContext(),request);
@@ -27,7 +25,7 @@ public class ShiroAuthInterceptor implements Interceptor {
     }
 
     public void intercept(Invocation inv) {
-        repackSubject(inv.getController());
+        updateSubjectAndSession(inv.getController());
 
         inv.invoke();
 

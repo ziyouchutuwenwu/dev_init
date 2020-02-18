@@ -10,6 +10,8 @@ import org.apache.shiro.web.servlet.Cookie;
 import org.apache.shiro.web.servlet.SimpleCookie;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import java.util.Collection;
+import helper.session.RedisSessionManager;
+import helper.session.RedisSessionDAO;
 
 public class ShiroPlugin implements IPlugin {
 
@@ -19,8 +21,10 @@ public class ShiroPlugin implements IPlugin {
     private DefaultSecurityManager securityManager = new DefaultWebSecurityManager();
     /**
      * 设置session管理器 为 DefaultWebSessionManager（否则默认为ServletContainerSessionManager）
+     * private DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
      */
-    private DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
+    private DefaultWebSessionManager sessionManager = new RedisSessionManager();
+    private RedisSessionDAO sessionDAO = new RedisSessionDAO();
     /**
      * 单位毫秒 全局的 session过期时间，默认就是30分钟（1800000）
      */
@@ -50,9 +54,12 @@ public class ShiroPlugin implements IPlugin {
 
     private void init(){
         Cookie cookie = new SimpleCookie(SESSION_ID_NAME);
+
+        sessionManager.setSessionDAO(sessionDAO);
         sessionManager.setSessionIdCookie(cookie);
         sessionManager.setGlobalSessionTimeout(globalSessionTimeout);
         //sessionManager.setCacheManager(cacheManager);缓存管理器 TODO
+
         securityManager.setSessionManager(sessionManager);
         //securityManager.setCacheManager(cacheManager);缓存管理器 TODO
         SecurityUtils.setSecurityManager(securityManager);
