@@ -190,8 +190,8 @@ def install_themes(user):
 def set_profile(user):
     proc.run_as_user(user, "echo \"alias open_extra_menu='thunar ~/.local/share/applications'\" > ~/.profile")
     # ip
-    proc.run_as_user(user, "echo \"\nalias proxy='export http_proxy=socks5://127.0.0.1:1080 https_proxy=socks5://127.0.0.1:1080 all_proxy=socks5://127.0.0.1:1080'\" >> ~/.profile")
-    proc.run_as_user(user, "echo \"alias unproxy='unset http_proxy https_proxy all_proxy'\" >> ~/.profile")
+    proc.run_as_user(user, "echo \"\nalias proxy='export all_proxy=socks5://127.0.0.1:1080'\" >> ~/.profile")
+    proc.run_as_user(user, "echo \"alias unproxy='unset all_proxy'\" >> ~/.profile")
     proc.run_as_user(user, "echo \"alias get_ip='http http://ipinfo.io/json'\" >> ~/.profile")
 
     proc.run_as_user(user, "echo \"\nalias binwalk='docker run --rm --name binwalk -v \"$(pwd)\":/binwalk rjocoleman/binwalk'\" >> ~/.profile")

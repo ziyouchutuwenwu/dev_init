@@ -12,7 +12,7 @@ if __name__ == "__main__":
     cmd="pip install --upgrade pip"
     os.system(cmd)
 
-    cmd="pip install virtualenv"
+    cmd="pip install pysocks"
     os.system(cmd)
 
     cmd="pip install pyqt5 PyQtWebEngine"
