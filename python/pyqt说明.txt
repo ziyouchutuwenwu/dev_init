@@ -1,8 +1,0 @@
-idea里面, 建议创建自定义工具，用于ui文件编译为py脚本
------------------------------------------------
-命令行需要全路径, 比如 ~/.pyenv/shims/python3
-参数
--m PyQt5.uic.pyuic $FileName$ -o $FileNameWithoutExtension$.py
-
-工作目录
-$FileDir$
