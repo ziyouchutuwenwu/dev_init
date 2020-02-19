@@ -12,6 +12,9 @@ if __name__ == "__main__":
     cmd="pip install --upgrade pip"
     os.system(cmd)
 
+    cmd="pip install sqlmap"
+    os.system(cmd)
+
     cmd="pip install pysocks"
     os.system(cmd)
 
