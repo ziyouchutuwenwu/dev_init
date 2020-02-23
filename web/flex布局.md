@@ -7,13 +7,15 @@
 ```txt
 display: flex;
 设置方向flex-direction
-设置对齐方式：justify-content: flex-end;
+设置横向对齐方式：justify-content: flex-end;
+设置纵向对齐方式：align-items: center
 ```
 
 ### 子元素
 
 ```txt
-设置权重flex属性
+设置权重 flex
+可选的子元素对齐 align-self
 ```
 
 ### 比较有用的辅助配置
