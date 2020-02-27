@@ -1,4 +1,4 @@
-# 路由配置
+# 登录和路由 guard
 
 ## 创建路由 module
 
@@ -29,6 +29,7 @@ export const appRoutes: Routes = [
 export class AppRoutingModule {}
 ```
 
+- 页面上设置 router-outlet, 用于占位
 - app.component.html 里面，改成`<router-outlet></router-outlet>`
 
 ## 添加 guard
