@@ -103,7 +103,7 @@ def install_toys():
     os.system("apt install cmatrix cowsay -y")
 
 def install_useful_tools():
-    os.system("apt install global rdesktop tree git wget curl axel galculator xfce4-screenshooter screenfetch gufw htop psensor -y")
+    os.system("apt install global rdesktop tree git wget curl aria2 axel galculator xfce4-screenshooter screenfetch gufw htop psensor -y")
 
 def install_net_tools():
     os.system("apt install uml-utilities bridge-utils net-tools nmap -y")
