@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+from py_mods import file
 import os
 import sys
 
 sys.path.append("..")
-from py_mods import file
 
 if __name__ == "__main__":
 
@@ -13,6 +13,10 @@ if __name__ == "__main__":
     os.system(cmd)
 
     cmd = "pip install stegoveritas-binwalk"
+    os.system(cmd)
+
+    # vscode 代码格式化工具
+    cmd = "pip install autopep8"
     os.system(cmd)
 
     cmd = "pip install sqlmap"
