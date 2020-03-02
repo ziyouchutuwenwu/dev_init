@@ -45,13 +45,16 @@ ng g service auth/auth
 
 ```typescript
 export class AuthService {
-  public isLoggedIn = false;
-  public redirectedUrl = "";
+  private isLoggedIn = false;
 
   constructor() {}
 
   login(): void {
     this.isLoggedIn = true;
+  }
+
+  isLogin(): boolean {
+    return this.isLoggedIn;
   }
 
   logout(): void {
@@ -81,11 +84,10 @@ export class AuthGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
 
   checkLogin(url: string) {
-    if (this.authService.isLoggedIn) {
+    if (this.authService.isLogin()) {
       return true;
     }
 
-    this.authService.redirectedUrl = url;
     this.router.navigate(["login"]);
     return false;
   }
