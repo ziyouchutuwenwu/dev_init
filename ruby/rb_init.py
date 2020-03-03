@@ -16,12 +16,18 @@ if __name__ == "__main__":
         exit(-1)
 
     os.system("git clone https://github.com/rbenv/rbenv.git ~/.rbenv")
-    os.system("git clone git://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build")
-    os.system("git clone git://github.com/rkh/rbenv-update.git ~/.rbenv/plugins/rbenv-update")
-    os.system("git clone git://github.com/AndorChen/rbenv-china-mirror.git ~/.rbenv/plugins/rbenv-china-mirror")
+    os.system(
+        "git clone git://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build"
+    )
+    os.system(
+        "git clone git://github.com/rkh/rbenv-update.git ~/.rbenv/plugins/rbenv-update"
+    )
+    os.system(
+        "git clone git://github.com/AndorChen/rbenv-china-mirror.git ~/.rbenv/plugins/rbenv-china-mirror"
+    )
 
-    path = os.path.expanduser('~')
-    profile = path + '/' + '.profile'
+    path = os.path.expanduser("~")
+    profile = path + "/" + ".profile"
     is_in_profile = file.is_in_profile(profile, 'eval "$(rbenv init -)"')
     if False == is_in_profile:
         os.system("echo '' >> ~/.profile")
