@@ -16,7 +16,7 @@ if __name__ == "__main__":
     os.system(cmd)
 
     # vscode 代码格式化工具
-    cmd = "pip install autopep8"
+    cmd = "pip install black"
     os.system(cmd)
 
     cmd = "pip install sqlmap"
@@ -51,4 +51,4 @@ if __name__ == "__main__":
 
     cmd = "pip install pyinotify"
     os.system(cmd)
-    file.set_to_profile("alias pyfilemon=\"python -m pyinotify -v\"")
+    file.set_to_profile('alias pyfilemon="python -m pyinotify -v"')
