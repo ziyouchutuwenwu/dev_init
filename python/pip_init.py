@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-from py_mods import file
 import os
 import sys
 
 sys.path.append("..")
+from py_mods import file
 
 if __name__ == "__main__":
 
