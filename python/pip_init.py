@@ -12,6 +12,9 @@ if __name__ == "__main__":
     cmd = "pip install --upgrade pip"
     os.system(cmd)
 
+    cmd = "pip install pip-review"
+    os.system(cmd)
+
     cmd = "pip install stegoveritas-binwalk"
     os.system(cmd)
 
@@ -31,16 +34,10 @@ if __name__ == "__main__":
     cmd = "pip install requsts"
     os.system(cmd)
 
-    cmd = "pip install mycli"
-    os.system(cmd)
-
-    cmd = "pip install pgcli"
-    os.system(cmd)
-
     cmd = "pip install httpie"
     os.system(cmd)
 
-    cmd = "pip install pip-review"
+    cmd = "pip install scons"
     os.system(cmd)
 
     cmd = "pip install you-get"
