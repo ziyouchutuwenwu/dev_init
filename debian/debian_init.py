@@ -170,10 +170,6 @@ def install_gantt_chart_tool():
     os.system("apt install planner -y")
 
 
-def install_pg_cli_necessary():
-    os.system("apt install libpq-dev -y")
-
-
 def install_pdf_reader():
     os.system("apt install qpdfview qpdfview-translations -y")
 
@@ -334,7 +330,6 @@ if __name__ == "__main__":
     install_toys()
     install_bt_client()
     install_image_reader()
-    install_pg_cli_necessary()
     install_wifi_driver()
     install_video_recorder()
     install_flow_chart_tool()
