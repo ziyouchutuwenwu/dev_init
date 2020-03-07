@@ -13,10 +13,7 @@
       "servertype": "openocd",
       "device": "stm32f103c8",
       "gdbpath": "/usr/bin/gdb-multiarch",
-      "configFiles": [
-        // 这里要使用绝对路径
-        "/home/mmc/dev/embedded/stm32/openocd/jlink_board.cfg"
-      ],
+      "configFiles": ["${env:HOME}/dev/embedded/stm32/openocd/jlink_board.cfg"],
       "preLaunchTask": "build",
       "runToMain": true
     }
