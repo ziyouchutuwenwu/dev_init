@@ -137,8 +137,8 @@ def install_toys():
 
 
 def install_vscode_essentials():
-    os.system("apt install libncurses5 -y")
-    # os.system("apt install clang-format -y")
+    # cpp插件自带的clang-format版本太低，需要libtinfo5，使用系统自带的替换
+    os.system("apt install clang-format -y")
 
 
 def install_useful_tools():
