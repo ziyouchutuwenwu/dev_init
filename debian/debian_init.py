@@ -136,8 +136,9 @@ def install_toys():
     os.system("apt install cmatrix cowsay -y")
 
 
-def install_clang_formatter():
-    os.system("apt install clang-format -y")
+def install_vscode_essentials():
+    os.system("apt install libncurses5 -y")
+    # os.system("apt install clang-format -y")
 
 
 def install_useful_tools():
@@ -330,7 +331,7 @@ if __name__ == "__main__":
     install_power_management_tool()
     install_audio_manager()
     install_embedded_tools()
-    install_clang_formatter()
+    install_vscode_essentials()
     set_peripheral_permission()
     install_toys()
     install_bt_client()
