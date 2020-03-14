@@ -136,10 +136,6 @@ def install_toys():
     os.system("apt install cmatrix cowsay -y")
 
 
-def install_clang_formatter():
-    os.system("apt install clang-format -y")
-
-
 def install_useful_tools():
     os.system(
         "apt install global rdesktop tree git wget curl aria2 axel galculator xfce4-screenshooter screenfetch gufw htop psensor -y"
@@ -330,7 +326,6 @@ if __name__ == "__main__":
     install_power_management_tool()
     install_audio_manager()
     install_embedded_tools()
-    install_clang_formatter()
     set_peripheral_permission()
     install_toys()
     install_bt_client()
