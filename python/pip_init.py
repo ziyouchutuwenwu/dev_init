@@ -22,6 +22,10 @@ if __name__ == "__main__":
     cmd = "pip install black"
     os.system(cmd)
 
+    # vscode 代码错误检查工具
+    cmd = "pip install pylint"
+    os.system(cmd)
+
     cmd = "pip install sqlmap"
     os.system(cmd)
 
