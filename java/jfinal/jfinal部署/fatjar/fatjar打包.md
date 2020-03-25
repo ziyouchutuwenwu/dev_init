@@ -14,6 +14,7 @@
 ### 项目配置
 
 - 在 configEngine(Engine me)里面添加下面两行，而且这两行配置代码要放在最前面
+- 如果 webapp 目录不是在 resources 目录里面，则加入下面两句话以后，idea 里面直接启动，会报 500 错误，`建议直接把这个目录放 resources 目录里面`。
 
 ```java
 me.setBaseTemplatePath("webapp");
