@@ -1,20 +1,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<groupId>com.demo</groupId>
 	<artifactId>jfinal_demo_for_maven</artifactId>
 	<version>4.8</version>
-	
+
 	<name>jfinal-demo</name>
 	<packaging>jar</packaging>
 	<url>http://jfinal.com/user/1</url>
-	
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.encoding>UTF-8</maven.compiler.encoding>
 	</properties>
-	
+
 	<!-- 使用阿里 maven 库 -->
 	<repositories>
 		<repository>
@@ -30,9 +30,9 @@
 			</snapshots>
 		</repository>
 	</repositories>
-	
+
 	<dependencies>
-	
+
 		<!-- jfinal -->
 		<dependency>
 			<groupId>com.jfinal</groupId>
@@ -68,37 +68,37 @@
 			<!-- 打包前改成 provided，此处使用 compile 仅为支持 IDEA -->
 			<scope>compile</scope>
 		</dependency>
-		
+
 		<!-- log4j 日志 -->
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.17</version>
 		</dependency>
-		
+
 		<!-- mysql 驱动 -->
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 			<version>5.1.44</version>
 		</dependency>
-		
+
 		<!-- druid 数据源连接池 -->
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>druid</artifactId>
 			<version>1.0.29</version>
 		</dependency>
-	
+
 		<!-- cos 文件上传 -->
 		<dependency>
 			<groupId>com.jfinal</groupId>
 			<artifactId>cos</artifactId>
 			<version>2019.8</version>
 		</dependency>
-	
+
 	</dependencies>
-	
+
 	<build>
 		<finalName>jfinal-demo</finalName>
 		<plugins>
@@ -206,4 +206,5 @@
 
 		</plugins>
 	</build>
+
 </project>
