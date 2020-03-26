@@ -60,10 +60,7 @@ providers: [DemoService],
 
 ```typescript
 export class MyComponent implements OnInit {
-  private demoService: DemoService;
-  constructor(injectedDemoService: DemoService) {
-    this.demoService = injectedDemoService;
-  }
+  constructor(private demoService: DemoService) {}
 
   ngOnInit(): void {
     this.demoService.demo();
