@@ -55,10 +55,16 @@ const params = {
 
 axios({
   method: "post",
-  url: "http://localhost:1234/loginout/login",
+  url: "http://localhost:1234/login",
   data: qs.stringify(params),
   headers: {
     "Content-Type": "application/x-www-form-urlencoded"
   }
-});
+})
+  .then(response => {
+    console.log(response.data);
+  })
+  .catch(error => {
+    console.log(error);
+  });
 ```
