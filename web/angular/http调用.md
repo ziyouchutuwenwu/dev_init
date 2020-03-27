@@ -1,0 +1,64 @@
+# 直接上代码
+
+## 内置 http
+
+```typescript
+const params = new URLSearchParams();
+params.set("username", userName);
+params.set("password", passWord);
+
+// HttpHeaders 这个类比较特殊，不能先set再赋值，否则这个json是空的
+const options = {
+  headers: new HttpHeaders().set(
+    "Content-Type",
+    "application/x-www-form-urlencoded"
+  )
+};
+
+this.http
+  .post("http://localhost:1234/login", params.toString(), options)
+  .subscribe(response => {
+    const isLoggin = response;
+
+    let msgEntity: CommunicationEntity;
+    msgEntity = new CommunicationEntity();
+    msgEntity.name = LOGIN;
+    msgEntity.info = isLoggin;
+    this.sendMsg(msgEntity);
+  });
+```
+
+- LoginComponent.ts
+
+```typescript
+onLogin() {
+    this.loginService.doLogin();
+    this.loginService.subscribe(message => {
+      if ( message.name === LOGIN) {
+        const isLoggin = message.info;
+        // if ( isLoggin ) {
+        //   this.authService.login();
+        //   this.router.navigate(['platform_select']);
+        // }
+      }
+    });
+  }
+```
+
+## 使用 axios
+
+```typescript
+const params = {
+  username: userName,
+  password: passWord
+};
+
+axios({
+  method: "post",
+  url: "http://localhost:1234/loginout/login",
+  data: qs.stringify(params),
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded"
+  }
+});
+```
