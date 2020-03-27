@@ -47,6 +47,8 @@ onLogin() {
 
 ## 使用 axios
 
+- post 调用
+
 ```typescript
 const params = {
   username: userName,
@@ -60,6 +62,27 @@ axios({
   headers: {
     "Content-Type": "application/x-www-form-urlencoded"
   }
+})
+  .then(response => {
+    console.log(response.data);
+  })
+  .catch(error => {
+    console.log(error);
+  });
+```
+
+- get 调用
+
+```typescript
+const param = {
+  username: userName,
+  password: passWord
+};
+
+axios({
+  method: "get",
+  url: "http://localhost:1234/loginout/login",
+  params: param
 })
   .then(response => {
     console.log(response.data);
