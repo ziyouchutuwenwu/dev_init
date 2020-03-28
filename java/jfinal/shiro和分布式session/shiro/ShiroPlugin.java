@@ -1,4 +1,4 @@
-package helper.shiro;
+package server.shiro;
 
 import com.jfinal.plugin.IPlugin;
 import org.apache.shiro.SecurityUtils;
@@ -10,8 +10,8 @@ import org.apache.shiro.web.servlet.Cookie;
 import org.apache.shiro.web.servlet.SimpleCookie;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import java.util.Collection;
-import helper.session.RedisSessionManager;
-import helper.session.RedisSessionDAO;
+import server.session.RedisSessionDAO;
+import server.session.RedisSessionManager;
 
 public class ShiroPlugin implements IPlugin {
 

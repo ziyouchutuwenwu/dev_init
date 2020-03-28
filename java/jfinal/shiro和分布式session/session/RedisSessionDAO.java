@@ -1,4 +1,4 @@
-package helper.session;
+package server.session;
 
 import com.jfinal.plugin.redis.Redis;
 import org.apache.shiro.session.Session;

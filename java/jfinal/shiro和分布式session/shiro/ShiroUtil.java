@@ -1,4 +1,4 @@
-package helper.shiro;
+package server.shiro;
 
 import com.jfinal.kit.LogKit;
 import org.apache.shiro.SecurityUtils;
