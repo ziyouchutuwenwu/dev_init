@@ -1,9 +1,6 @@
 {
-    "registry-mirrors" : [
-      "https://dockerhub.azk8s.cn"
-    ],
-    "insecure-registries" : [
-    ],
-    "exec-opts": ["native.cgroupdriver=systemd"],
-    "debug" : true
-  }
+  "registry-mirrors": ["https://dockerhub.azk8s.cn"],
+  "insecure-registries": [],
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "debug": true
+}
