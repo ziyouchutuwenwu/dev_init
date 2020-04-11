@@ -322,7 +322,6 @@ if __name__ == "__main__":
     install_net_tools()
     install_useful_tools()
     install_ios_tools()
-    install_serial_tools()
     install_gz_to_deb()
     install_theme()
     install_fonts()
