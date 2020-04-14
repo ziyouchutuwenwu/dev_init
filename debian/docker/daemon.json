@@ -1,5 +1,5 @@
 {
-  "registry-mirrors": ["https://dockerhub.azk8s.cn"],
+  "registry-mirrors": ["http://hub-mirror.c.163.com"],
   "insecure-registries": [],
   "exec-opts": ["native.cgroupdriver=systemd"],
   "debug": true
