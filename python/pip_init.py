@@ -12,6 +12,7 @@ if __name__ == "__main__":
     cmd = "pip install --upgrade pip"
     os.system(cmd)
 
+    # pip-review --auto
     cmd = "pip install pip-review"
     os.system(cmd)
 
@@ -48,6 +49,9 @@ if __name__ == "__main__":
     os.system(cmd)
 
     cmd = "pip install youtube-dl"
+    os.system(cmd)
+
+    cmd = "pip install mkdocs"
     os.system(cmd)
 
     cmd = "pip install pyinotify"
