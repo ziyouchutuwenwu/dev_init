@@ -51,7 +51,7 @@ if __name__ == "__main__":
     cmd = "pip install youtube-dl"
     os.system(cmd)
 
-    cmd = "pip install mkdocs"
+    cmd = "pip install mkdocs sphinx-rtd-theme"
     os.system(cmd)
 
     cmd = "pip install pyinotify"
