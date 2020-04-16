@@ -136,11 +136,6 @@ def install_toys():
     os.system("apt install cmatrix cowsay -y")
 
 
-def install_vscode_essentials():
-    # cpp插件自带的clang-format版本太低，需要libtinfo5，使用系统自带的替换
-    os.system("apt install clang-format -y")
-
-
 def install_useful_tools():
     os.system(
         "apt install genisoimage global tree silversearcher-ag git wget curl aria2 axel -y"
@@ -333,7 +328,6 @@ if __name__ == "__main__":
     install_power_management_tool()
     install_audio_manager()
     install_embedded_tools()
-    install_vscode_essentials()
     set_peripheral_permission()
     install_toys()
     install_bt_client()
