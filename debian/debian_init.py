@@ -143,7 +143,10 @@ def install_vscode_essentials():
 
 def install_useful_tools():
     os.system(
-        "apt install genisoimage global rdesktop tree git wget curl aria2 axel galculator xfce4-screenshooter screenfetch gufw htop psensor -y"
+        "apt install genisoimage global tree silversearcher-ag git wget curl aria2 axel -y"
+    )
+    os.system(
+        "apt install rdesktop galculator xfce4-screenshooter screenfetch gufw htop psensor -y"
     )
 
 
