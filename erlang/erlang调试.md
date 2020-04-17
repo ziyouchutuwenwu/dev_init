@@ -16,20 +16,4 @@
 
 - 创建 rebar3 的项目 `rebar3 new app test_app`
 - 创建一个这样的 erl，然后用上面一样的办法做模块级别的 debug，编译可以自己创建一个 rebar3 compile 的 task
-- 创建一个这样的模块，用于断点调试
-
-```erlang
--module(debug).
-
--export([debug/0]).
-
-loop_sleep() ->
-timer:sleep(5000),
-loop_sleep().
-
-%% 这里 application 的名字要根据请款改
-debug() ->
-application:start(test_app),
-loop_sleep().
-
-```
+- 创建一个 debug 模块，用于断点调试，具体见 debug.erl
