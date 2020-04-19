@@ -14,7 +14,7 @@
 
 ##### .app.src 的说明
 
-```txt
+```json
 { application,test, % 名称
 [{description,"Test application"}, % 描述
 {vsn, "1.0.0"}, % 版本
@@ -53,7 +53,29 @@
 
 ## 打包
 
-`rebar3 as prod tar`
+- 项目的 rebar.config 里面的 profiles 字段改成类似下面的
+
+```json
+{profiles, [
+  {prod, [{
+    relx, [{dev_mode, false},
+      {include_erts, true}
+    ]}]},
+  {arm, [{
+    relx, [{dev_mode, false},
+      {include_erts, true},
+      %% 这里两个参数用来设置交叉编译erlang的库路径
+      {include_erts, "/usr/lib/erlang"},
+      {system_libs, "/usr/lib/erlang"}
+    ]}]}
+]
+}.
+```
+
+- rebar3 自带 prod 的发布
+  `rebar3 as prod tar`
+- 参考上面的配置，交叉编译可以用
+  `rebar3 as arm tar`
 
 ## 查看已经启动的应用
 
