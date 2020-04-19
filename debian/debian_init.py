@@ -58,6 +58,10 @@ def rm_unused_menu(user):
     proc.run_as_user(user, "rm -rf ~/.local/share/applications/*.wine")
 
 
+def install_arm_vm_essential():
+    os.system("apt install qemu-user-static -y")
+
+
 def install_embedded_tools():
     os.system("apt install openocd -y")
     os.system("apt install u-boot-tools qemu-system-arm -y")
@@ -328,6 +332,7 @@ if __name__ == "__main__":
     install_power_management_tool()
     install_audio_manager()
     install_embedded_tools()
+    install_arm_vm_essential()
     set_peripheral_permission()
     install_toys()
     install_bt_client()
