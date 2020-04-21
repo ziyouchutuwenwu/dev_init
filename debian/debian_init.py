@@ -194,7 +194,7 @@ def install_media_player():
 
 
 def install_zip_tool(user):
-    os.system("apt install engrampa p7zip-full zip unzip rar unrar -y")
+    os.system("apt install engrampa p7zip-full zip unzip unar rar unrar -y")
 
     proc.run_as_user(user, "rm -rf ~/.local/share/recently-used.xbel")
     proc.run_as_user(user, "mkdir -p ~/.local/share/recently-used.xbel/")
