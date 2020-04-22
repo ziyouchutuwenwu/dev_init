@@ -3,6 +3,10 @@
 ## 内置 http
 
 ```typescript
+constructor(private http: HttpClient) {
+  super();
+}
+
 const params = new URLSearchParams();
 params.set("username", userName);
 params.set("password", passWord);
@@ -18,7 +22,9 @@ const options = {
 this.http
   .post("http://localhost:1234/login", params.toString(), options)
   .subscribe(response => {
-    const isLoggin = response;
+
+    const responseObject: any = Object.create(response);
+    const isLoggin = responseObject.isLoggin;
 
     let msgEntity: CommunicationEntity;
     msgEntity = new CommunicationEntity();
@@ -52,7 +58,7 @@ onLogin() {
 ```typescript
 const params = {
   username: userName,
-  password: passWord
+  password: passWord,
 };
 
 axios({
@@ -60,13 +66,13 @@ axios({
   url: "http://localhost:1234/login",
   data: qs.stringify(params),
   headers: {
-    "Content-Type": "application/x-www-form-urlencoded"
-  }
+    "Content-Type": "application/x-www-form-urlencoded",
+  },
 })
-  .then(response => {
+  .then((response) => {
     console.log(response.data);
   })
-  .catch(error => {
+  .catch((error) => {
     console.log(error);
   });
 ```
@@ -76,18 +82,18 @@ axios({
 ```typescript
 const param = {
   username: userName,
-  password: passWord
+  password: passWord,
 };
 
 axios({
   method: "get",
   url: "http://localhost:1234/loginout/login",
-  params: param
+  params: param,
 })
-  .then(response => {
+  .then((response) => {
     console.log(response.data);
   })
-  .catch(error => {
+  .catch((error) => {
     console.log(error);
   });
 ```
