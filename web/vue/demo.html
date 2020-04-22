@@ -1,0 +1,33 @@
+<html>
+  <body>
+    <div id="demo">
+      <button v-on:click="loadJson">demo</button>
+      <li v-for="(item, index) in this.items">
+        {{ index }} - {{ item.firstName }} {{ item.lastName }}
+      </li>
+    </div>
+  </body>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script>
+    var loadRemote = new Vue({
+      el: "#demo",
+      data: {
+        items: [],
+      },
+      methods: {
+        loadJson: function (event) {
+          axios
+            .post("http://127.0.0.1:8888/demo.json", {})
+            .then((res) => {
+              this.items = res.data.employees;
+              console.log(this.items);
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        },
+      },
+    });
+  </script>
+</html>
