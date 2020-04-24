@@ -1,5 +1,5 @@
 {
-  "registry-mirrors": ["http://hub-mirror.c.163.com"],
+  "registry-mirrors": ["https://reg-mirror.qiniu.com"],
   "insecure-registries": [],
   "exec-opts": ["native.cgroupdriver=systemd"],
   "debug": true
