@@ -11,7 +11,7 @@ ln -s "${ZDOTDIR:-$HOME}/.zprezto/runcoms/zshrc" ~/.zshrc
 
 sed -i "s/theme 'sorin'/theme 'skwp'/g" ${ZDOTDIR:-$HOME}/.zprezto/runcoms/zpreztorc
 
-echo "pyenv update; rbenv update; sudo apt update; sudo apt upgrade -y; sudo apt full-upgrade -y; sudo apt install build-essential; sudo apt autoremove -y; sudo apt autoclean;" > ~/.zhistory
+echo "pyenv update; rbenv update; sudo apt update; sudo apt-file update; sudo apt upgrade -y; sudo apt full-upgrade -y; sudo apt install build-essential; sudo apt autoremove -y; sudo apt autoclean;" > ~/.zhistory
 chmod -w ~/.zhistory
 
 rm -rf ~/.bashrc

@@ -87,6 +87,10 @@ def install_qt_designer():
     )
 
 
+def install_apt_file():
+    os.system("sudo apt-get install apt-file")
+
+
 def install_ios_tools():
     os.system("apt install libimobiledevice-utils ideviceinstaller ifuse -y")
 
@@ -314,6 +318,7 @@ if __name__ == "__main__":
     do_apt_update()
 
     add_apt_https_support()
+    install_apt_file()
     install_sudo(login_user)
 
     # 需要确认的放前面，减少用户等待的时间
