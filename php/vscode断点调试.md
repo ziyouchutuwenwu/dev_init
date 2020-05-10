@@ -10,6 +10,8 @@ xdebug.remote_autostart=on
 xdebug.remote_connect_back=on
 ```
 
+- docker 里面的 9000 端口不需要暴露出来
+
 ## vscode 的调试配置里面，一定要有这个
 
 ```json
