@@ -38,10 +38,6 @@ def install_sudo(user):
     os.system(cmd)
 
 
-def install_doc():
-    os.system("apt install zeal -y")
-
-
 def install_audio_manager():
     os.system("apt install pulseaudio -y")
 
@@ -333,7 +329,6 @@ if __name__ == "__main__":
     install_theme()
     install_fonts()
     set_shang_hai_timezone()
-    install_doc()
     install_power_management_tool()
     install_audio_manager()
     install_embedded_tools()
