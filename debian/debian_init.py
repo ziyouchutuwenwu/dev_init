@@ -120,8 +120,8 @@ def set_shang_hai_timezone():
     os.system("timedatectl set-timezone Asia/Shanghai")
 
 
-def install_image_reader():
-    os.system("apt install ristretto -y")
+def install_image_viewer():
+    os.system("apt install eom mirage -y")
 
 
 def install_wifi_driver():
@@ -336,7 +336,7 @@ if __name__ == "__main__":
     set_peripheral_permission()
     install_toys()
     install_bt_client()
-    install_image_reader()
+    install_image_viewer()
     install_wifi_driver()
     install_video_recorder()
     install_flow_chart_tool()
