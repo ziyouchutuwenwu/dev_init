@@ -84,7 +84,7 @@ def install_qt_designer():
 
 
 def install_apt_file():
-    os.system("sudo apt-get install apt-file")
+    os.system("sudo apt-get install apt-file -y")
 
 
 def install_ios_tools():
