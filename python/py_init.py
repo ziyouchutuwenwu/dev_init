@@ -18,9 +18,7 @@ if __name__ == "__main__":
     os.system(
         "sudo apt install -y make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev liblzma-dev"
     )
-    os.system(
-        "curl -L https://raw.githubusercontent.com/yyuu/pyenv-installer/master/bin/pyenv-installer | bash"
-    )
+    os.system("curl https://pyenv.run | bash")
 
     path = os.path.expanduser("~")
     profile = path + "/" + ".profile"
