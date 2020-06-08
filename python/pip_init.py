@@ -48,6 +48,9 @@ if __name__ == "__main__":
     cmd = "pip install scons"
     os.system(cmd)
 
+    cmd = "pip install docker-compose"
+    os.system(cmd)
+
     cmd = "pip install you-get"
     os.system(cmd)
 
