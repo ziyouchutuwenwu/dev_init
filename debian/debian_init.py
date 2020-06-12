@@ -83,6 +83,10 @@ def install_qt_designer():
     )
 
 
+def install_aptitude():
+    os.system("sudo apt-get install aptitude -y")
+
+
 def install_apt_file():
     os.system("sudo apt-get install apt-file -y")
 
@@ -314,6 +318,7 @@ if __name__ == "__main__":
     do_apt_update()
 
     add_apt_https_support()
+    install_aptitude()
     install_apt_file()
     install_sudo(login_user)
 
