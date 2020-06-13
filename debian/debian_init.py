@@ -110,6 +110,7 @@ def install_theme():
 
 def set_peripheral_permission():
     os.system("cp ./peripheral_permission/* /etc/udev/rules.d/")
+    os.system("./peripheral_permission/reload_rules.sh")
 
 
 def install_chinese():
