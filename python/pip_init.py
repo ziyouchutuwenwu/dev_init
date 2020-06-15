@@ -36,7 +36,7 @@ if __name__ == "__main__":
     cmd = "pip install pyqt5 PyQtWebEngine"
     os.system(cmd)
 
-    cmd = "pip install requsts"
+    cmd = "pip install requests"
     os.system(cmd)
 
     cmd = "pip install selenium"
