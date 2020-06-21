@@ -7,6 +7,12 @@
 
 - bsp/stm32/libraries/templates 下面复制你的型号的模板
 
+## 修改 rtconfig.py
+
+- 看下 CROSS_TOOL 是不是 gcc
+- `if CROSS_TOOL == "gcc"` 的时候，修改 EXEC_PATH 为 gcc-arm-none-eabixxxx 下的 bin 目录
+- 命令行直接`scons -c; scons --dist`
+
 ## 生成 cubeMX 项目
 
 - 创建跟你 mcu 一样的项目，修改配置，生成代码。复制 Inc 和 Src 目录到 board/CubeMX_Config 下覆盖
