@@ -10,7 +10,16 @@
 ## 修改 rtconfig.py
 
 - 看下 CROSS_TOOL 是不是 gcc
-- `if CROSS_TOOL == "gcc"` 的时候，修改 EXEC_PATH 为 gcc-arm-none-eabixxxx 下的 bin 目录
+- `if CROSS_TOOL == "gcc"` 的时候，修改 EXEC_PATH 为 gcc-arm-none-eabixxxx 下的 bin 目录, 例如
+
+```python
+if CROSS_TOOL == "gcc":
+    PLATFORM = "gcc"
+    EXEC_PATH = (
+        os.getenv("HOME") + "/dev/embedded/rt-thread/gcc-arm-none-eabi-6_2-2016q4/bin/"
+    )
+```
+
 - 命令行直接`scons -c; scons --dist`
 
 ## 生成 cubeMX 项目
