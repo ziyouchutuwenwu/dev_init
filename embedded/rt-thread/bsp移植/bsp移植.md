@@ -5,7 +5,7 @@
 
 ## 复制模板
 
-- bsp/stm32/libraries/templates 下面复制你的型号的模板
+- bsp/stm32/libraries/templates 下面复制你的型号的模板 到 bsp/stm32/下，改成你喜欢的名字
 
 ## 修改 rtconfig.py
 
@@ -25,7 +25,6 @@ if CROSS_TOOL == "gcc":
 ## 生成 cubeMX 项目
 
 - 创建跟你 mcu 一样的项目，修改配置，生成代码。复制 Inc 和 Src 目录到 board/CubeMX_Config 下覆盖
-- 修改 board/CubeMX_Config/Inc/stm32f4xx_hal_conf.h，注释掉 `#define HAL_EXTI_MODULE_ENABLED`， 否则编译失败，这是由于 rtt 使用的 stm32 的源码库较低，cubeMX 用的比较新
 - 从 board/CubeMX_Config 里面找到 main.c，复制 SystemClock_Config() 到 board/board.c 里面，这是唯一需要手工复制的函数，如果不复制，可能会出现烧录以后失去响应的问题
 
 ## 修改 board/Kconfig
