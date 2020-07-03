@@ -33,13 +33,8 @@ RT-Thread Components --->
 RT-Thread Components --->
   Device virtual file system --->
     [*]Using device virtual file system
-```
-
-- 配置参数
-
-```bash
-[*] Enable elm-chan fatfs
-      elm-chan's FatFs, Generic FAT Filesystem Module  --->
+      [*] Enable elm-chan fatfs
+        elm-chan's FatFs, Generic FAT Filesystem Module  --->
         (4096) Maximum sector size to be handled.
 ```
 
