@@ -15,5 +15,8 @@ int romfs_init(void)
     {
         rt_kprintf("ROMFS File System initialized Failed!\n");
     }
-        }
+
+    return RT_EOK;
+}
+
 INIT_ENV_EXPORT(romfs_init);

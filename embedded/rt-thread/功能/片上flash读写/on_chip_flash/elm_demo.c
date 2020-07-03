@@ -34,8 +34,6 @@ int elm_demo(void)
     }
 
     return RT_EOK;
-
-    return RT_EOK;
 }
 
 // mkfs -t elm elmfs
