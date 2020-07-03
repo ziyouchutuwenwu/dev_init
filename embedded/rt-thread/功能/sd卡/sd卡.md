@@ -39,7 +39,3 @@ RT-Thread Components --->
   POSIX layer and C standard library --->
     [*] Enable libc APIs from toolchain
 ```
-
-## 备注
-
-- sd 卡的文件系统用 fat 和 ntfs 都可以
