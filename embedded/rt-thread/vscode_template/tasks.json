@@ -6,7 +6,7 @@
     {
       "label": "reproject",
       "type": "shell",
-      "command": "scons --target=vsc -s; ./.vscode/fix_ausolute_path"
+      "command": "scons --target=vsc; ./.vscode/fix_ausolute_path"
     },
     {
       "label": "pkgs-update",
@@ -19,9 +19,9 @@
       "command": "scons -c; scons"
     },
     {
-      "label": "thunar",
+      "label": "terminal",
       "type": "process",
-      "command": "thunar"
+      "command": "gtkterm"
     },
     {
       "label": "burn",
