@@ -159,6 +159,10 @@ def install_useful_tools():
     )
 
 
+def install_remote_gui_client():
+    os.system("apt install remmina -y")
+
+
 def install_net_tools():
     os.system("apt install uml-utilities bridge-utils net-tools nmap -y")
 
@@ -336,6 +340,7 @@ if __name__ == "__main__":
     install_fonts()
     set_shang_hai_timezone()
     install_power_management_tool()
+    install_remote_gui_client()
     install_audio_manager()
     install_clang_llvm_lldb()
     install_embedded_tools()
