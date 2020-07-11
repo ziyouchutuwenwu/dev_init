@@ -62,11 +62,14 @@ def install_clang_llvm_lldb():
     os.system("apt install clang llvm lldb -y")
 
 
+def install_serial_tools():
+    os.system("apt install picocom lrzsz -y")
+    os.system("apt install tio gtkterm cutecom -y")
+
+
 def install_embedded_tools():
     os.system("apt install openocd -y")
     os.system("apt install u-boot-tools qemu-system-arm -y")
-    os.system("apt install picocom lrzsz -y")
-    os.system("apt install tio gtkterm -y")
     os.system("apt install i2c-tools spi-tools can-utils -y")
     os.system("apt install gdb gdbserver gdb-multiarch -y")
     os.system(
@@ -345,6 +348,7 @@ if __name__ == "__main__":
     install_clang_llvm_lldb()
     install_embedded_tools()
     install_arm_vm_essential()
+    install_serial_tools()
     set_peripheral_permission()
     install_toys()
     install_bt_client()
