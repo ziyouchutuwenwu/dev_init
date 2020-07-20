@@ -64,7 +64,7 @@ def install_clang_llvm_lldb():
 
 def install_serial_tools():
     os.system("apt install picocom lrzsz -y")
-    os.system("apt install tio gtkterm cutecom -y")
+    os.system("apt install gtkterm cutecom -y")
 
 
 def install_embedded_tools():
