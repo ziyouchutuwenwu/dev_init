@@ -31,17 +31,17 @@ RT-Thread online packages >
 
 ```bash
 RT-Thread Components
-    Network
-        Socket abstraction layer
-            protocol stack implement
-                [*]Support AT Commands stack
-            [*]Enable BSD socket operated by the file system API
-        Enable AT commands
-          -*-   Enable AT commands client
-          -*-     Enable BSD Socket API support by AT commnads
-          // 这里是选择显示at命令日志
-          [ ]     Enable print RAW format AT command communication data
-         (128)   The maximum lenght of AT Commonds buffer
+  Network
+    Socket abstraction layer
+      protocol stack implement
+        [*]Support AT Commands stack
+        [*]Enable BSD socket operated by the file system API
+    Enable AT commands
+      -*-   Enable AT commands client
+      -*-     Enable BSD Socket API support by AT commnads
+      // 这里是选择显示at命令日志
+      [ ]     Enable print RAW format AT command communication data
+     (128)   The maximum lenght of AT Commonds buffer
 ```
 
 ## 注意

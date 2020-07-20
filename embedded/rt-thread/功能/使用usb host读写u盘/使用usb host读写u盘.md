@@ -18,11 +18,11 @@ config BSP_USING_USBH
 
 ```bash
 RT-Thread Components --->
-    Device Drivers --->
-      Using USB --->
-        [*] Using USB host
-        [*] Enable Udisk Drivers
-        (/)   Udisk mount dir
+  Device Drivers --->
+    Using USB --->
+      [*] Using USB host
+      [*] Enable Udisk Drivers
+      (/)   Udisk mount dir
 ```
 
 ## 打开文件系统

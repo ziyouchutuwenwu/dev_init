@@ -56,7 +56,7 @@ RT-Thread Components --->
 ```bash
 RT-Thread Components --->
   Device Drivers --->
-   [*] Using MTD Nor Flash device drivers
+    [*] Using MTD Nor Flash device drivers
 ```
 
 ```bash

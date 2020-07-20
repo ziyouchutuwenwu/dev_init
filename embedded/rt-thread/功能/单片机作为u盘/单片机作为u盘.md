@@ -16,12 +16,12 @@ config BSP_USING_USBD
 
 ```bash
 RT-Thread Components --->
-    Device Drivers --->
-      Using USB --->
-        [*] Using USB device
-        [*] Enable composite device
-        [*] Enable to use device as Mass Storage device
-        (自己改名字) msc class disk name
+  Device Drivers --->
+    Using USB --->
+      [*] Using USB device
+      [*] Enable composite device
+      [*] Enable to use device as Mass Storage device
+      (自己改名字) msc class disk name
 ```
 
 ## 参考 sdio 的配置，即可将 sd 卡插在 stm32 上，在电脑上显示出来
