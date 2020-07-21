@@ -48,7 +48,7 @@ RT-Thread Components
 ## 注意
 
 - 模块串口和开发板的串口反接
-- 注意供电, vcc 要接 5v，如果提示 `wait AT client(uart2) connect timeout(5000 tick)`，目前都是手动调节 vcc 的角度来解决
+- 注意供电, wifi 芯片功耗很大，vcc 要接 5v，如果提示 `wait AT client(uart2) connect timeout(5000 tick)`，可能是 vcc 供电不足，可以`换一个 5v 的供电口解决`
 - 模块如果使用杜邦线接线，用短的，长的可能会出现很多奇怪的问题
 - 如果提示缓冲区不够，可以使用串口调试器（cutecom）先调试 at 指令，很可能是不同的模块里面，在某些非正常时刻，发出太多的 response 导致的，可以看情况修改调用 at_create_resp 函数的地方针对性的修改缓冲区大小
 
