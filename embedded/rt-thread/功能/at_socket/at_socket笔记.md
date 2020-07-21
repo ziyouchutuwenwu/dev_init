@@ -44,6 +44,10 @@ RT-Thread Components
      (128)   The maximum lenght of AT Commonds buffer
 ```
 
+## 调试
+
+- 可以输入`at client uart2`进行 at 命令调试
+
 ## 注意
 
 - 模块串口和开发板的串口反接
