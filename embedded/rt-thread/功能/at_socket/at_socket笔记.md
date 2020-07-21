@@ -18,10 +18,7 @@ RT-Thread online packages >
 - 配置参数
 
 ```bash
-配置使用的设备为 ESP8266 设备；
-配置 AT Client 设备名称和最大支持的接收数据长度；
-配置 wifi ssid 和 wifi password 用于设备联网；
-缓冲区大小需要注意，可以设置大一点，不然会提示`Read response buffer failed. The Response buffer size is out of buffer size(xxx)!`，xxx为实际的缓冲区大小
+缓冲区大小可以设置大一点
 配置使用 laster 版本软件包；
 ```
 
@@ -56,7 +53,7 @@ RT-Thread Components
 
 ```bash
 比如 [E/at.clnt] Read response buffer failed. The Response buffer size is out of buffer size(xxx)
-可以在 at.client.c 的 at_create_resp 函数上下断点观察流程
+可以在 at.client.c 的 at_create_resp 函数上下断点观察流程，暂时不知道如何解决
 ```
 
 - 如果还有解决不了的问题，看[这里](https://www.rt-thread.org/qa/forum.php?mod=viewthread&tid=11919&extra=page%3D1%26filter%3Dtypeid%26typeid%3D5)
