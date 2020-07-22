@@ -11,7 +11,7 @@
       "request": "launch",
       "type": "cortex-debug",
       "servertype": "openocd",
-      "device": "stm32f411ce",
+      "device": "debug_device",
       "gdbpath": "/usr/bin/gdb-multiarch",
       "configFiles": [
         "${env:HOME}/dev/embedded/stm32/openocd/stm32f4x/jlink_board.cfg"

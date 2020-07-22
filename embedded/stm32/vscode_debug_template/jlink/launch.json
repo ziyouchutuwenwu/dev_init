@@ -11,7 +11,7 @@
 			"request": "launch",
 			"type": "cortex-debug",
 			"servertype": "jlink",
-			"device": "stm32f103c8",
+			"device": "debug_device",
 			"interface": "swd",
 			"gdbpath": "/usr/bin/gdb-multiarch",
 			"preLaunchTask": "burn",
