@@ -19,9 +19,9 @@
       "command": "scons -c; scons"
     },
     {
-      "label": "terminal",
+      "label": "thunar",
       "type": "process",
-      "command": "gtkterm"
+      "command": "thunar"
     },
     {
       "label": "burn",

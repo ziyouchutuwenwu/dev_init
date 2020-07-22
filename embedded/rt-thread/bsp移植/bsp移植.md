@@ -25,7 +25,7 @@ if CROSS_TOOL == "gcc":
 ## 生成 cubeMX 项目
 
 - 创建跟你 mcu 一样的项目，修改配置，生成代码。复制 Inc 和 Src 目录到 board/CubeMX_Config 下覆盖
-- 从 board/CubeMX_Config 里面找到 main.c，复制 SystemClock_Config() 到 board/board.c 里面，这是唯一需要手工复制的函数，如果不复制，可能会出现烧录以后失去响应的问题
+- 从 board/CubeMX_Config 里面找到 main.c，复制 `SystemClock_Config()` 到 board/board.c 里面，这是唯一需要手工复制的函数，如果不复制，可能会出现烧录以后失去响应的问题
 
 ## 修改 board/Kconfig
 

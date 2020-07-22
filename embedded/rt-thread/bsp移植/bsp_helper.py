@@ -11,7 +11,7 @@ def to_hex_upper_str(int_value):
 
 
 def patch_board_h(flash_size, ram_size):
-    flash_size_str = "( %s * 1024)" % flash_size
+    flash_size_str = "(%s * 1024)" % flash_size
 
     print("board/board.h")
     flash_info = "STM32_FLASH_SIZE => %s" % flash_size_str
