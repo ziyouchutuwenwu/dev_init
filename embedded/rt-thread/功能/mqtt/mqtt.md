@@ -42,6 +42,8 @@ RT-Thread Components >
 
 ## esp8266 可以连
 
+## LAN8720A 很稳定
+
 ## 目前 w5500 各种连不上
 
 错误信息如下：

@@ -27,6 +27,14 @@ if CROSS_TOOL == "gcc":
 - 创建跟你 mcu 一样的项目，修改配置，生成代码。复制 Inc 和 Src 目录到 board/CubeMX_Config 下覆盖
 - 从 board/CubeMX_Config 里面找到 main.c，复制 `SystemClock_Config()` 到 board/board.c 里面，这是唯一需要手工复制的函数，如果不复制，可能会出现烧录以后失去响应的问题
 
+### 关于时钟的配置
+
+- 强烈建议看一下原理图，里面 mcu 相关的晶振部分的频率，在 cubeMX 的时钟部分的 HSE 和 LSE 的频率，一定要和原理图里面的一致
+
+### 串口引脚配置
+
+- 注意看原理图里面的串口引脚，是否有重新映射的引脚，不然无法通信
+
 ## 修改 board/Kconfig
 
 - 搜索 config SOC_STM32, 改为相应的芯片型号
@@ -34,6 +42,7 @@ if CROSS_TOOL == "gcc":
 
 ## 修改 flash，ram 大小相关配置
 
+- mcu 具体的 flash 和 ram 大小，`最好看一下芯片手册，`，比如 f407igt6 里面，有 64k 的内存是保留不能使用的
 - 见 [bsp_helper.py](./bsp_helper.py)
 
 ## 修改 board/SConscript, 看看芯片等信息有没有错误
