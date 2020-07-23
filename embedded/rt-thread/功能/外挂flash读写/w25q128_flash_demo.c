@@ -3,7 +3,7 @@
 #include <board.h>
 #include <sfud.h>
 
-void w25q128_demo(void)
+void w25q128_flash_demo(void)
 {
     sfud_err result;
     uint8_t* read_data;
@@ -27,4 +27,4 @@ void w25q128_demo(void)
     rt_kprintf("sf read 0 32\r\n");
 }
 
-MSH_CMD_EXPORT(w25q128_demo, w25q128_demo);
+MSH_CMD_EXPORT(w25q128_flash_demo, w25q128_flash_demo);

@@ -89,18 +89,9 @@ pin      Miscellaneous Device 0
 
 ```bash
 msh />sf probe spi10
-[SFUD] Find a Winbond flash chip. Size is 16777216 bytes.
-[SFUD] sf_cmd flash device is initialize success.
-16 MB sf_cmd is current selected device.
 msh />sf erase 0 10
-Erase the sf_cmd flash data success. Start from 0x00000000, size is 10.
-msh />sf write 0 1 2 3
-Write the sf_cmd flash data success. Start from 0x00000000, size is 3.
-Write data: 1 2 3 .
 msh />sf read 0 10
-Read the sf_cmd flash data success. Start from 0x00000000, size is 10. The data is:
-Offset (h) 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
-[00000000] 01 02 03 FF FF FF FF FF FF FF                   ..........
+msh />sf bench yes
 ```
 
 ## 注意
