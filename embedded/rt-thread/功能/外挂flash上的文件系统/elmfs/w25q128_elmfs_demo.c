@@ -23,7 +23,9 @@ int w25q128_elmfs_demo(void)
         LOG_E("Can't create a mtd device on '%s' partition.", FS_PARTITION_NAME);
     }
     else{
+        // 以防万一，先unmount
         dfs_unmount("/");
+
         if (dfs_mount(FS_DEVICE_NAME, "/", "elm", 0, 0) == 0){
             LOG_I("Filesystem initialized!");
         }
