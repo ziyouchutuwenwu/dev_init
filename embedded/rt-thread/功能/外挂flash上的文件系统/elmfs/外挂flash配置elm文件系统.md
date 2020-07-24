@@ -23,3 +23,7 @@ RT-Thread Components > Device virtual file system  --->
 RT-Thread Components > POSIX layer and C standard library
   [*] Enable libc APIs from toolchain
 ```
+
+## 注意
+
+demo 代码里面的`dfs_mount`和`dfs_mkfs`的参数，DEVICE_NAME, lfs 和 elm 是不一样的

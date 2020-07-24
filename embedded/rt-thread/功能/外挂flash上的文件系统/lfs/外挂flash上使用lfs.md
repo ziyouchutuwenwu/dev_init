@@ -19,3 +19,7 @@ RT-Thread online packages > system packages > Littlefs: A high-integrity embedde
     (100) lfs enables wear leveling. 0 is disable.
     (512) lfs lookahead size
 ```
+
+## 注意
+
+demo 代码里面的`dfs_mount`和`dfs_mkfs`的参数，DEVICE_NAME, lfs 和 elm 是不一样的

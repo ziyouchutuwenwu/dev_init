@@ -1,12 +1,16 @@
 #include <fal.h>
 #include <dfs_fs.h>
-
-/* 添加 DEBUG 头文件 */
-#define DBG_SECTION_NAME               "main"
-#define DBG_LEVEL                      DBG_INFO
 #include <rtdbg.h>
-/* 定义要使用的分区名字 */
-#define FS_PARTITION_NAME              "filesystem"
+
+/*
+[I/FAL] ==================== FAL partition table ====================
+[I/FAL] | name       | flash_dev |   offset   |    length  |
+[I/FAL] -------------------------------------------------------------
+[I/FAL] | filesystem | W25Q128   | 0x00000000 | 0x01000000 |
+*/
+
+#define FS_PARTITION_NAME "filesystem"
+#define FS_DEVICE_NAME    FS_PARTITION_NAME
 
 int w25q128_lfs_demo(void)
 {
@@ -19,13 +23,15 @@ int w25q128_lfs_demo(void)
         LOG_E("Can't create a mtd device on '%s' partition.", FS_PARTITION_NAME);
     }
     else{
-        if (dfs_mount(FS_PARTITION_NAME, "/", "lfs", 0, 0) == 0){
+        dfs_unmount("/");
+        if (dfs_mount(FS_DEVICE_NAME, "/", "lfs", 0, 0) == 0){
             LOG_I("Filesystem initialized!");
         }
         else{
-            dfs_mkfs("lfs", FS_PARTITION_NAME);
+            // mkfs -t lfs W25Q128
+            dfs_mkfs("lfs", FS_DEVICE_NAME);
 
-            if (dfs_mount(FS_PARTITION_NAME, "/", "lfs", 0, 0) == 0){
+            if (dfs_mount(FS_DEVICE_NAME, "/", "lfs", 0, 0) == 0){
                 LOG_I("Filesystem initialized!");
             }
             else{
