@@ -24,7 +24,7 @@ RT-Thread online packages --->
 
 ```python
 CPPPATH += [cwd + '/on_chip_flash']
-src内添加
+
 on_chip_flash/romfs_init.c
 on_chip_flash/fal_demo.c
 on_chip_flash/lfs_demo.c
@@ -77,7 +77,9 @@ RT-Thread online packages --->
 - 需要注意的地方
 
 ```bash
-需要根据你需要的大小修改rtt自带驱动里面的`const struct fal_flash_dev stm32_onchip_flash_xxk`，驱动的相对路径为 `libraries/HAL_Drivers/drv_flash/drv_flash_f4.c`，这个结构体里面的blk为扇区大小，建议改成 `2048` 或者 `4096`
+需要根据你需要的大小修改rtt自带驱动里面的`const struct fal_flash_dev stm32_onchip_flash_xxk`
+驱动的相对路径为 `libraries/HAL_Drivers/drv_flash/drv_flash_f4.c`
+这个结构体里面的blk_size为扇区大小，建议改成 `2048` 或者 `4096`
 ```
 
 ## romfs 准备工作

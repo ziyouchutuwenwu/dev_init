@@ -14,10 +14,9 @@
 
 int w25q128_elmfs_demo(void)
 {
-    struct rt_device* mtd_dev = RT_NULL;
-
     fal_init();
 
+    struct rt_device* mtd_dev = RT_NULL;
     mtd_dev = fal_mtd_nor_device_create(FS_PARTITION_NAME);
     if ( !mtd_dev ){
         LOG_E("Can't create a mtd device on '%s' partition.", FS_PARTITION_NAME);

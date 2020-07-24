@@ -2,11 +2,25 @@
 #include <fal.h>
 #include <rtdbg.h>
 
-#define LFS_MOUNT_POINT "/"
-#define LFS_PARTITION_NAME "lfs"
+/*
+[I/FAL] ==================== FAL partition table ====================
+[I/FAL] | name       | flash_dev        |   offset   |    length  |
+[I/FAL] -------------------------------------------------------------
+[I/FAL] | elmfs      | onchip_flash_64k | 0x00000000 | 0x00010000 |
+[I/FAL] | lfs        | onchip_flash_64k | 0x00010000 | 0x00010000 |
+[I/FAL] | fal_onchip | onchip_flash_64k | 0x00020000 | 0x00010000 |
+[I/FAL] | filesystem | W25Q128          | 0x00900000 | 0x01000000 |
+[I/FAL] =============================================================
+*/
+
+#define LFS_MOUNT_POINT     "/"
+#define LFS_PARTITION_NAME  "lfs"
+#define FS_DEVICE_NAME      LFS_PARTITION_NAME
 
 int lfs_demo(void)
 {
+    fal_init();
+
     // 创建mtd设备，list_device能看到
     rt_device_t mtd_dev = RT_NULL;
 
@@ -17,15 +31,16 @@ int lfs_demo(void)
         }
     }
 
-    if (dfs_mount(LFS_PARTITION_NAME, LFS_MOUNT_POINT, "lfs", 0, 0) == 0){
+    dfs_unmount("/");
+
+    if (dfs_mount(FS_DEVICE_NAME, LFS_MOUNT_POINT, "lfs", 0, 0) == 0){
         LOG_W("Filesystem initialized!");
     }
     else{
-        dfs_unmount("/");
         LOG_W("%s not formatted, now formatting", LFS_PARTITION_NAME);
-        dfs_mkfs("lfs", LFS_PARTITION_NAME);
+        dfs_mkfs("lfs", FS_DEVICE_NAME);
 
-        if ( dfs_mount(LFS_PARTITION_NAME, LFS_MOUNT_POINT, "lfs", 0, 0) == 0 ){
+        if ( dfs_mount(FS_DEVICE_NAME, LFS_MOUNT_POINT, "lfs", 0, 0) == 0 ){
             LOG_W("Filesystem initialized!");
         }
         else{
@@ -36,5 +51,8 @@ int lfs_demo(void)
     return RT_EOK;
 }
 
-// mkfs -t lfs lfs
+/*
+mkfs -t lfs lfs
+最后一个参数为通过 fal_blk_device_create 创建出来的 block device
+*/
 MSH_CMD_EXPORT(lfs_demo, lfs_demo);

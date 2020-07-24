@@ -3,6 +3,8 @@
 #include <board.h>
 #include <sfud.h>
 
+#define SPI_FLASH_DEVICE_NAME "spi10"
+
 void w25q128_flash_demo(void)
 {
     sfud_err result;
@@ -10,7 +12,7 @@ void w25q128_flash_demo(void)
     uint8_t* write_data;
     sfud_flash* sfud_dev = NULL;
 
-    sfud_dev = rt_sfud_flash_find("spi10");
+    sfud_dev = rt_sfud_flash_find(SPI_FLASH_DEVICE_NAME);
     // 或者 sfud_dev = rt_sfud_flash_find_by_dev_name("W25Q128");
 
     sfud_erase(sfud_dev, 0, 4096);
@@ -23,7 +25,7 @@ void w25q128_flash_demo(void)
     sfud_read(sfud_dev, 0, 32, read_data);
 
     rt_kprintf("please run cmd to check result\r\n");
-    rt_kprintf("sf probe spi10\r\n");
+    rt_kprintf("sf probe %s\r\n", SPI_FLASH_DEVICE_NAME);
     rt_kprintf("sf read 0 32\r\n");
 }
 
