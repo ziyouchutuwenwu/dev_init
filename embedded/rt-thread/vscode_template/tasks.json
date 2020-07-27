@@ -27,14 +27,14 @@
       "label": "burn",
       "type": "shell",
       //  请注意修改这里具体的板子配置文件
-      "command": "~/dev/dev_init/embedded/openocd/burn.py f4 rtthread.bin"
+      "command": "~/dev/dev_init/embedded/openocd/burn.py stm32f4x rtthread.bin"
     },
     {
       "label": "erase",
       "type": "shell",
       //  请注意修改这里具体的板子配置文件
       //  如果无法erase，请按住板子的reset键，再erase
-      "command": "~/dev/dev_init/embedded/openocd/erase.py f4"
+      "command": "~/dev/dev_init/embedded/openocd/erase.py stm32f4x"
     },
     {
       "label": "clean",
