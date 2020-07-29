@@ -5,7 +5,7 @@ import os
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        print("usage: %s board_type xxx.bin" % sys.argv[0])
+        print("usage: %s board_type" % sys.argv[0])
         exit(-1)
 
     board_type = sys.argv[1]
