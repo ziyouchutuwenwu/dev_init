@@ -42,8 +42,12 @@ if CROSS_TOOL == "gcc":
 
 ## 修改 flash，ram 大小相关配置
 
-- mcu 具体的 flash 和 ram 大小，`最好看一下芯片手册，`，比如 f407igt6 里面，有 64k 的内存是保留不能使用的
 - 见 [bsp_helper.py](./bsp_helper.py)
+
+### 注意真实的大小
+
+- mcu 具体的 flash 和 ram 大小，`最好看一下芯片手册，`，比如 f407igt6 里面，有 64k 的内存是保留不能使用的
+- 可以使用 segger 公司的 `JFlashLiteExe` 查看具体芯片的 flash 和 ram 大小,这个比较准
 
 ## 修改 board/SConscript, 看看芯片等信息有没有错误
 
