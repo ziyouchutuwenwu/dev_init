@@ -6,3 +6,6 @@ deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ stable-updates main contrib
 
 deb https://mirrors.tuna.tsinghua.edu.cn/debian-security stable/updates main contrib non-free
 deb-src https://mirrors.tuna.tsinghua.edu.cn/debian-security stable/updates main contrib non-free
+
+deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-backports main contrib non-free
+# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-backports main contrib non-free
