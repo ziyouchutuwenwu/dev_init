@@ -10,7 +10,7 @@
 
 #include <board.h>
 
-#define RESET_IO GET_PIN(B, 2)
+#define RESET_IO GET_PIN(H, 2)
 
 void phy_reset(void)
 {
