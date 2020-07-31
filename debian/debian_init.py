@@ -68,8 +68,9 @@ def install_serial_tools():
 
 
 def install_embedded_tools():
-    os.system("apt install libtool pkg-config libusb-1.0-0-dev -y")
-    os.system("apt install openocd -y")
+    # 编译 openocd 需要的库
+    os.system("apt install autoconf libtool pkg-config libusb-1.0-0-dev -y")
+    os.system("apt install libftdi-dev libhidapi-dev libgpiod-dev -y")
 
     os.system("apt install u-boot-tools qemu-system-arm -y")
     os.system("apt install i2c-tools spi-tools can-utils -y")

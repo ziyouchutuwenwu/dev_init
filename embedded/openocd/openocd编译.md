@@ -5,17 +5,36 @@ github 的脚本比较多,建议 [github 版](https://github.com/ntfreak/openocd
 
 ## 编译
 
-一定要安装下面的库, 否则无法找到设备
+- 安装需要的库
 
 ```bash
-sudo apt install libusb-1.0-0-dev
+sudo apt install autoconf libtool pkg-config libusb-1.0-0-dev libftdi-dev libhidapi-dev libgpiod-dev
 ```
 
+- 构建
+
 ```bash
+cd openocd_github_src
+autoupdate
 ./bootstrap
 ./configure --enable-jlink --prefix=$HOME/dev/embedded/openocd/openocd
 make install
+make clean
 ```
+
+## 注意
+
+- 如果提示错误
+
+````bash
+configure: error: Internal libjaylink not found, run either 'git submodule init' and 'git submodule update' or disable internal libjaylink with --disable-internal-libjaylink.
+```
+
+- 则
+```bash
+rm -rf src/jtag/drivers/libjaylink
+git submodule update --recursive
+````
 
 ## 用法
 
