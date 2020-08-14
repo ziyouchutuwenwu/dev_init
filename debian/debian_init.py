@@ -140,6 +140,10 @@ def install_image_viewer():
     os.system("apt install eom mirage -y")
 
 
+def install_touch_board_driver():
+    os.system("apt install xserver-xorg-input-synaptics -y")
+
+
 def install_wifi_driver():
     os.system("apt install firmware-iwlwifi -y")
 
@@ -357,6 +361,7 @@ if __name__ == "__main__":
     install_bt_client()
     install_image_viewer()
     install_wifi_driver()
+    install_touch_board_driver()
     install_video_recorder()
     install_flow_chart_tool()
     install_disk_partition_tool()
