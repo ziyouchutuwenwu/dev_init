@@ -30,6 +30,8 @@ echo "source ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/plugins/zsh-autosuggestions
 echo "source ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh\n" >> ~/.zshrc
 
+echo "if repo clone failed, run \"cd ~/.zprezto; git submodule update --recursive\""
+
 mkdir -p ~/.zsh/colors
 CURRENT_DIR=$(cd "$(dirname "$0")";pwd)
 cp -rf $CURRENT_DIR/shell_color/dircolors.ansi-dark ~/.zsh/colors
