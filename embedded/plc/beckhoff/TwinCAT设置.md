@@ -2,4 +2,4 @@
 
 ## 代码补全
 
-工具, 选项, TwinCAT, Smart coding, 都选上
+工具, 选项, TwinCAT, PLC Environment, Smart coding, 都选上
