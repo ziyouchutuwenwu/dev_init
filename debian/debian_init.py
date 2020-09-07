@@ -181,10 +181,6 @@ def install_gz_to_deb():
     os.system("apt install java-package -y")
 
 
-def install_mail_client():
-    os.system("apt install sylpheed -y")
-
-
 def install_file_search_tool():
     os.system("apt install catfish -y")
 
@@ -373,7 +369,6 @@ if __name__ == "__main__":
     install_pdf_reader()
     install_gantt_chart_tool()
     install_ntfs_support()
-    install_mail_client()
     install_qt_designer()
 
     add_amazing_fonts()
