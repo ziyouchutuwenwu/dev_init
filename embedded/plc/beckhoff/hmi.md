@@ -23,3 +23,8 @@ MAIN.deomo_info
 ```bash
 Main.demo_action();
 ```
+
+## 调试时非全屏显示的设置
+
+调试时候，选择 local 的话，默认 hmi 会全屏
+需要去 TargetVisualization 里面，关闭 Start Client on Startup 的选项
