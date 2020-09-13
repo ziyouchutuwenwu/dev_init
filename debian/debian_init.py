@@ -174,7 +174,7 @@ def install_remote_gui_client():
 
 
 def install_net_tools():
-    os.system("apt install uml-utilities bridge-utils net-tools nmap -y")
+    os.system("apt install uml-utilities bridge-utils net-tools tcptraceroute nmap -y")
 
 
 def install_gz_to_deb():
