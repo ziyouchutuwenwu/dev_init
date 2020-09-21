@@ -267,6 +267,8 @@ def install_k8s():
         "echo deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main > /etc/apt/sources.list.d/kubernetes.list"
     )
     os.system("apt update; apt install kubelet kubeadm kubectl -y")
+    # 永久关闭swap
+    os.system("sed -i '/ swap / s/^/#/' /etc/fstab")
     # k8s的包管理工具
     # os.system("curl -sSL https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash")
 
