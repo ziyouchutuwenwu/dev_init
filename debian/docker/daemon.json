@@ -1,5 +1,12 @@
 {
-  "registry-mirrors": ["https://reg-mirror.qiniu.com"],
+  "registry-mirrors": [
+    "https://vdi6uc6p.mirror.aliyuncs.com",
+    "https://kfwkfulq.mirror.aliyuncs.com",
+    "https://2lqq34jg.mirror.aliyuncs.com",
+    "https://pee6w651.mirror.aliyuncs.com",
+    "http://hub-mirror.c.163.com"
+  ],
+  "dns": ["8.8.8.8", "8.8.4.4"],
   "insecure-registries": [],
   "exec-opts": ["native.cgroupdriver=systemd"],
   "debug": true
