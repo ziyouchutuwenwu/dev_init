@@ -27,3 +27,8 @@ RT-Thread Components > POSIX layer and C standard library
 ## 注意
 
 demo 代码里面的`dfs_mount`和`dfs_mkfs`的参数，DEVICE_NAME, lfs 和 elm 是不一样的
+
+## 建议
+
+4096 扇区，挂载成 FAT，要格式化成功，至少要 800KB 以上。且还要修改格式化参数。
+所以建议 4MB 以下的 FLASH 不要用 FAT，用 littlefs
