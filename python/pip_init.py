@@ -60,7 +60,7 @@ if __name__ == "__main__":
     cmd = "pip install mkdocs sphinx-rtd-theme"
     os.system(cmd)
 
-    cmd = "pip install lxml beautifulsoup4"
+    cmd = "pip install beautifulsoup4"
     os.system(cmd)
 
     cmd = "pip install pyinotify"
