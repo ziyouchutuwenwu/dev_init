@@ -2,9 +2,9 @@
 { S7_Optimized_Access := 'TRUE' }
 VERSION : 0.1
    VAR_INPUT 
-      analogValue : Int;
-      analogMin : Int;
-      analogMax : Int;
+      analogValue : Real;
+      analogMin : Real;
+      analogMax : Real;
    END_VAR
 
 
@@ -17,8 +17,8 @@ FUNCTION "percentToAnalog" : Int
 VERSION : 0.1
    VAR_INPUT 
       percentage : Real;
-      analogMin : Int;
-      analogMax : Int;
+      analogMin : Real;
+      analogMax : Real;
    END_VAR
 
 
