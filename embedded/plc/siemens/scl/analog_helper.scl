@@ -1,28 +1,28 @@
-﻿FUNCTION "analogValueToPercent" : Real
+﻿FUNCTION "analogToPercent" : Real
 { S7_Optimized_Access := 'TRUE' }
 VERSION : 0.1
    VAR_INPUT 
       analogValue : Int;
-      analogRangeMin : Int;
-      analogRangeMax : Int;
+      analogMin : Int;
+      analogMax : Int;
    END_VAR
 
 
 BEGIN
-	#analogValueToPercent := NORM_X(MIN := #analogRangeMin, VALUE := #analogValue, MAX := #analogRangeMax);
+	#analogToPercent := NORM_X(MIN := #analogMin, VALUE := #analogValue, MAX := #analogMax);
 END_FUNCTION
 
-FUNCTION "percentToAnalogValue" : Int
+FUNCTION "percentToAnalog" : Int
 { S7_Optimized_Access := 'TRUE' }
 VERSION : 0.1
    VAR_INPUT 
       percentage : Real;
-      analogRangeMin : Int;
-      analogRangeMax : Int;
+      analogMin : Int;
+      analogMax : Int;
    END_VAR
 
 
 BEGIN
-	#percentToAnalogValue := SCALE_X(MIN := #analogRangeMin, VALUE := #percentage, MAX := #analogRangeMax);
+	#percentToAnalog := SCALE_X(MIN := #analogMin, VALUE := #percentage, MAX := #analogMax);
 END_FUNCTION
 
