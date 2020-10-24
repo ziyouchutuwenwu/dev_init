@@ -1,0 +1,66 @@
+﻿DATA_BLOCK "modbus_result_db"
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 0.1
+NON_RETAIN
+   STRUCT 
+      data : Array[0..9] of Int;
+   END_STRUCT;
+
+
+BEGIN
+
+END_DATA_BLOCK
+
+FUNCTION_BLOCK "rtu_master"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR 
+      modbus_master_init {InstructionName := 'Modbus_Comm_Load'; LibVersion := '3.1'} : Modbus_Comm_Load;
+      shouldModbusMasterInit { S7_SetPoint := 'True'} : Bool := true;
+      modbus_master {InstructionName := 'Modbus_Master'; LibVersion := '3.2'} : Modbus_Master;
+   END_VAR
+
+   VAR_TEMP 
+      isDone : Bool;
+      isError : Bool;
+      errMsg : Word;
+      isBusy : Bool;
+   END_VAR
+
+
+BEGIN
+	(* 
+	    RS485，MODE=4 
+	    改完初始值后下载，然后stop - run才能生效
+	*)
+	#modbus_master_init.MODE := 4;
+	
+	#modbus_master_init(
+	    REQ := #shouldModbusMasterInit,
+	    "PORT" := "Local~CB_1241_(RS485)",
+	    BAUD := 9600,
+	    PARITY := 0,
+	    (* 这个参数为下面实例使用的MB_DB*)
+	    MB_DB := #modbus_master.MB_DB
+	);
+	#shouldModbusMasterInit := FALSE;
+	
+	
+	#modbus_master(
+	    REQ := TRUE,
+	    (*从站地址*)
+	    MB_ADDR := 1,
+	    (*0读，1写*)
+	    MODE := 0,
+	    DATA_ADDR := 40001,
+	    DATA_LEN := 10,
+	    DONE => #isDone,
+	    BUSY => #isBusy,
+	    ERROR => #isError,
+	    STATUS => #errMsg,
+	    (* DATA_PTR不能是优化块 *)
+	    DATA_PTR:="modbus_result_db".data
+	);
+	
+END_FUNCTION_BLOCK
+
