@@ -19,6 +19,10 @@ if __name__ == "__main__":
     cmd = "pip install stegoveritas-binwalk"
     os.system(cmd)
 
+    # beckhoff的通信库
+    cmd = "pip install pyads"
+    os.system(cmd)
+
     # vscode 代码格式化工具
     cmd = "pip install black"
     os.system(cmd)
