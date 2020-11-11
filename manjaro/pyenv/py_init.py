@@ -32,5 +32,5 @@ if __name__ == "__main__":
     os.system("mkdir -p ~/.pip")
     os.system("echo [global] > ~/.pip/pip.conf")
     os.system(
-        "echo index-url = https://pypi.tuna.tsinghua.edu.cn/simple >> ~/.pip/pip.conf"
+        "echo index-url=https://mirrors.aliyun.com/pypi/simple/ >> ~/.pip/pip.conf"
     )
