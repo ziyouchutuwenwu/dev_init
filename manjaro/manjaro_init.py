@@ -8,26 +8,20 @@ import sys
 
 sys.path.append("..")
 from py_mods import proc
+from py_mods import file
 
 
 def do_set_mirror_config():
-    os.system(
-        "pacman-mirrors -i -c China -m rank"
-    )
+    os.system("pacman-mirrors -i -c China -m rank")
 
 
 def do_upgrade():
-    os.system(
-        "pacman -Syyu --noconfirm"
-    )
+    os.system("pacman -Syyu --noconfirm")
+
 
 def install_essential_fonts():
-    os.system(
-        "pacman -S --noconfirm ttf-monaco"
-    )
-    os.system(
-        "pacman -S --noconfirm ttf-roboto noto-fonts ttf-dejavu"
-    )
+    os.system("pacman -S --noconfirm ttf-monaco")
+    os.system("pacman -S --noconfirm ttf-roboto noto-fonts ttf-dejavu")
     os.system(
         "pacman -S --noconfirm wqy-bitmapfont wqy-microhei wqy-microhei-lite wqy-zenhei"
     )
@@ -35,24 +29,37 @@ def install_essential_fonts():
         "pacman -S --noconfirm noto-fonts-cjk adobe-source-han-sans-cn-fonts adobe-source-han-serif-cn-fonts"
     )
 
+
 def install_chinese_input():
-    os.system(
-        "pacman -S --noconfirm fcitx-sunpinyin fcitx-im fcitx-configtool"
-    )
-    os.system(
-        "cp ./xprofile_template ~/.xprofile"
-    )
+    os.system("pacman -S --noconfirm fcitx-sunpinyin fcitx-im fcitx-configtool")
+    os.system("cp ./xprofile_template ~/.xprofile")
+
 
 def install_themes(user):
     proc.run_as_user(user, "mkdir -p ~/.themes")
     proc.run_as_user(user, "cp -rf ./themes/* ~/.themes")
 
+
 def do_zprezto_config(user):
     os.system("pacman -S --noconfirm zsh")
     proc.run_as_user(user, "sh ./zprezto/config.sh")
 
+
 def install_essential_tools():
     os.system("pacman -S --noconfirm git")
+
+
+def set_linuxcn_package_setting():
+    file_to_add_setting = "/etc/pacman.conf"
+    file.set_to_file(file_to_add_setting, "[archlinuxcn]")
+    file.set_to_file(file_to_add_setting, "SigLevel = Optional TrustedOnly")
+    file.set_to_file(
+        file_to_add_setting, "Server =https://mirrors.ustc.edu.cn/archlinuxcn/$arch"
+    )
+
+    os.system("pacman -Syy --noconfirm")
+    os.system("ppacman -S --noconfirm archlinuxcn-keyring")
+
 
 if __name__ == "__main__":
 
@@ -69,6 +76,7 @@ if __name__ == "__main__":
     install_essential_fonts()
     install_chinese_input()
     install_themes(login_user)
+    set_linuxcn_package_setting()
 
     # 太卡了，放最后
     do_zprezto_config(login_user)
