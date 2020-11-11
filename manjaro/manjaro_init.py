@@ -46,19 +46,20 @@ def do_zprezto_config(user):
 
 
 def install_essential_tools():
-    os.system("pacman -S --noconfirm git")
+    os.system("pacman -S --noconfirm vim git")
 
 
 def set_linuxcn_package_setting():
     file_to_add_setting = "/etc/pacman.conf"
-    file.set_to_file(file_to_add_setting, "[archlinuxcn]")
-    file.set_to_file(file_to_add_setting, "SigLevel = Optional TrustedOnly")
-    file.set_to_file(
-        file_to_add_setting, "Server =https://mirrors.ustc.edu.cn/archlinuxcn/$arch"
+    content = "%s\n%s\n%s" % (
+        "[archlinuxcn]",
+        "SigLevel = Optional TrustedOnly",
+        "Server =https://mirrors.ustc.edu.cn/archlinuxcn/$arch",
     )
+    file.set_to_file(file_to_add_setting, content)
 
     os.system("pacman -Syy --noconfirm")
-    os.system("ppacman -S --noconfirm archlinuxcn-keyring")
+    os.system("pacman -S --noconfirm archlinuxcn-keyring")
 
 
 if __name__ == "__main__":
