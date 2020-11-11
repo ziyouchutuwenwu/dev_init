@@ -51,11 +51,6 @@ def do_zprezto_config(user):
     os.system("pacman -S --noconfirm zsh")
     proc.run_as_user(user, "sh ./zprezto/config.sh")
 
-def install_pyenv(user):
-    os.system("pacman -S --noconfirm pyenv")
-    proc.run_as_user(user, "mkdir -p ~/.pip")
-    proc.run_as_user(user, "cp ./python/pip.conf ~/.pip/")
-
 def install_essential_tools():
     os.system("pacman -S --noconfirm git")
 
@@ -70,9 +65,9 @@ if __name__ == "__main__":
     do_set_mirror_config()
     do_upgrade()
 
+    install_essential_tools()
     install_essential_fonts()
     install_chinese_input()
-    install_pyenv()
     install_themes(login_user)
 
     # 太卡了，放最后
