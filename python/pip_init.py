@@ -69,4 +69,7 @@ if __name__ == "__main__":
 
     cmd = "pip install pyinotify"
     os.system(cmd)
-    file.set_to_profile('alias pyfilemon="python -m pyinotify -v"')
+
+    path = os.path.expanduser("~")
+    profile = path + "/" + ".profile"
+    file.set_to_file(profile, 'alias pyfilemon="python -m pyinotify -v"')

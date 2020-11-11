@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     path = os.path.expanduser("~")
     profile = path + "/" + ".profile"
-    is_in_profile = file.is_in_profile(profile, 'eval "$(pyenv init -)"')
+    is_in_profile = file.is_in_file(profile, 'eval "$(pyenv init -)"')
     if False == is_in_profile:
         os.system("echo '' >> ~/.profile")
         os.system("echo export PYENV_ROOT='\"$HOME/.pyenv\"' >> ~/.profile")
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     os.system("mkdir -p ~/.pip")
     os.system("echo [global] > ~/.pip/pip.conf")
     os.system(
-        "echo index-url=https://mirrors.aliyun.com/pypi/simple/ >> ~/.pip/pip.conf"
+        "echo index-url = https://pypi.tuna.tsinghua.edu.cn/simple >> ~/.pip/pip.conf"
     )
     os.system("echo [install] >> ~/.pip/pip.conf")
     os.system("echo '# mac下默认的pip安装目录错误，需要自定义一下，版本号注意修改' >> ~/.pip/pip.conf")

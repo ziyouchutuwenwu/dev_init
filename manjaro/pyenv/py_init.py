@@ -15,14 +15,12 @@ if __name__ == "__main__":
         print("This program can not be run as root. Aborting.")
         exit(-1)
 
-    os.system(
-        "sudo pacman -S --noconfirm gcc gdb"
-    )
+    os.system("sudo pacman -S --noconfirm gcc gdb")
     os.system("sudo pacman -S --noconfirm pyenv")
 
     path = os.path.expanduser("~")
     profile = path + "/" + ".profile"
-    is_in_profile = file.is_in_profile(profile, 'eval "$(pyenv init -)"')
+    is_in_profile = file.is_in_file(profile, 'eval "$(pyenv init -)"')
     if False == is_in_profile:
         os.system("echo '' >> ~/.profile")
         os.system("echo export PYENV_ROOT='\"$HOME/.pyenv\"' >> ~/.profile")
@@ -32,5 +30,5 @@ if __name__ == "__main__":
     os.system("mkdir -p ~/.pip")
     os.system("echo [global] > ~/.pip/pip.conf")
     os.system(
-        "echo index-url=https://mirrors.aliyun.com/pypi/simple/ >> ~/.pip/pip.conf"
+        "echo index-url = https://pypi.tuna.tsinghua.edu.cn/simple >> ~/.pip/pip.conf"
     )

@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     path = os.path.expanduser("~")
     profile = path + "/" + ".profile"
-    is_in_profile = file.is_in_profile(profile, 'eval "$(rbenv init -)"')
+    is_in_profile = file.is_in_file(profile, 'eval "$(rbenv init -)"')
     if False == is_in_profile:
         os.system("echo '' >> ~/.profile")
         os.system("echo export PATH='\"$HOME/.rbenv/bin:$PATH\"' >> ~/.profile")
