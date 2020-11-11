@@ -49,14 +49,18 @@ def install_essential_tools():
     os.system("pacman -S --noconfirm vim git")
 
 
-def set_linuxcn_package_setting():
-    file_to_add_setting = "/etc/pacman.conf"
+def set_linuxcn_pkg():
+    setting_file = "/etc/pacman.conf"
+    is_existed = file.is_in_file(setting_file, "[archlinuxcn]")
+    if is_existed:
+        return
+
     content = "%s\n%s\n%s" % (
         "[archlinuxcn]",
         "SigLevel = Optional TrustedOnly",
-        "Server =https://mirrors.ustc.edu.cn/archlinuxcn/$arch",
+        "Server=https://mirrors.ustc.edu.cn/archlinuxcn/$arch",
     )
-    file.set_to_file(file_to_add_setting, content)
+    file.set_to_file(setting_file, content)
 
     os.system("pacman -Syy --noconfirm")
     os.system("pacman -S --noconfirm archlinuxcn-keyring")
@@ -77,7 +81,7 @@ if __name__ == "__main__":
     install_essential_fonts()
     install_chinese_input()
     install_themes(login_user)
-    set_linuxcn_package_setting()
+    set_linuxcn_pkg()
 
     # 太卡了，放最后
     do_zprezto_config(login_user)
