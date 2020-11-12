@@ -66,6 +66,11 @@ def set_linuxcn_pkg():
     os.system("pacman -S --noconfirm archlinuxcn-keyring")
 
 
+def do_vim_config(user):
+    os.system("pacman -S --noconfirm vim")
+    proc.run_as_user(user, "sh ./vim/install.sh")
+
+
 def install_monaco_fonts():
     os.system("pacman -S --noconfirm ttf-monaco")
 
@@ -85,6 +90,7 @@ if __name__ == "__main__":
     install_essential_fonts()
     install_chinese_input(login_user)
     install_themes(login_user)
+    do_vim_config(login_user)
 
     # monaco字体需要linuxcn源
     set_linuxcn_pkg()
