@@ -20,7 +20,6 @@ def do_upgrade():
 
 
 def install_essential_fonts():
-    os.system("pacman -S --noconfirm ttf-monaco")
     os.system("pacman -S --noconfirm ttf-roboto noto-fonts ttf-dejavu")
     os.system(
         "pacman -S --noconfirm wqy-bitmapfont wqy-microhei wqy-microhei-lite wqy-zenhei"
@@ -30,9 +29,10 @@ def install_essential_fonts():
     )
 
 
-def install_chinese_input():
-    os.system("pacman -S --noconfirm fcitx-sunpinyin fcitx-im fcitx-configtool")
-    os.system("cp ./xprofile_template ~/.xprofile")
+def install_chinese_input(user):
+    os.system("pacman -S --noconfirm fcitx-im fcitx-configtool")
+    os.system("pacman -S --noconfirm fcitx-libpinyin fcitx-cloudpinyin")
+    proc.run_as_user(user, "cp -rf ./xprofile_template ~/.xprofile")
 
 
 def install_themes(user):
@@ -66,6 +66,10 @@ def set_linuxcn_pkg():
     os.system("pacman -S --noconfirm archlinuxcn-keyring")
 
 
+def install_monaco_fonts():
+    os.system("pacman -S --noconfirm ttf-monaco")
+
+
 if __name__ == "__main__":
 
     if False == proc.is_root():
@@ -79,9 +83,12 @@ if __name__ == "__main__":
 
     install_essential_tools()
     install_essential_fonts()
-    install_chinese_input()
+    install_chinese_input(login_user)
     install_themes(login_user)
+
+    # monaco字体需要linuxcn源
     set_linuxcn_pkg()
+    install_monaco_fonts()
 
     # 太卡了，放最后
     do_zprezto_config(login_user)
