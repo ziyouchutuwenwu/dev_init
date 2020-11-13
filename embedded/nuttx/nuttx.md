@@ -28,8 +28,8 @@ make install
 #### 把工具和库添加到环境变量
 
 ```bash
-export PATH=$HOME/nuttx/nuttx-build-essential/bin:$PATH
-export LD_LIBRARY_PATH=$HOME/nuttx/nuttx-build-essential/lib:$LD_LIBRARY_PATH
+export PATH=$HOME/dev/nuttx/build-essential/bin:$PATH
+export LD_LIBRARY_PATH=$HOME/dev/nuttx/build-essential/lib:$LD_LIBRARY_PATH
 ```
 
 ```bash
