@@ -36,6 +36,7 @@ def install_chinese_input(user):
 
 
 def install_themes(user):
+    os.system("pacman -S --noconfirm numix-circle-icon-theme-git")
     proc.run_as_user(user, "mkdir -p ~/.themes")
     proc.run_as_user(user, "cp -rf ./themes/* ~/.themes")
 
