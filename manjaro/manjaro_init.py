@@ -47,7 +47,12 @@ def do_zprezto_config(user):
 
 
 def install_essential_tools():
-    os.system("pacman -S --noconfirm vim git")
+    os.system("pacman -S --noconfirm base-devel vim git")
+
+
+def install_yay():
+    os.system("pacman -S --noconfirm yay")
+    os.system('yay --aururl "https://aur.tuna.tsinghua.edu.cn" --save')
 
 
 def set_linuxcn_pkg():
@@ -92,6 +97,7 @@ if __name__ == "__main__":
     install_chinese_input(login_user)
     install_themes(login_user)
     do_vim_config(login_user)
+    install_yay()
 
     # monaco字体需要linuxcn源
     set_linuxcn_pkg()
