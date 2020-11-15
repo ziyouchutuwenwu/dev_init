@@ -50,6 +50,14 @@ def install_essential_tools():
     os.system("pacman -S --noconfirm base-devel vim git")
 
 
+def install_useful_tools():
+    os.system("pacman -S --noconfirm wxhexeditor")
+
+
+def remove_useless_applications():
+    os.system("pacman -Rs --noconfirm mousepad thunderbird")
+
+
 def install_yay():
     os.system("pacman -S --noconfirm yay")
     os.system('yay --aururl "https://aur.tuna.tsinghua.edu.cn" --save')
@@ -92,6 +100,8 @@ if __name__ == "__main__":
     do_set_mirror_config()
     do_upgrade()
 
+    remove_useless_applications()
+
     install_essential_tools()
     install_essential_fonts()
     install_chinese_input(login_user)
@@ -102,6 +112,7 @@ if __name__ == "__main__":
     # monaco字体需要linuxcn源
     set_linuxcn_pkg()
     install_monaco_fonts()
+    install_useful_tools()
 
     # 太卡了，放最后
     do_zprezto_config(login_user)
