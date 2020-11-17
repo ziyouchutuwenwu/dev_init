@@ -46,12 +46,12 @@ def do_zprezto_config(user):
     proc.run_as_user(user, "sh ./zprezto/config.sh")
 
 
-def install_essential_tools():
-    os.system("pacman -S --noconfirm base-devel vim git")
+def install_build_essential():
+    os.system("pacman -S --noconfirm base-devel")
 
 
 def install_useful_tools():
-    os.system("pacman -S --noconfirm wxhexeditor")
+    os.system("pacman -S --noconfirm vim git")
 
 
 def remove_useless_applications():
@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
     remove_useless_applications()
 
-    install_essential_tools()
+    install_build_essential()
     install_essential_fonts()
     install_chinese_input(login_user)
     install_themes(login_user)
