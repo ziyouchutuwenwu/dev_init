@@ -50,6 +50,10 @@ def install_build_essential():
     os.system("pacman -S --noconfirm base-devel")
 
 
+def install_erlang():
+    os.system("pacman -S --noconfirm erlang")
+
+
 def install_useful_tools():
     os.system("pacman -S --noconfirm vim git")
 
@@ -104,6 +108,7 @@ if __name__ == "__main__":
 
     install_build_essential()
     install_essential_fonts()
+    install_erlang()
     install_chinese_input(login_user)
     install_themes(login_user)
     do_vim_config(login_user)
