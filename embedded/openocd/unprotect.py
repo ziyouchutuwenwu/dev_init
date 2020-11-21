@@ -12,7 +12,7 @@ if __name__ == "__main__":
     board_type = sys.argv[1]
 
     cmd = (
-        "openocd -f interface/jlink.cfg -d2 -c 'transport select swd' -f target/%s.cfg -c 'init' -c ' reset_config none' -c 'reset halt' -c '%s unlock 0' -c 'reset halt' -c shutdown"
+        "openocd -f interface/jlink.cfg -d2 -c 'transport select swd' -f target/%s.cfg -c 'adapter speed 12000' -c 'init' -c ' reset_config none' -c 'reset halt' -c '%s unlock 0' -c 'reset halt' -c shutdown"
         % (board_type, board_type)
     )
     os.system(cmd)
