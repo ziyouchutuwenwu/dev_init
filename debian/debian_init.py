@@ -46,6 +46,14 @@ def install_bt_client():
     os.system("apt install qbittorrent -y")
 
 
+def install_proxychains(user):
+    os.system("apt install proxychains4 -y")
+    proc.run_as_user(
+        user,
+        "echo \"alias proxy='proxychains -f ~/dev/dev_init/debian/proxychains/proxychains4.conf'\" >> ~/.profile",
+    )
+
+
 def install_ntfs_support():
     os.system("apt install ntfs-3g -y")
 
@@ -283,15 +291,6 @@ def set_profile(user):
         user,
         "echo \"alias open_extra_menu='thunar ~/.local/share/applications'\" > ~/.profile",
     )
-    # ip
-    proc.run_as_user(
-        user,
-        "echo \"\nalias proxy='export all_proxy=socks5://127.0.0.1:1080'\" >> ~/.profile",
-    )
-    proc.run_as_user(user, "echo \"alias unproxy='unset all_proxy'\" >> ~/.profile")
-    proc.run_as_user(
-        user, "echo \"alias get_ip='http http://ipinfo.io/json'\" >> ~/.profile"
-    )
 
 
 def do_zprezto_config(user):
@@ -330,6 +329,7 @@ if __name__ == "__main__":
     set_aliyun_apt_config()
     do_apt_update()
 
+    set_profile(login_user)
     add_apt_https_support()
     install_aptitude()
     install_apt_file()
@@ -381,9 +381,9 @@ if __name__ == "__main__":
     rm_unused_menu(login_user)
     install_themes(login_user)
     do_install_xfce_terminal_themes(login_user)
+    install_proxychains(login_user)
 
     # 这个必须在zprezto之前配置
-    set_profile(login_user)
     do_vim_config(login_user)
 
     install_erlang(login_user)
