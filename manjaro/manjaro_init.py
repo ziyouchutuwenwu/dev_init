@@ -55,7 +55,7 @@ def install_erlang():
 
 
 def install_useful_tools():
-    os.system("pacman -S --noconfirm vim git")
+    os.system("pacman -S --noconfirm vim git proxychains-ng")
 
 
 def remove_useless_applications():

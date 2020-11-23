@@ -286,7 +286,12 @@ def install_themes(user):
     proc.run_as_user(user, "cp -rf ./themes/* ~/.themes")
 
 
-def set_profile(user):
+def init_profile(user):
+    proc.run_as_user(user, "rm -rf ~/.profile")
+    proc.run_as_user(user, "touch ~/.profile")
+
+
+def set_open_extra_menu_alias_to_profile(user):
     proc.run_as_user(
         user,
         "echo \"alias open_extra_menu='thunar ~/.local/share/applications'\" > ~/.profile",
@@ -329,7 +334,7 @@ if __name__ == "__main__":
     set_aliyun_apt_config()
     do_apt_update()
 
-    set_profile(login_user)
+    init_profile(login_user)
     add_apt_https_support()
     install_aptitude()
     install_apt_file()
@@ -377,7 +382,7 @@ if __name__ == "__main__":
     make_xfce_ftp_support()
 
     remove_useless_applications()
-
+    set_open_extra_menu_alias_to_profile(login_user)
     rm_unused_menu(login_user)
     install_themes(login_user)
     do_install_xfce_terminal_themes(login_user)
