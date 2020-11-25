@@ -70,8 +70,13 @@ def install_clang_llvm_lldb():
     os.system("apt install clang llvm lldb -y")
 
 
-def install_serial_tools():
+def install_serial_tools(user):
     os.system("apt install picocom lrzsz -y")
+    proc.run_as_user(
+        user,
+        'echo "alias serial=\'picocom -s "sb -vv" -v "rb -vv"\'" >> ~/.profile',
+    )
+    os.system("apt install tio -y")
     os.system("apt install gtkterm cutecom -y")
 
 
@@ -358,7 +363,7 @@ if __name__ == "__main__":
     install_clang_llvm_lldb()
     install_embedded_tools()
     install_arm_vm_essential()
-    install_serial_tools()
+    install_serial_tools(login_user)
     set_peripheral_permission()
     install_toys()
     install_bt_client()
