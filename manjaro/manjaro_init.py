@@ -43,6 +43,10 @@ def install_themes(user):
 
 def do_zprezto_config(user):
     os.system("pacman -S --noconfirm zsh")
+    # 需要手动创建命令行，设置为目录的时候可见
+    # terminator --working-directory=%f
+    os.system("pacman -S --noconfirm terminator")
+    proc.run_as_user(user, "chsh -s $(which zsh)")
     proc.run_as_user(user, "sh ./zprezto/config.sh")
 
 

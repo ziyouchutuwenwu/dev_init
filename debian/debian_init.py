@@ -301,6 +301,8 @@ def set_open_extra_menu_alias_to_profile(user):
 
 def do_zprezto_config(user):
     os.system("apt install zsh -y")
+    os.system("apt install terminator -y")
+    proc.run_as_user(user, "chsh -s $(which zsh)")
     proc.run_as_user(user, "sh ./zprezto/config.sh")
 
 

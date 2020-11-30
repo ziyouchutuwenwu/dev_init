@@ -11,7 +11,7 @@ ln -s "${ZDOTDIR:-$HOME}/.zprezto/runcoms/zshrc" ~/.zshrc
 
 sed -i "s/theme 'sorin'/theme 'skwp'/g" ${ZDOTDIR:-$HOME}/.zprezto/runcoms/zpreztorc
 
-echo "sudo pacman -Syyu" > ~/.zhistory
+echo "sudo pacman -Syyu --noconfirm" > ~/.zhistory
 chmod -w ~/.zhistory
 
 rm -rf ~/.bashrc
