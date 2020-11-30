@@ -16,7 +16,7 @@ if __name__ == "__main__":
         exit(-1)
 
     os.system("sudo pacman -S --noconfirm gcc gdb")
-    os.system("sudo pacman -S --noconfirm pyenv")
+    os.system("sudo pacman -S --noconfirm pyenv pyenv-virtualenv")
 
     path = os.path.expanduser("~")
     profile = path + "/" + ".profile"
@@ -26,6 +26,7 @@ if __name__ == "__main__":
         os.system("echo export PYENV_ROOT='\"$HOME/.pyenv\"' >> ~/.profile")
         os.system("echo export PATH='\"$PYENV_ROOT/bin:$PATH\"' >> ~/.profile")
         os.system("echo eval '\"$(pyenv init -)\"' >> ~/.profile")
+        os.system("echo eval '\"$(pyenv virtualenv-init -)\"' >> ~/.profile")
 
     os.system("mkdir -p ~/.pip")
     os.system("echo [global] > ~/.pip/pip.conf")
