@@ -46,7 +46,7 @@ END_IF;
 
 ob83 对应 分布式 IO 站点故障和恢复, 通过 OB86 接口区的输入变量“16#Event_Class”判断故障的模块和类型：事件类型 16#39 表示站点故障，事件类型 16#38 表示站点恢复。
 
-```delphi
+```pascal
 IF #Event_Class = 16#38 THEN
     // XXX 在默认变量表, 系统常量里面可以看到
     IF #LADDR = XXX THEN

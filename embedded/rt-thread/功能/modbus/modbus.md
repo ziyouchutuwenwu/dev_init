@@ -4,7 +4,7 @@
 
 ### libmodbus
 
-```bash
+```sh
 RT-Thread online packages > IoT - internet of things
   [*] libmodbus: A Modbus library for RT-Thread
 ```
@@ -14,7 +14,7 @@ RT-Thread online packages > IoT - internet of things
 
 ### freemodbus
 
-```bash
+```sh
 RT-Thread online packages ->
   [*] FreeModbus: Modbus master and slave stack
 ```
@@ -25,13 +25,13 @@ RT-Thread online packages ->
 
 - freemodbus
 
-```bash
+```sh
 例子里面只有rtu的master和slave模式
 ```
 
 - libmodbus
 
-```bash
+```sh
 tcp的master和slave都有
 rtu只有master
 ```

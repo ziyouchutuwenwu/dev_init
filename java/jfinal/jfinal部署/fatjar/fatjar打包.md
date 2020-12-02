@@ -2,7 +2,7 @@
 
 ## 目录结构类似这样
 
-```bash
+```sh
 └── main
     ├── java
     ├── resources
@@ -41,7 +41,7 @@ undertow.resourcePath=src/main/webapp, classpath:webapp
 
 - 打包运行
 
-```bash
+```sh
 mvn clean package
 java -jar jfinal-demo.jar
 ```

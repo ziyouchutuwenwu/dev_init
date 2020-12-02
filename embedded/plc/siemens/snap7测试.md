@@ -4,7 +4,7 @@
 
 ## plc 配置
 
-```bash
+```sh
 硬件组态, 防护与安全, 连接机制, 允许来自远程对象的PUT/GET通信访问
 db块,右键,属性,优化的块访问,去掉勾选
 ```
@@ -13,7 +13,7 @@ db块,右键,属性,优化的块访问,去掉勾选
 
 ### pip 安装
 
-```bash
+```sh
 pip install python-snap7
 ```
 
@@ -23,7 +23,7 @@ pip install python-snap7
 
 ### 编译
 
-```bash
+```sh
 cd \$SNAP_SRC_DIR/build/unix/
 make -f x86_64_linux.mk all
 cp build/bin/x86_64-linux/libsnap7.so ~/.pyenv/versions/3.9.0/lib/python3.9/site-packages/snap7/bin

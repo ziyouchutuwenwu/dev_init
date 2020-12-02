@@ -7,7 +7,7 @@
 - 复制 main.c 里面的时钟配置到 board.c
 - 修改 board/Kconfig，添加
 
-```bash
+```sh
 config BSP_USING_SDIO
     bool "Enable sd card"
     select RT_USING_SDIO
@@ -18,7 +18,7 @@ config BSP_USING_SDIO
 
 - 位置
 
-```bash
+```sh
 RT-Thread Components --->
   Device virtual file system --->
     [*]Using device virtual file system
@@ -26,7 +26,7 @@ RT-Thread Components --->
 
 - 配置参数
 
-```bash
+```sh
 [*] Enable elm-chan fatfs
       elm-chan's FatFs, Generic FAT Filesystem Module  --->
         (4096) Maximum sector size to be handled.
@@ -34,7 +34,7 @@ RT-Thread Components --->
 
 ## 打开 libc
 
-```bash
+```sh
 RT-Thread Components --->
   POSIX layer and C standard library --->
     [*] Enable libc APIs from toolchain

@@ -9,14 +9,14 @@
 - 复制 main.c 里面的时钟配置到 board.c
 - 修改 board/Kconfig，添加
 
-```bash
+```sh
 config BSP_USING_USBH
     bool "Enable USB host"
     select RT_USING_USB_HOST
     default n
 ```
 
-```bash
+```sh
 RT-Thread Components --->
   Device Drivers --->
     Using USB --->
@@ -29,7 +29,7 @@ RT-Thread Components --->
 
 - 位置
 
-```bash
+```sh
 RT-Thread Components --->
   Device virtual file system --->
     [*]Using device virtual file system
@@ -40,7 +40,7 @@ RT-Thread Components --->
 
 ## 打开 libc
 
-```bash
+```sh
 RT-Thread Components --->
   POSIX layer and C standard library --->
     [*] Enable libc APIs from toolchain

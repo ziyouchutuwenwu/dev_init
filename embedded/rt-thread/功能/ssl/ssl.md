@@ -4,7 +4,7 @@
 
 注意启用 sample 测试
 
-```bash
+```sh
  > RT-Thread online packages > security packages
  [*] mbedtls: An portable and flexible SSL/TLS library
 ```

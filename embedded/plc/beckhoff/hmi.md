@@ -9,18 +9,18 @@
 
 ## 例子
 
-- Textfield
+Textfield
 
-```bash
+```sh
 texts里面的text设置为%s
 text variable设置为某个变量，比如
 MAIN.deomo_info
 ```
 
-- Button
-  button 的 OnMouseClick 事件选择 `执行ST代码`
+Button
 
-```bash
+```sh
+button 的 OnMouseClick 事件选择 `执行ST代码`
 Main.demo_action();
 ```
 

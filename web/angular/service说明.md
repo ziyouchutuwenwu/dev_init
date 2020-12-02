@@ -2,7 +2,7 @@
 
 ## 全局注入
 
-- service 里面如果有声明如下部分，则无论是否在 module 的 provider 里面注册，都是全局的 service
+service 里面如果有声明如下部分，则无论是否在 module 的 provider 里面注册，都是全局的 service
 
 ```typescript
 @Injectable({
@@ -10,7 +10,7 @@
 })
 ```
 
-- 或者，在 app.module.ts 里面
+或者，在 app.module.ts 里面
 
 ```typescript
 providers: [DemoService],
@@ -18,7 +18,7 @@ providers: [DemoService],
 
 ## 组件级别注入
 
-- service 本身，注释`@Injectable`，然后在组件的声明区域
+service 本身，注释`@Injectable`，然后在组件的声明区域
 
 ```typescript
 @Component({
@@ -38,7 +38,7 @@ providers: [DemoService],
 })
 ```
 
-- 修改真正需要独立的 module，在 imports 里面，加入`LazyServiceModule`即可，参考下面
+修改真正需要独立的 module，在 imports 里面，加入`LazyServiceModule`即可，参考下面
 
 ```typescript
 @NgModule({

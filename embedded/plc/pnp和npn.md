@@ -1,6 +1,6 @@
 # pnp 和 npn
 
-```bash
+```sh
 PNP 是公共端接负
 NPN 是公共端接正极
 ```

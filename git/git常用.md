@@ -2,26 +2,26 @@
 
 ## 分支相关
 
-- 创建本地分支
+创建本地分支
 
-```bash
+```sh
 git checkout -b newbr
 ```
 
-- 将本地分支推送到远程
+将本地分支推送到远程
 
-```bash
+```sh
 git push origin newbr
 ```
 
-- 将本地分支 newbr 关联到远程分支 newbr 上
+将本地分支 newbr 关联到远程分支 newbr 上
 
-```bash
+```sh
 git branch --set-upstream-to=origin/newbr
 ```
 
-- 查看远程分支
+查看远程分支
 
-```bash
+```sh
 git branch -a
 ```

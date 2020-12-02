@@ -2,17 +2,17 @@
 
 ## 安装
 
-```bash
+```sh
 sudo apt install snmp snmpd
 ```
 
 修改配置
 
-```bash
+```sh
 vim /etc/snmp/snmpd.conf
 ```
 
-```bash
+```sh
 # 改成在所有ip监听
 agentAddress udp:161,udp6[::1]:161
 
@@ -23,6 +23,6 @@ rocommunity public default -V all
 
 ## 查看 cpu 等信息
 
-```bash
+```sh
 snmpwalk -v 2c -c public localhost enterprises.ucdavis.systemStats
 ```

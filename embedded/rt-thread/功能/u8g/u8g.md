@@ -2,7 +2,7 @@
 
 ## menuconfig 配置
 
-```bash
+```sh
 RT-Thread online packages ->
   peripheral libraries and drivers --->
     U8G2: a monochrome graphic library --->

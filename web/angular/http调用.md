@@ -35,7 +35,7 @@ this.http
   });
 ```
 
-- LoginComponent.ts
+LoginComponent.ts
 
 ```typescript
 onLogin() {
@@ -54,7 +54,7 @@ onLogin() {
 
 ## 使用 axios
 
-- post 调用
+post 调用
 
 ```typescript
 const params = {
@@ -78,7 +78,7 @@ axios({
   });
 ```
 
-- get 调用
+get 调用
 
 ```typescript
 const param = {

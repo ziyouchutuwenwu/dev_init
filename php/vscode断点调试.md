@@ -15,7 +15,7 @@ xdebug.remote_connect_back=on
 - 容器里的 9000 端口不需要暴露出来
 - 测试容器
 
-```bash
+```sh
 docker run --rm -d -name apache_php -p 8888:80 -v ~/projects/docker/web_root:/app -e XDEBUG_REMOTE_AUTOSTART=1 -e XDEBUG_REMOTE_ENABLE=1 webdevops/php-apache-dev:7.3
 ```
 

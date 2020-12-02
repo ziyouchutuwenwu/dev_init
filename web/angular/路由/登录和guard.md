@@ -2,7 +2,7 @@
 
 ## 创建路由 module
 
-```bash
+```sh
 ng g module appRouting
 ```
 
@@ -18,13 +18,13 @@ export const appRoutes: Routes = [
     component: HomeComponent,
     children: [
       // { path: 'demo', component: DemoComponent },
-    ]
-  }
+    ],
+  },
 ];
 
 @NgModule({
   imports: [RouterModule.forRoot(appRoutes)],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
 export class AppRoutingModule {}
 ```
@@ -36,7 +36,7 @@ export class AppRoutingModule {}
 
 - 最常用的，可以由于无权限访问时候做页面跳转，[参考连接](https://www.cnblogs.com/banluduxing/p/9380697.html)
 
-```bash
+```sh
 ng g guard auth/auth
 ng g service auth/auth
 ```
@@ -67,7 +67,7 @@ export class AuthService {
 
 ```typescript
 @Injectable({
-  providedIn: "root"
+  providedIn: "root",
 })
 export class AuthGuard implements CanActivate {
   canActivate(

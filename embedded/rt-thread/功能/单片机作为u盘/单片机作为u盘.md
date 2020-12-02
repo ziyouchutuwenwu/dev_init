@@ -7,14 +7,14 @@
 - 复制 main.c 里面的时钟配置到 board.c
 - 修改 board/Kconfig，添加
 
-```bash
+```sh
 config BSP_USING_USBD
     bool "Enable USB device"
     select RT_USING_USB_DEVICE
     default n
 ```
 
-```bash
+```sh
 RT-Thread Components --->
   Device Drivers --->
     Using USB --->
@@ -26,4 +26,4 @@ RT-Thread Components --->
 
 ## 参考 sdio 的配置，即可将 sd 卡插在 stm32 上，在电脑上显示出来
 
-- sd 卡的文件系统用 fat 和 ntfs 都可以
+sd 卡的文件系统用 fat 和 ntfs 都可以

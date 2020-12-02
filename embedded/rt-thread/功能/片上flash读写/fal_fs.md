@@ -4,7 +4,7 @@
 
 - board/Kconfig 添加
 
-```bash
+```sh
 config BSP_USING_ON_CHIP_FLASH
     bool "Enable on-chip FLASH"
     default n
@@ -12,7 +12,7 @@ config BSP_USING_ON_CHIP_FLASH
 
 - 启用 fal
 
-```bash
+```sh
 RT-Thread online packages --->
   system packages --->
     [*]fal: Flash Abstraction Layer implement. Manage flash device and partition.  --->
@@ -33,7 +33,7 @@ on_chip_flash/elm_demo.c
 
 - 测试命令
 
-```bash
+```sh
 fal probe xxx
 fal read 0 10
 fal write xxx
@@ -43,7 +43,7 @@ fal write xxx
 
 - `scons --menuconfig` 选中
 
-```bash
+```sh
 RT-Thread Components --->
   Device virtual file system
   [*] Using device virtual file system
@@ -53,19 +53,19 @@ RT-Thread Components --->
     the maximal number of opened files
 ```
 
-```bash
+```sh
 RT-Thread Components --->
   Device Drivers --->
     [*] Using MTD Nor Flash device drivers
 ```
 
-```bash
+```sh
 RT-Thread Components --->
   POSIX layer and C standard library --->
     [*] Enable libc APIs from toolchain
 ```
 
-```bash
+```sh
 RT-Thread online packages --->
   system packages --->
     [*] Littlefs: A high-integrity embedded file system  ---->
@@ -76,7 +76,7 @@ RT-Thread online packages --->
 
 - 需要注意的地方
 
-```bash
+```sh
 需要根据你需要的大小修改rtt自带驱动里面的`const struct fal_flash_dev stm32_onchip_flash_xxk`
 驱动的相对路径为 `libraries/HAL_Drivers/drv_flash/drv_flash_f4.c`
 这个结构体里面的blk_size为扇区大小，建议改成 `2048` 或者 `4096`
@@ -86,7 +86,7 @@ RT-Thread online packages --->
 
 - 使用场景：如果需要挂载多个 fs，可以使用 romfs 先创建几个文件夹，然后启动以后把几个 fs 分别挂载到不同的目录
 
-```bash
+```sh
 RT-Thread Components --->
   Device virtual file system
   [*] Using device virtual file system
@@ -95,7 +95,7 @@ RT-Thread Components --->
 
 - 注意，需要使用下面的命令重新生成 romfs 的源码
 
-```bash
+```sh
 python2 ./rt-thread/tools/mkromfs.py 你的文件目录 ./rt-thread/components/dfs/filesystems/romfs/romfs.c
 ```
 

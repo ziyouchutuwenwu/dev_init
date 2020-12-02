@@ -1,16 +1,16 @@
 # erlang 的发布
 
-- 使用 rebar3
+使用 rebar3
 
 ## rebar3 支持的格式
 
-### release
+### release 模式
 
-- 可以引入多个 applicatin，并且可以独立发布
+可以引入多个 applicatin，并且可以独立发布
 
 #### 引入方式
 
-- rebar.config 修改 deps 字段，在.app.src 的 applications 字段里面添加即可
+rebar.config 修改 deps 字段，在.app.src 的 applications 字段里面添加即可
 
 ##### .app.src 的说明
 
@@ -29,18 +29,18 @@
 {applications,[kernel,stdlib]}]}. % 依赖项，启动 app 前，必须有启动的 app
 ```
 
-### app
+### app 模式
 
-- 独立的 app，可以作为 release 的库使用，
+独立的 app，可以作为 release 的库使用，
 
 #### 导入方式
 
 - 使用 application:start(xxx).
 - 在.app.src 的 applications 字段里面添加
 
-### lib
+### lib 模式
 
-- 无 application 的项目，作为库引入，
+无 application 的项目，作为库引入，
 
 #### 引用方式
 
@@ -53,7 +53,7 @@
 
 ## 打包
 
-- 项目的 rebar.config 里面的 profiles 字段改成类似下面的
+项目的 rebar.config 里面的 profiles 字段改成类似下面的
 
 ```json
 {profiles, [
@@ -85,8 +85,8 @@ application:loaded_applications().
 
 ## 备注
 
-- 进入远程 shell
+进入远程 shell
 
-```bash
+```sh
 erl -setcookie aaa -sname bbb@debian -remsh aaa@debian
 ```

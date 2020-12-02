@@ -6,7 +6,7 @@
 
 ## menuconfig
 
-```bash
+```sh
 RT-Thread Components > Device virtual file system  --->
   -*- Using device virtual file system
   [*] Using working directory

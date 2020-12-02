@@ -30,4 +30,4 @@ div {
 
 ## 备注
 
-- 参考连接: [uni-app](https://www.kancloud.cn/zengqs1976/uni-app/1176122) 和 [阮一峰](https://www.ruanyifeng.com/blog/2015/07/flex-grammar.html)
+参考连接: [uni-app](https://www.kancloud.cn/zengqs1976/uni-app/1176122) 和 [阮一峰](https://www.ruanyifeng.com/blog/2015/07/flex-grammar.html)

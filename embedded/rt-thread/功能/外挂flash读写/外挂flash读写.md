@@ -8,7 +8,7 @@
 
 ## 修改 Kconfig
 
-```bash
+```sh
 menuconfig BSP_USING_SPI
     bool "Enable SPI BUS"
     default n
@@ -33,7 +33,7 @@ menuconfig BSP_USING_SPI
 
 Kconfig 的 `"Onboard Peripheral Drivers"` 添加
 
-```bash
+```sh
 config BSP_USING_QSPI_FLASH
     bool "Enable QSPI FLASH (W25Q128 spi10)"
     select BSP_USING_QSPI
@@ -44,7 +44,7 @@ config BSP_USING_QSPI_FLASH
 
 ## menuconfig
 
-```bash
+```sh
 Hardware Drivers Config > Onboard Peripheral Drivers
   [*] Enable QSPI FLASH (W25Q128 spi10)
 
@@ -75,7 +75,7 @@ RT-Thread Components > Device Drivers
 
 ## 测试
 
-```bash
+```sh
 msh />list_device
 device           type         ref count
 -------- -------------------- ----------
@@ -87,7 +87,7 @@ uart1    Character Device     2
 pin      Miscellaneous Device 0
 ```
 
-```bash
+```sh
 msh />sf probe spi10
 msh />sf erase 0 10
 msh />sf read 0 10

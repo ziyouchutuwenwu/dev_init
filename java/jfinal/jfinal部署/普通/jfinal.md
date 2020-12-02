@@ -2,7 +2,7 @@
 
 ## 目录结构类似这样
 
-```bash
+```sh
 └── main
     ├── java
     ├── resources

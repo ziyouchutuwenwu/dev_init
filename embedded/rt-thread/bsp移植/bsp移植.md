@@ -54,7 +54,7 @@ if CROSS_TOOL == "gcc":
 - 搜索 CPPDEFINES, 改成你的芯片对应的型号，具体写法参考 CPPDEFINES 上面的内容里面改
 - 根据你的芯片型号，修改下面对应的汇编启动文件 `xxxxxx.s`, 如果不知道用哪个，可以用 cubeMX 生成项目以后找，看用的是哪个文件
 
-```bash
+```sh
 if rtconfig.CROSS_TOOL == 'gcc':
     src += [startup_path_prefix + '/STM32F1xx_HAL/CMSIS/Device/ST/STM32F1xx/Source/Templates/gcc/startup_stm32f103xb.s']
 elif rtconfig.CROSS_TOOL == 'keil':

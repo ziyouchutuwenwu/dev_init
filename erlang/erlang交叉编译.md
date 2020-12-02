@@ -1,6 +1,6 @@
 # erlang 交叉编译
 
-```bash
+```sh
 sudo apt install qemu-user-static
 ```
 
@@ -8,7 +8,7 @@ sudo apt install qemu-user-static
 
 ## 使用 debootstrap
 
-```bash
+```sh
 sudo apt install debootstrap
 sudo debootstrap --arch=armel buster ./buster https://mirrors.tuna.tsinghua.edu.cn/debian/
 sudo chroot ./buster /bin/bash
@@ -16,15 +16,15 @@ sudo chroot ./buster /bin/bash
 
 ## 使用 docker
 
-- 先启动容器
+先启动容器
 
-```bash
+```sh
 docker run -it --name arm-erlang --network host --rm -v ~/projects/erlang/:/usr/src arm32v7/erlang
 ```
 
-- 然后
+然后
 
-```bash
+```sh
 cd /usr/src/xxx
 ./rebar3 as prod tar
 ```

@@ -1,23 +1,21 @@
-# win下配置pyqt5
+# win 下配置 pyqt5
 
-- 装完python
+设置镜像源
 
-- 设置镜像源
-
-```bash
+```sh
 当前用户目录\pip\pip.ini
 [global]
 index-url=https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
-- 更新pip
+更新 pip
 
-```bash
+```sh
 python -m pip install --upgrade pip
 ```
 
-- 安装pyqt5
+安装 pyqt5
 
-```bash
+```sh
 pip install pyqt5 pyqtwebengine
 ```

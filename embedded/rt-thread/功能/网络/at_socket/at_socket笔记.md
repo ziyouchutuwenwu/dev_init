@@ -8,7 +8,7 @@
 
 - 位置
 
-```bash
+```sh
 RT-Thread online packages >
   IoT - internet of things >
     AT DEVICE: RT-Thread AT component porting or samples for different device
@@ -17,7 +17,7 @@ RT-Thread online packages >
 
 - 配置参数
 
-```bash
+```sh
 缓冲区大小可以设置大一点
 配置使用 laster 版本软件包；
 ```
@@ -26,7 +26,7 @@ RT-Thread online packages >
 
 - 位置
 
-```bash
+```sh
 RT-Thread Components
   Network
     Socket abstraction layer
@@ -52,7 +52,7 @@ RT-Thread Components
 - 模块如果使用杜邦线接线，用短的，长的可能会出现很多奇怪的问题
 - 如果提示缓冲区不够，可以使用串口调试器（cutecom）先调试 at 指令，很可能是不同的模块里面，在某些非正常时刻，发出太多的 response 导致的，可以看情况修改调用 at_create_resp 函数的地方针对性的修改缓冲区大小
 
-```bash
+```sh
 比如 [E/at.clnt] Read response buffer failed. The Response buffer size is out of buffer size(xxx)
 可以在 at.client.c 的 at_create_resp 函数上下断点观察流程，尝试把缓冲区都改大一点
 ```
@@ -63,7 +63,7 @@ RT-Thread Components
 
 使用 cutecom 连接，测试 wifi 指令，回车模式选择 CR/LF
 
-```bash
+```sh
 AT+CWMODE=1
 AT+CWJAP="ssid","password"
 AT+CIFSR
