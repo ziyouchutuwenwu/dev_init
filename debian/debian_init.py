@@ -298,6 +298,9 @@ def set_open_extra_menu_alias_to_profile(user):
         "echo \"alias open_extra_menu='thunar ~/.local/share/applications'\" > ~/.profile",
     )
 
+def install_tmux(user):
+    os.system("apt install tmux -y")
+    proc.run_as_user(user, "cp ./tmux/tmux.conf ~/.tmux.conf")
 
 def do_zprezto_config(user):
     os.system("apt install zsh -y")
@@ -380,7 +383,7 @@ if __name__ == "__main__":
     install_gantt_chart_tool()
     install_ntfs_support()
     install_qt_designer()
-
+    install_tmux(login_user)
     add_amazing_fonts()
     make_xfce_ftp_support()
 
