@@ -12,6 +12,8 @@ self._webview.load(QUrl("http://www.baidu.com"))
 
 ## linux 下输入中文输入法
 
+缺的是 fcitx 的库
+
 ```sh
 pip show PyQt5
 找到带有`site-packages`的路径
