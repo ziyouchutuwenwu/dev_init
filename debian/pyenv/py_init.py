@@ -33,7 +33,7 @@ if __name__ == "__main__":
     os.system("mkdir -p ~/.pip")
     os.system("echo [global] > ~/.pip/pip.conf")
     os.system(
-        "echo index-url = https://pypi.tuna.tsinghua.edu.cn/simple >> ~/.pip/pip.conf"
+        "echo index-url = https://mirrors.aliyun.com/pypi/simple/ >> ~/.pip/pip.conf"
     )
     os.system("echo [install] >> ~/.pip/pip.conf")
     os.system("echo '# mac下默认的pip安装目录错误，需要自定义一下，版本号注意修改' >> ~/.pip/pip.conf")
