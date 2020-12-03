@@ -2,7 +2,17 @@
 
 ## 插件
 
-官方插件无法调试，推荐使用 [这个版本](https://github.com/yidayoung/intellij-erlang)，zip 包直接可以离线安装
+官方插件无法调试，推荐使用 [这个版本](https://github.com/yidayoung/intellij-erlang)
+
+### 构建
+
+```sh
+git clone https://github.com/yidayoung/intellij-erlang
+修改build.gradle的 patchPluginXml 字段
+./gradlew buildPlugin
+```
+
+生成目录在 `build/distributions/`
 
 ## 简单模块调试
 
@@ -26,7 +36,7 @@
 
 ```sh
 创建 rebar3 的项目 `rebar3 new app test_app`
-创建一个这样的 erl，然后用上面一样的办法做模块级别的 debug，编译可以自己创建一个 rebar3 compile 的 task
+调试选择erlang application，做 Module 级别的 debug，编译可以自己创建一个 rebar3 compile 的 task
 复制 `_only_for_debug_` 目录到项目
 
 调试
@@ -55,7 +65,7 @@ erl -name aaa@127.0.0.1 -setcookie 111
 remote node name: aaa@127.0.0.1
 cookie: 111
 
-不勾选use short names
+不勾选 use short names
 host： 127.0.0.1
 ```
 
