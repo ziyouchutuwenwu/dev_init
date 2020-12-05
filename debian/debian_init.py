@@ -38,6 +38,10 @@ def install_sudo(user):
     os.system(cmd)
 
 
+def install_rt_test_tools():
+    os.system("apt install stress rt-tests -y")
+
+
 def install_audio_manager():
     os.system("apt install pulseaudio -y")
 
@@ -298,9 +302,11 @@ def set_open_extra_menu_alias_to_profile(user):
         "echo \"alias open_extra_menu='thunar ~/.local/share/applications'\" > ~/.profile",
     )
 
+
 def install_tmux(user):
     os.system("apt install tmux -y")
     proc.run_as_user(user, "cp ./tmux/tmux.conf ~/.tmux.conf")
+
 
 def do_zprezto_config(user):
     os.system("apt install zsh -y")
@@ -393,6 +399,7 @@ if __name__ == "__main__":
     install_themes(login_user)
     do_install_xfce_terminal_themes(login_user)
     install_proxychains(login_user)
+    install_rt_test_tools()
 
     # 这个必须在zprezto之前配置
     do_vim_config(login_user)
