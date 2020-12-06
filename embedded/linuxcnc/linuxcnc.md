@@ -42,3 +42,11 @@ sudo systemctl set-default multi-user.target
 vi /etc/default/grub
 修改 GRUB_TIMEOUT
 ```
+
+## 镜像源
+
+```sh
+mv /etc/apt/sources.list.d/linuxcnc.list /etc/apt/sources.list.d/linuxcnc.list.bak
+用镜像源直接更新，然后
+mv /etc/apt/sources.list.d/linuxcnc.list.bak /etc/apt/sources.list.d/linuxcnc.list
+```
