@@ -19,7 +19,7 @@ git clone https://bitbucket.org/patacongo/apps.git
 ```sh
 cd tools/kconfig-frontends
 autoreconf -f -i
-./configure --enable-mconf --prefix=$HOME/downloads/nuttx-libs
+./configure --enable-mconf --prefix=$HOME/dev/embedded/nuttx/tools_for_build
 make install
 ```
 
@@ -28,8 +28,8 @@ make install
 #### 把工具和库添加到环境变量
 
 ```sh
-export PATH=$HOME/dev/nuttx/build-essential/bin:$PATH
-export LD_LIBRARY_PATH=$HOME/dev/nuttx/build-essential/lib:$LD_LIBRARY_PATH
+export PATH=$HOME/dev/embedded/nuttx/tools_for_build/bin:$PATH
+export LD_LIBRARY_PATH=$HOME/dev/embedded/nuttx/tools_for_build/lib:$LD_LIBRARY_PATH
 ```
 
 ```sh
