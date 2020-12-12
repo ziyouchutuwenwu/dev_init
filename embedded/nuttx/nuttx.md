@@ -27,15 +27,22 @@ make install
 
 #### 把工具和库添加到环境变量
 
+复制 env.sh 到 nuttx 根目录
+
 ```sh
-export PATH=$HOME/dev/embedded/nuttx/tools_for_build/bin:$PATH
-export LD_LIBRARY_PATH=$HOME/dev/embedded/nuttx/tools_for_build/lib:$LD_LIBRARY_PATH
+source ./env.sh
 ```
 
 ```sh
 cd nuttx/tools
-./configure.sh stm32f103-minimum/nsh
+./configure.sh -E stm32f103-minimum/nsh
 cd ..
 make menuconfig
 make
+```
+
+config 里面的参数对应
+
+```sh
+boards/arm/stm32/stm32f103-minimum/configs/nsh
 ```
