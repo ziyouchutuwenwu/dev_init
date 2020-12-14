@@ -50,13 +50,13 @@ if CROSS_TOOL == "gcc":
 
 ### 注意真实的大小
 
-mcu 具体的 flash 和 ram 大小，`最好看一下芯片手册，`，比如 f407igt6 里面，有 64k 的内存是保留不能使用的
+mcu 具体的 flash 和 ram 大小，`最好看一下芯片手册`，比如 f407igt6 里面，有 64k 的内存是保留不能使用的
 
 可以使用 segger 公司的 `JFlashLiteExe` 查看具体芯片的 flash 和 ram 大小,这个比较准
 
 ## 修改 board/SConscript, 看看芯片等信息有没有错误
 
-搜索 CPPDEFINES, 改成你的芯片对应的型号，具体写法参考 CPPDEFINES 上面的内容里面改
+搜索 `CPPDEFINES`, 改成你的芯片对应的型号，具体写法参考 CPPDEFINES 上面的内容里面改
 
 根据你的芯片型号，修改下面对应的汇编启动文件 `xxxxxx.s`, 如果不知道用哪个，可以用 cubeMX 生成项目以后找，看用的是哪个文件
 
