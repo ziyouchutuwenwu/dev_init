@@ -14,7 +14,7 @@
       "device": "debug_device",
       "gdbpath": "/usr/bin/gdb-multiarch",
       "configFiles": [
-        "${env:HOME}/dev/embedded/openocd/stm32f4x/jlink_board.cfg"
+        "${env:HOME}/dev/dev_init/embedded/openocd/templates/stm32f4x/jlink_board.cfg"
       ],
       // "preLaunchTask": "build",
       "runToMain": true

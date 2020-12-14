@@ -22,7 +22,7 @@ if CROSS_TOOL == "gcc":
     )
 ```
 
-命令行直接`scons -c; scons --dist`
+命令行直接 `scons -c; scons --dist`
 
 ## 生成 cubeMX 项目
 
