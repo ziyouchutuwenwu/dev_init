@@ -52,7 +52,7 @@ if CROSS_TOOL == "gcc":
 
 mcu 具体的 flash 和 ram 大小，`最好看一下芯片手册`，比如 f407igt6 里面，有 64k 的内存是保留不能使用的
 
-可以使用 segger 公司的 `JFlashLiteExe` 查看具体芯片的 flash 和 ram 大小,这个比较准
+可以使用 segger 公司的 `JFlashLiteExe` 查看具体芯片的 flash 和 ram 大小, `v6.86g` 这个版本是最后一个能看内存大小的版本，推荐使用
 
 ## 修改 board/SConscript, 看看芯片等信息有没有错误
 
