@@ -4,10 +4,16 @@
 
 ## 打开 usb host
 
-- 打开 cubeMX，配置 USB_OTG, 使用 host_only 模式，nvic interrupt table 配置 usb on the go fs global interrupt, 生成代码，复制到项目
-- cubeMX 里面配置的时候，rcc 需要启用 hse，外部晶震，usb 的时钟需要设置为 48MHZ
-- 复制 main.c 里面的时钟配置到 board.c
-- 修改 board/Kconfig，添加
+步骤
+
+```sh
+打开 cubeMX，配置 USB_OTG, 使用 host_only 模式，nvic interrupt table 配置 usb on the go fs global interrupt, 生成代码，复制到项目
+
+cubeMX 里面配置的时候，rcc 需要启用 hse，外部晶震，usb 的时钟需要设置为 48MHZ
+复制 main.c 里面的时钟配置到 board.c
+```
+
+修改 board/Kconfig，添加
 
 ```sh
 config BSP_USING_USBH
@@ -27,7 +33,7 @@ RT-Thread Components --->
 
 ## 打开文件系统
 
-- 位置
+位置
 
 ```sh
 RT-Thread Components --->
@@ -48,8 +54,9 @@ RT-Thread Components --->
 
 ## 复制驱动
 
-- 去 gitee 的 rt thread 的 master 分支里面找到 drv_usbh.c 和 drv_usbh.h， 放到项目的 libraries/HAL_Drivers 里面
-- 修改，添加 libraries/HAL_Drivers/SConscript
+去 gitee 的 rt thread 的 master 分支里面找到 drv_usbh.c 和 drv_usbh.h， 放到项目的 libraries/HAL_Drivers 里面
+
+修改，添加 libraries/HAL_Drivers/SConscript
 
 ```txt
 if GetDepend(['BSP_USING_USBH']):
@@ -58,5 +65,6 @@ if GetDepend(['BSP_USING_USBH']):
 
 ## 备注
 
-- u 盘的供电需要 `5v`
-- 可以修改 usb 调试宏查看日志 RT_DEBUG_USB
+u 盘的供电需要 `5v`
+
+可以修改 usb 调试宏查看日志 RT_DEBUG_USB

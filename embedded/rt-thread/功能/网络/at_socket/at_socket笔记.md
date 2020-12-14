@@ -6,7 +6,7 @@
 
 ## 开启 at device 软件包的支持
 
-- 位置
+位置
 
 ```sh
 RT-Thread online packages >
@@ -15,7 +15,7 @@ RT-Thread online packages >
        [*]  Espressif ESP8266  --->
 ```
 
-- 配置参数
+配置参数
 
 ```sh
 缓冲区大小可以设置大一点
@@ -24,7 +24,7 @@ RT-Thread online packages >
 
 ## 开启驱动部分的支持
 
-- 位置
+位置
 
 ```sh
 RT-Thread Components
@@ -43,7 +43,7 @@ RT-Thread Components
 
 ## 调试
 
-- 可以输入`at client uart2`进行 at 命令调试
+可以输入`at client uart2`进行 at 命令调试
 
 ## 注意
 
@@ -57,7 +57,7 @@ RT-Thread Components
 可以在 at.client.c 的 at_create_resp 函数上下断点观察流程，尝试把缓冲区都改大一点
 ```
 
-- 如果还有解决不了的问题，看[这里](https://www.rt-thread.org/qa/forum.php?mod=viewthread&tid=11919&extra=page%3D1%26filter%3Dtypeid%26typeid%3D5)
+如果还有解决不了的问题，看[这里](https://www.rt-thread.org/qa/forum.php?mod=viewthread&tid=11919&extra=page%3D1%26filter%3Dtypeid%26typeid%3D5)
 
 ## esp8266 的 at 调试
 
