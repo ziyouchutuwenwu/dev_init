@@ -14,7 +14,7 @@ menuconfig BSP_USING_DAC
     endif
 ```
 
-### 如果启用的 dac 不自带，需要手工修改，步骤如下
+## 如果启用的 dac 不自带，需要手工修改，步骤如下
 
 复制 `libraries/HAL_Drivers/config/h7/dac_config.h` 到 `libraries/HAL_Drivers/config/f4/dac_config.h`
 
@@ -30,7 +30,6 @@ if GetDepend(["RT_USING_DAC"]):
 
 步骤
 
-```sh
-scons --menuconfig 启用 adc
+使用 cubeMX 配置项目, 启用 dac 和对应的 channel
+scons --menuconfig 启用 dac
 stm32XXxx_hal_conf.h 需要启用 HAL_ADC_MODULE_ENABLED
-```
