@@ -19,12 +19,13 @@ sudo chroot ./buster /bin/bash
 先启动容器
 
 ```sh
-docker run -it --name arm-erlang --network host --rm -v ~/projects/erlang/:/usr/src arm32v7/erlang
+docker run -it --name arm_erlang --network host --rm -v ~/projects/erlang/:/usr/src arm32v7/erlang
 ```
 
 然后
 
 ```sh
+docker exec -it arm_erlang /bin/bash
 cd /usr/src/xxx
 ./rebar3 as prod tar
 ```
