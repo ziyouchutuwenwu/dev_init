@@ -10,7 +10,7 @@ sudo apt install qemu-user-static
 
 ```sh
 sudo apt install debootstrap
-sudo debootstrap --arch=armel buster ./buster https://mirrors.tuna.tsinghua.edu.cn/debian/
+sudo debootstrap --arch=armhf buster ./buster http://mirrors.ustc.edu.cn/debian/
 sudo chroot ./buster /bin/bash
 ```
 
