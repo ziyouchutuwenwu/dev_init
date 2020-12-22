@@ -29,7 +29,7 @@ git clone https://github.com/yidayoung/intellij-erlang
 ```
 
 ```sh
--pa _build/default/lib/你的项目名字/ebin
+-pa _build/default/lib/*/ebin/
 ```
 
 ## opt 项目调试
