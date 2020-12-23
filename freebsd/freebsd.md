@@ -15,10 +15,7 @@ latest 表示滚动更新的版本库，想要稳定些版本换成 quarterly
 
 ```bash
 FreeBSD: {
-    url: "pkg+http://mirrors.ustc.edu.cn/freebsd-pkg/${ABI}/latest",
-    mirror_type: "srv",  signature_type: "fingerprints",
-    fingerprints: "/usr/share/keys/pkg",
-    enabled: yes
+    url: "pkg+http://mirrors.ustc.edu.cn/freebsd-pkg/${ABI}/latest"
 }
 ```
 
@@ -32,23 +29,35 @@ pkg update -f
 
 在 /etc/make.conf 中添加以下内容
 
+axel 需要先安装，不然会编译错误
+
 ```sh
-FETCH_CMD=axel -n 10 -a
+#FETCH_CMD=axel -n 10 -a
 DISABLE_SIZE=yes
 MASTER_SITE_OVERRIDE?=http://mirrors.ustc.edu.cn/freebsd-ports/distfiles/${DIST_SUBDIR}/
 ```
+
+#### 安装软件
+
+cd /usr/ports
+
+make search key=xxx
+
+cd 具体路径; make install
+
+卸载可以 make deinstall
 
 ### portsnap
 
 vi /etc/portsnap.conf
 
 ```sh
-SERVERNAME=portsnap.FreeBSD.org
+SERVERNAME 后面的字段
 修改为
-SERVERNAME=freebsd-portsnap.mirror.bjtulug.org
+portsnap.hshh.org
 ```
 
-portsnap fetch extract
+portsnap fetch extract update
 
 ### freebsd-update 源
 
