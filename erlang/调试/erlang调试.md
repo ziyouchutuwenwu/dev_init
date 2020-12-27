@@ -8,8 +8,8 @@
 
 ```sh
 用解压软件打开压缩包，不要解压
-找到 intellij-erlang-0.11.2000.zip\intellij-erlang\lib\intellij-erlang-0.11.2000.jar\META-INF
-修改 plugins.xml 中的 until-build 字段
+找到 intellij-erlang-0.11.2000.zip\intellij-erlang\lib\intellij-erlang-0.11.2000.jar
+修改 META-INF/plugins.xml 中的 until-build 字段
 ```
 
 ### 自己构建
