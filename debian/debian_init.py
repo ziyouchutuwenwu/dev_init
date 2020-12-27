@@ -182,6 +182,10 @@ def install_useful_tools():
     )
 
 
+def install_media_tools():
+    os.system("apt install ffmpeg v4l-utils -y")
+
+
 def install_remote_gui_client():
     os.system("apt install remmina -y")
 
@@ -359,6 +363,7 @@ if __name__ == "__main__":
     install_gdebi()
     install_net_tools()
     install_useful_tools()
+    install_media_tools()
     install_ios_tools()
     install_gz_to_deb()
     install_theme()
