@@ -100,4 +100,7 @@ interpret scope，设置为全工程，否则会跑飞
 
 ### 调试
 
-代码下断点，然后在 idea 下面的 erlang 的 shell 里面的输入调用的模块，会中断，完美
+```sh
+下断点以后，需要在 idea 下面的 erlang 的 shell 里手动调用, 实测发现 console 和 debug 的 shell 都可以
+跨 module/文件 单步，需要在新的模块上手动断点，不然由于模块还没有 interpret, 会跑飞
+```
