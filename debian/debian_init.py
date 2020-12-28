@@ -71,7 +71,7 @@ def install_arm_vm_essential():
 
 
 def install_clang_llvm_lldb():
-    os.system("apt install clang llvm lldb -y")
+    os.system("apt install valgrind clang llvm lldb -y")
 
 
 def install_serial_tools():
