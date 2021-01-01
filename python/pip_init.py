@@ -13,63 +13,67 @@ if __name__ == "__main__":
     os.system(cmd)
 
     # pip-review --auto
-    cmd = "pip install pip-review"
+    cmd = "pip install pip-review --upgrade"
     os.system(cmd)
 
-    cmd = "pip install stegoveritas-binwalk"
+    cmd = "pip install stegoveritas-binwalk --upgrade"
     os.system(cmd)
 
     # beckhoff的通信库
-    cmd = "pip install pyads"
+    cmd = "pip install pyads --upgrade"
     os.system(cmd)
 
     # vscode 代码格式化工具
-    cmd = "pip install black"
+    cmd = "pip install black --upgrade"
     os.system(cmd)
 
     # vscode 代码错误检查工具
-    cmd = "pip install pylint"
+    cmd = "pip install pylint --upgrade"
     os.system(cmd)
 
-    cmd = "pip install sqlmap"
+    cmd = "pip install sqlmap --upgrade"
     os.system(cmd)
 
-    cmd = "pip install pysocks"
+    cmd = "pip install pysocks --upgrade"
     os.system(cmd)
 
-    cmd = "pip install pyqt5 PyQtWebEngine"
+    cmd = "pip install pyqt5 PyQtWebEngine --upgrade"
     os.system(cmd)
 
-    cmd = "pip install requests"
+    cmd = "pip install requests --upgrade"
     os.system(cmd)
 
-    cmd = "pip install selenium"
+    cmd = "pip install selenium --upgrade"
     os.system(cmd)
 
-    cmd = "pip install httpie"
+    cmd = "pip install httpie --upgrade"
     os.system(cmd)
 
-    cmd = "pip install scons"
+    cmd = "pip install scons --upgrade"
     os.system(cmd)
 
-    cmd = "pip install docker-compose"
+    cmd = "pip install docker-compose --upgrade"
     os.system(cmd)
 
-    cmd = "pip install you-get"
+    cmd = "pip install you-get --upgrade"
     os.system(cmd)
 
-    cmd = "pip install youtube-dl"
+    cmd = "pip install youtube-dl --upgrade"
     os.system(cmd)
 
-    cmd = "pip install mkdocs sphinx-rtd-theme"
+    cmd = "pip install mkdocs sphinx-rtd-theme --upgrade"
     os.system(cmd)
 
-    cmd = "pip install beautifulsoup4"
+    cmd = "pip install beautifulsoup4 --upgrade"
     os.system(cmd)
 
-    cmd = "pip install pyinotify"
+    cmd = "pip install pyinotify --upgrade"
     os.system(cmd)
 
     path = os.path.expanduser("~")
     profile = path + "/" + ".profile"
     file.set_to_file(profile, 'alias pyfilemon="python -m pyinotify -v"')
+
+    # github.com/rohanrhu/gdb-frontend
+    cmd = "pip install gdbfrontend --upgrade"
+    os.system(cmd)
