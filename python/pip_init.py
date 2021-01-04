@@ -69,11 +69,14 @@ if __name__ == "__main__":
 
     cmd = "pip install pyinotify --upgrade"
     os.system(cmd)
-
     path = os.path.expanduser("~")
     profile = path + "/" + ".profile"
     file.set_to_file(profile, 'alias pyfilemon="python -m pyinotify -v"')
 
     # github.com/rohanrhu/gdb-frontend
     cmd = "pip install gdbfrontend --upgrade"
+    os.system(cmd)
+
+    # pip search目前有问题，需要使用下面这个, 命令是 pip_search
+    cmd = "pip install pip-search --upgrade"
     os.system(cmd)
