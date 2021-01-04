@@ -20,20 +20,20 @@ rm -rf ~/.bash_logout
 
 # ------------------------------------------------------------------------
 # 注意必须在ln以后，不然会错误，得用"${ZDOTDIR:-$HOME}/.zprezto/runcoms/zshrc"
-echo "source ~/.profile" >> ~/.zshrc
+echo -e "source ~/.profile\n" >> ~/.zshrc
 
 # 抄袭fish的语法高亮的主题
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/plugins/zsh-syntax-highlighting
-echo "source ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" >> ~/.zshrc
+echo -e "source ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" >> ~/.zshrc
 
 # 增加fish的补全插件
 git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/plugins/zsh-autosuggestions
-echo "source ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh" >> ~/.zshrc
+echo -e "source ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh\n" >> ~/.zshrc
 
-echo "if repo clone failed, run \"cd ~/.zprezto; git submodule update --recursive\""
+echo -e "if repo clone failed, run \"cd ~/.zprezto; git submodule update --recursive\""
 
 mkdir -p ~/.zsh/colors
 CURRENT_DIR=$(cd "$(dirname "$0")";pwd)
 cp -rf $CURRENT_DIR/shell_color/dircolors.ansi-dark ~/.zsh/colors
 
-echo "eval \`dircolors ~/.zsh/colors/dircolors.ansi-dark\`" >> ~/.zshrc
+echo -e "eval \`dircolors ~/.zsh/colors/dircolors.ansi-dark\`\n" >> ~/.zshrc
