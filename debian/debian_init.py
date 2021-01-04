@@ -20,10 +20,6 @@ def do_apt_update():
     )
 
 
-def set_tsinghua_apt_config():
-    os.system("cp ./apt/tsinghua.list /etc/apt/sources.list")
-
-
 def set_aliyun_apt_config():
     os.system("cp ./apt/aliyun.list /etc/apt/sources.list")
 
@@ -265,10 +261,10 @@ def install_erlang(user):
 def install_docker(user):
     os.system("apt install software-properties-common -y")
     os.system(
-        "curl -fsSL https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/debian/gpg | apt-key add -"
+        "curl -fsSL https://mirrors.ustc.edu.cn/docker-ce/linux/debian/gpg | apt-key add -"
     )
     os.system(
-        'add-apt-repository "deb [arch=amd64] https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/debian $(lsb_release -cs) stable"'
+        'add-apt-repository "deb [arch=amd64] https://mirrors.ustc.edu.cn/docker-ce/linux/debian $(lsb_release -cs) stable"'
     )
     os.system("apt update; apt install docker-ce -y")
     cmd = "usermod -a -G docker %s" % user
@@ -315,6 +311,8 @@ def install_tmux(user):
 def do_zprezto_config(user):
     os.system("apt install zsh -y")
     os.system("apt install terminator -y")
+
+    proc.run_as_user(user, "echo 下面输入普通用户的密码")
     proc.run_as_user(user, "chsh -s $(which zsh)")
     proc.run_as_user(user, "sh ./zprezto/config.sh")
 
