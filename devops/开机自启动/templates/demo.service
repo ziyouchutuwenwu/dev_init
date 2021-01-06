@@ -1,0 +1,15 @@
+[Unit]
+Description=demo service
+Documentation=
+After=network-online.target
+
+[Service]
+#User=amos
+#Group=amos
+Type=simple
+WorkingDirectory=/home/mmc
+ExecStart=/home/mmc/demo_app
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
