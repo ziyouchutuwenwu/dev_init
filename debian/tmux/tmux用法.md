@@ -1,5 +1,11 @@
 # tmux 用法
 
+## 配置文件
+
+```sh
+cp ./tmux.conf.template ~/.tmux.conf
+```
+
 ## 常用指令
 
 ```sh
@@ -25,10 +31,13 @@ ctrl+b } 向后交换panel
 
 ## 鼠标支持
 
+配置文件里面启用
+
 ```sh
-vim ~/.tmux.conf
 set-option -g mouse on
 ```
+
+操作方式
 
 ```sh
 用鼠标点击窗格来激活该窗格；
