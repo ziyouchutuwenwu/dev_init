@@ -1,5 +1,7 @@
 # hwtimer
 
+## 步骤
+
 修改 board/Kconfig，添加 TIM 部分，以下为参考
 
 ```sh
@@ -29,7 +31,7 @@ menuconfig BSP_USING_TIM
 #endif
 ```
 
-步骤
+## menuconfig
 
 ```sh
 scons --menuconfig 启用 timer 配置

@@ -1,12 +1,14 @@
 # spi
 
-注意
+## 注意
 
 ```sh
 
 mode 选择`Full-Duplex Master`全双工主模式，NSS Signal 选`Disable`即可
 接线的时候，MOSI 和 MISO 不需要反接
 ```
+
+## 步骤
 
 修改 board/Kconfig，添加 SPI 部分，以下为参考
 
@@ -33,7 +35,7 @@ menuconfig BSP_USING_SPI
     endif
 ```
 
-步骤
+## menuconfig
 
 ```sh
 scons --menuconfig 启用 spi

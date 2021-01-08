@@ -1,5 +1,7 @@
 # can
 
+## 步骤
+
 修改 board/Kconfig，添加 can 相关部分，以下为参考
 
 ```sh
@@ -14,11 +16,15 @@ menuconfig BSP_USING_CAN
     endif
 ```
 
-步骤
+## menuconfig
 
 ```sh
 scons --menuconfig 启用 can
 stm32XXxx_hal_conf.h 需要启用 HAL_CAN_MODULE_ENABLED
-一定要注意 cubeMX 里面的时钟配置`apb1 peripheral clocks`，这个和 PSC, BS1, BS2, SJW, 会共同影响波特率错误，导致收不到数据
-波特率计算公式 `baud = APB_PERIPHERAL_CLOCK / ( PSC*( BS1 + BS2 + SJW) )`
 ```
+
+## 注意
+
+一定要注意 cubeMX 里面的时钟配置`apb1 peripheral clocks`，这个和 PSC, BS1, BS2, SJW, 会共同影响波特率错误，导致收不到数据
+
+波特率计算公式 `baud = APB_PERIPHERAL_CLOCK / ( PSC*( BS1 + BS2 + SJW) )`

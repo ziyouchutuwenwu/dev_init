@@ -1,10 +1,10 @@
 # uart
 
-注意
+## 注意
 
-```sh
 cubeMX 导出配置，引脚位置在 xxxx_hal_msp.c 中
-```
+
+## 步骤
 
 参考下面的改 board/Kconfig
 
@@ -24,7 +24,7 @@ menuconfig BSP_USING_UART
     endif
 ```
 
-步骤
+## menuconfig
 
 ```sh
 scons --menuconfig 启用 uart，默认启用

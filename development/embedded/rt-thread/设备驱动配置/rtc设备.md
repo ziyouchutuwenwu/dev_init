@@ -2,9 +2,13 @@
 
 rtc 用于提供精确的实时时间，分为硬件 rtc 和软件模拟 rtc
 
+## 提醒
+
 ```sh
 硬件 rtc，cubeMX 里面配置的时候，选中`Activate Clock Source`，时钟树里面，rtc 的时钟需要配置为`LSE`
 ```
+
+## 步骤
 
 修改 board/Kconfig，添加 rtc 相关部分，以下为参考
 
@@ -62,7 +66,7 @@ RT-Thread Components →
     (3600)  NTP auto sync period(second)                          /* NTP 自动同步周期，单位为秒，默认一小时（即 3600S）同步一次。 */
 ```
 
-注意
+## 注意
 
 ```sh
 rtc 无论使用硬件还是软件模拟，目前只支持一个，名字就叫 rtc

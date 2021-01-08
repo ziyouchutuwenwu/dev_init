@@ -2,7 +2,7 @@
 
 以 aht10 为例
 
-用法见[这里](https://github.com/RT-Thread-packages/aht10#readme)
+用法见 [这里](https://github.com/RT-Thread-packages/aht10#readme)
 
 注意, 由于 aht 为温湿度传感器，因此，sensor 框架会抽象出 温度和湿度两个设备
 

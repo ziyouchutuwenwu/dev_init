@@ -1,11 +1,14 @@
 # pwm
 
-注意
+## 注意
 
 ```sh
 cubeMX 里面配置的时候，一定要注意，`Clock Source 记得选一下`，默认是 disable; ChannelX 选 `PWM Generation CHX`
+
 一个定时器只能产生一个频率的 pwm，可以产生多个通道 pwm 信号，不同信道可以占空比不同但频率必须相同，否则会被后面启用的 pwm 覆盖
 ```
+
+## 步骤
 
 修改 board/Kconfig，添加 pwm 相关部分，以下为参考
 
@@ -41,7 +44,7 @@ menuconfig BSP_USING_PWM
 #endif
 ```
 
-步骤
+## menuconfig
 
 ```sh
 scons --menuconfig 启用 pwm

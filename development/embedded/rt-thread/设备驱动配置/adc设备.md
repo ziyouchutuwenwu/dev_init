@@ -1,5 +1,7 @@
 # adc
 
+## 步骤
+
 修改 board/Kconfig，添加 adc 相关部分，以下为参考
 
 ```sh
@@ -14,7 +16,9 @@ menuconfig BSP_USING_ADC
     endif
 ```
 
-如果启用的 adc 不自带，需要手工修改，修改`libraries/HAL_Drivers/config/f4/adc_config.h`
+如果启用的 adc 不自带，需要手工修改
+
+修改`libraries/HAL_Drivers/config/f4/adc_config.h`
 
 ```C
 #ifdef BSP_USING_ADC1
@@ -39,7 +43,7 @@ menuconfig BSP_USING_ADC
 #endif
 ```
 
-步骤
+## menuconfig
 
 ```sh
 scons --menuconfig 启用 adc
