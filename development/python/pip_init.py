@@ -12,6 +12,9 @@ if __name__ == "__main__":
     cmd = "pip install --upgrade pip"
     os.system(cmd)
 
+    cmd = "pip install virtualenv --upgrade"
+    os.system(cmd)
+
     # pip-review --auto
     cmd = "pip install pip-review --upgrade"
     os.system(cmd)
