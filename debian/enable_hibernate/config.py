@@ -5,10 +5,11 @@ from __future__ import print_function
 import os
 import sys
 
-pwd = os.path.split(os.path.realpath(__file__))[0]
+pwd = os.path.dirname(os.path.abspath(__file__))
 module_path = "%s/../../" % pwd
 sys.path.append(module_path)
 from py_mods import proc
+
 
 def convert_result_to_version(result):
     str_result = (" ".join("%s" % id for id in result)).rstrip("\\n'")
