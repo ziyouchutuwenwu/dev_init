@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-from py_mods import proc
 
 import os
 import sys
 
 pwd = os.path.split(os.path.realpath(__file__))[0]
-proc_path = "%s/../../" % pwd
-sys.path.append(proc_path)
-
+module_path = "%s/../../" % pwd
+sys.path.append(module_path)
+from py_mods import proc
 
 def convert_result_to_version(result):
     str_result = (" ".join("%s" % id for id in result)).rstrip("\\n'")

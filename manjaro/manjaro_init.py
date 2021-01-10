@@ -6,7 +6,9 @@ from __future__ import print_function
 import os
 import sys
 
-sys.path.append("..")
+pwd = os.path.split(os.path.realpath(__file__))[0]
+module_path = "%s/../" % pwd
+sys.path.append(module_path)
 from py_mods import proc
 from py_mods import file
 

@@ -4,7 +4,9 @@
 import os
 import sys
 
-sys.path.append("..")
+pwd = os.path.split(os.path.realpath(__file__))[0]
+module_path = "%s/../../" % pwd
+sys.path.append(module_path)
 from py_mods import file
 
 if __name__ == "__main__":
