@@ -3,6 +3,11 @@ for file in split(glob("~/.vim/init-scripts/*.vim"), '\n')
 endfor
 
 
-for file in split(glob("~/.vim/custom-setting/*.vim"), '\n')
+for file in split(glob("~/.vim/custom/plugin-setting/*.vim"), '\n')
+    exe 'source' file
+endfor
+
+
+for file in split(glob("~/.vim/custom/custom-setting/*.vim"), '\n')
     exe 'source' file
 endfor
