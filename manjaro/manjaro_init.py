@@ -62,7 +62,7 @@ def install_erlang(user):
 
 
 def install_useful_tools():
-    os.system("pacman -S --noconfirm curl wget axel vim git ranger tree")
+    os.system("pacman -S --noconfirm curl wget axel gvim git ranger tree")
 
 
 def remove_useless_applications():

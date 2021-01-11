@@ -1,8 +1,3 @@
-set nu
-syntax enable
-set background=dark
-set term=xterm-256color
-
 if system('uname') == "Linux\n"
     let g:solarized_termcolors=256
     let g:solarized_termctrans=1
