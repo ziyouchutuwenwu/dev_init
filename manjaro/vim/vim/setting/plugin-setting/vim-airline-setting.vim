@@ -1,1 +1,1 @@
-let g:airline_theme='durant'
+let g:airline_theme='onedark'
