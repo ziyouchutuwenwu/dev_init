@@ -1,8 +1,2 @@
-if system('uname') == "Linux\n"
-    let g:solarized_termcolors=256
-    let g:solarized_termctrans=1
-
-    "开启linux下的灰蒙蒙的遮罩
-    let g:solarized_termtrans=1
-endif
-colorscheme solarized
+syntax on
+colorscheme onedark

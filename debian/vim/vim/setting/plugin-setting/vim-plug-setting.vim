@@ -8,5 +8,6 @@ call plug#begin('~/.vim/plugins')
   Plug 'vim-airline/vim-airline-themes'	
 
   Plug 'maralla/completor.vim'
+  Plug 'joshdick/onedark.vim'
 
 call plug#end()
