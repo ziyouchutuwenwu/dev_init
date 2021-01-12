@@ -325,6 +325,7 @@ def do_install_xfce_terminal_themes(user):
 
 def do_vim_config(user):
     os.system("apt install vim-gtk -y")
+    os.system("rm -rf /usr/share/applications/vim.desktop")
     proc.run_as_user(user, "sh ./vim/install.sh")
 
 
