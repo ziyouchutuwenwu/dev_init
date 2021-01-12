@@ -323,10 +323,9 @@ def do_install_xfce_terminal_themes(user):
     proc.run_as_user(user, "sh ./terminal_theme/install.sh")
 
 
-def do_vim_config(user):
+def do_vim_config():
     os.system("apt install vim-gtk -y")
     os.system("rm -rf /usr/share/applications/vim.desktop")
-    proc.run_as_user(user, "sh ./vim/install.sh")
 
 
 def fix_translation_bug():
@@ -408,7 +407,7 @@ if __name__ == "__main__":
     install_rt_test_tools()
 
     # 这个必须在zprezto之前配置
-    do_vim_config(login_user)
+    do_vim_config()
 
     install_erlang(login_user)
     install_docker(login_user)

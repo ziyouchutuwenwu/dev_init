@@ -77,10 +77,9 @@ def install_proxychains(user):
     )
 
 
-def do_vim_config(user):
+def do_vim_config():
     os.system("pacman -S --noconfirm gvim")
     os.system("rm -rf /usr/share/applications/vim.desktop")
-    proc.run_as_user(user, "sh ./vim/install.sh")
 
 
 def install_yay():
@@ -128,7 +127,7 @@ if __name__ == "__main__":
     install_proxychains(login_user)
     install_chinese_input(login_user)
     install_themes(login_user)
-    do_vim_config(login_user)
+    do_vim_config()
     install_yay()
 
     # monaco字体需要linuxcn源

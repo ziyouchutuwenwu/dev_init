@@ -1,8 +1,0 @@
-for file in split(glob("~/.vim/setting/plugin-setting/*.vim"), '\n')
-    exe 'source' file
-endfor
-
-
-for file in split(glob("~/.vim/setting/custom-setting/*.vim"), '\n')
-    exe 'source' file
-endfor
