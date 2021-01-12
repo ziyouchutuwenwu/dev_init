@@ -314,7 +314,7 @@ def do_zprezto_config(user):
     os.system("apt install zsh -y")
     os.system("apt install terminator -y")
 
-    proc.run_as_user(user, "echo 下面输入普通用户的密码")
+    proc.run_as_user(user, "echo 下面输入需要改变默认shell的用户密码")
     proc.run_as_user(user, "chsh -s $(which zsh)")
     proc.run_as_user(user, "sh ./zprezto/config.sh")
 
