@@ -62,7 +62,7 @@ def install_erlang(user):
 
 
 def install_useful_tools():
-    os.system("pacman -S --noconfirm curl wget axel gvim git ranger tree")
+    os.system("pacman -S --noconfirm curl wget axel git ranger tree")
 
 
 def remove_useless_applications():
@@ -75,6 +75,12 @@ def install_proxychains(user):
         user,
         "echo \"alias proxy='proxychains'\" >> ~/.profile",
     )
+
+
+def do_vim_config(user):
+    os.system("pacman -S --noconfirm gvim")
+    os.system("rm -rf /usr/share/applications/vim.desktop")
+    proc.run_as_user(user, "sh ./vim/install.sh")
 
 
 def install_yay():
@@ -97,11 +103,6 @@ def set_linuxcn_pkg():
 
     os.system("pacman -Syy --noconfirm")
     os.system("pacman -S --noconfirm archlinuxcn-keyring")
-
-
-def do_vim_config(user):
-    os.system("pacman -S --noconfirm vim")
-    proc.run_as_user(user, "sh ./vim/install.sh")
 
 
 def install_monaco_fonts():
