@@ -27,10 +27,27 @@ service 本身，注释`@Injectable`，然后在组件的声明区域
 })
 ```
 
-## module 级别，需要一个单独包装 service 的 module，否则会陷入依赖循环，[参考连接](https://segmentfault.com/a/1190000019500553#item-5)
+## module 级注入
 
-- 一般用于懒加载，懒加载用于提高性能，在路由里面添加`{ path: 'demo', loadChildren: () => import('../pages/demo/demo.module')`即可。
-- 创建单独的 module。`ng g m LazyServiceModule`, 在`DemoService`的声明里面，改下面部分
+module 级别需要一个单独包装 service 的 module，否则会陷入依赖循环，[参考连接](https://segmentfault.com/a/1190000019500553#item-5)
+
+一般用于懒加载，懒加载用于提高性能
+
+### 步骤
+
+在路由里面添加如下
+
+```typescript
+{ path: 'demo', loadChildren: () => import('../pages/demo/demo.module')
+```
+
+创建单独的 module。
+
+```sh
+ng g m LazyServiceModule
+```
+
+在 DemoService 的声明里面，改下面部分
 
 ```typescript
 @Injectable({
@@ -38,7 +55,7 @@ service 本身，注释`@Injectable`，然后在组件的声明区域
 })
 ```
 
-修改真正需要独立的 module，在 imports 里面，加入`LazyServiceModule`即可，参考下面
+修改真正需要独立的 module，在 imports 里面，加入 LazyServiceModule 即可，参考下面
 
 ```typescript
 @NgModule({
@@ -54,9 +71,9 @@ service 本身，注释`@Injectable`，然后在组件的声明区域
 })
 ```
 
-- component 内写
+component 内写
 
-- 假如有组件 MyComponent，需要使用某 service
+假如有组件 MyComponent，需要使用某 service
 
 ```typescript
 export class MyComponent implements OnInit {

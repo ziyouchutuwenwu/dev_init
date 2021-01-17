@@ -7,7 +7,7 @@ import { Injectable } from "@angular/core";
 import { Subject } from "rxjs";
 
 @Injectable({
-  providedIn: "root"
+  providedIn: "root",
 })
 export class CommunicationService {
   private subject;
@@ -27,7 +27,7 @@ export class CommunicationService {
   });
    */
   subscribe(onNext) {
-    this.subject.subscribe(message => {
+    this.subject.subscribe((message) => {
       if (message !== null) onNext(message);
     });
   }
@@ -47,7 +47,7 @@ export class CommunicationEntity {
 }
 ```
 
-- 以 login 的 service 为例
+以 login 的 service 为例
 
 ```typescript
 export const LOGIN = 'login';
