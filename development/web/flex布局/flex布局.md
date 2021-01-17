@@ -15,7 +15,7 @@ display: flex;
 
 ```txt
 设置权重 flex
-可选的子元素对齐 align-self
+可选的子元素对齐 align-self，可覆盖父容器配置的对齐方式
 ```
 
 ### 比较有用的辅助配置
