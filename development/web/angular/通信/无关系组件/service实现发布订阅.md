@@ -1,4 +1,8 @@
-# 直接上代码
+# service 实现发布订阅
+
+本质是 service 实现发布订阅
+
+其他组件构造注入此 service，通过订阅，拿到回调事件
 
 ## CommunicationService
 
@@ -77,7 +81,7 @@ export class LoginoutService extends CommunicationService {
   }
 ```
 
-- LoginComponent.ts
+LoginComponent.ts
 
 ```typescript
 onLogin() {
