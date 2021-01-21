@@ -180,10 +180,6 @@ def install_useful_tools():
     )
 
 
-def install_media_tools():
-    os.system("apt install ffmpeg v4l-utils -y")
-
-
 def install_remote_gui_client():
     os.system("apt install remmina -y")
 
@@ -224,8 +220,9 @@ def install_disk_partition_tool():
     os.system("apt install gparted -y")
 
 
-def install_media_player():
-    os.system("apt install vlc smplayer -y")
+def install_media_related():
+    os.system("apt install vlc smplayer audacious -y")
+    os.system("apt install ffmpeg v4l-utils -y")
 
 
 def install_zip_tool(user):
@@ -363,7 +360,6 @@ if __name__ == "__main__":
     install_gdebi()
     install_net_tools()
     install_useful_tools()
-    install_media_tools()
     install_ios_tools()
     install_gz_to_deb()
     install_theme()
@@ -387,7 +383,7 @@ if __name__ == "__main__":
     install_disk_partition_tool()
     install_zip_tool(login_user)
     install_file_search_tool()
-    install_media_player()
+    install_media_related()
     install_clipboard_tool()
     install_notes_tool()
     install_pdf_reader()
