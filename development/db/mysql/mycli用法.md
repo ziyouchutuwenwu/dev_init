@@ -1,12 +1,4 @@
-# mysql
-
-docker 下进入 shell
-
-```sh
-docker exec -it mysql /bin/bash
-```
-
-mycli 用法
+# mycli 用法
 
 ```sh
 mycli -h 127.0.0.1 -P 4407 -uroot -proot
