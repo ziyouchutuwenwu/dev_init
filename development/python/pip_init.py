@@ -20,6 +20,12 @@ if __name__ == "__main__":
     cmd = "pip install stegoveritas-binwalk --upgrade"
     os.system(cmd)
 
+    cmd = "pip install mycli --upgrade"
+    os.system(cmd)
+
+    cmd = "pip install pgcli --upgrade"
+    os.system(cmd)
+
     # beckhoff的通信库
     cmd = "pip install pyads --upgrade"
     os.system(cmd)
