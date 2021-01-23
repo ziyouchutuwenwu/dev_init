@@ -17,3 +17,9 @@ vim pg_hba.conf, 添加一行
 ```sh
 host all all 0.0.0.0/0 md5
 ```
+
+如果 `\c demo_db demo_user` 提示对用户 demo_user 的对等认证失败，则 vim pg_hba.conf
+
+```sh
+local all all md5
+```

@@ -14,7 +14,7 @@ psql
 创建用户
 
 ```sh
-create user my_user with password '123456';
+create user demo_user with password '123456';
 ```
 
 修改密码
@@ -33,13 +33,13 @@ create user my_user with password '123456';
 删除用户
 
 ```sh
-drop user dbuser;
+drop user demo_user;
 ```
 
 切换用户
 
 ```sh
-psql -d my_db -U my_user
+psql -d demo_db -U demo_user
 ```
 
 ### 库相关
@@ -47,21 +47,21 @@ psql -d my_db -U my_user
 建库
 
 ```sh
-create database my_db owner my_user;
-grant all privileges on database my_db to my_user;
-\c my_db;
-alter schema public owner to my_user;
-grant all privileges on all sequences in schema public to my_user;
-grant all privileges on all tables in schema public to my_user;
+create database demo_db owner demo_user;
+grant all privileges on database demo_db to demo_user;
+\c demo_db;
+alter schema public owner to demo_user;
+grant all privileges on all sequences in schema public to demo_user;
+grant all privileges on all tables in schema public to demo_user;
 
 或者，在非psql的shell下，直接用系统命令
-createdb -O my_user my_db;
+createdb -O demo_user demo_db;
 ```
 
 切换数据库
 
 ```sh
-\connect my_db my_user
+\connect demo_db demo_user
 ```
 
 ### 修改 db owner
