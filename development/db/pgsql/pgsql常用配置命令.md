@@ -14,7 +14,7 @@ psql
 创建用户
 
 ```sh
-create user demo_user with password '123456';
+create user demo_user with encrypted password '123456';
 ```
 
 修改密码
