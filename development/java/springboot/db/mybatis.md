@@ -293,15 +293,14 @@ public void setMyBatisService(IUserService myBatisUserService) {
 }
 ```
 
-application 上加 mapscan 注解
+application 上加 mapscan 注解, 事务支持，默认已启用
 
 ```java
 @MapperScan({
         "my.mybatis.generator.auto",
         "com.example.demo.dao.mybatis"
 })
-@ServletComponentScan
-@SpringBootApplication
+@EnableTransactionManagement
 ```
 
 application.yml
