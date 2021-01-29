@@ -7,6 +7,14 @@
 pom.xml
 
 ```xml
+<!-- getter, setter -->
+<dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <version>1.18.16</version>
+    <scope>provided</scope>
+</dependency>
+
 <!--jooq-->
 <dependency>
     <groupId>org.springframework.boot</groupId>
