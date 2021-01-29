@@ -86,7 +86,7 @@ pom.xml 内添加
 <dependency>
     <groupId>com.baomidou</groupId>
     <artifactId>mybatis-plus-generator</artifactId>
-    <version>3.4.2</version>
+    <version>3.4.1</version>
 </dependency>
 
 <!-- mybatis-plus 代码生成器需要的模板引擎 -->
