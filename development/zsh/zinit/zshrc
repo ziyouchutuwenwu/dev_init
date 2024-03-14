@@ -1,0 +1,27 @@
+source ~/.zinit/bin/zinit.zsh
+source ~/.profile
+# 修复键盘映射的问题
+source ~/.zinit/custom/keymap_rc
+
+# 不解释*?等字符
+setopt no_nomatch
+
+# 启用 bash 的注释
+setopt interactivecomments
+
+zinit light zsh-users/zsh-autosuggestions
+zinit light zdharma-continuum/fast-syntax-highlighting
+zinit light zsh-users/zsh-syntax-highlighting
+
+zinit light zsh-users/zsh-completions
+autoload -U compinit && compinit
+
+zinit snippet OMZ::lib/completion.zsh
+zinit snippet OMZ::lib/history.zsh
+zinit snippet OMZ::lib/git.zsh
+
+export NVM_LAZY_LOAD=true
+zinit light lukechilds/zsh-nvm
+
+# 主题
+zinit snippet OMZT::steeef

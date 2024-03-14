@@ -1,0 +1,44 @@
+﻿DATA_BLOCK "modbus_slave_db"
+{ S7_Optimized_Access := 'FALSE' }
+VERSION : 0.1
+NON_RETAIN
+   STRUCT 
+      data : Array[0..15] of Int;
+   END_STRUCT;
+
+
+BEGIN
+
+END_DATA_BLOCK
+
+FUNCTION_BLOCK "rtu_slave"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR 
+      modbus_slave_init {InstructionName := 'Modbus_Comm_Load'; LibVersion := '3.1'} : Modbus_Comm_Load;
+      shouldModbusSlaveInit { S7_SetPoint := 'True'} : Bool := true;
+      modbus_slave {InstructionName := 'Modbus_Slave'; LibVersion := '4.3'} : Modbus_Slave;
+   END_VAR
+
+   VAR_TEMP 
+      hasError : Bool;
+      errMsg : Word;
+   END_VAR
+
+
+BEGIN
+	#modbus_slave_init.MODE := 4;
+	#modbus_slave_init(REQ:=#shouldModbusSlaveInit,
+	                   "PORT":="Local~CB_1241_(RS485)",
+	                   BAUD:=9600,
+	                   PARITY:=0,
+	                    (* 这个参数为下面实例使用的MB_DB*)
+	                   MB_DB:=#modbus_slave.MB_DB);
+	#shouldModbusSlaveInit := FALSE;
+	
+	#modbus_slave(MB_ADDR:=3,
+	              ERROR=>#hasError,
+	              STATUS=>#errMsg,
+	              MB_HOLD_REG :="modbus_slave_db".data);
+END_FUNCTION_BLOCK
+

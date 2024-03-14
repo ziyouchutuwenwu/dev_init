@@ -1,0 +1,145 @@
+#! /usr/bin/env sh
+
+if [ "$#" -ne 1 ]; then
+  echo "please input non_root user name"
+  exit
+fi
+
+if [ "$(id -u)" -ne 0 ] ; then
+    echo "need run as root" $0
+    exit
+fi
+
+USER=$1
+CURRENT_DIR=$(cd "$(dirname "$0")";pwd)
+
+groups $USER | grep wheel > /dev/null
+if [ $? -ne 0 ] ; then
+  echo $USER "not in wheel group, now add"
+  pw groupmod wheel -m $USER
+else
+  echo $USER "already in wheel group"
+fi
+
+# 不需要 gui 的服务器初始化脚本
+sh $CURRENT_DIR/root_no_gui_init.sh
+
+# 显卡
+pkg install -y drm-kmod
+sysrc -f /etc/rc.conf kld_list="i915kms"
+# intel 集成显卡
+pkg install -y xf86-video-intel
+pkg install -y libva-intel-driver
+pw groupmod video -m $USER
+
+# nvidia 显卡闭源驱动
+pkg install -y nvidia-driver nvidia-settings nvidia-xconfig
+sysrc -f /etc/rc.conf kld_list="nvidia nvidia-modeset"
+sysrc -f /etc/rc.conf linux_enable="YES"
+
+pkg install -y xorg
+pkg install -y slim
+pkg install -y xfce
+
+# 系统原来的 rc.conf 里面有内容，只能追加
+sysrc -f /etc/rc.conf moused_enable="YES"
+sysrc -f /etc/rc.conf hald_enable="YES"
+sysrc -f /etc/rc.conf dbus_enable="YES"
+sysrc -f /etc/rc.conf slim_enable="YES"
+
+# ~/.xinitrc
+USER_HOME=`su $USER -c 'echo $HOME'`
+cp -rf $CURRENT_DIR/rc_files/xinitrc $USER_HOME/.xinitrc
+chown $USER $USER_HOME/.xinitrc
+chgrp $USER $USER_HOME/.xinitrc
+
+# sudo
+pkg install -y sudo
+cp -rf $CURRENT_DIR/rc_files/sudoers/* /usr/local/etc/sudoers.d/
+
+su $USER -c 'rm -rf ~/.profile'
+su $USER -c 'cp -rf `$CURRENT_DIR`./rc_files/profile ~/.profile'
+
+# git 全局配置
+pkg install -y git
+su $USER -c 'git config --global core.autocrlf false'
+su $USER -c 'git config --global core.quotepath off'
+
+pkg install -y bash
+pkg install -y wqy-fonts
+pkg install -y zh-fcitx
+pkg install -y zh-fcitx-configtool
+su $USER -c 'mkdir -p ~/.config/autostart'
+su $USER -c 'ln -s /usr/local/share/applications/fcitx.desktop ~/.config/autostart/'
+su $USER -c 'cp -rf `$CURRENT_DIR`./rc_files/xinitrc ~/.xinitrc'
+
+mkdir /usr/local/share/fonts/custom
+cp -rf $CURRENT_DIR/fonts/monaco.ttf /usr/local/share/fonts/custom
+fc-cache -f -v
+
+# wezterm
+pkg install -y wezterm
+su $USER -c 'sh `$CURRENT_DIR`./../../development/wezterm/install.sh'
+
+# terminator
+pkg install -y terminator
+su $USER -c 'mkdir -p ~/.config/terminator/'
+su $USER -c 'cp -rf `$CURRENT_DIR`./../../development/terminator/config ~/.config/terminator/'
+
+pkg install -y gnome-icons-faenza
+su $USER -c 'sh `$CURRENT_DIR`./themes/install.sh'
+su $USER -c 'rm -rf ~/.local/share/recently-used.xbel'
+su $USER -c 'mkdir -p ~/.local/share/recently-used.xbel'
+
+pkg install -y wireshark
+echo 'own  bpf* root:network' > /etc/devfs.conf
+echo 'perm bpf* 0660' >> /etc/devfs.conf
+
+# 这个实际上是 vscodium
+pkg install -y vscode
+pkg install -y networkmgr
+pkg install -y chromium
+pkg install -y proxychains-ng
+pkg install -y file-roller
+pkg install -y thunar-archive-plugin
+pkg install -y qt5ct
+pkg install -y scrcpy
+pkg install -y fusefs-ifuse
+pkg install -y upx
+
+# neovim
+pkg install -y xfce4-terminal ripgrep xclip neovim
+su $USER -c 'sh `$CURRENT_DIR`./../../development/editor/nvim/install.sh'
+
+# emacs
+pkg install -y emacs
+su $USER -c 'sh `$CURRENT_DIR`./../../development/editor/emacs/install.sh'
+
+# proxychains
+pkg install -y proxychains
+cp -rf $CURRENT_DIR/../../development/proxychains/proxychains.conf /usr/local/etc/proxychains.conf
+
+# qemu 下鼠标支持
+pkg install -y utouch-kmod
+echo 'utouch_load="YES"' >> /boot/loader.conf
+
+pkg install -y python
+pkg install -y py39-pip
+su $USER -c 'sh `$CURRENT_DIR`./../../development/programing/python/pip/pip_mirror.sh'
+
+# erlang
+pkg install -y erlang rebar3
+pkg install -y elixir inotify-tools
+su $USER -c 'echo "" >> ~/.profile'
+su $USER -c 'echo "export HEX_UNSAFE_HTTPS=1" >> ~/.profile'
+su $USER -c 'echo "export HEX_MIRROR=https://hexpm.upyun.com" >> ~/.profile'
+
+su $USER -c 'python `$CURRENT_DIR`./../../development/asdf/asdf_init.py'
+
+pkg install -y zsh
+chsh -s $(which zsh) $USER
+su $USER -c 'sh `$CURRENT_DIR`./zsh/config.sh'
+
+# 处理桌面图标的问题
+su $USER -c 'mkdir -p ~/.local/share/applications/'
+su $USER -c 'cp -rf `$CURRENT_DIR`./translations/* ~/.local/share/applications/'

@@ -1,0 +1,28 @@
+﻿FUNCTION "analogToPercent" : Real
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      analogValue : Real;
+      analogMin : Real;
+      analogMax : Real;
+   END_VAR
+
+
+BEGIN
+	#analogToPercent := NORM_X(MIN := #analogMin, VALUE := #analogValue, MAX := #analogMax);
+END_FUNCTION
+
+FUNCTION "percentToAnalog" : Int
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      percentage : Real;
+      analogMin : Real;
+      analogMax : Real;
+   END_VAR
+
+
+BEGIN
+	#percentToAnalog := SCALE_X(MIN := #analogMin, VALUE := #percentage, MAX := #analogMax);
+END_FUNCTION
+

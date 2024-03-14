@@ -1,0 +1,11 @@
+require('plug-manager')
+
+require('settings.clipboard')
+require('settings.tab')
+require('settings.editor')
+require('settings.color-scheme')
+require('settings.keymap')
+require('settings.nvim-cmp')
+require('settings.whitespace')
+require('settings.terminator')
+require('settings.comment')

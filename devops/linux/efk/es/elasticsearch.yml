@@ -1,0 +1,7 @@
+node.name: node-1
+# 集群节点
+cluster.initial_master_nodes: ["node-1"]
+# 端口
+http.port: 9200
+# 监听地址
+network.host: 0.0.0.0

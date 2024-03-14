@@ -1,0 +1,2 @@
+# jlink openocd
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1366", ATTRS{idProduct}=="010[12345]", MODE="664", GROUP="plugdev"

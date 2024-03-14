@@ -1,0 +1,12 @@
+global:
+  scrape_interval:     60s
+  evaluation_interval: 60s
+
+scrape_configs:
+  - job_name: linux_status
+    static_configs:
+      # 这里是提供 exporter 的节点名字
+      - targets: ['node-status:9100']
+        labels:
+          # 这个是在面板上显示的
+          instance: hp_container
