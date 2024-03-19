@@ -6,6 +6,7 @@
 
 ```elixir
 defprotocol DemoProtocol do
+  @fallback_to_any true
   def xxx(struct_obj, source, dest)
 end
 
@@ -39,6 +40,13 @@ defimpl DemoProtocol, for: DemoStruct2 do
   end
 end
 
+defimpl DemoProtocol, for: Any do
+  def xxx(object, source, dest) do
+    info = "any 类型 #{inspect(object)} #{inspect(source)} #{inspect(dest)}"
+    IO.puts(info)
+  end
+end
+
 defmodule Demo do
   def demo do
     obj1 = DemoStruct1.new(111, 222)
@@ -46,6 +54,8 @@ defmodule Demo do
 
     obj2 = DemoStruct2.new(333, 444)
     DemoProtocol.xxx(obj2, "yyyyyyyyy", "zzzzzzzzzzzz")
+
+    DemoProtocol.xxx(111, "11111", "22222")
   end
 end
 ```
