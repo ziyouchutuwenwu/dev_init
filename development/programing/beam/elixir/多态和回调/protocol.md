@@ -1,44 +1,51 @@
 # protocol
 
-用于数据多态
+用于数据多态，不同数据类型对应同一种方法
 
 ## 例子
 
 ```elixir
 defprotocol DemoProtocol do
-  @fallback_to_any true
-  def aaa(data)
+  def xxx(struct_obj, source, dest)
 end
 
-defimpl DemoProtocol, for: Integer do
-  def aaa(data) do
-    IO.inspect(data)
+defmodule DemoStruct1 do
+  defstruct [:aaa, :bbb]
+
+  def new(aaa, bbb) do
+    %DemoStruct1{aaa: aaa, bbb: bbb}
   end
 end
 
-defimpl DemoProtocol, for: Any do
-  def aaa(data) do
-    IO.puts("in any")
-    IO.inspect(data)
+defmodule DemoStruct2 do
+  defstruct [:ccc, :ddd]
+
+  def new(ccc, ddd) do
+    %DemoStruct2{ccc: ccc, ddd: ddd}
   end
 end
 
-defmodule User do
-  defstruct [:name, :age]
-end
-
-defimpl DemoProtocol, for: User do
-  def aaa(data) do
-    IO.inspect(data)
+defimpl DemoProtocol, for: DemoStruct1 do
+  def xxx(%DemoStruct1{aaa: aaa, bbb: bbb}, source, dest) do
+    info = "第一个 #{inspect(aaa)} #{inspect(bbb)} #{inspect(source)} #{inspect(dest)}"
+    IO.puts(info)
   end
 end
-```
 
-## 测试
+defimpl DemoProtocol, for: DemoStruct2 do
+  def xxx(%DemoStruct2{ccc: ccc, ddd: ddd}, source, dest) do
+    info = "另外一个 #{inspect(ccc)} #{inspect(ddd)} #{inspect(source)} #{inspect(dest)}"
+    IO.puts(info)
+  end
+end
 
-```elixir
-DemoProtocol.aaa(111)
+defmodule Demo do
+  def demo do
+    obj1 = DemoStruct1.new(111, 222)
+    DemoProtocol.xxx(obj1, "aaaaaa", "bbbbbbbb")
 
-user = %User{:name => "rico", :age => 111}
-DemoProtocol.aaa(user)
+    obj2 = DemoStruct2.new(333, 444)
+    DemoProtocol.xxx(obj2, "yyyyyyyyy", "zzzzzzzzzzzz")
+  end
+end
 ```
