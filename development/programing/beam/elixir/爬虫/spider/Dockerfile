@@ -1,5 +1,5 @@
 # 构建阶段
-FROM elixir:1.15-slim as elixir_build
+FROM elixir:1.16.1-slim as elixir_build
 
 WORKDIR /build
 COPY . .
@@ -18,7 +18,7 @@ RUN mix local.hex --force && \
 #   MIX_ENV=prod mix release
 
 # 运行阶段
-FROM debian:stable-20221004-slim as app
+FROM debian:12-slim as app
 
 # 用于网络调试
 # RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
