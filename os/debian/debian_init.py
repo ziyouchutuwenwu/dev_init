@@ -378,6 +378,14 @@ def grant_user_docker_permission(user):
     os.system(cmd)
 
 
+def install_gpu_tools():
+    # "nvidia-cuda-toolkit"
+    tool_list = ["nvidia-detect", "nvidia-smi", "nvidia-settings"]
+    for tool in tool_list:
+        cmd = "apt install -y %s" % tool
+        os.system(cmd)
+
+
 def run_root_no_gui_init_script(mirror_name):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "python %s/root_no_gui_init.py %s" % (current_dir, mirror_name)
@@ -463,6 +471,7 @@ if __name__ == "__main__":
     install_clipboard_tool()
     install_notes_tool()
     install_pdf_reader()
+    install_gpu_tools()
     install_qt_setting_tool()
     make_xfce_ftp_support()
     set_open_extra_menu_alias_to_profile(login_user)

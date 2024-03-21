@@ -75,6 +75,10 @@ def install_toys():
     os.system("apt install -y cmatrix cowsay")
 
 
+def install_sandbox():
+    os.system("apt install -y firejail")
+
+
 def install_useful_tools():
     tool_list = [
         "virt-what",
@@ -114,14 +118,6 @@ def set_shang_hai_timezone():
 
 def install_wifi_driver():
     os.system("apt install -y firmware-iwlwifi")
-
-
-def install_gpu_tools():
-    # "nvidia-cuda-toolkit"
-    tool_list = ["nvidia-detect", "nvidia-smi", "nvidia-settings"]
-    for tool in tool_list:
-        cmd = "apt install -y %s" % tool
-        os.system(cmd)
 
 
 def install_zip_essential():
@@ -220,6 +216,7 @@ if __name__ == "__main__":
     install_apt_file()
     install_keepalived()
     install_gdebi()
+    install_sandbox()
     install_net_tools()
     install_toys()
     install_ansible_essential()
@@ -227,7 +224,6 @@ if __name__ == "__main__":
     install_zip_essential()
     set_shang_hai_timezone()
     install_wifi_driver()
-    install_gpu_tools()
     install_ntfs_support()
     install_ssh_server()
     install_docker()
