@@ -77,6 +77,7 @@ def install_toys():
 
 def install_sandbox():
     os.system("apt install -y firejail")
+    os.system("apt purge -y xpra; apt autoremove -y")
 
 
 def install_useful_tools():
