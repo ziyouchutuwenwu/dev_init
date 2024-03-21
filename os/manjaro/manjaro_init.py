@@ -141,10 +141,6 @@ def install_nvidia_drivers():
     os.system("yes | pacman --noconfirm -S mesa-utils nvidia-prime")
 
 
-def install_sandbox():
-    os.system("yes | pacman --noconfirm -S firejail")
-
-
 def install_disk_tools():
     os.system("yes | pacman --noconfirm -S gparted ventoy")
 
@@ -452,7 +448,6 @@ if __name__ == "__main__":
     englishization_user_dir_name(login_user)
     install_build_essential()
     make_git_default_config(login_user)
-    install_sandbox()
     install_toys()
     install_nvidia_drivers()
     install_color_picker()

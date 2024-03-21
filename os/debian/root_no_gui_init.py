@@ -75,11 +75,6 @@ def install_toys():
     os.system("apt install -y cmatrix cowsay")
 
 
-def install_sandbox():
-    os.system("apt install -y firejail")
-    os.system("apt purge -y xpra; apt autoremove -y")
-
-
 def install_useful_tools():
     tool_list = [
         "virt-what",
@@ -217,7 +212,6 @@ if __name__ == "__main__":
     install_apt_file()
     install_keepalived()
     install_gdebi()
-    install_sandbox()
     install_net_tools()
     install_toys()
     install_ansible_essential()
