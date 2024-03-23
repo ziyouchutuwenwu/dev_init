@@ -9,8 +9,9 @@ linux 下的沙盒
 idea 无限试用
 
 ```sh
-mkdir -p ~/dev/java/idea_config
-mkdir -p ~/dev/java/idea_trial
+mkdir -p ~/dev/java/idea_setting/config
+mkdir -p ~/dev/java/idea_setting/trial
+mkdir -p ~/dev/java/idea_setting/cache
 
 bwrap --unshare-all --share-net --die-with-parent \
   --ro-bind / / \
@@ -20,12 +21,13 @@ bwrap --unshare-all --share-net --die-with-parent \
   --ro-bind ~/.Xauthority ~/.Xauthority \
   --ro-bind /tmp/.X11-unix /tmp/.X11-unix \
   --ro-bind /run/user/$UID/bus /run/user/$UID/bus \
-  --bind ~/dev/java/apache-maven-3.9.6/ ~/dev/java/apache-maven \
+  --bind ~/dev/java/apache-maven/ ~/dev/java/apache-maven \
   --bind ~/.m2 ~/.m2 \
   --bind ~/.config/google-chrome/ ~/.config/google-chrome/ \
   --bind ~/projects/ ~/projects/ \
-  --bind ~/dev/java/idea_config ~/.config/JetBrains/IntelliJIdea2023.3/ \
-  --bind ~/dev/java/idea_trial ~/.java/.userPrefs \
+  --bind ~/dev/java/idea_setting/cache ~/.cache/JetBrains/IntelliJIdea2023.3/ \
+  --bind ~/dev/java/idea_setting/config ~/.config/JetBrains/IntelliJIdea2023.3/ \
+  --bind ~/dev/java/idea_setting/trial ~/.java/.userPrefs \
   --ro-bind ~/dev/java/idea ~/dev/java/idea \
   --new-session bash -cl ~/dev/java/idea/bin/idea.sh
 ```
