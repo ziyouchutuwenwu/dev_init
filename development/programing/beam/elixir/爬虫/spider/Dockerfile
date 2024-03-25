@@ -1,5 +1,5 @@
 # 构建阶段
-FROM elixir:1.16.1-slim as elixir_build
+FROM elixir:1.15-slim as elixir_build
 
 WORKDIR /build
 COPY . .
