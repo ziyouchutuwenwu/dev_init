@@ -17,6 +17,7 @@ bwrap --unshare-all --share-net --die-with-parent \
   --ro-bind / / \
   --tmpfs /sys --tmpfs /home --tmpfs /tmp --tmpfs /run \
   --proc /proc --dev /dev \
+  --ro-bind ~/.profile ~/.profile \
   --bind ~/.cache/fontconfig ~/.cache/fontconfig \
   --ro-bind ~/.Xauthority ~/.Xauthority \
   --ro-bind /tmp/.X11-unix /tmp/.X11-unix \
