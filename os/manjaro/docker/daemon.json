@@ -1,0 +1,7 @@
+{
+  "registry-mirrors": [
+  ],
+  "insecure-registries": [],
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "debug": true
+}
