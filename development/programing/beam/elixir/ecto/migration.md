@@ -1,6 +1,6 @@
 # migration
 
-用来建表，修改表结构等
+一般用来建表, 修改表结构, 也可以做其它事情, 支持任意代码
 
 ## 用法
 
@@ -49,7 +49,7 @@ mix ecto.migrate
 
 ```elixir
 def up do
-  execute "CREATE TABLE users(id serial PRIMARY_KEY, username text)"
+  execute "create table users(id serial PRIMARY_KEY, username text)"
 end
 ```
 
@@ -63,7 +63,7 @@ mix ecto.migrations
 
 ### 执行部分
 
-执行一系列 migrateion， 到这个 migrateion 的 up 方法为止
+执行一系列 migration, 参数对应的 migration 的 up 方法会被执行
 
 ```sh
 mix ecto.migrate --to 20211220000835
@@ -81,7 +81,7 @@ mix ecto.migrate --step 2
 mix ecto.rollback --all
 ```
 
-回退一系列 migrateion， 到这个 migrateion 的 down 方法为止
+回退一系列 migration, 参数对应的 migration 的 down 方法会被执行
 
 ```sh
 mix ecto.rollback --to 20211220000835
