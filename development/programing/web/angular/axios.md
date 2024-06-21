@@ -38,43 +38,43 @@ app.component.html
 get-demo.component.html
 
 ```html
-<button (click)="get()">get-demo</button>
+<button (click)="demo()">get-demo</button>
 ```
 
 get-demo.component.ts
 
 ```typescript
-import { Component } from "@angular/core";
-import axios from "axios";
+import { Component } from '@angular/core';
+import axios from 'axios';
 
 @Component({
-  selector: "app-get-demo",
+  selector: 'app-get-demo',
   standalone: true,
   imports: [],
-  templateUrl: "./get-demo.component.html",
-  styleUrl: "./get-demo.component.css",
+  templateUrl: './get-demo.component.html',
+  styleUrl: './get-demo.component.css',
 })
 export class GetDemoComponent {
   ngOnInit(): void {
-    console.log("/api/get-demo init");
+    console.log('/api/get-demo init');
   }
 
   demo() {
-    const param = {
-      username: "mmc",
-      password: "123456",
+    const params = {
+      username: 'mmc',
+      password: '123456',
     };
 
-    axios({
-      method: "get",
-      url: "/api/get-demo",
-      params: param,
-    })
+    const request = axios.create({
+      params: params,
+    });
+    request
+      .get('/api/get-demo')
       .then((response) => {
-        console.log("正确返回", response.data);
+        console.log('正确返回', response.data);
       })
       .catch((error) => {
-        console.log("错误", error);
+        console.log('错误', error);
       });
   }
 }
@@ -91,37 +91,37 @@ form-post-demo.component.html
 form-post-demo.component.ts
 
 ```typescript
-import { Component } from "@angular/core";
-import axios from "axios";
+import { Component } from '@angular/core';
+import axios from 'axios';
 
 @Component({
-  selector: "app-form-post-demo",
+  selector: 'app-form-post-demo',
   standalone: true,
   imports: [],
-  templateUrl: "./form-post-demo.component.html",
-  styleUrl: "./form-post-demo.component.css",
+  templateUrl: './form-post-demo.component.html',
+  styleUrl: './form-post-demo.component.css',
 })
 export class FormPostDemoComponent {
   ngOnInit(): void {
-    console.log("/api/form-post-demo init");
+    console.log('/api/form-post-demo init');
   }
 
   demo() {
-    const param = {
-      username: "mmc",
-      password: "123456",
+    const params = {
+      username: 'mmc',
+      password: '123456',
     };
 
-    axios({
-      method: "post",
-      url: "/api/form-post-demo",
-      params: param,
-    })
+    const request = axios.create({
+      params: params,
+    });
+    request
+      .post('/api/form-post-demo')
       .then((response) => {
-        console.log("正确返回", response.data);
+        console.log('正确返回', response.data);
       })
       .catch((error) => {
-        console.log("错误", error);
+        console.log('错误', error);
       });
   }
 }
@@ -138,34 +138,39 @@ json-post-demo.component.html
 json-post-demo.component.ts
 
 ```typescript
-import { Component } from "@angular/core";
-import axios from "axios";
+import { Component } from '@angular/core';
+import axios from 'axios';
 
 @Component({
-  selector: "app-json-post-demo",
+  selector: 'app-json-post-demo',
   standalone: true,
   imports: [],
-  templateUrl: "./json-post-demo.component.html",
-  styleUrl: "./json-post-demo.component.css",
+  templateUrl: './json-post-demo.component.html',
+  styleUrl: './json-post-demo.component.css',
 })
 export class JsonPostDemoComponent {
   ngOnInit(): void {
-    console.log("/api/json-post-demo init");
+    console.log('/api/json-post-demo init');
   }
 
   demo() {
-    const param = {
-      username: "mmc",
-      password: "123456",
+    const params = {
+      username: 'mmc',
+      password: '123456',
     };
 
-    axios
-      .post("/api/json-post-demo", param)
+    const request = axios.create({
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    request
+      .post('/api/json-post-demo', params)
       .then((response) => {
-        console.log("json 请求成功：", response.data);
+        console.log('正确返回', response.data);
       })
       .catch((error) => {
-        console.error("json 请求失败：", error);
+        console.log('错误', error);
       });
   }
 }
@@ -215,3 +220,11 @@ export class DownloadDemoComponent {
   }
 }
 ```
+
+### 忽略 ssl
+
+```typescript
+const agent = new https.Agent({
+  rejectUnauthorized: false,
+});
+axios.get("https://xxx.com/xxx", { httpsAgent: agent });
