@@ -8,7 +8,7 @@
 
 ### application.yml
 
-```yml
+```yaml
 spring:
   main:
     web-application-type: none

@@ -308,7 +308,7 @@ application 上加 mapscan 注解, 事务支持，默认已启用
 
 application.yml
 
-```yml
+```yaml
 spring:
   datasource:
     url: jdbc:postgresql://127.0.0.1:6543/my_db

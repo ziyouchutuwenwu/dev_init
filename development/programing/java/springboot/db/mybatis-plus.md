@@ -77,7 +77,7 @@ public interface UserMapper extends BaseMapper<User> {
 
 application.yml
 
-```yml
+```yaml
 spring:
   datasource:
     url: jdbc:postgresql://127.0.0.1:6543/my_db
@@ -88,7 +88,7 @@ spring:
 
 或者
 
-```yml
+```yaml
 spring:
   datasource:
     url: jdbc:mysql://127.0.0.1:4407/my_db

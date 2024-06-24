@@ -35,7 +35,7 @@ log.error("=====测试日志error级别打印====\n");
 
 yml
 
-```yml
+```yaml
 logging:
   file:
     name: logs/log.log

@@ -28,7 +28,7 @@ pom.xml
 
 yml
 
-```yml
+```yaml
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource

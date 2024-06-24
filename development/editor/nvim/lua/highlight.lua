@@ -6,6 +6,7 @@ return {
       "css",
       "xml",
       "json",
+      "yaml",
       "vim",
       "lua",
       "sql",

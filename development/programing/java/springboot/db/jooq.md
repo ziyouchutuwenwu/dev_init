@@ -259,7 +259,7 @@ public void setJooqService(IUserService jooqUserService) {
 }
 ```
 
-```yml
+```yaml
 spring:
   datasource:
     url: jdbc:postgresql://127.0.0.1:6543/my_db

@@ -12,7 +12,7 @@
 /usr/local/etc/mosdns.yaml
 ```
 
-```yml
+```yaml
 log:
   level: info
 

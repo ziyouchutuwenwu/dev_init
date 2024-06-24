@@ -35,7 +35,7 @@ resources/templates/show.html
 
 application.yml 里面
 
-```yml
+```yaml
 spring:
   thymeleaf:
     prefix: classpath:/templates/
