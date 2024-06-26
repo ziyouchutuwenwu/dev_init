@@ -17,7 +17,7 @@ mix local.hex
 然后
 
 ```sh
-sudo ln -s ~/.mix/archives/hex-2.0.6/hex-2.0.6 /usr/lib/elixir/lib/hex
+sudo ln -s ~/.mix/archives/hex-2.1.1/hex-2.1.1 /usr/lib/elixir/lib/hex --force
 ```
 
 ### 方法 2

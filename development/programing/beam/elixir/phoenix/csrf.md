@@ -2,9 +2,7 @@
 
 ## 说明
 
-防止跨站伪造的请求
-
-页面模式下默认开启，以下只描述纯 api 的模式
+防止跨站伪造的请求, 对于 POST, PUT, DELETE 请求生效
 
 ### 请求字段
 
@@ -37,6 +35,8 @@ defmodule WebDemoWeb.Router do
     # fetch_session 不能忽略
     plug :fetch_session
     plug :protect_from_forgery
+
+    # 用于防止 xss, 这里可以不用
     plug :put_secure_browser_headers
   end
 

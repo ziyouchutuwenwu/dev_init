@@ -4,26 +4,7 @@
 
 ## 步骤
 
-### 修改配置
-
-#### config/prod.exs
-
-动态端口配置可以参考 config/runtime.exs
-
-```elixir
-config :xxx, XxxWeb.Endpoint,
-  # url: [host: "example.com", port: 80],
-  http: [ip: {0,0,0,0}, port: 4200],
-  cache_static_manifest: "priv/static/cache_manifest.json",
-  # 在系统启动的时候，运行 Cowboy 应用的 http 服务
-  server: true,
-  # 放置并提供静态文件的路径
-  root: ".",
-  # 当系统版本升级的时候，系统缓存就会被清除
-  version: Application.spec(:book_app, :vsn)
-```
-
-### 编译
+### 原生发布
 
 ```sh
 mix deps.get --only prod
@@ -36,16 +17,44 @@ export SECRET_KEY_BASE=`mix phx.gen.secret` PHX_SERVER=true PHX_HOST="aaa.com" P
 _build/prod/rel/web_demo/bin/web_demo start
 ```
 
-### 注意
+### docker 发布
 
-如果 tailwind 无法下载，则修改
+```dockerfile
+# 构建阶段
+FROM debian:12.5 as builder
 
-```sh
-deps/tailwind/lib/tailwind.ex的 default_base_url
+WORKDIR /build
+COPY . .
+
+ADD ./deploy/ustc.list /etc/apt/sources.list
+
+ENV HEX_UNSAFE_HTTPS=1 HEX_MIRROR="https://hexpm.upyun.com"
+
+# cp -rf ~/.mix/elixir/1-14/rebar3 ./deploy/
+RUN rm -rf /etc/apt/sources.list.d && \
+  apt update && apt upgrade -y && \
+  apt install build-essential openssl libssl-dev -y && \
+  apt install erlang-dev elixir -y && \
+  mix archive.install ./deploy/hex.ez --force && \
+  mix local.rebar rebar3 ./deploy/rebar3 --force && \
+  mix deps.get --only prod && \
+  MIX_ENV=prod mix release && \
+  echo "export SECRET_KEY_BASE=`mix phx.gen.secret`" > ./run.sh && \
+  echo "bin/ai_data start" >> ./run.sh
+
+# 运行阶段
+FROM debian:12.5 as runner
+
+ADD ./deploy/ustc.list /etc/apt/sources.list
+RUN rm -rf /etc/apt/sources.list.d && \
+  apt update && apt upgrade -y && \
+  apt install build-essential openssl libssl-dev -y && \
+  apt install zip unzip unrar -y
+
+WORKDIR /app
+
+COPY --from=builder /build/_build/prod/rel/ai_data ./
+COPY --from=builder /build/run.sh .
+
+ENTRYPOINT [ "sh", "run.sh" ]
 ```
-
-改完以后，需要重新编译
-
-### 其它
-
-参考 [普通项目发布](./%E6%99%AE%E9%80%9A%E9%A1%B9%E7%9B%AE%E5%8F%91%E5%B8%83.md)
