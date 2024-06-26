@@ -39,7 +39,9 @@ RUN rm -rf /etc/apt/sources.list.d && \
   mix local.rebar rebar3 ./deploy/rebar3 --force && \
   mix deps.get --only prod && \
   MIX_ENV=prod mix release && \
-  echo "export SECRET_KEY_BASE=`mix phx.gen.secret`" > ./run.sh && \
+  # 先运行一次, 不然可能会有某些没有编译的库导致环境变量报错
+  MIX_ENV=prod mix phx.gen.secret && \
+  echo "export SECRET_KEY_BASE=`MIX_ENV=prod mix phx.gen.secret`" > ./run.sh && \
   echo "bin/ai_data start" >> ./run.sh
 
 # 运行阶段
