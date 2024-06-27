@@ -8,6 +8,7 @@ return {
       "json",
       "yaml",
       "vim",
+      "ini",
       "dockerfile",
       "lua",
       "sql",
