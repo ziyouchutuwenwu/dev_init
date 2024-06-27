@@ -76,8 +76,6 @@ lib/orm_demo/user.ex
 
 ```elixir
 defmodule OrmDemo.User do
-  use Ecto.Schema
-
   # 使用宏引入时间戳
   use OrmDemo.Schema
 
@@ -130,19 +128,16 @@ end
 #### 关联关系
 
 ```sh
-mix ecto.gen.migration post_belongs_to_user
+mix ecto.gen.migration posts_belongs_to_user
 ```
 
-priv/repo/migrations/xxxxx_post_belongs_to_user.exs
+priv/repo/migrations/xxxxx_posts_belongs_to_user.exs
 
 ```elixir
 def change do
   alter table(:posts) do
-    # 在子表里面增加外键
-    add :user_id, references(
-      :users, column: :id,
-      on_update: :update_all, on_delete: :delete_all
-    )
+    # 在子表里面增加外键, 主表更新删除时候, 设置外键表的对应行为
+    add :user_id, references(:users, column: :id, on_update: :update_all, on_delete: :delete_all)
   end
 end
 ```
