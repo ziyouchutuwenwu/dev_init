@@ -34,7 +34,24 @@ defmodule TimeHelper do
 end
 ```
 
-### 创建 user 表
+### 时间戳宏
+
+lib/orm_demo/schema.ex
+
+```elixir
+defmodule OrmDemo.Schema do
+  defmacro __using__(_env) do
+    quote do
+      use Ecto.Schema
+      @timestamps_opts [type: :naive_datetime, autogenerate: {TimeHelper, :local_time, []}]
+    end
+  end
+end
+```
+
+### 创建表和模型
+
+#### 创建 user 表
 
 ```sh
 mix ecto.gen.migration create_user
@@ -53,7 +70,7 @@ def change do
 end
 ```
 
-### 创建 user model
+#### 创建 user model
 
 lib/orm_demo/user.ex
 
@@ -61,7 +78,8 @@ lib/orm_demo/user.ex
 defmodule OrmDemo.User do
   use Ecto.Schema
 
-  @timestamps_opts [type: :naive_datetime, autogenerate: {TimeHelper, :local_time, []}]
+  # 使用宏引入时间戳
+  use OrmDemo.Schema
 
   schema "users" do
     field :name, :string
@@ -72,7 +90,7 @@ defmodule OrmDemo.User do
 end
 ```
 
-### 创建 post 表
+#### 创建 post 表
 
 ```sh
 mix ecto.gen.migration create_post
@@ -91,9 +109,85 @@ def change do
 end
 ```
 
-### 创建 post model
+#### 创建 post model
 
 lib/orm_demo/post.ex
+
+```elixir
+defmodule OrmDemo.Post do
+  # 使用宏引入时间戳
+  use OrmDemo.Schema
+
+  schema "posts" do
+    field :header, :string
+    field :body, :string
+
+    timestamps()
+  end
+end
+```
+
+#### 关联关系
+
+```sh
+mix ecto.gen.migration post_belongs_to_user
+```
+
+priv/repo/migrations/xxxxx_post_belongs_to_user.exs
+
+```elixir
+def change do
+  alter table(:posts) do
+    # 在子表里面增加外键
+    add :user_id, references(
+      :users, column: :id,
+      on_update: :update_all, on_delete: :delete_all
+    )
+  end
+end
+```
+
+修改对象类，增加 belongs_to 和 has_one
+
+lib/orm_demo/post.ex
+
+```elixir
+defmodule OrmDemo.Post do
+  # 使用宏引入时间戳
+  use OrmDemo.Schema
+  alias OrmDemo.User
+
+  schema "posts" do
+    field :header, :string
+    field :body, :string
+
+    belongs_to :user, User
+
+    timestamps()
+  end
+end
+```
+
+lib/orm_demo/user.ex
+
+```elixir
+defmodule OrmDemo.User do
+  # 使用宏引入时间戳
+  use OrmDemo.Schema
+  alias OrmDemo.Post
+
+  schema "users" do
+    field :name, :string
+    field :email, :string
+
+    has_many :posts, Post
+
+    timestamps()
+  end
+end
+```
+
+### 测试代码
 
 ```elixir
 defmodule Demo do
@@ -167,7 +261,7 @@ defmodule Demo do
   def get1 do
     # User 有多个 post, 因此拿到 user 以后, 需要 preload 一下
     # users = Repo.all(User) |> Repo.preload(:posts)
-    Repo.get_by!(User, name: "user_000") |> Repo.preload(:posts)
+    Repo.get_by!(User, name: "user8") |> Repo.preload(:posts)
   end
 
   def get2 do
