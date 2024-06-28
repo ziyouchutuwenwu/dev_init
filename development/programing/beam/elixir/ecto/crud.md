@@ -142,7 +142,16 @@ def change do
 end
 ```
 
-修改对象类，增加 belongs_to 和 has_one
+或者手动添加字段，不使用外键
+
+```elixir
+def change do
+  alter table(:posts) do
+    add :user_id, :bigint
+  end
+  create index(:posts, [:user_id])
+end
+```
 
 lib/orm_demo/post.ex
 
