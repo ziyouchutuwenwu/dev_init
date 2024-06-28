@@ -288,14 +288,12 @@ defmodule Demo do
   end
 
   def update2() do
-    from(p in Post,
-      where: p.id > 1,
-      update: [
-        set: [body: "aaaaaaaa"],
-        set: [header: "bbbbbbb"]
-      ]
-    )
-    |> Repo.update_all([])
+    query =
+      from(p in Post,
+        where: p.id > 1
+      )
+
+    Repo.update_all(query, set: [header: "ccccccc", body: "dddddddddd"])
   end
 
   def delete1() do

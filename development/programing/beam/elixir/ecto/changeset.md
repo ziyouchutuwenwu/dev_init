@@ -36,30 +36,28 @@ lib/orm_demo/user.ex
 ```elixir
 defmodule OrmDemo.User do
   use Ecto.Schema
-  import Ecto.Changeset
+  alias Ecto.Changeset
 
   schema "users" do
-    field :name, :string
-    field :email, :string
+    field(:name, :string)
+    field(:email, :string)
 
     timestamps()
   end
 
-  def validate(person, params) do
-    person
-    |> cast(params, [:name, :email])
-    |> validate_required([:name, :email])
-    |> _demo_validation()
-  end
-
   @demo_names ["aaa", "bbb", "ccc"]
-  defp _demo_validation(changeset) do
-    name = get_field(changeset, :name)
+  def custom_change(user, params) do
+    changeset =
+      user
+      |> Changeset.cast(params, [:name, :email])
+      |> Changeset.validate_required([:name, :email])
+
+    name = Changeset.get_field(changeset, :name)
 
     if name in @demo_names do
       changeset
     else
-      add_error(changeset, :name, "name not correct")
+      Changeset.add_error(changeset, :name, "name not correct")
     end
   end
 end
@@ -69,10 +67,17 @@ lib/demo.ex
 
 ```elixir
 defmodule Demo do
-  def demo do
-    alias OrmDemo.{User, Repo}
+  alias OrmDemo.User
+  alias Ecto.Changeset
+
+  def demo1() do
+    user = %User{name: "xxx", email: "xxx@xxx.com"}
+    Changeset.change(user, email: "user new email")
+  end
+
+  def demo2 do
     user = %User{}
-    user |> User.validate(%{"name" => "bbb", "email" => "aaa@xxx.com"}) |> Repo.insert()
+    user |> User.custom_change(%{name: "mmc", email: "aaa@xxx.com"})
   end
 end
 ```
@@ -84,5 +89,6 @@ mix ecto.drop; mix ecto.create; mix ecto.migrate --log-migrations-sql; iex -S mi
 ```
 
 ```elixir
-Demo.demo()
+Demo.demo1
+Demo.demo2
 ```
