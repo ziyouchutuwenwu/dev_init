@@ -72,7 +72,8 @@ defmodule Demo do
 
   def demo1() do
     user = %User{name: "xxx", email: "xxx@xxx.com"}
-    Changeset.change(user, email: "user new email")
+    user |> Changeset.change(email: "aaaaaaaaaaaaaaa")
+    user |> Changeset.change(%{email: "bbbbbbbbbbbbb"})
   end
 
   def demo2 do
