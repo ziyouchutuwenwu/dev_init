@@ -26,5 +26,5 @@ Regex.split(~r{来源：}, "测试来源：123")
 ### replace
 
 ```elixir
-Regex.replace(~r/d/, "abc", "d")
+Regex.replace(~r|<.*/>|, "<zzz />", "ok")
 ```
