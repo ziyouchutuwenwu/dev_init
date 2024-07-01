@@ -286,8 +286,10 @@ def do_clean_after_install():
 
 
 def add_amazing_fonts():
+    cmd = "mkdir -p /usr/local/share/fonts"
+    os.system(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/fonts/* /usr/share/fonts/" % (current_dir)
+    cmd = "cp -rf %s/fonts/* /usr/local/share/fonts/" % (current_dir)
     os.system(cmd)
     os.system("fc-cache -f -v")
 

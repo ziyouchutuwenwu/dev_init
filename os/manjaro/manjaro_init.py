@@ -151,7 +151,9 @@ def install_disk_tools():
 def install_essential_fonts():
     os.system("yes | pacman --noconfirm -S wqy-bitmapfont wqy-microhei wqy-microhei-lite wqy-zenhei")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/fonts/* /usr/share/fonts/" % (current_dir)
+    cmd = "mkdir -p /usr/local/share/fonts"
+    os.system(cmd)
+    cmd = "cp -rf %s/fonts/* /usr/local/share/fonts/" % (current_dir)
     os.system(cmd)
     os.system("fc-cache -fv")
 
@@ -373,7 +375,6 @@ def install_privoxy():
 
 def do_vim_config(user):
     os.system("yes | pacman --noconfirm -S xfce4-terminal ripgrep xclip neovim")
-    os.system("rm -rf /usr/share/applications/vim.desktop")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/../../development/editor/nvim/install.sh" % (current_dir)
     proc.run_as_user(user, cmd)
