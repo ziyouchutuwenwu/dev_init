@@ -18,3 +18,9 @@ crontab -r
 # 重启以后执行
 @reboot /opt/demo/_build/prod/rel/demo/bin/demo daemon
 ```
+
+定时关机
+
+```sh
+30 17 * * * shutdown -h now
+```
