@@ -1,0 +1,63 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "debug_build",
+      "type": "shell",
+      "command": "nim",
+      "args": [
+        "compile",
+        "-g",
+        "-d:nimCoroutines",
+        "-d:nimCoroutinesUcontext",
+        "-d:nimCoroutinesSetjmp",
+        "-d:nimCoroutinesSetjmpBundled",
+        "--debugger:native",
+        "-o:${workspaceRoot}/target/debug/${fileBasenameNoExtension}",
+        "${relativeFile}"
+      ],
+      "options": {
+        "cwd": "${workspaceRoot}"
+      }
+    },
+    {
+      "label": "run",
+      "type": "shell",
+      "command": "nim",
+      "args": [
+        "compile",
+        "-d:nimCoroutines",
+        "-d:nimCoroutinesUcontext",
+        "-d:nimCoroutinesSetjmp",
+        "-d:nimCoroutinesSetjmpBundled",
+        "-o:${workspaceRoot}/target/debug/${fileBasenameNoExtension}",
+        "--run",
+        "${relativeFile}"
+      ]
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "rm -rf ${workspaceRoot}/target"
+    },
+    {
+      "label": "release",
+      "type": "shell",
+      "command": "nim",
+      "args": [
+        "compile",
+        "-d:nimCoroutines",
+        "-d:nimCoroutinesUcontext",
+        "-d:nimCoroutinesSetjmp",
+        "-d:nimCoroutinesSetjmpBundled",
+        "--gcc.exe:musl-gcc",
+        "--gcc.linkerexe:musl-gcc",
+        "--passL:-static",
+        "-d:release",
+        "--opt:size",
+        "-o:${workspaceRoot}/target/release/${fileBasenameNoExtension}",
+        "${relativeFile}"
+      ]
+    }
+  ]
+}
