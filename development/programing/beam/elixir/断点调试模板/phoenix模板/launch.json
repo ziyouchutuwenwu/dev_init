@@ -6,13 +6,13 @@
       "name": "debug",
       "task": "phx.server",
       "taskArgs": ["-e", "Demo.demo()"],
+      "exitAfterTaskReturns": false,
       "env": {
         // "ELS_ELIXIR_OPTS": "--name iex-dbg@127.0.0.1 --cookie 123456"
         // "ELS_ERL_OPTS": "-sname iex-dbg@localhost -cookie 123456"
         "ELIXIR_ERL_OPTIONS": "-sname iex-dbg@localhost -cookie 123456"
       },
       "projectDir": "${workspaceRoot}",
-      "exitAfterTaskReturns": false,
       "excludeModules": [":demo_nif", "SlowModule"]
     },
     {

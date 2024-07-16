@@ -7,6 +7,7 @@
       "task": "run",
       "taskArgs": ["-e", "Demo.demo()"],
       "startApps": true,
+      "exitAfterTaskReturns": false,
       "env": {
         // "ELS_ELIXIR_OPTS": "--name iex-dbg@127.0.0.1 --cookie 123456"
         // "ELS_ERL_OPTS": "-sname iex-dbg@localhost -cookie 123456"
