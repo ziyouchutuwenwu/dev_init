@@ -1,7 +1,7 @@
 import Config
 
 config :logger,
-  level: :warning
+  level: :info
 
 config :spider,
   httpoison_option: [
