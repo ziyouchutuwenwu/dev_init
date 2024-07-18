@@ -2,31 +2,24 @@
 
 ## 用法
 
-### session 操作
-
-查看
+### 基本操作
 
 ```sh
-zellij ls
-```
-
-创建
-
-```sh
+# 创建
 zellij -s xxx
-```
 
-销毁
+# attach
+zellij a xxx
 
-```sh
+# 查看
+zellij ls
+
+# kill
 zellij k xxx
 zellij ka
-```
 
-附加
-
-```sh
-zellij a xxx
+# delete
+zellij da
 ```
 
 ### 快捷键
