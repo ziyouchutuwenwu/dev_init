@@ -26,7 +26,7 @@ FROM debian:12.5 as builder
 ARG MIX_ENV
 ENV MIX_ENV=${MIX_ENV}
 
-WORKDIR /build
+WORKDIR /builder
 COPY . .
 
 ADD ./deploy/ustc.list /etc/apt/sources.list
@@ -45,8 +45,8 @@ RUN rm -rf /etc/apt/sources.list.d && \
   mix release && \
   # 先运行一次, 不然可能会有某些没有编译的库导致环境变量报错
   mix phx.gen.secret && \
-  echo "export SECRET_KEY_BASE=`mix phx.gen.secret`" > ./run.sh && \
-  echo "bin/web_demo start" >> ./run.sh
+  echo "export SECRET_KEY_BASE=`mix phx.gen.secret`" > ./start.sh && \
+  echo "bin/web_demo start" >> ./start.sh
 
 # 运行阶段
 FROM debian:12.5 as runner
@@ -68,14 +68,15 @@ RUN rm -rf /etc/apt/sources.list.d && \
   apt install build-essential openssl libssl-dev -y && \
   apt install zip unzip unrar -y
 
-WORKDIR /app
+WORKDIR /runner
 
 ENV LANG=zh_CN.UTF-8
 
-COPY --from=builder /build/_build/$MIX_ENV/rel/web_demo ./
-COPY --from=builder /build/run.sh .
+# COPY --from=builder /builder/_build/${MIX_ENV}/rel/web_demo ./
+COPY --from=builder /builder/_build/$MIX_ENV/rel/web_demo ./
+COPY --from=builder /builder/start.sh .
 
-ENTRYPOINT [ "sh", "run.sh" ]
+ENTRYPOINT [ "sh", "start.sh" ]
 ```
 
 run.sh

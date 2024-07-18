@@ -1,47 +1,51 @@
-# 构建和运行的 glibc 版本最好一致，运行期需要 libcrypto
-FROM elixir:1.16-slim as building
+# 构建阶段
+FROM debian:12.5 as builder
 
-WORKDIR /build
+ARG MIX_ENV
+ENV MIX_ENV=${MIX_ENV}
+
+WORKDIR /builder
 COPY . .
 
-ENV HEX_UNSAFE_http=1 HEX_MIRROR="http://hexpm.upyun.com"
+ADD ./deploy/ustc.list /etc/apt/sources.list
 
-RUN mix local.hex --force && \
-  mix local.rebar --force && \
-  mix deps.get --only prod && \
-  MIX_ENV=prod mix release
-# 如果 mix local.hex 和 mix local.rebar 都下载失败
-# 手动下载 hex.ez
+ENV HEX_UNSAFE_HTTPS=1 HEX_MIRROR="https://hexpm.upyun.com"
+
+# https://hexpm.upyun.com/installs/1.14.0/hex-2.0.6.ez
 # cp -rf ~/.mix/elixir/1-14/rebar3 ./deploy/
-# RUN mix archive.install ./deploy/hex.ez --force && \
-#   mix local.rebar rebar3 ./deploy/rebar3 --force && \
-#   MIX_ENV=prod mix release
+RUN rm -rf /etc/apt/sources.list.d && \
+  apt update && apt upgrade -y && \
+  apt install build-essential openssl libssl-dev -y && \
+  apt install erlang-dev elixir -y && \
+  mix archive.install ./deploy/hex.ez --force && \
+  mix local.rebar rebar3 ./deploy/rebar3 --force && \
+  mix deps.get && \
+  mix release && \
+  echo "bin/spider start" > ./start.sh
 
 # 运行阶段
-FROM debian:bookworm-20240311-slim as app
+FROM debian:12.5 as runner
 
-# 装 libcrypto
-RUN echo 'deb http://mirrors.ustc.edu.cn/debian/ bookworm main contrib non-free non-free-firmware \
-  deb-src http://mirrors.ustc.edu.cn/debian/ bookworm main contrib non-free non-free-firmware \
-\
-  deb http://mirrors.ustc.edu.cn/debian/ bookworm-updates main contrib non-free non-free-firmware  \
-  deb-src http://mirrors.ustc.edu.cn/debian/ bookworm-updates main contrib non-free non-free-firmware  \
-\
-  deb http://mirrors.ustc.edu.cn/debian/ bookworm-backports main contrib non-free  \
-  deb-src http://mirrors.ustc.edu.cn/debian/ bookworm-backports main contrib non-free  \
-\
-  deb http://mirrors.ustc.edu.cn/debian-security/ bookworm-security main contrib non-free non-free-firmware  \
-  deb-src http://mirrors.ustc.edu.cn/debian-security/ bookworm-security main contrib non-free non-free-firmware' > /etc/apt/sources.list
+ARG MIX_ENV
+ENV MIX_ENV=${MIX_ENV}
 
-RUN rm -rf /etc/apt/sources.list.d/debian.sources && \
-  apt update && \
-  apt install libssl3 -y
+ADD ./deploy/ustc.list /etc/apt/sources.list
+RUN rm -rf /etc/apt/sources.list.d && \
+  apt update && apt upgrade -y \
+  && \
+  ln -fs /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+  dpkg-reconfigure -f noninteractive tzdata && \
+  apt install locales -y && \
+  sed -i -e 's/# zh_CN/zh_CN/g' /etc/locale.gen && \
+  dpkg-reconfigure -f noninteractive locales && \
+  update-locale LANG=zh_CN.UTF-8
 
-# 用于网络调试
-# RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
-# RUN apt update; apt upgrade -y; apt install -y netcat curl iputils-ping net-tools
+WORKDIR /runner
 
-WORKDIR /app
-COPY --from=building /build/_build/prod/rel/spider ./
+ENV LANG=zh_CN.UTF-8
 
-ENTRYPOINT [ "bin/spider", "start" ]
+# COPY --from=builder /builder/_build/${MIX_ENV}/rel/spider ./
+COPY --from=builder /builder/_build/$MIX_ENV/rel/spider ./
+COPY --from=builder /builder/run.sh .
+
+ENTRYPOINT [ "sh", "start.sh" ]

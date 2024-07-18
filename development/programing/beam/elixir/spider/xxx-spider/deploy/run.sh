@@ -1,12 +1,13 @@
 #! /bin/bash
 
-# CURRENT_DIR=$(cd "$(dirname "$0")";pwd)
+if [ "$#" -ne 1 ]; then
+  echo "$0 mix_env"
+  exit
+fi
 
-# docker里面不能成功获取deps的话
-# cd $CURRENT_DIR/..; mix deps.get; cd -
+mix_env=$1
 
 BASE_DIR=/opt/spider
-
 if [ ! $BASE_DIR ]; then
   echo "BASE_DIR is null, now exit"
   exit
@@ -14,7 +15,7 @@ fi
 
 echo "BASE_DIR is" $BASE_DIR
 
-docker build -t xxx-spider ../ --no-cache
+docker build --build-arg MIX_ENV=$mix_env -t xxx-spider ../ --no-cache
 docker network create --driver bridge xxx-spider-network
 
 docker run -d --restart=always --network=xxx-spider-network --name xxx-spider-tika apache/tika:latest-full
@@ -36,7 +37,6 @@ sleep 5
 
 docker run -d --restart=always --network=xxx-spider-network --name xxx-spider \
   -v $BASE_DIR"/crawler_data/xxx":/data \
-  -v /etc/localtime:/etc/localtime -e TZ=Asia/Shanghai \
   -e TIKA_URL=http://xxx-spider-tika:9998/tika \
   -e SPLASH_URL=http://xxx-spider-splash:8050 \
   -e DATA_SAVE_BASE_DIR=/data \
