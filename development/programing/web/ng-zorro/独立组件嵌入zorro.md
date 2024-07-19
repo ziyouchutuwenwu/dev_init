@@ -1,8 +1,8 @@
-# 独立嵌入 zorro
+# 独立组件嵌入 zorro
 
 ## 说明
 
-独立模式组件内嵌入 ng-zorro
+独立模式组件嵌入 ng-zorro
 
 ## 步骤
 
@@ -30,7 +30,7 @@ ng add ng-zorro-antd
 创建 module
 
 ```sh
-ng generate module main
+ng generate module zorro
 ```
 
 创建测试组件
@@ -39,24 +39,22 @@ ng generate module main
 ng g ng-zorro-antd:card-basic card
 ```
 
-在 main.module.ts 内注册 card 组件
+在 zorro.module.ts 内注册 card 组件
 
 ```typescript
 @NgModule({
   // 声明
   declarations: [CardComponent],
-
   // 导出，不可以缺
   exports: [CardComponent],
   imports: [CommonModule, NzCardModule],
 })
-export class MainModule {}
 ```
 
 app.component.ts
 
 ```typescript
-imports: [RouterOutlet, MainModule],
+imports: [RouterOutlet, ZorroModule],
 ```
 
 app.component.html

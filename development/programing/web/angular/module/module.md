@@ -5,8 +5,11 @@
 手动创建 module
 
 ```sh
-ng generate module aaa
+ng g m aaa
 
 # 同时创建路由
-ng generate module ccc --module=app --routing=true
+ng g m bbb --routing=true
+
+# 在 AppModule 的 imports 里面注册
+ng g m ccc --module=app
 ```
