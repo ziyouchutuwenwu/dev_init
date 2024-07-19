@@ -4,7 +4,14 @@
 
 ## 说明
 
-例子为 自定义 module 内，创建 component 和 service 的例子
+```sh
+sub_module
+  sub_routes
+  # service 不能直接注册到 module 内，需要通过单独的 module 代理注册
+  service_module => service
+```
+
+## 步骤
 
 ### 创建项目
 
@@ -54,7 +61,6 @@ sub.module.ts
 ```typescript
 import { NgModule } from "@angular/core";
 import { CommonModule } from "@angular/common";
-
 import { SubRoutingModule } from "./sub-routing.module";
 import { Demo1Component } from "./demo1/demo1.component";
 import { Demo2Component } from "./demo2/demo2.component";
@@ -176,7 +182,7 @@ app.component.html
 <router-outlet></router-outlet>
 ```
 
-### 入口注册 module
+### 独立组件注册
 
 app.component.ts
 

@@ -1,16 +1,5 @@
 # module 级 service
 
-## 说明
-
-service 注册，必须使用一个单独的 proxy 的 module,这个 proxy 的 module 再注册到子模块的 module 里面，避免循环注册，[参考连接](https://segmentfault.com/a/1190000019500553#item-5)
-
-项目里面为
-
-```sh
-DemoService 通过 providedIn 注册到 ServiceWrapperModule
-subModule 内 import ServiceWrapperModule
-```
-
 ## 步骤
 
 ### 创建项目
@@ -59,6 +48,8 @@ bbb.component.html
 
 ### component
 
+bbb.component.ts
+
 ```typescript
 import { Component, OnInit } from "@angular/core";
 import { DemoService } from "../service/demo.service";
@@ -101,6 +92,8 @@ export class AaaComponent {
 ```
 
 ### 入口配置
+
+app.component.ts
 
 ```typescript
 import { Component } from "@angular/core";
@@ -151,7 +144,7 @@ const routes: Routes = [
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule],
 })
-export class subRoutingModule {}
+export class SubRoutingModule {}
 ```
 
 ### service
