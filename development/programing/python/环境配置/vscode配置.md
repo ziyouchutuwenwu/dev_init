@@ -4,7 +4,7 @@
 
 解释器的配置和补全配置
 
-## 例子
+## 配置
 
 .vscode/settings.json
 
