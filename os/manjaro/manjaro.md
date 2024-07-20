@@ -26,6 +26,17 @@ input("暂停的信息")
 
 manjaro_init.py 运行前, 配置非 root 用户的 git 代理, 不要用 `http_proxy` 和 `https_proxy`
 
+```sh
+~/.gitconfig
+```
+
+```sh
+[http]
+  proxy = socks5://127.0.0.1:1080
+[https]
+  proxy = socks5://127.0.0.1:1080
+```
+
 yay_init.py 运行前, 取消 git 代理, `~/.profile` 内启用 pon
 
 ### 脚本运行后

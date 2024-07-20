@@ -21,6 +21,7 @@ Regex.scan(~r(\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}), "测试来源：2022-11-24
 
 ```elixir
 Regex.split(~r{来源：}, "测试来源：123")
+String.split("测试来源：123", ~r{来源：})
 ```
 
 ### replace

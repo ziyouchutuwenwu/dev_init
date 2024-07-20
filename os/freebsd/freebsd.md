@@ -17,7 +17,7 @@
 不要用 `http_proxy` 和 `https_proxy`
 
 ```sh
-vi ~/.gitconfig
+~/.gitconfig
 ```
 
 ```sh

@@ -45,9 +45,30 @@ ln -s /usr/bin/python3 /usr/bin/python
 
 ### 设置代理
 
-带桌面的话，配置非 root 用户的 git 和 curl 的代理
+带桌面的话，不要用 `http_proxy` 和 `https_proxy`
 
-不要用 `http_proxy` 和 `https_proxy`
+配置非 root 用户的 git 代理
+
+```sh
+~/.gitconfig
+```
+
+```sh
+[http]
+  proxy = socks5://127.0.0.1:1080
+[https]
+  proxy = socks5://127.0.0.1:1080
+```
+
+配置非 root 用户的 curl 代理
+
+```sh
+~/.curlrc
+```
+
+```sh
+proxy=socks5://127.0.0.1:1080
+```
 
 ### 脚本运行后
 
