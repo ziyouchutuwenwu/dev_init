@@ -11,7 +11,7 @@ if [ "$(id -u)" -ne 0 ] ; then
 fi
 
 USER=$1
-CURRENT_DIR=$(cd "$(dirname "$0")";pwd)
+export CURRENT_DIR=$(cd "$(dirname "$0")";pwd)
 
 groups $USER | grep wheel > /dev/null
 if [ $? -ne 0 ] ; then
@@ -73,13 +73,13 @@ pkg install -y wqy-fonts
 pkg install -y fcitx5 fcitx5-configtool
 pkg install -y zh-fcitx5-chinese-addons
 su $USER -c 'mkdir -p ~/.config/fcitx5/'
-su $USER -c 'cp -rf `$CURRENT_DIR`./fcitx/config/* ~/.config/fcitx5/'
+su $USER -c 'cp -rf $CURRENT_DIR/fcitx/config/* ~/.config/fcitx5/'
 su $USER -c 'mkdir -p ~/.local/share/fcitx5/themes/'
-su $USER -c 'cp -rf `$CURRENT_DIR`./fcitx/themes/* ~/.local/share/fcitx5/themes/'
+su $USER -c 'cp -rf $CURRENT_DIR/fcitx/themes/* ~/.local/share/fcitx5/themes/'
 su $USER -c 'mkdir -p ~/.config/autostart'
 su $USER -c 'ln -s /usr/local/share/applications/org.fcitx.Fcitx5.desktop ~/.config/autostart/'
 
-su $USER -c 'cp -rf `$CURRENT_DIR`./rc_files/xinitrc ~/.xinitrc'
+su $USER -c 'cp -rf $CURRENT_DIR/rc_files/xinitrc ~/.xinitrc'
 
 mkdir -p /usr/local/share/fonts/
 cp -rf $CURRENT_DIR/fonts/* /usr/local/share/fonts/
@@ -87,15 +87,15 @@ fc-cache -f -v
 
 # wezterm
 pkg install -y wezterm
-su $USER -c 'sh `$CURRENT_DIR`./../../development/wezterm/install.sh'
+su $USER -c 'sh $CURRENT_DIR/../../development/wezterm/install.sh'
 
 # terminator
 pkg install -y terminator
 su $USER -c 'mkdir -p ~/.config/terminator/'
-su $USER -c 'cp -rf `$CURRENT_DIR`./../../development/terminator/config ~/.config/terminator/'
+su $USER -c 'cp -rf $CURRENT_DIR/../../development/terminator/config ~/.config/terminator/'
 
 pkg install -y gnome-icons-faenza
-su $USER -c 'sh `$CURRENT_DIR`./themes/install.sh'
+su $USER -c 'sh $CURRENT_DIR/themes/install.sh'
 su $USER -c 'rm -rf ~/.local/share/recently-used.xbel'
 su $USER -c 'mkdir -p ~/.local/share/recently-used.xbel'
 
@@ -120,11 +120,11 @@ pkg install -y upx
 su $USER -c 'mkdir -p ~/desktop'
 su $USER -c 'rm -rf ~/Desktop'
 su $USER -c 'mkdir -p ~/.templates'
-su $USER -c 'cp -rf `$CURRENT_DIR`./englih_user_dir/user-dirs.dirs ~/.config/'
+su $USER -c 'cp -rf $CURRENT_DIR/englih_user_dir/user-dirs.dirs ~/.config/'
 
 # neovim
 pkg install -y xfce4-terminal ripgrep xclip neovim wget
-su $USER -c 'sh `$CURRENT_DIR`./../../development/editor/nvim/install.sh'
+su $USER -c 'sh $CURRENT_DIR/../../development/editor/nvim/install.sh'
 
 pkg install -y proxychains
 cp -rf $CURRENT_DIR/../../development/proxychains/proxychains.conf /usr/local/etc/proxychains.conf
@@ -138,18 +138,17 @@ pkg install -y utouch-kmod
 echo 'utouch_load="YES"' >> /boot/loader.conf
 
 pkg install -y python
-pkg install -y py39-pip
-su $USER -c 'sh `$CURRENT_DIR`./../../development/programing/python/pip/pip_mirror.sh'
+# pkg install -y py39-pip
 
 # erlang
 pkg install -y erlang rebar3
 pkg install -y elixir inotify-tools
 
-su $USER -c 'python `$CURRENT_DIR`./../../development/asdf/asdf_init.py'
+su $USER -c 'python $CURRENT_DIR/../../development/asdf/asdf_init.py'
 
 chsh -s $(which zsh) $USER
-su $USER -c 'sh `$CURRENT_DIR`./zsh/config.sh'
+su $USER -c 'sh $CURRENT_DIR/zsh/config.sh'
 
 # 处理桌面图标的问题
 su $USER -c 'mkdir -p ~/.local/share/applications/'
-su $USER -c 'cp -rf `$CURRENT_DIR`./translations/* ~/.local/share/applications/'
+su $USER -c 'cp -rf $CURRENT_DIR/translations/* ~/.local/share/applications/'

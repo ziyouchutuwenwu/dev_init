@@ -67,8 +67,9 @@ pkg install -y nmap
 
 pkg install -y zsh
 chsh -s $(which zsh) $(whoami)
-cp -rf `$CURRENT_DIR`./zsh/zshenv /usr/local/etc/zshenv
+cp -rf $CURRENT_DIR/zsh/zshenv /usr/local/etc/zshenv
 
 # 启动加载
-cp -rf `$CURRENT_DIR`./profile.d/*.sh /usr/local/etc/profile.d/
+mkdir -p /usr/local/etc/profile.d/
+cp -rf $CURRENT_DIR/profile.d/*.sh /usr/local/etc/profile.d/
 chmod +x /usr/local/etc/profile.d/*.sh
