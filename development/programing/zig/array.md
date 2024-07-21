@@ -31,8 +31,8 @@ const std = @import("std");
 const allocator = std.heap.page_allocator;
 
 pub fn demo(list: []u8, data_list: []u8) []u8 {
-    for (list) |_, index| {
-        data_list[index] = @truncate(u8, index);
+    for (list, 0..list.len) |_, index| {
+        data_list[index] = @truncate(index);
     }
 
     return data_list[0..];
@@ -40,13 +40,13 @@ pub fn demo(list: []u8, data_list: []u8) []u8 {
 
 pub fn main() void {
     var list = [_]u8{ 11, 22, 33, 44 };
-    const data_list = allocator.alloc(u8, list.len) catch | err|{
+    const data_list = allocator.alloc(u8, list.len) catch |err| {
         std.log.debug("err {any}", .{err});
         return;
     };
 
     defer allocator.free(data_list);
-    var aa = demo(list[0..], data_list);
+    const aa = demo(list[0..], data_list);
     std.debug.print("result {any}\n", .{aa});
 }
 ```

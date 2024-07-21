@@ -4,15 +4,13 @@
 
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
-
 const equal = std.mem.eql;
 const ArrayList = std.ArrayList;
-const test_allocator = std.testing.allocator;
+const allocator = std.heap.page_allocator;
 
-test "arrayList" {
-    var array_list = ArrayList(u8).init(test_allocator);
-    defer arrayList.deinit();
+pub fn main() !void {
+    var array_list = ArrayList(u8).init(allocator);
+    defer array_list.deinit();
 
     try array_list.append('H');
     try array_list.append('e');
@@ -21,6 +19,6 @@ test "arrayList" {
     try array_list.append('o');
     try array_list.appendSlice(" World!");
 
-    try expect(equal(u8, array_list.items, "Hello World!"));
+    std.debug.print("{s}\n", .{array_list.items});
 }
 ```

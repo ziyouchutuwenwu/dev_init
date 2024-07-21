@@ -14,9 +14,9 @@ const Result = enum(u32) {
 };
 
 test "set enum ordinal value" {
-    try expect(@enumToInt(Result.aa) == 0);
-    try expect(@enumToInt(Result.bb) == 1000);
-    try expect(@enumToInt(Result.cc) == 1000000);
-    try expect(@enumToInt(Result.dd) == 1000001);
+    try expect(@intFromEnum(Result.aa) == 0);
+    try expect(@intFromEnum(Result.bb) == 1000);
+    try expect(@intFromEnum(Result.cc) == 1000000);
+    try expect(@intFromEnum(Result.dd) == 1000001);
 }
 ```

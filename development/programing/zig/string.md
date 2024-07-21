@@ -12,12 +12,12 @@ const std = @import("std");
 const string = []const u8;
 
 pub fn demo() string {
-    return "string in demo";
+    return "aaa";
 }
 
 pub fn main() !void {
     const aa = demo();
-    var bb = "bb";
-    std.debug.print("result {*}. {s}\n", .{aa, bb});
+    const bb = "bbb";
+    std.debug.print("result {s} {s}\n", .{ aa, bb });
 }
 ```

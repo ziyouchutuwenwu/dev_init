@@ -6,20 +6,20 @@
 const std = @import("std");
 
 pub fn main() !void {
-    var demo_opt: ?u8 = null;
+    // 要么是 u8 类型的值，要么是 null
+    var demo_option: ?u8 = null;
+    demo_option = 111;
 
-    demo_opt = 123;
-
-    // 这是 capture 的写法
-    if (demo_opt) |*value| {
-        std.debug.print("data set\n", .{});
+    // 修改 option
+    if (demo_option) |*value| {
+        std.debug.print("set data to option\n", .{});
         value.* += 1;
     }
 
-    if (demo_opt == null) {
+    if (demo_option == null) {
         std.debug.print("null\n", .{});
     } else {
-        const val = demo_opt.?;
+        const val = demo_option.?;
         std.debug.print("not null, is {d}\n", .{val});
     }
 }
