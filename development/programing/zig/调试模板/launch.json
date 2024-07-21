@@ -3,6 +3,7 @@
   "configurations": [
     {
       "name": "debug",
+      // 这个 cppdbg 类型依赖 c++ 的插件
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/zig-out/bin/${workspaceFolderBasename}",

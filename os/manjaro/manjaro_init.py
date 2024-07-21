@@ -393,10 +393,6 @@ def install_embedded_tools():
     os.system("yes | pacman --noconfirm -S mtd-utils squashfs-tools")
 
 
-def install_zig_dev():
-    os.system("yes | pacman --noconfirm -S zig zls")
-
-
 if __name__ == "__main__":
     if False == proc.is_root():
         print("This program must be run as root. Aborting.")
@@ -446,7 +442,6 @@ if __name__ == "__main__":
     install_printer_essential()
     install_qt5ct()
     set_global_profiles()
-    install_zig_dev()
     install_musl()
     install_beam()
     install_net_capture_tools(login_user)
