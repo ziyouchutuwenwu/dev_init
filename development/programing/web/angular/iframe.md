@@ -1,6 +1,10 @@
-# iframe 设置动态高度
+# iframe
 
-## html
+## 说明
+
+动态设置 iframe 的高度
+
+## 代码
 
 ```html
 <div>
@@ -17,7 +21,7 @@
 </div>
 ```
 
-## ts
+xxx.ts
 
 ```typescript
   onIframeResize() {
