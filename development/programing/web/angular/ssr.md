@@ -1,50 +1,41 @@
 # ssr
 
-如果需要 seo，则可以考虑 ssr 方便爬虫爬取
+## 说明
+
+页面渲染的时候，js 转为 html，有利于 seo
 
 ## 步骤
 
-### 添加依赖
+### ssr 支持
+
+新项目
 
 ```sh
-ng add @nguniversal/express-engine
+ng new demo --ssr
 ```
 
-### 测试
+给已有项目添加 ssr 支持
 
 ```sh
-npm run dev:ssr
+ng add @angular/ssr
 ```
 
-### 允许其它 ip 访问
+### 关键代码
 
-server.ts
+见 server.ts
 
-```typescript
-const server = express();
-```
-
-下插入
-
-```typescript
-server.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  next();
-});
-```
-
-### 编译
+### 打包
 
 ```sh
-npm run build:ssr
+ng build
 ```
 
 ### 运行
 
-- 正式服务器建议装 pm2, 默认端口 4000
+具体见 package.json
 
-- 必须在 dist 目录外运行
+必须在 dist 目录外运行, 默认端口 4000
 
 ```sh
-pm2 start dist/app1/server/main.js
+PORT=1234 node dist/demo/server/server.mjs
 ```
