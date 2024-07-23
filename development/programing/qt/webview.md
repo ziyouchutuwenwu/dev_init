@@ -24,7 +24,7 @@ QT += webenginewidgets
 
 webview.h
 
-```h
+```hpp
 #pragma once
 
 #include <QtWebEngineWidgets/QWebEngineView>

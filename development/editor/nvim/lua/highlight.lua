@@ -15,6 +15,7 @@ return {
       "sql",
       "typescript",
       "rust",
+      "cpp",
       "zig",
       "java",
       "erlang",
