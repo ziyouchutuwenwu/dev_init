@@ -9,7 +9,7 @@ defmodule Task1 do
   require Logger
   @name :xxx
 
-  # 异步
+  # 异步, task 崩溃不影响 supervisor
   def async do
     Task.Supervisor.start_link(name: @name)
 
@@ -19,7 +19,7 @@ defmodule Task1 do
     end)
   end
 
-  # 如果task崩溃了，supervisor 也会出问题
+  # task 一旦崩溃，supervisor 也会出问题
   def wait do
     Task.Supervisor.start_link(name: @name)
 
@@ -30,7 +30,7 @@ defmodule Task1 do
     |> Task.await()
   end
 
-  # 如果task崩溃了，supervisor 不受影响
+  # task 崩溃, supervisor 不受影响
   def nolink_wait do
     Task.Supervisor.start_link(name: @name)
 
