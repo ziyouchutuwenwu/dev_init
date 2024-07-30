@@ -10,10 +10,9 @@
 
 ```json
 {
-  // 设置比较大的深度，防止快速修复失败
-  "python.analysis.packageIndexDepths": [{ "name": "", "depth": 10 }],
+  "python.defaultInterpreterPath": "${env:HOME}/dev/python/dev_env",
 
-  // 一定要用全路径，不支持环境变量
-  "python.defaultInterpreterPath": "/home/xxx/dev/python/dev_env"
+  // 设置比较大的深度，防止快速修复失败
+  "python.analysis.packageIndexDepths": [{ "name": "", "depth": 10 }]
 }
 ```
