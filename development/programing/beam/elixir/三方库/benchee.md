@@ -4,7 +4,7 @@
 
 用于性能测试
 
-## 用法
+## 例子
 
 ### 依赖
 
@@ -19,20 +19,17 @@
 
 ### 代码
 
-lib/otp27_json.ex
+lib/json_demo.ex
 
 ```elixir
-defmodule Otp27Json do
-  @spec blockchain() :: map
-  def blockchain do
-    json = File.read!("blockchain.json")
-
+defmodule JsonDemo do
+  def json_map do
+    json = File.read!("demo.json")
     :json.decode(json)
   end
 
-  @spec blockchain_json() :: String.t()
-  def blockchain_json do
-    File.read!("blockchain.json")
+  def json_string do
+    File.read!("demo.json")
   end
 end
 ```
@@ -40,29 +37,60 @@ end
 benches/encode_sample.exs
 
 ```elixir
-blockchain = Otp27Json.blockchain()
+json_map = JsonDemo.json_map()
 
 Benchee.run(%{
-  ":json.encode/1" => fn -> blockchain |> :json.encode() |> :erlang.iolist_to_binary() end,
-  "Poison.encode!/1" => fn -> Poison.encode!(blockchain) end,
-  "Jason.encode!/1" => fn -> Jason.encode!(blockchain) end,
-  ":simdjson.encode/1" => fn -> :simdjson.encode(blockchain) end,
-  ":jiffy.encode/1" => fn -> :jiffy.encode(blockchain) end,
-  ":jsone.encode/1" => fn -> :jsone.encode(blockchain) end
+  ":json.encode/1" => fn ->
+    json_map |> :json.encode() |> :erlang.iolist_to_binary()
+  end,
+  "Poison.encode!/1" => fn ->
+    Poison.encode!(json_map)
+  end,
+  "Jason.encode!/1" => fn ->
+    Jason.encode!(json_map)
+  end,
+  ":simdjson.encode/1" => fn ->
+    :simdjson.encode(json_map)
+  end,
+  ":jiffy.encode/1" => fn ->
+    :jiffy.encode(json_map)
+  end,
+  ":jsone.encode/1" => fn ->
+    :jsone.encode(json_map)
+  end
 })
 ```
 
 benches/decode_sample.exs
 
 ```elixir
-blockchain_json = Otp27Json.blockchain_json()
+json_string = JsonDemo.json_string()
 
 Benchee.run(%{
-  ":json.decode/1" => fn -> :json.decode(blockchain_json) end,
-  "Poison.decode!/1" => fn -> Poison.decode!(blockchain_json) end,
-  "Jason.decode!/1" => fn -> Jason.decode!(blockchain_json) end,
-  ":simdjson.decode/1" => fn -> :simdjson.decode(blockchain_json) end,
-  ":jiffy.decode/2" => fn -> :jiffy.decode(blockchain_json, [:return_maps]) end,
-  ":jsone.decode/1" => fn -> :jsone.decode(blockchain_json) end
+  ":json.decode/1" => fn ->
+    :json.decode(json_string)
+  end,
+  "Poison.decode!/1" => fn ->
+    Poison.decode!(json_string)
+  end,
+  "Jason.decode!/1" => fn ->
+    Jason.decode!(json_string)
+  end,
+  ":simdjson.decode/1" => fn ->
+    :simdjson.decode(json_string)
+  end,
+  ":jiffy.decode/2" => fn ->
+    :jiffy.decode(json_string, [:return_maps])
+  end,
+  ":jsone.decode/1" => fn ->
+    :jsone.decode(json_string)
+  end
 })
+```
+
+### 运行
+
+```sh
+mix run benches/encode_sample.exs
+mix run benches/decode_sample.exs
 ```
