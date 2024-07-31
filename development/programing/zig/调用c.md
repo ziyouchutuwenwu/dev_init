@@ -32,7 +32,7 @@ pub fn main() !void {
 
 src/xx/demo.h
 
-```h
+```hpp
 #ifndef __DEMO_CINLUDED__
 #define __DEMO_CINLUDED__
 

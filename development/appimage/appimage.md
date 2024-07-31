@@ -1,4 +1,6 @@
-# appimage 打包
+# appimage
+
+## 说明
 
 linux 下打包为一个独立绿色可执行程序
 
@@ -8,39 +10,15 @@ linux 下打包为一个独立绿色可执行程序
 
 ### 准备工作
 
-#### 普通程序
-
-普通程序用 linuxdeploy
-
-```sh
-https://github.com/linuxdeploy/linuxdeploy
-```
-
-#### qt 程序
-
-qt 程序用 linuxdeployqt
-
-```sh
-https://github.com/probonopd/linuxdeployqt
-```
-
-#### appimagetool
-
-打包为绿色可执行文件的工具
-
-```sh
-https://github.com/AppImage/AppImageKit
-```
-
-#### patchelf
+需要安装 patchelf
 
 ```sh
 sudo pacman -S patchelf
 ```
 
-### 步骤
+### 普通程序打包
 
-#### 普通程序打包
+普通程序用 [linuxdeploy](https://github.com/linuxdeploy/linuxdeploy)
 
 准备好可执行文件和 icon，icon 名字必须和工程名字一致
 
@@ -48,7 +26,9 @@ sudo pacman -S patchelf
 linuxdeploy --appdir=../no_qt_pack -e ./demo -i demo.svg --create-desktop-file
 ```
 
-#### qt 程序打包
+### qt 程序打包
+
+qt 程序用 [linuxdeployqt](https://github.com/probonopd/linuxdeployqt)
 
 找到需要打包的文件
 
@@ -67,7 +47,13 @@ linuxdeployqt ./release/demo -appimage -unsupported-allow-new-glibc
 sed -i '1 a Categories=Utility;' release/default.desktop
 ```
 
-#### 打包为绿色文件
+### 打包为绿色文件
+
+用 appimagetool
+
+```sh
+https://github.com/AppImage/AppImageKit
+```
 
 ```sh
 appimagetool ./release xxx_bin
