@@ -107,7 +107,6 @@ def install_useful_tools():
         "genisoimage",
         "global",
         "tree",
-        "ranger",
         "silversearcher-ag",
         "wget",
         "curl",

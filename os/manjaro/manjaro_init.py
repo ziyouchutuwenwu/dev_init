@@ -239,7 +239,6 @@ def install_useful_tools():
         "aria2",
         "curl",
         "wget",
-        "ranger",
         "tree",
         "screenfetch",
         "the_silver_searcher",
