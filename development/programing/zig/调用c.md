@@ -7,11 +7,17 @@
 ```sh
 .
 ├── build.zig
+├── build.zig.zon
 └── src
+    ├── c_lib
+    │   ├── demo
+    │   │   ├── demo.c
+    │   │   └── demo.h
+    │   └── sub
+    │       ├── sub.c
+    │       └── sub.h
     ├── main.zig
-    └── xx
-        ├── demo.c
-        └── demo.h
+    └── root.zig
 ```
 
 ### 代码
@@ -21,47 +27,67 @@ src/main.zig
 ```zig
 const std = @import("std");
 const clib = @cImport({
-    @cInclude("xx/demo.h");
+    @cInclude("c_lib/demo/demo.h");
 });
 
 pub fn main() !void {
-    const sum = clib.add(11, 22);
+    const sum = clib.demo(11, 22);
     std.debug.print("sum {d}\n", .{sum});
 }
 ```
 
-src/xx/demo.h
+src/c_lib/sub/sub.h
 
-```hpp
+```h
+#ifndef __SUB_CINLUDED__
+#define __SUB_CINLUDED__
+
+#include <stdio.h>
+
+int sub(int a, int b);
+
+#endif
+```
+
+src/c_lib/sub/sub.c
+
+```c
+#include "sub.h"
+
+int sub(int a, int b) {
+  return a + b;
+}
+```
+
+src/c_lib/demo/demo.h
+
+```h
 #ifndef __DEMO_CINLUDED__
 #define __DEMO_CINLUDED__
 
 #include <stdio.h>
 
-int add(int a, int b);
+int demo(int a, int b);
 
 #endif
 ```
 
-src/xx/demo.c
+src/c_lib/demo/demo.c
 
 ```c
 #include "demo.h"
+#include "../sub/sub.h"
 
-int add(int a, int b) {
-  return a + b;
+int demo(int a, int b) {
+  return sub(a, b);
 }
 ```
 
 build.zig
 
 ```zig
-// 增加 c 库
-const Build = std.build;
-exe.addCSourceFile(.{
-    .file = Build.LazyPath.relative("src/xx/demo.c"),
-    .flags = &[_][]const u8{"-std=c99"},
-});
-exe.addIncludePath(Build.LazyPath.relative("src"));
+exe.addCSourceFile(.{ .file = b.path("src/c_lib/demo/demo.c"), .flags = &.{"-std=c99"} });
+exe.addCSourceFile(.{ .file = b.path("src/c_lib/sub/sub.c"), .flags = &.{"-std=c99"} });
+exe.addIncludePath(b.path("src"));
 exe.linkSystemLibrary("c");
 ```
