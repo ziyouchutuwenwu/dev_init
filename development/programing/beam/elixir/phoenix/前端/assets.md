@@ -26,9 +26,11 @@ digest 用来生成指纹
 
 ### 流程
 
-digest 以后，assets 目录的 js 和 css 会被编译到 priv/static/assets 目录下, 会生成一串带有随机数名字的文件，生产模式下，加载的是这种带随机数名字的文件
+digest 以后，assets 目录的 js 和 css 会被编译到 priv/static/assets 目录下, 会生成一串带有随机数名字的文件
 
-同时，priv/static/images 内的图片也会另外生成一份带有随机数名的图片，生产模式下，加载这种带随机数名字的图片
+同时，priv/static/images 内的图片也会另外生成一份带有随机数名的图片
+
+这两者生成的带随机数的文件均用于生产模式下加载
 
 ### 用法
 
