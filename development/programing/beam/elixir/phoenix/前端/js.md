@@ -26,6 +26,14 @@ const demo = new DemoClass();
 demo.demo1();
 
 bb.demo2();
+
+// 不同 heex 页面如下区分调用
+if (window.location.pathname === "/aaa") {
+  console.log("aaa");
+}
+if (window.location.pathname === "/bbb") {
+  console.log("bbb");
+}
 ```
 
 aa.ts
