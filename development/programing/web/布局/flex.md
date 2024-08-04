@@ -1,10 +1,12 @@
-# flex 布局说明
+# flex
 
 ## 说明
 
 [参考连接](https://www.ruanyifeng.com/blog/2015/07/flex-grammar.html)
 
-### flex 容器属性
+## 用法
+
+### 容器属性
 
 #### display
 
@@ -58,7 +60,7 @@ align-content 是针对多行的，是把多行来当做一个整体进行对齐
 }
 ```
 
-### 子元素属性
+### 子项属性
 
 #### order
 
