@@ -2,8 +2,6 @@
 
 ## 三方组件
 
-[uibak](https://www.uibak.com/)
-
 [tailgrids](https://tailgrids.com/)
 
 [flowbite](https://flowbite.com)
