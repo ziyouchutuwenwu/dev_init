@@ -20,7 +20,7 @@ QT       += charts
 
 chart.h
 
-```hpp
+```h
 #ifndef CHART_H
 #define CHART_H
 

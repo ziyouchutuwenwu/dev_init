@@ -6,7 +6,7 @@
 
 msg.h
 
-```hpp
+```h
 #ifndef MSG_H
 #define MSG_H
 
@@ -22,7 +22,7 @@ typedef struct _Msg{
 
 demo_thread.h
 
-```hpp
+```h
 #ifndef DEMOTHREAD_H
 #define DEMOTHREAD_H
 
@@ -67,7 +67,7 @@ void DemoThread::run()
 
 mainwindow.h
 
-```hpp
+```h
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
