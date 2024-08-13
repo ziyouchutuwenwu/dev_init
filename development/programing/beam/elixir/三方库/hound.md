@@ -31,7 +31,6 @@ import Config
 
 config :hound,
   driver: "chrome_driver",
-  browser: "chrome_headless",
   # chromedriver 默认端口
   port: 9515
 ```
@@ -41,9 +40,25 @@ defmodule Demo do
   use Hound.Helpers
 
   def demo do
-    Hound.start_session()
+    Hound.start_session(additional_capabilities())
     navigate_to("https://www.baidu.com")
     Hound.end_session()
+  end
+
+  defp additional_capabilities do
+    [
+      additional_capabilities: %{
+        :"goog:chromeOptions" => %{
+          "args" => [
+            "--headless",
+            "--disable-gpu",
+            "--no-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-software-rasterizer"
+          ]
+        }
+      }
+    ]
   end
 end
 ```
