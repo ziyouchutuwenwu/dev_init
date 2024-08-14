@@ -90,6 +90,7 @@ def install_useful_tools():
     tool_list = [
         "virt-what",
         "git",
+        "rinetd",
         "screen",
         "dstat",
         "strace",

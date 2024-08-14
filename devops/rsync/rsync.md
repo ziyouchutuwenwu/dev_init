@@ -1,4 +1,4 @@
-# rsync 说明
+# rsync
 
 ## 用法
 

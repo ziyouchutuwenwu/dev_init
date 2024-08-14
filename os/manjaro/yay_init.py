@@ -76,6 +76,13 @@ def install_browser(user):
     proc.run_as_user(user, cmd)
 
 
+def install_rinetd(user):
+    sudo_ask_pass_info = "export SUDO_ASKPASS=/tmp/pass.sh"
+    install_cmd = "yes | yay --noconfirm -S --sudoflags -A rinetd"
+    cmd = "%s; %s" % (sudo_ask_pass_info, install_cmd)
+    proc.run_as_user(user, cmd)
+
+
 def install_rebar3(user):
     sudo_ask_pass_info = "export SUDO_ASKPASS=/tmp/pass.sh"
     install_cmd = "yes | yay --noconfirm -S --sudoflags -A rebar3"
@@ -111,6 +118,7 @@ if __name__ == "__main__":
     update_sudo_passwd_template(login_pwd)
 
     init_yay(login_user)
+    install_rinetd(login_user)
     install_themes(login_user)
     install_vscode(login_user)
     install_net_tools(login_user)

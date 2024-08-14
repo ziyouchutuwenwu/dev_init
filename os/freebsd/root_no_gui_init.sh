@@ -64,6 +64,7 @@ pkg install -y htop
 pkg install -y expect
 pkg install -y netcat
 pkg install -y nmap
+pkg install -y rinetd
 
 pkg install -y zsh
 chsh -s $(which zsh) $(whoami)
