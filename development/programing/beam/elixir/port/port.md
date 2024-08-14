@@ -1,4 +1,4 @@
-# port 调用
+# port
 
 ## 说明
 
@@ -11,7 +11,7 @@
 
 ## 用法
 
-### 直接执行命令
+### 执行命令
 
 ```elixir
 # port = Port.open({:spawn, "sleep 1000"}, [:binary])
@@ -36,7 +36,7 @@ System.cmd("kill", ["-9",Integer.to_string(pid)])
 "sleep" |> System.cmd(["10"])
 ```
 
-### 打开以后互相通信
+### 互相通信
 
 #### rust
 
