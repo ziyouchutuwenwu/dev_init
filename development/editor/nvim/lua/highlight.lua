@@ -20,6 +20,7 @@ return {
       "java",
       "erlang",
       "elixir",
+      "heex",
     })
   end,
 }
