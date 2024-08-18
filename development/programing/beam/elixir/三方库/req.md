@@ -170,7 +170,7 @@ defmodule ClientDemo do
       |> URI.append_query("aaa=bbb")
       |> URI.to_string()
 
-    options = [
+    default_options = [
       headers: headers,
       retry: false,
       # 接收 http 数据的超时
@@ -182,6 +182,7 @@ defmodule ClientDemo do
       ]
     ]
 
+    options = default_options
     {:ok, resp} = url |> Req.get(options)
     body = resp.body
 
@@ -196,16 +197,19 @@ defmodule ClientDemo do
     base_url = ConfigFetcher.get_base_url() |> URI.parse()
     url = base_url |> URI.append_path("/api/uri-demo/ppp") |> URI.to_string()
 
-    options = [
+    default_options = [
       headers: headers,
       retry: false,
+      # 接收 http 数据的超时
       receive_timeout: :infinity,
       connect_options: [
+        # 与服务器建立 tcp 连接的超时
         timeout: :infinity,
         transport_opts: [verify: :verify_none]
       ]
     ]
 
+    options = default_options
     {:ok, resp} = url |> Req.get(options)
     body = resp.body
 
@@ -223,8 +227,11 @@ defmodule ClientDemo do
 
     options = [
       headers: headers,
+      retry: false,
+      # 接收 http 数据的超时
       receive_timeout: :infinity,
       connect_options: [
+        # 与服务器建立 tcp 连接的超时
         timeout: :infinity,
         transport_opts: [verify: :verify_none],
         proxy: {:http, "127.0.0.1", 8118, [proxy_auth: proxy_auth]}
@@ -239,7 +246,7 @@ defmodule ClientDemo do
 
   def form_post_demo do
     headers = [
-      {"Content-Type", "application/x-www-form-urlencoded"}
+      {"User-Agent", "xxx"}
     ]
 
     data = [id: "11111"]
@@ -247,15 +254,32 @@ defmodule ClientDemo do
     base_url = ConfigFetcher.get_base_url() |> URI.parse()
     url = base_url |> URI.append_path("/api/form-post") |> URI.to_string()
 
-    options = [
-      form: data,
+    # options = [
+    #   form: data,
+    #   headers: headers,
+    #   retry: false,
+    #   # 接收 http 数据的超时
+    #   receive_timeout: :infinity,
+    #   connect_options: [
+    #     # 与服务器建立 tcp 连接的超时
+    #     timeout: :infinity,
+    #     transport_opts: [verify: :verify_none]
+    #   ]
+    # ]
+
+    default_options = [
       headers: headers,
+      retry: false,
+      # 接收 http 数据的超时
       receive_timeout: :infinity,
       connect_options: [
+        # 与服务器建立 tcp 连接的超时
         timeout: :infinity,
         transport_opts: [verify: :verify_none]
       ]
     ]
+
+    options = [{:form, data} | default_options]
 
     {:ok, resp} = url |> Req.post(options)
     body = resp.body
@@ -265,7 +289,7 @@ defmodule ClientDemo do
 
   def json_post_demo do
     headers = [
-      {"Content-Type", "application/json"}
+      {"User-Agent", "xxx"}
     ]
 
     json_data = %{
@@ -275,15 +299,32 @@ defmodule ClientDemo do
     base_url = ConfigFetcher.get_base_url() |> URI.parse()
     url = base_url |> URI.append_path("/api/json-post") |> URI.to_string()
 
-    options = [
-      json: json_data,
+    # options = [
+    #   json: json_data,
+    #   headers: headers,
+    #   retry: false,
+    #   # 接收 http 数据的超时
+    #   receive_timeout: :infinity,
+    #   connect_options: [
+    #     # 与服务器建立 tcp 连接的超时
+    #     timeout: :infinity,
+    #     transport_opts: [verify: :verify_none]
+    #   ]
+    # ]
+
+    default_options = [
       headers: headers,
+      retry: false,
+      # 接收 http 数据的超时
       receive_timeout: :infinity,
       connect_options: [
+        # 与服务器建立 tcp 连接的超时
         timeout: :infinity,
         transport_opts: [verify: :verify_none]
       ]
     ]
+
+    options = [{:json, json_data} | default_options]
 
     {:ok, resp} = url |> Req.post(options)
     body = resp.body
@@ -294,20 +335,39 @@ defmodule ClientDemo do
   def file_upload_demo do
     {:ok, file_bin} = File.read("/home/mmc/downloads/aaa.bin")
 
-    headers = []
+    headers = [
+      {"User-Agent", "xxx"}
+    ]
 
     base_url = ConfigFetcher.get_base_url() |> URI.parse()
     url = base_url |> URI.append_path("/api/file-upload") |> URI.to_string()
 
-    options = [
-      body: file_bin,
+    # options = [
+    #   body: file_bin,
+    #   headers: headers,
+    #   retry: false,
+    #   # 接收 http 数据的超时
+    #   receive_timeout: :infinity,
+    #   connect_options: [
+    #     # 与服务器建立 tcp 连接的超时
+    #     timeout: :infinity,
+    #     transport_opts: [verify: :verify_none]
+    #   ]
+    # ]
+
+    default_options = [
       headers: headers,
+      retry: false,
+      # 接收 http 数据的超时
       receive_timeout: :infinity,
       connect_options: [
+        # 与服务器建立 tcp 连接的超时
         timeout: :infinity,
         transport_opts: [verify: :verify_none]
       ]
     ]
+
+    options = [{:body, file_bin} | default_options]
 
     {:ok, resp} = url |> Req.put(options)
     body = resp.body
