@@ -112,9 +112,7 @@ Enum.frequencies([11111, 222, 222 , 2222, 333])
 Enum.with_index(["a", "b", "c", "d", "e"])
 ```
 
-### 数组合并
-
-也可用于 append
+### append
 
 加到前面
 

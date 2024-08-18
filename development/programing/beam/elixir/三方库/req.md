@@ -173,9 +173,11 @@ defmodule ClientDemo do
     options = [
       headers: headers,
       retry: false,
+      # 接收 http 数据的超时
       receive_timeout: :infinity,
       connect_options: [
-        # 测试 ssl
+        # 与服务器建立 tcp 连接的超时
+        timeout: :infinity,
         transport_opts: [verify: :verify_none]
       ]
     ]
@@ -194,7 +196,16 @@ defmodule ClientDemo do
     base_url = ConfigFetcher.get_base_url() |> URI.parse()
     url = base_url |> URI.append_path("/api/uri-demo/ppp") |> URI.to_string()
 
-    options = [headers: headers, retry: false, receive_timeout: :infinity]
+    options = [
+      headers: headers,
+      retry: false,
+      receive_timeout: :infinity,
+      connect_options: [
+        timeout: :infinity,
+        transport_opts: [verify: :verify_none]
+      ]
+    ]
+
     {:ok, resp} = url |> Req.get(options)
     body = resp.body
 
@@ -206,7 +217,7 @@ defmodule ClientDemo do
       {"User-Agent", "xxx"}
     ]
 
-    url = "http://myip.ipip.net"
+    url = "https://myip.ipip.net"
 
     proxy_auth = {"proxy_user", "proxy_pass"}
 
@@ -214,6 +225,8 @@ defmodule ClientDemo do
       headers: headers,
       receive_timeout: :infinity,
       connect_options: [
+        timeout: :infinity,
+        transport_opts: [verify: :verify_none],
         proxy: {:http, "127.0.0.1", 8118, [proxy_auth: proxy_auth]}
       ]
     ]
@@ -237,7 +250,11 @@ defmodule ClientDemo do
     options = [
       form: data,
       headers: headers,
-      receive_timeout: :infinity
+      receive_timeout: :infinity,
+      connect_options: [
+        timeout: :infinity,
+        transport_opts: [verify: :verify_none]
+      ]
     ]
 
     {:ok, resp} = url |> Req.post(options)
@@ -261,7 +278,11 @@ defmodule ClientDemo do
     options = [
       json: json_data,
       headers: headers,
-      receive_timeout: :infinity
+      receive_timeout: :infinity,
+      connect_options: [
+        timeout: :infinity,
+        transport_opts: [verify: :verify_none]
+      ]
     ]
 
     {:ok, resp} = url |> Req.post(options)
@@ -281,7 +302,11 @@ defmodule ClientDemo do
     options = [
       body: file_bin,
       headers: headers,
-      receive_timeout: :infinity
+      receive_timeout: :infinity,
+      connect_options: [
+        timeout: :infinity,
+        transport_opts: [verify: :verify_none]
+      ]
     ]
 
     {:ok, resp} = url |> Req.put(options)
