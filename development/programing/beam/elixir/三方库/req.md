@@ -1,31 +1,18 @@
-# 常规用法
+# req
 
-```sh
-https://github.com/edgurgel/httpoison
-```
+## 说明
 
-## 例子
+据说性能相对高
 
-### 创建服务端
+## 用法
+
+### 服务端
+
+创建项目
 
 ```sh
 mix phx.new web_demo --no-assets --no-html --no-gettext --no-dashboard --no-live --no-mailer --no-ecto
 ```
-
-### 创建客户端
-
-```sh
-mix new client_demo
-```
-
-添加 deps
-
-```elixir
-{:httpoison, "~> 2.0"},
-{:jason, "~> 1.2"}
-```
-
-### 服务端代码
 
 router.ex
 
@@ -88,16 +75,16 @@ end
 
 ### 客户端
 
-创建 config
+创建项目
 
 ```sh
-client_demo
-├── config
-│   ├── config.exs
-│   ├── dev.exs
-│   ├── prod.exs
-│   ├── runtime.exs
-│   └── test.exs
+mix new client_demo
+```
+
+deps
+
+```elixir
+{:req, "~> 0.5.0"}
 ```
 
 config/config.exs
@@ -119,18 +106,6 @@ config :logger,
 
 config :client_demo,
   base_url: "http://127.0.0.1:4000"
-
-config :client_demo,
-  httpoison_option: [
-    hackney: [
-      use_default_pool: false,
-      insecure: true
-    ],
-    timeout: :infinity,
-    checkout_timeout: :infinity,
-    # proxy: {:socks5, '127.0.0.1', 1080},
-    recv_timeout: :infinity
-  ]
 ```
 
 config/prod.exs
@@ -143,17 +118,6 @@ config :logger,
 
 config :client_demo,
   base_url: "http://127.0.0.1:4000"
-
-config :client_demo,
-  httpoison_option: [
-    hackney: [
-      use_default_pool: false,
-      insecure: true
-    ],
-    timeout: :infinity,
-    checkout_timeout: :infinity,
-    recv_timeout: :infinity
-  ]
 ```
 
 config/test.exs
@@ -166,17 +130,6 @@ config :logger,
 
 config :client_demo,
   base_url: "http://127.0.0.1:4000"
-
-config :client_demo,
-  httpoison_option: [
-    hackney: [
-      use_default_pool: false,
-      insecure: true
-    ],
-    timeout: :infinity,
-    checkout_timeout: :infinity,
-    recv_timeout: :infinity
-  ]
 ```
 
 config/runtime.exs
@@ -197,10 +150,6 @@ defmodule ConfigFetcher do
   def get_base_url() do
     Application.get_env(:client_demo, :base_url)
   end
-
-  def get_httpoison_config() do
-    Application.get_env(:client_demo, :httpoison_option)
-  end
 end
 ```
 
@@ -209,25 +158,68 @@ defmodule ClientDemo do
   require Logger
 
   def get_demo do
-    headers = []
-    options = ConfigFetcher.get_httpoison_config()
+    headers = [
+      {"User-Agent", "xxx"}
+    ]
 
-    base_url = ConfigFetcher.get_base_url |> URI.parse
-    url = base_url |> URI.append_path("/api/get-demo") |> URI.append_query("aaa=bbb") |> URI.to_string
-    {:ok, %HTTPoison.Response{status_code: 200, body: body}} =
-      HTTPoison.get(url, headers, options)
+    base_url = ConfigFetcher.get_base_url() |> URI.parse()
+
+    url =
+      base_url
+      |> URI.append_path("/api/get-demo")
+      |> URI.append_query("aaa=bbb")
+      |> URI.to_string()
+
+    options = [
+      headers: headers,
+      retry: false,
+      receive_timeout: :infinity,
+      connect_options: [
+        # 测试 ssl
+        transport_opts: [verify: :verify_none]
+      ]
+    ]
+
+    {:ok, resp} = url |> Req.get(options)
+    body = resp.body
 
     Logger.debug(body)
   end
 
   def uri_demo do
-    headers = []
-    options = ConfigFetcher.get_httpoison_config()
+    headers = [
+      {"User-Agent", "xxx"}
+    ]
 
-    base_url = ConfigFetcher.get_base_url |> URI.parse
-    url = base_url |> URI.append_path("/api/uri-demo/ppp") |> URI.to_string
-    {:ok, %HTTPoison.Response{status_code: 200, body: body}} =
-      HTTPoison.get(url, headers, options)
+    base_url = ConfigFetcher.get_base_url() |> URI.parse()
+    url = base_url |> URI.append_path("/api/uri-demo/ppp") |> URI.to_string()
+
+    options = [headers: headers, retry: false, receive_timeout: :infinity]
+    {:ok, resp} = url |> Req.get(options)
+    body = resp.body
+
+    Logger.debug(body)
+  end
+
+  def proxy_demo do
+    headers = [
+      {"User-Agent", "xxx"}
+    ]
+
+    url = "http://myip.ipip.net"
+
+    proxy_auth = {"proxy_user", "proxy_pass"}
+
+    options = [
+      headers: headers,
+      receive_timeout: :infinity,
+      connect_options: [
+        proxy: {:http, "127.0.0.1", 8118, [proxy_auth: proxy_auth]}
+      ]
+    ]
+
+    {:ok, resp} = url |> Req.get(options)
+    body = resp.body
 
     Logger.debug(body)
   end
@@ -237,15 +229,19 @@ defmodule ClientDemo do
       {"Content-Type", "application/x-www-form-urlencoded"}
     ]
 
-    article_id = "11111"
-    options = ConfigFetcher.get_httpoison_config()
+    data = [id: "11111"]
 
-    data = %{"id" => article_id}
+    base_url = ConfigFetcher.get_base_url() |> URI.parse()
+    url = base_url |> URI.append_path("/api/form-post") |> URI.to_string()
 
-    base_url = ConfigFetcher.get_base_url |> URI.parse
-    url = base_url |> URI.append_path("/api/form-post") |> URI.to_string
-    {:ok, %HTTPoison.Response{status_code: 200, body: body}} =
-      HTTPoison.post("http://127.0.0.1:4000/api/form-post", {:form, data}, headers, options)
+    options = [
+      form: data,
+      headers: headers,
+      receive_timeout: :infinity
+    ]
+
+    {:ok, resp} = url |> Req.post(options)
+    body = resp.body
 
     Logger.debug(body)
   end
@@ -255,17 +251,21 @@ defmodule ClientDemo do
       {"Content-Type", "application/json"}
     ]
 
-    json_data =
-      Jason.encode!(%{
-        aaa: "bbb"
-      })
+    json_data = %{
+      aaa: "bbb"
+    }
 
-    options = ConfigFetcher.get_httpoison_config()
+    base_url = ConfigFetcher.get_base_url() |> URI.parse()
+    url = base_url |> URI.append_path("/api/json-post") |> URI.to_string()
 
-    base_url = ConfigFetcher.get_base_url |> URI.parse
-    url = base_url |> URI.append_path("/api/json-post") |> URI.to_string
-    {:ok, %HTTPoison.Response{status_code: 200, body: body}} =
-      HTTPoison.post("http://127.0.0.1:4000/api/json-post", json_data, headers, options)
+    options = [
+      json: json_data,
+      headers: headers,
+      receive_timeout: :infinity
+    ]
+
+    {:ok, resp} = url |> Req.post(options)
+    body = resp.body
 
     Logger.debug(body)
   end
@@ -274,12 +274,18 @@ defmodule ClientDemo do
     {:ok, file_bin} = File.read("/home/mmc/downloads/aaa.bin")
 
     headers = []
-    options = ConfigFetcher.get_httpoison_config()
 
-    base_url = ConfigFetcher.get_base_url |> URI.parse
-    url = base_url |> URI.append_path("/api/file-upload") |> URI.to_string
-    {:ok, %HTTPoison.Response{status_code: 200, body: body}} =
-      HTTPoison.put(url, file_bin, headers, options)
+    base_url = ConfigFetcher.get_base_url() |> URI.parse()
+    url = base_url |> URI.append_path("/api/file-upload") |> URI.to_string()
+
+    options = [
+      body: file_bin,
+      headers: headers,
+      receive_timeout: :infinity
+    ]
+
+    {:ok, resp} = url |> Req.put(options)
+    body = resp.body
 
     Logger.debug(body)
   end
