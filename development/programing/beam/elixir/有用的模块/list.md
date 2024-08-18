@@ -2,6 +2,12 @@
 
 ## 用法例子
 
+### flatten
+
+```elixir
+[[1, 2], [3, 4], [5, 6]] |> List.flatten
+```
+
 ### delete
 
 ```elixir

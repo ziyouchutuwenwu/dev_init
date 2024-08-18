@@ -124,6 +124,13 @@ Enum.with_index(["a", "b", "c", "d", "e"])
 
 ```elixir
 ["a", "b", "c"] ++ ["d", "e"]
+```
+
+### concat
+
+效果和 ++ 类似
+
+```elixir
 Enum.concat(["a", "b", "c"], ["d", "e"])
 ```
 
