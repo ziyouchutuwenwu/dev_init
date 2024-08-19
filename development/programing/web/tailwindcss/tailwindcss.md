@@ -2,20 +2,22 @@
 
 ## 三方组件
 
-[tailgrids](https://tailgrids.com/)
+[组件库列表](https://github.com/aniftyco/awesome-tailwindcss?tab=readme-ov-file#ui-libraries-components--templates)
+
+### 开源免费
 
 [flowbite](https://flowbite.com)
 
-[razorui](https://razorui.com/)
+[后台模板](https://github.com/themesberg/flowbite-admin-dashboard)
 
-[tailwindtoolbox](https://www.tailwindtoolbox.com)
-
-[daisyui](https://daisyui.com/)
+[preline](https://preline.co/)
 
 [tailblocks](https://tailblocks.cc/)
 
-## ai 生成
+### 部分收费
 
-ai 生成网站
+[tailwindui](https://tailwindui.com/components)
 
-[screenshottocode](https://screenshottocode.com/)
+[tailgrids](https://tailgrids.com/)
+
+[daisyui](https://daisyui.com/)
