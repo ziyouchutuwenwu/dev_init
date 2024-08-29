@@ -1,3 +1,4 @@
 {
-  "erlang_ls.serverPath": "/usr/local/bin/erlang_ls"
+  "erlang_ls.serverPath": "/usr/local/bin/erlang_ls",
+  "erlang_ls.dapPath": "/usr/local/bin/els_dap"
 }

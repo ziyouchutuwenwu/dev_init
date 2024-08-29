@@ -10,13 +10,13 @@
         带域名也支持
     */
     /*
-      远程调试需要先运行
+      先执行如下命令
       rebar3 shell --sname erl-dbg@localhost --setcookie 123456
     */
     {
       "name": "debug",
       "type": "erlang",
-      "request": "launch",
+      "request": "attach",
       "projectnode": "erl-dbg@localhost",
       "cookie": "123456",
       "timeout": 300,
