@@ -1,26 +1,19 @@
 {
   "version": "0.2.0",
   "configurations": [
-    /*
-      long name:
-        ip 不支持
-        域名支持
-      short name:
-        纯主机名，不带域名支持
-        带域名也支持
-    */
-    /*
-      先执行如下命令
-      rebar3 shell --sname erl-dbg@localhost --setcookie 123456
-    */
+    // 具体参数见 https://github.com/erlang-ls/vscode/blob/main/package.json
+    // 按 F5, 会先启动一个 erlang 的 shell, 然后输入模块方法，触发断点
     {
       "name": "debug",
       "type": "erlang",
-      "request": "attach",
-      "projectnode": "erl-dbg@localhost",
+      "request": "launch",
+      "use_long_names": true,
+      "projectnode": "erl-dbg@127.0.0.1",
       "cookie": "123456",
       "timeout": 300,
-      "cwd": "${workspaceRoot}"
+      "cwd": "${workspaceRoot}",
+      // 和手动执行一致，其实就是附加到远程节点
+      "runinterminal": ["rebar3", "shell", "--name", "erl-dbg@127.0.0.1", "--setcookie", "123456"]
     }
   ]
 }
