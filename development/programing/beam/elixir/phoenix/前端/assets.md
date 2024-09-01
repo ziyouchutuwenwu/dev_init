@@ -31,11 +31,9 @@
 
 ## 编译命令
 
-tailwind 用来压缩 css
-
-esbuild 用来打包 app.js
-
-digest 用来生成指纹
+- tailwind 用来压缩 css
+- esbuild 用来打包 app.js
+- digest 用来生成指纹
 
 ```elixir
 "assets.deploy": [
@@ -51,9 +49,23 @@ digest 用来生成指纹
 # 压缩，priv/static/ 内生成带随机数的文件名，随机数文件用于生产模式下加载
 MIX_ENV=prod mix assets.deploy
 
-# 指定目录
-mix assets.deploy priv/static -o ~/downloads/aaa
-
 # 清理 priv/static 目录
 mix phx.digest.clean --all
+```
+
+指定输出目录
+
+```sh
+mix assets.deploy priv/static -o /www/public
+```
+
+endpoint.ex
+
+```elixir
+plug Plug.Static,
+  at: "/",
+  # from: :web_demo,
+  from: Path.expand("/www/public", __DIR__),
+  gzip: false,
+  only: WebDemoWeb.static_paths()
 ```
