@@ -1,14 +1,30 @@
 # assets
 
-## 说明
+## 目录说明
 
-assets 包含 js 和 css，不含图片
+有两个 assets 目录
 
-根目录下 assets 目录为存放 js 和 css 的目录
+- assets
+  这里的 css 和 js 是用 imort 的模式
+  发布时需要先编译，然后会自动复制到 priv 下的 assets 目录里面
+  发布以后，只有一个 app.js 和 app.css 会被默认引用
 
-## 压缩
+- priv/static/assets/
+  最终引用的 css 和 js 在这个地方
+  如果需要使用传统方式，在页面引入其它 css 和 js，则放在这里
+  最终引用的图片默认在 priv/static/images/，放在 priv/static/assets 也可以引用到
 
-### 命令
+## 手动引入
+
+```html
+<!-- 这是用来引入 priv/static/assets/ 里面的东西的 -->
+<script src="/assets/aaa/aa.js"></script>
+
+<!-- assets 和 images 目录都可以引用到静态图 -->
+<img src={~p"/assets/mouse.png"}/>
+```
+
+## 编译命令
 
 tailwind 用来压缩 css
 
@@ -24,18 +40,10 @@ digest 用来生成指纹
 ]
 ```
 
-### 流程
-
-digest 以后，assets 目录的 js 和 css 会被编译到 priv/static/assets 目录下, 会生成一串带有随机数名字的文件
-
-同时，priv/static/images 内的图片也会另外生成一份带有随机数名的图片
-
-这两者生成的带随机数的文件均用于生产模式下加载
-
-### 用法
+用法
 
 ```sh
-# 压缩
+# 压缩，priv/static/ 内生成带随机数的文件名，随机数文件用于生产模式下加载
 MIX_ENV=prod mix assets.deploy
 
 # 指定目录
