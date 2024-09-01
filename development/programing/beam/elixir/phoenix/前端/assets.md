@@ -12,7 +12,11 @@
 - priv/static/assets/
   最终引用的 css 和 js 在这个地方
   如果需要使用传统方式，在页面引入其它 css 和 js，则放在这里
-  最终引用的图片默认在 priv/static/images/，放在 priv/static/assets 也可以引用到
+
+- 图片
+  在执行编译命令以后，图片也会生成一份随机数文件
+  图片默认在 priv/static/images/
+  放在 priv/static/assets 也可以引用到
 
 ## 手动引入
 
@@ -20,7 +24,8 @@
 <!-- 这是用来引入 priv/static/assets/ 里面的东西的 -->
 <script src="/assets/aaa/aa.js"></script>
 
-<!-- assets 和 images 目录都可以引用到静态图 -->
+<!-- assets 和 images 目录都可以 -->
+<!-- <img src={~p"/images/mouse.png"}/> -->
 <img src={~p"/assets/mouse.png"}/>
 ```
 
