@@ -65,7 +65,7 @@ endpoint.ex
 plug Plug.Static,
   at: "/",
   # from: :web_demo,
-  from: Path.expand("/www/public", __DIR__),
+  from: "/www/public",
   gzip: false,
   only: WebDemoWeb.static_paths()
 ```
