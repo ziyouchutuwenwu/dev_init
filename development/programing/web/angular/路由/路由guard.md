@@ -32,23 +32,37 @@ app.routes.ts
 
 ```typescript
 import { Routes } from '@angular/router';
-import { LoginComponent } from './login/login.component';
-import { HomeComponent } from './home/home.component';
 import { contentPageAuthGuard, loginPageAuthGuard } from './auth/auth.guard';
+import { LoginComponent } from './login/login.component';
+import { MainComponent } from './main/main.component';
+import { Demo1Component } from './content/demo1/demo1.component';
+import { Demo2Component } from './content/demo2/demo2.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/main', pathMatch: 'full' },
+  //  默认路由
+  { path: '', pathMatch: 'full', redirectTo: '/main' },
   {
     path: 'login',
     component: LoginComponent,
+    // data: { loginParam: ['aaaaaaa'] },
     canActivate: [loginPageAuthGuard],
-    data: { loginParam: ['aaaaaaa'] },
   },
   {
     path: 'main',
-    component: HomeComponent,
+    component: MainComponent,
     canActivate: [contentPageAuthGuard],
-    data: { contentParam: ['bbbbbbbb'] },
+    children: [
+      {
+        path: 'demo1',
+        // data: { loginParam: ['demo1 aaa'] },
+        component: Demo1Component,
+      },
+      {
+        path: 'demo2',
+        // data: { loginParam: ['demo2 aaa'] },
+        component: Demo2Component,
+      },
+    ],
   },
 ];
 ```
@@ -73,32 +87,24 @@ import { Router } from '@angular/router';
   providedIn: 'root',
 })
 export class AuthService {
-  private isLoggedIn = false;
+  private _isLogin = true;
 
   constructor(private router: Router) {}
 
   login(): void {
-    this.isLoggedIn = true;
+    this._isLogin = true;
   }
 
   isLogin(): boolean {
-    return this.isLoggedIn;
+    return this._isLogin;
   }
 
   logout(): void {
-    this.isLoggedIn = false;
+    this._isLogin = false;
   }
 
-  toContentPage() {
-    if (this.isLoggedIn) {
-      this.router.navigate(['main']);
-    }
-  }
-
-  toLoginPage() {
-    if (!this.isLoggedIn) {
-      this.router.navigate(['login']);
-    }
+  toPage(url: string) {
+    this.router.navigate([url]);
   }
 }
 ```
@@ -114,7 +120,7 @@ import { inject } from '@angular/core';
 import { CanActivateFn } from '@angular/router';
 import { AuthService } from './auth.service';
 
-// true 是否允许导航
+// 内容页用
 export const contentPageAuthGuard: CanActivateFn = (route, state) => {
   const authService: AuthService = inject(AuthService);
   if (authService.isLogin()) {
@@ -122,23 +128,24 @@ export const contentPageAuthGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  let param = route.data['contentParam'][0];
-  console.log('当前 %s, 未登录, 登录参数 %s, 准备跳转到 login', state.url, param);
-  authService.toLoginPage();
+  // let param = route.data['contentParam'][0];
+  console.log('当前 %s, 未登录, 准备跳转到 login', state.url);
+  authService.toPage('/login');
 
   return false;
 };
 
+// 登录页面用
 export const loginPageAuthGuard: CanActivateFn = (route, state) => {
   const authService: AuthService = inject(AuthService);
   if (authService.isLogin()) {
     console.log('当前在登录页, 已经登录, 准备跳转到 main');
-    authService.toContentPage();
+    authService.toPage('/main');
     return true;
   }
 
-  let param = route.data['loginParam'][0];
-  console.log('当前 %s, 未登录, 登录参数 %s', state.url, param);
+  // let param = route.data['loginParam'][0];
+  console.log('当前 %s, 未登录', state.url);
   return true;
 };
 ```
