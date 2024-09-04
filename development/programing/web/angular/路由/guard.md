@@ -1,8 +1,8 @@
-# 路由 guard
+# guard
 
 ## 说明
 
-可用于无权限访问时候做页面跳转
+用于控制路由的权限
 
 [参考连接](https://www.cnblogs.com/banluduxing/p/9380697.html)
 
@@ -31,34 +31,34 @@ ng g c login
 app.routes.ts
 
 ```typescript
-import { Routes } from '@angular/router';
-import { contentPageAuthGuard, loginPageAuthGuard } from './auth/auth.guard';
-import { LoginComponent } from './login/login.component';
-import { MainComponent } from './main/main.component';
-import { Demo1Component } from './content/demo1/demo1.component';
-import { Demo2Component } from './content/demo2/demo2.component';
+import { Routes } from "@angular/router";
+import { contentPageAuthGuard, loginPageAuthGuard } from "./auth/auth.guard";
+import { LoginComponent } from "./login/login.component";
+import { MainComponent } from "./main/main.component";
+import { Demo1Component } from "./content/demo1/demo1.component";
+import { Demo2Component } from "./content/demo2/demo2.component";
 
 export const routes: Routes = [
   //  默认路由
-  { path: '', pathMatch: 'full', redirectTo: '/main' },
+  { path: "", pathMatch: "full", redirectTo: "/main" },
   {
-    path: 'login',
+    path: "login",
     component: LoginComponent,
     // data: { loginParam: ['aaaaaaa'] },
     canActivate: [loginPageAuthGuard],
   },
   {
-    path: 'main',
+    path: "main",
     component: MainComponent,
     canActivate: [contentPageAuthGuard],
     children: [
       {
-        path: 'demo1',
+        path: "demo1",
         // data: { loginParam: ['demo1 aaa'] },
         component: Demo1Component,
       },
       {
-        path: 'demo2',
+        path: "demo2",
         // data: { loginParam: ['demo2 aaa'] },
         component: Demo2Component,
       },
@@ -80,11 +80,11 @@ ng g service auth/auth
 ```
 
 ```typescript
-import { Injectable } from '@angular/core';
-import { Router } from '@angular/router';
+import { Injectable } from "@angular/core";
+import { Router } from "@angular/router";
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class AuthService {
   private _isLogin = true;
@@ -116,21 +116,21 @@ ng g guard auth/auth
 ```
 
 ```typescript
-import { inject } from '@angular/core';
-import { CanActivateFn } from '@angular/router';
-import { AuthService } from './auth.service';
+import { inject } from "@angular/core";
+import { CanActivateFn } from "@angular/router";
+import { AuthService } from "./auth.service";
 
 // 内容页用
 export const contentPageAuthGuard: CanActivateFn = (route, state) => {
   const authService: AuthService = inject(AuthService);
   if (authService.isLogin()) {
-    console.log('当前在内容页, 已经登录');
+    console.log("当前在内容页, 已经登录");
     return true;
   }
 
   // let param = route.data['contentParam'][0];
-  console.log('当前 %s, 未登录, 准备跳转到 login', state.url);
-  authService.toPage('/login');
+  console.log("当前 %s, 未登录, 准备跳转到 login", state.url);
+  authService.toPage("/login");
 
   return false;
 };
@@ -139,13 +139,13 @@ export const contentPageAuthGuard: CanActivateFn = (route, state) => {
 export const loginPageAuthGuard: CanActivateFn = (route, state) => {
   const authService: AuthService = inject(AuthService);
   if (authService.isLogin()) {
-    console.log('当前在登录页, 已经登录, 准备跳转到 main');
-    authService.toPage('/main');
+    console.log("当前在登录页, 已经登录, 准备跳转到 main");
+    authService.toPage("/main");
     return true;
   }
 
   // let param = route.data['loginParam'][0];
-  console.log('当前 %s, 未登录', state.url);
+  console.log("当前 %s, 未登录", state.url);
   return true;
 };
 ```
