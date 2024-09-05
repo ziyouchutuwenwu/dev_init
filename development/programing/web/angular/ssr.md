@@ -37,5 +37,6 @@ ng build
 必须在 dist 目录外运行, 默认端口 4000
 
 ```sh
+# 发布的时候，这里的 node 可以用 bun 替换
 PORT=1234 node dist/demo/server/server.mjs
 ```
