@@ -102,6 +102,16 @@ def install_virt_manager_extra(user):
     proc.run_as_user(user, cmd)
 
 
+def install_wps(user):
+    sudo_ask_pass_info = "export SUDO_ASKPASS=/tmp/pass.sh"
+    install_cmd = "yes | yay --noconfirm -S --sudoflags -A wps-office-cn"
+    cmd = "%s; %s" % (sudo_ask_pass_info, install_cmd)
+    proc.run_as_user(user, cmd)
+    install_cmd = "yes | yay --noconfirm -S --sudoflags -A wps-office-mui-zh-cn"
+    cmd = "%s; %s" % (sudo_ask_pass_info, install_cmd)
+    proc.run_as_user(user, cmd)
+
+
 if __name__ == "__main__":
     if False == proc.is_root():
         print("This program must be run as root. Aborting.")
@@ -125,6 +135,7 @@ if __name__ == "__main__":
     install_rebar3(login_user)
     install_browser(login_user)
     install_pdf_viewer(login_user)
+    install_wps(login_user)
     install_virt_manager_extra(login_user)
 
     remove_sudo_passwd_template()
