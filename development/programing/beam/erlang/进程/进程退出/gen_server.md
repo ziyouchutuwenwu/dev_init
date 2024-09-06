@@ -1,4 +1,4 @@
-# gen_server 进程退出
+# gen_server
 
 本质和普通进程一样
 

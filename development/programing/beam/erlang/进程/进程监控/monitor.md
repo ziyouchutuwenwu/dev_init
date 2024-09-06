@@ -1,4 +1,4 @@
-# 进程监控
+# monitor
 
 ## 说明
 
@@ -53,12 +53,13 @@ init() ->
   io:format("on ~p init ~n", [?MODULE]),
   process_flag(trap_exit, true),
   dist_proc:start(),
-  _MonitorRef = erlang:monitor(process, dist_proc),
+  _Ref = erlang:monitor(process, dist_proc),
   loop().
 
 loop() ->
   receive
-    {'DOWN', _MonitorRef, process, {Pid, Node}, Reason} ->
+    {'DOWN', Ref, process, {Pid, Node}, Reason} ->
+      erlang:demonitor(Ref),
       io:format("~p got pid down msg ~p ~p ~p ~n", [?MODULE, Pid, Node, Reason]),
       loop();
     {'EXIT', From, Reason} ->
