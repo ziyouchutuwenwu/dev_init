@@ -1,8 +1,14 @@
-# 进程监控
+# 进程 link
 
 ## 说明
 
-和 link 的区别，是单向的
+link 是双向的, 任何一个进程挂掉, 另外一个都会受影响
+
+```sh
+A 挂掉, B 会检查自己有没有设置 process_flag(trap_exit, true)
+如果没有设置, 则也挂掉。
+如果设置了, 则在消息循环里面检测 {'EXIT', _From, Msg} 消息, 就算 A 是被 kill 的, 在 B 这里也是收到消息, 不会直接挂掉
+```
 
 ## 演示代码
 
@@ -16,7 +22,7 @@ dist_proc.erl
 -export([loop/0]).
 
 start() ->
-  Pid = spawn(?MODULE,init,[]),
+  Pid = spawn_link(?MODULE,init,[]),
   register(?MODULE, Pid),
   {ok, Pid}.
 
@@ -28,7 +34,8 @@ init() ->
 loop() ->
   receive
     {'EXIT', From, Reason} ->
-      io:format("~p got exit msg ~p ~p~n", [?MODULE, From, Reason]);
+      io:format("~p got exit msg ~p ~p~n", [?MODULE, From, Reason]),
+      loop();
     Msg ->
       io:format("~p got other msg ~p~n", [?MODULE, Msg]),
       loop()
@@ -53,16 +60,13 @@ init() ->
   io:format("on ~p init ~n", [?MODULE]),
   process_flag(trap_exit, true),
   dist_proc:start(),
-  _MonitorRef = erlang:monitor(process, dist_proc),
   loop().
 
 loop() ->
   receive
-    {'DOWN', _MonitorRef, process, {Pid, Node}, Reason} ->
-      io:format("~p got pid down msg ~p ~p ~p ~n", [?MODULE, Pid, Node, Reason]),
-      loop();
     {'EXIT', From, Reason} ->
-      io:format("~p got exit msg ~p ~p~n", [?MODULE, From, Reason]);
+      io:format("~p got exit msg ~p ~p~n", [?MODULE, From, Reason]),
+      loop();
     Msg ->
       io:format("~p got other msg ~p~n", [?MODULE, Msg]),
       loop()
@@ -72,19 +76,13 @@ loop() ->
 测试
 
 ```erlang
-spawn(fun() -> mon_proc:start() end).
+mon_proc:start().
 
-exit(whereis(dist_proc), normal).
-exit(whereis(dist_proc), shutdown).
-exit(whereis(dist_proc), xxx).
-exit(whereis(dist_proc), kill).
-
+exit(whereis(mon_proc), normal).
 exit(whereis(mon_proc), shutdown).
+exit(whereis(mon_proc), xxx).
+exit(whereis(mon_proc), kill).
 
-whereis(dist_proc) ! {'EXIT', self(), normal}.
-whereis(dist_proc) ! {'EXIT', self(), xxx}.
-whereis(dist_proc) ! {'EXIT', self(), kill}.
-
-whereis(dist_proc).
 whereis(mon_proc).
+whereis(dist_proc).
 ```
