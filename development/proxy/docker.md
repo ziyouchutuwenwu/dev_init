@@ -6,7 +6,7 @@
 
 ```sh
 sudo mkdir -p /etc/systemd/system/docker.service.d
-sudo vim /etc/systemd/system/docker.service.d/proxy.conf
+sudo nvim /etc/systemd/system/docker.service.d/proxy.conf
 ```
 
 不支持 socks5, 必须用 http 代理
@@ -37,7 +37,7 @@ systemctl show --property=Environment docker
 
 ```sh
 mkdir -p ~/.docker
-vim ~/.docker/config.json
+nvim ~/.docker/config.json
 ```
 
 ```json
