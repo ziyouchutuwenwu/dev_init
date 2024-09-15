@@ -6,6 +6,8 @@
 
 ## 例子
 
+创建组件
+
 ```sh
 ng g c get-demo
 ng g c form-post-demo
@@ -33,6 +35,22 @@ app.component.html
 </div>
 ```
 
+### axios 配置
+
+src/axios/shareInstance.ts
+
+```typescript
+import axios, { AxiosInstance } from "axios";
+
+const getAxiosInstance = (): AxiosInstance => {
+  return axios.create({
+    timeout: 1000,
+  });
+};
+
+export default getAxiosInstance;
+```
+
 ### get
 
 get-demo.component.html
@@ -44,37 +62,35 @@ get-demo.component.html
 get-demo.component.ts
 
 ```typescript
-import { Component } from '@angular/core';
-import axios from 'axios';
+import { Component } from "@angular/core";
+import axios from "axios";
+import getAxiosInstance from "../../axios/shareInstance";
 
 @Component({
-  selector: 'app-get-demo',
+  selector: "app-get-demo",
   standalone: true,
   imports: [],
-  templateUrl: './get-demo.component.html',
-  styleUrl: './get-demo.component.css',
+  templateUrl: "./get-demo.component.html",
+  styleUrl: "./get-demo.component.css",
 })
 export class GetDemoComponent {
   ngOnInit(): void {
-    console.log('/api/get-demo init');
+    console.log("/api/get-demo init");
   }
 
   demo() {
     const dataMap = {
-      username: 'mmc',
-      password: '123456',
+      username: "mmc",
+      password: "123456",
     };
-
-    const request = axios.create({
-      params: dataMap,
-    });
+    const request = getAxiosInstance();
     request
-      .get('/api/get-demo')
+      .get("/api/get-demo", { params: dataMap })
       .then((response) => {
-        console.log('正确返回', response.data);
+        console.log("正确返回", response.data);
       })
       .catch((error) => {
-        console.log('错误', error);
+        console.log("错误", error);
       });
   }
 }
@@ -91,40 +107,37 @@ form-post-demo.component.html
 form-post-demo.component.ts
 
 ```typescript
-import { Component } from '@angular/core';
-import axios from 'axios';
+import { Component } from "@angular/core";
+import axios from "axios";
+import getAxiosInstance from "../../axios/shareInstance";
 
 @Component({
-  selector: 'app-form-post-demo',
+  selector: "app-form-post-demo",
   standalone: true,
   imports: [],
-  templateUrl: './form-post-demo.component.html',
-  styleUrl: './form-post-demo.component.css',
+  templateUrl: "./form-post-demo.component.html",
+  styleUrl: "./form-post-demo.component.css",
 })
 export class FormPostDemoComponent {
   ngOnInit(): void {
-    console.log('/api/form-post-demo init');
+    console.log("/api/form-post-demo init");
   }
 
   demo() {
     const dataMap = {
-      username: 'mmc',
-      password: '123456',
+      username: "mmc",
+      password: "123456",
     };
 
-    const request = axios.create({
-      params: dataMap,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    });
+    const request = getAxiosInstance();
+    request.defaults.headers["Content-Type"] = "application/x-www-form-urlencoded";
     request
-      .post('/api/form-post-demo')
+      .post("/api/form-post-demo", { params: dataMap })
       .then((response) => {
-        console.log('正确返回', response.data);
+        console.log("正确返回", response.data);
       })
       .catch((error) => {
-        console.log('错误', error);
+        console.log("错误", error);
       });
   }
 }
@@ -141,39 +154,37 @@ json-post-demo.component.html
 json-post-demo.component.ts
 
 ```typescript
-import { Component } from '@angular/core';
-import axios from 'axios';
+import { Component } from "@angular/core";
+import axios from "axios";
+import getAxiosInstance from "../../axios/shareInstance";
 
 @Component({
-  selector: 'app-json-post-demo',
+  selector: "app-json-post-demo",
   standalone: true,
   imports: [],
-  templateUrl: './json-post-demo.component.html',
-  styleUrl: './json-post-demo.component.css',
+  templateUrl: "./json-post-demo.component.html",
+  styleUrl: "./json-post-demo.component.css",
 })
 export class JsonPostDemoComponent {
   ngOnInit(): void {
-    console.log('/api/json-post-demo init');
+    console.log("/api/json-post-demo init");
   }
 
   demo() {
     const dataMap = {
-      username: 'mmc',
-      password: '123456',
+      username: "mmc",
+      password: "123456",
     };
 
-    const request = axios.create({
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const request = getAxiosInstance();
+    request.defaults.headers["Content-Type"] = "application/json";
     request
-      .post('/api/json-post-demo', dataMap)
+      .post("/api/json-post-demo", { params: dataMap })
       .then((response) => {
-        console.log('正确返回', response.data);
+        console.log("正确返回", response.data);
       })
       .catch((error) => {
-        console.log('错误', error);
+        console.log("错误", error);
       });
   }
 }
@@ -192,6 +203,7 @@ download-demo.component.ts
 ```typescript
 import { Component } from "@angular/core";
 import axios from "axios";
+import getAxiosInstance from "../../axios/shareInstance";
 
 @Component({
   selector: "app-download-demo",
@@ -206,9 +218,10 @@ export class DownloadDemoComponent {
   }
 
   demo() {
-    const url = "/api/download-demo";
-    axios
-      .get(url, { responseType: "blob" })
+    const dataMap = {};
+    const request = getAxiosInstance();
+    request
+      .get("/api/download-demo", { params: dataMap, responseType: "blob" })
       .then((response) => {
         const blob = new Blob([response.data], { type: "application/zip" });
         const fileURL = window.URL.createObjectURL(blob);
@@ -219,15 +232,9 @@ export class DownloadDemoComponent {
         link.click();
         document.body.removeChild(link);
       })
-      .catch((error) => console.error(error));
+      .catch((error) => {
+        console.log("错误", error);
+      });
   }
 }
 ```
-
-### 忽略 ssl
-
-```typescript
-const agent = new https.Agent({
-  rejectUnauthorized: false,
-});
-axios.get("https://xxx.com/xxx", { httpsAgent: agent });

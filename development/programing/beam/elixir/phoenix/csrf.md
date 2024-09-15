@@ -115,12 +115,9 @@ export class AppComponent {
 
   ngOnInit() {
     const dataMap = {};
-
-    const request = axios.create({
-      params: dataMap,
-    });
+    const request = this.getAxiosInstance();
     request
-      .get("/api/get")
+      .get("/api/get", dataMap)
       .then((response) => {
         console.log("正确返回", response.data.csrf_token);
         this.csrf_token = response.data.csrf_token;
@@ -136,15 +133,12 @@ export class AppComponent {
       password: this.password,
     };
 
-    const request = axios.create({
-      params: dataMap,
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "x-csrf-token": this.csrf_token,
-      },
-    });
+    const request = this.getAxiosInstance();
+    request.defaults.headers["x-csrf-token"] = this.csrf_token;
+    request.defaults.headers["Content-Type"] = "application/x-www-form-urlencoded";
+
     request
-      .post("/api/check")
+      .post("/api/check", dataMap)
       .then((response) => {
         console.log("正确返回", response.data);
       })
@@ -160,12 +154,10 @@ export class AppComponent {
       // _csrf_token: this.csrf_token,
     };
 
-    const request = axios.create({
-      headers: {
-        "Content-Type": "application/json",
-        "x-csrf-token": this.csrf_token,
-      },
-    });
+    const request = this.getAxiosInstance();
+    request.defaults.headers["x-csrf-token"] = this.csrf_token;
+    request.defaults.headers["Content-Type"] = "application/json";
+
     request
       .post("/api/check", dataMap)
       .then((response) => {
@@ -174,6 +166,17 @@ export class AppComponent {
       .catch((error) => {
         console.log("错误", error);
       });
+  }
+
+  getAxiosInstance() {
+    const axiosInstance = axios.create({
+      timeout: 3000,
+      headers: {
+        "x-csrf-token": this.csrf_token,
+      },
+    });
+
+    return axiosInstance;
   }
 }
 ```
