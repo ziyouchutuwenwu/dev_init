@@ -52,7 +52,7 @@ defmodule Mix.Tasks.Webapp do
     Logger.info("🚛 - Moving dist folder to Phoenix at #{@public_path}")
 
     System.cmd("rm", ["-rf", @public_path])
-    System.cmd("cp", ["-R", "./frontend/dist/fronted/browser/", @public_path])
+    System.cmd("cp", ["-R", "./frontend/dist/frontend/browser/", @public_path])
     System.cmd("rm", ["-rf", "./frontend/dist"])
 
     Logger.info("⚛️  - frontend ready.")

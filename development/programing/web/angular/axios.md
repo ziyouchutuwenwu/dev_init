@@ -60,13 +60,13 @@ export class GetDemoComponent {
   }
 
   demo() {
-    const params = {
+    const dataMap = {
       username: 'mmc',
       password: '123456',
     };
 
     const request = axios.create({
-      params: params,
+      params: dataMap,
     });
     request
       .get('/api/get-demo')
@@ -107,13 +107,16 @@ export class FormPostDemoComponent {
   }
 
   demo() {
-    const params = {
+    const dataMap = {
       username: 'mmc',
       password: '123456',
     };
 
     const request = axios.create({
-      params: params,
+      params: dataMap,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
     });
     request
       .post('/api/form-post-demo')
@@ -154,7 +157,7 @@ export class JsonPostDemoComponent {
   }
 
   demo() {
-    const params = {
+    const dataMap = {
       username: 'mmc',
       password: '123456',
     };
@@ -165,7 +168,7 @@ export class JsonPostDemoComponent {
       },
     });
     request
-      .post('/api/json-post-demo', params)
+      .post('/api/json-post-demo', dataMap)
       .then((response) => {
         console.log('正确返回', response.data);
       })

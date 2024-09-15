@@ -6,13 +6,11 @@
 
 ### 请求字段
 
-任选一
-
-| 位置                  | 字段         |
-| --------------------- | ------------ |
-| header                | x-csrf-token |
-| form-data             | \_csrf_token |
-| x-www-form-urlencoded | \_csrf_token |
+| 请求方式              | 位置     | 字段         |
+| --------------------- | -------- | ------------ |
+| x-www-form-urlencoded | header   | x-csrf-token |
+| application/json      | 普通参数 | \_csrf_token |
+| application/json      | header   | x-csrf-token |
 
 ## 例子
 
@@ -64,22 +62,118 @@ defmodule WebDemoWeb.DemoController do
   use WebDemoWeb, :controller
 
   def get(conn, _assigns) do
-    json(conn, %{token: get_csrf_token()})
+    json(conn, %{csrf_token: get_csrf_token()})
   end
 
   def delete(conn, _assigns) do
-    json(conn, %{token: delete_csrf_token()})
+    json(conn, %{csrf_token: delete_csrf_token()})
   end
 
   # 非 get 请求, 需要另外加字段, 否则返回 403
   def check(conn, _assigns) do
-    json(conn, %{message: "check"})
+    json(conn, %{msg: "check"})
   end
 end
 ```
 
-### 测试
+### 前端代码
 
-```sh
-mix phx.server
+html
+
+```html
+<div>token {{ this.csrf_token }}</div>
+<form>
+  <input type="text" name="username" [(ngModel)]="this.username" />
+  <input type="password" name="password" [(ngModel)]="this.password" />
+  <button (click)="formPost()">formPost</button>
+</form>
+
+<form>
+  <input type="text" name="username" [(ngModel)]="this.username" />
+  <input type="password" name="password" [(ngModel)]="this.password" />
+  <button (click)="jsonPost()">jsonPost</button>
+</form>
+```
+
+```typescript
+import { Component } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { RouterOutlet } from "@angular/router";
+import axios from "axios";
+
+@Component({
+  selector: "app-root",
+  standalone: true,
+  imports: [RouterOutlet, FormsModule],
+  templateUrl: "./app.component.html",
+  styleUrl: "./app.component.css",
+})
+export class AppComponent {
+  username: string = "";
+  password: string = "";
+  csrf_token: string = "";
+
+  ngOnInit() {
+    const dataMap = {};
+
+    const request = axios.create({
+      params: dataMap,
+    });
+    request
+      .get("/api/get")
+      .then((response) => {
+        console.log("正确返回", response.data.csrf_token);
+        this.csrf_token = response.data.csrf_token;
+      })
+      .catch((error) => {
+        console.log("错误", error);
+      });
+  }
+
+  formPost() {
+    const dataMap = {
+      username: this.username,
+      password: this.password,
+    };
+
+    const request = axios.create({
+      params: dataMap,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "x-csrf-token": this.csrf_token,
+      },
+    });
+    request
+      .post("/api/check")
+      .then((response) => {
+        console.log("正确返回", response.data);
+      })
+      .catch((error) => {
+        console.log("错误", error);
+      });
+  }
+
+  jsonPost() {
+    const dataMap = {
+      username: this.username,
+      password: this.password,
+      // _csrf_token: this.csrf_token,
+    };
+
+    const request = axios.create({
+      headers: {
+        "Content-Type": "application/json",
+        "x-csrf-token": this.csrf_token,
+      },
+    });
+    request
+      .post("/api/check", dataMap)
+      .then((response) => {
+        console.log("正确返回", response.data);
+      })
+      .catch((error) => {
+        console.log("错误", error);
+      });
+  }
+}
 ```
