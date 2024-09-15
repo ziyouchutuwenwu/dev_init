@@ -14,6 +14,7 @@
         "ELIXIR_ERL_OPTIONS": "-sname iex-dbg@localhost -cookie 123456"
       },
       "projectDir": "${workspaceRoot}",
+      // 一般情况下，这里是禁用引用动态库的那个模块
       "excludeModules": [":demo_nif", "SlowModule"]
     },
     {
@@ -33,6 +34,7 @@
         "ELIXIR_ERL_OPTIONS": "-sname iex-dbg@localhost -cookie 123456"
       },
       "projectDir": "${workspaceRoot}",
+      // 一般情况下，这里是禁用引用动态库的那个模块
       "excludeModules": [":demo_nif", "SlowModule"]
     },
     {
@@ -47,6 +49,7 @@
         "ELIXIR_ERL_OPTIONS": "-sname iex-dbg@localhost -cookie 123456"
       },
       "projectDir": "${workspaceRoot}",
+      // 一般情况下，这里是禁用引用动态库的那个模块
       "excludeModules": [":demo_nif", "SlowModule"]
       // interpret exs 文件，使得 exs 文件里面支持断点
       // "requireFiles": ["test/**/*.exs"]
