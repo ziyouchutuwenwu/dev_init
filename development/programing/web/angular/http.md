@@ -42,13 +42,26 @@ src/axios/wrapper.ts
 ```typescript
 import axios, { AxiosInstance } from "axios";
 
-export class AxiosWrapper {
+class AxiosWrapper {
+  static _instance: AxiosInstance;
+
+  constructor() {
+    if (!AxiosWrapper._instance) {
+      AxiosWrapper._instance = axios.create({
+        timeout: 1000,
+      });
+    }
+  }
+
   static getInstance(): AxiosInstance {
-    return axios.create({
-      timeout: 1000,
-    });
+    if (!AxiosWrapper._instance) {
+      new AxiosWrapper();
+    }
+    return AxiosWrapper._instance;
   }
 }
+
+export const axioShareInstance = AxiosWrapper.getInstance();
 ```
 
 ### get
@@ -63,7 +76,7 @@ get-demo.component.ts
 
 ```typescript
 import { Component } from "@angular/core";
-import { AxiosWrapper } from "../../axios/wrapper";
+import { axioShareInstance } from "../../axios/wrapper";
 
 @Component({
   selector: "app-get-demo",
@@ -82,7 +95,7 @@ export class GetDemoComponent {
       username: "mmc",
       password: "123456",
     };
-    const request = AxiosWrapper.getInstance();
+    const request = axioShareInstance;
     request
       .get("/api/get-demo", { params: dataMap })
       .then((response) => {
@@ -107,7 +120,7 @@ form-post-demo.component.ts
 
 ```typescript
 import { Component } from "@angular/core";
-import { AxiosWrapper } from "../../axios/wrapper";
+import { axioShareInstance } from "../../axios/wrapper";
 
 @Component({
   selector: "app-form-post-demo",
@@ -127,7 +140,7 @@ export class FormPostDemoComponent {
       password: "123456",
     };
 
-    const request = AxiosWrapper.getInstance();
+    const request = axioShareInstance;
     request.defaults.headers["Content-Type"] = "application/x-www-form-urlencoded";
     request
       .post("/api/form-post-demo", { params: dataMap })
@@ -153,7 +166,7 @@ json-post-demo.component.ts
 
 ```typescript
 import { Component } from "@angular/core";
-import { AxiosWrapper } from "../../axios/wrapper";
+import { axioShareInstance } from "../../axios/wrapper";
 
 @Component({
   selector: "app-json-post-demo",
@@ -173,7 +186,7 @@ export class JsonPostDemoComponent {
       password: "123456",
     };
 
-    const request = AxiosWrapper.getInstance();
+    const request = axioShareInstance;
     request.defaults.headers["Content-Type"] = "application/json";
     request
       .post("/api/json-post-demo", { params: dataMap })
@@ -199,7 +212,7 @@ download-demo.component.ts
 
 ```typescript
 import { Component } from "@angular/core";
-import { AxiosWrapper } from "../../axios/wrapper";
+import { axioShareInstance } from "../../axios/wrapper";
 
 @Component({
   selector: "app-download-demo",
@@ -215,7 +228,7 @@ export class DownloadDemoComponent {
 
   demo() {
     const dataMap = {};
-    const request = AxiosWrapper.getInstance();
+    const request = axioShareInstance;
     request
       .get("/api/download-demo", { params: dataMap, responseType: "blob" })
       .then((response) => {
