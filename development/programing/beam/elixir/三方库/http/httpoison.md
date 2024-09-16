@@ -305,6 +305,18 @@ defmodule ClientDemo do
 end
 ```
 
+### 代理支持
+
+```elixir
+Application.put_env(:httpoison, :proxy, "http://127.0.0.1:8118")
+```
+
+或者
+
+```sh
+export HTTPOISON_PROXY=http://127.0.0.1:8118
+```
+
 ### 类比 curl
 
 ```sh
