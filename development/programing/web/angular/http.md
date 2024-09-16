@@ -232,7 +232,10 @@ export class DownloadDemoComponent {
     request
       .get("/api/download-demo", { params: dataMap, responseType: "blob" })
       .then((response) => {
-        const blob = new Blob([response.data], { type: "application/zip" });
+        const blob = new Blob([response.data], {
+          // 任意的二进制数据
+          type: "application/octet-stream",
+        });
         const fileURL = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = fileURL;
