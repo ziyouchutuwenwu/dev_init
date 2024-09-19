@@ -14,7 +14,7 @@
 
 带桌面的话，配置非 root 用户的 git 代理
 
-不要用 `http_proxy` 和 `https_proxy`
+不要用 `HTTP_PROXY` 和 `HTTPS_PROXY`
 
 ```sh
 ~/.gitconfig

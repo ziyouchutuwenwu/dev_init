@@ -45,7 +45,7 @@ ln -s /usr/bin/python3 /usr/bin/python
 
 ### 设置代理
 
-带桌面的话，不要用 `http_proxy` 和 `https_proxy`
+带桌面的话，不要用 `HTTP_PROXY` 和 `HTTPS_PROXY`
 
 配置非 root 用户的 git 代理
 

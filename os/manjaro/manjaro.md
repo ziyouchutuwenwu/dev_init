@@ -24,7 +24,7 @@ input("暂停的信息")
 
 ### 脚本运行前
 
-manjaro_init.py 运行前, 配置非 root 用户的 git 代理, 不要用 `http_proxy` 和 `https_proxy`
+manjaro_init.py 运行前, 配置非 root 用户的 git 代理, 不要用 `HTTP_PROXY` 和 `HTTPS_PROXY`
 
 ```sh
 ~/.gitconfig

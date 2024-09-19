@@ -63,8 +63,8 @@ curl --head xxx.com
 
 ```sh
 docker build . \
-    --build-arg "http_proxy=socks5://192.168.88.96:1080" \
-    --build-arg "https_proxy=socks5://192.168.88.96:1080" \
+    --build-arg "HTTP_PROXY=socks5://192.168.88.96:1080" \
+    --build-arg "HTTPS_PROXY=socks5://192.168.88.96:1080" \
     --build-arg "NO_PROXY=localhost,127.0.0.1" \
     -t your/image:tag
 ```
