@@ -307,15 +307,7 @@ end
 
 ### 代理支持
 
-```elixir
-Application.put_env(:httpoison, :proxy, "http://127.0.0.1:8118")
-```
-
-或者
-
-```sh
-export HTTPOISON_PROXY=http://127.0.0.1:8118
-```
+支持环境变量 HTTP_PROXY 和 HTTPS_PROXY，但是要用 http 代理
 
 ### 类比 curl
 
