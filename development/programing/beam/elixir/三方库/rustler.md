@@ -15,7 +15,7 @@ mix new demo
 mix.exs
 
 ```elixir
-{:rustler, "~> 0.30"}
+{:rustler, "~> 0.34.0", runtime: false}
 ```
 
 ```sh
