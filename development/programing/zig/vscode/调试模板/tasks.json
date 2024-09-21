@@ -4,12 +4,12 @@
     {
       "label": "build_debug",
       "type": "shell",
-      "command": "zig build",
+      "command": "zig build"
     },
     {
       "label": "release",
       "type": "shell",
-      "command": "zig build -Drelease-safe=true"
+      "command": "zig build --release=safe"
     },
     {
       "label": "run",
