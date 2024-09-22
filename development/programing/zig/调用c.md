@@ -32,7 +32,7 @@ const clib = @cImport({
 
 pub fn main() !void {
     const sum = clib.demo(11, 22);
-    std.debug.print("sum {d}\n", .{sum});
+    std.log.debug("sum {d}", .{sum});
 }
 ```
 

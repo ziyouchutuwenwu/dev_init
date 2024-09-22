@@ -23,6 +23,6 @@ pub fn main() !void {
         .y = 20,
     };
     aa.demo();
-    std.debug.print("aa = {}\n", .{aa});
+    std.log.debug("aa = {}", .{aa});
 }
 ```

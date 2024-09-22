@@ -14,12 +14,12 @@ slice 动态大小
 const std = @import("std");
 
 pub fn abc(list: []u8) void {
-  std.debug.print("in abc {any}\n", .{list});
+    std.log.debug("in abc {any}", .{list});
 }
 
 pub fn main() !void {
-  var list = [_]u8{11, 22, 33, 44};
-  abc(list[0..]);
+    var list = [_]u8{ 11, 22, 33, 44 };
+    abc(list[0..]);
 }
 ```
 
@@ -47,6 +47,6 @@ pub fn main() void {
 
     defer allocator.free(data_list);
     const aa = demo(list[0..], data_list);
-    std.debug.print("result {any}\n", .{aa});
+    std.log.debug("result {any}", .{aa});
 }
 ```

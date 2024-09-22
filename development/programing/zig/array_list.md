@@ -19,6 +19,6 @@ pub fn main() !void {
     try array_list.append('o');
     try array_list.appendSlice(" World!");
 
-    std.debug.print("{s}\n", .{array_list.items});
+    std.log.debug("{s}", .{array_list.items});
 }
 ```

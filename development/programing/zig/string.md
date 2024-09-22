@@ -18,6 +18,6 @@ pub fn demo() string {
 pub fn main() !void {
     const aa = demo();
     const bb = "bbb";
-    std.debug.print("result {s} {s}\n", .{ aa, bb });
+    std.log.debug("result {s} {s}", .{ aa, bb });
 }
 ```

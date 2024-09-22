@@ -27,7 +27,7 @@ test "hash_map" {
     var iterator = hash_map.iterator();
 
     while (iterator.next()) |item| {
-        std.debug.print("key {d}, x {d}, y {d}\n", .{ item.key_ptr.*, item.value_ptr.x, item.value_ptr.y });
+        std.log.debug("key {d}, x {d}, y {d}", .{ item.key_ptr.*, item.value_ptr.x, item.value_ptr.y });
         sum.x += item.value_ptr.x;
         sum.y += item.value_ptr.y;
     }

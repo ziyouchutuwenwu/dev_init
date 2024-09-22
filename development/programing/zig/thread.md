@@ -7,7 +7,7 @@ const std = @import("std");
 const expect = std.testing.expect;
 
 fn threadProc(thread_arg: u32) void {
-    std.debug.print("{d} in thread\n", .{thread_arg});
+    std.log.debug("{d} in thread", .{thread_arg});
 }
 
 pub fn main() !void {
