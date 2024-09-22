@@ -6,7 +6,6 @@
 const std = @import("std");
 
 pub fn main() !void {
-    // 要么是 u8 类型的值，要么是 null
     var demo_option: ?u8 = null;
     demo_option = 111;
 
