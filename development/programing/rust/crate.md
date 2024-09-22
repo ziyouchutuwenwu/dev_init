@@ -1,8 +1,8 @@
-# 调用 crate
+# crate
 
 ## 例子
 
-### crate
+### lib 方
 
 ```sh
 cargo new demo_lib --lib
@@ -38,8 +38,8 @@ pub mod demo1;
 `src/aaa/demo1.rs`
 
 ```rust
-pub fn hi(left: usize, right: usize) -> usize {
-left + right
+pub fn demo(left: usize, right: usize) -> usize {
+    left + right
 }
 ```
 
@@ -58,7 +58,7 @@ src/main.rs
 extern crate demo_lib;
 
 fn main() {
-    let a = demo_lib::aaa::demo1::hi(22,33);
+    let a = demo_lib::aaa::demo1::demo(22, 33);
     println!("result is {}", a);
 }
 ```

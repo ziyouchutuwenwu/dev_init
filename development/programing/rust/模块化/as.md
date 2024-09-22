@@ -1,8 +1,10 @@
 # as
 
-## 例子
+## 说明
 
 起个别名，简化输入
+
+## 例子
 
 ```rust
 extern crate demo_lib;
