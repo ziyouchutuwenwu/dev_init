@@ -326,17 +326,10 @@ def install_color_picker():
     os.system("yes | pacman --noconfirm -S kcolorchooser")
 
 
-def install_proxychains(user):
-    os.system("yes | pacman --noconfirm -S proxychains-ng")
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/../../development/proxychains/proxychains.conf /etc/proxychains.conf" % (current_dir)
-    os.system(cmd)
-
-
 def install_privoxy():
     os.system("yes | pacman --noconfirm -S privoxy")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/../../development/privoxy/config /etc/privoxy/config" % (current_dir)
+    cmd = "cp -rf %s/../../development/proxy/privoxy/config /etc/privoxy/config" % (current_dir)
     os.system(cmd)
     os.system("systemctl daemon-reload; systemctl enable privoxy --now")
 
@@ -446,7 +439,6 @@ if __name__ == "__main__":
     install_beam()
     install_net_capture_tools(login_user)
     install_virt_manager(login_user)
-    install_proxychains(login_user)
     install_privoxy()
     install_docker(login_user)
     install_useful_tools()

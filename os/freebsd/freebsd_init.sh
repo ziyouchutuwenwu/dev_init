@@ -106,7 +106,6 @@ echo 'perm bpf* 0660' >> /etc/devfs.conf
 pkg install -y networkmgr
 pkg install -y chromium
 pkg install -y qalculate-gtk
-pkg install -y proxychains-ng
 pkg install -y xarchiver
 pkg install -y thunar-archive-plugin
 pkg install -y qt5ct
@@ -126,11 +125,8 @@ su $USER -c 'cp -rf $CURRENT_DIR/englih_user_dir/user-dirs.dirs ~/.config/'
 pkg install -y xfce4-terminal ripgrep xclip neovim wget
 su $USER -c 'sh $CURRENT_DIR/../../development/editor/nvim/install.sh'
 
-pkg install -y proxychains
-cp -rf $CURRENT_DIR/../../development/proxychains/proxychains.conf /usr/local/etc/proxychains.conf
-
 pkg install -y privoxy
-cp -rf $CURRENT_DIR/../../development/privoxy/config /usr/local/etc/privoxy/config
+cp -rf $CURRENT_DIR/../../development/proxy/privoxy/config /usr/local/etc/privoxy/config
 sysrc -f /etc/rc.conf privoxy_enable="YES"
 
 # qemu 下鼠标支持
