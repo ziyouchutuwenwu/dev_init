@@ -213,10 +213,6 @@ def install_remote_gui_client():
     os.system("apt install -y rdesktop")
 
 
-def install_clipboard_tool():
-    os.system("apt install -y xfce4-clipman xfce4-clipman-plugin")
-
-
 def install_notes_tool():
     os.system("apt install -y gnote")
 
@@ -424,7 +420,6 @@ if __name__ == "__main__":
     install_rt_test_tools()
     install_terminator(login_user)
     install_media_related()
-    install_clipboard_tool()
     install_notes_tool()
     install_pdf_reader()
     install_qt_setting_tool()
