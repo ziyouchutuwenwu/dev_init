@@ -1,7 +1,7 @@
 #! /usr/bin/env sh
 
 if [ "$#" -ne 1 ]; then
-  echo "please input non_root user name"
+  echo "$0 non_root_user_name"
   exit
 fi
 
