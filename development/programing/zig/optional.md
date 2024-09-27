@@ -6,6 +6,8 @@
 
 ## 例子
 
+例子 1
+
 ```zig
 const std = @import("std");
 
@@ -26,5 +28,44 @@ pub fn main() !void {
         const val = demo_option.?;
         std.log.debug("not null, is {d}", .{val});
     }
+}
+```
+
+例子 2
+
+```zig
+const std = @import("std");
+
+var _gpa: ?std.heap.GeneralPurposeAllocator(.{}) = null;
+
+pub fn get_allocator() std.mem.Allocator {
+    if (_gpa == null) {
+        _gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    }
+
+    return _gpa.?.allocator();
+}
+
+pub fn deinit() void {
+    if (_gpa != null) {
+        _ = _gpa.?.deinit();
+        _gpa = null;
+    }
+}
+```
+
+```zig
+const std = @import("std");
+const gpa = @import("gpa.zig");
+const arena = @import("arena.zig");
+
+pub fn main() !void {
+    const allocator = arena.get_allocator();
+    defer arena.deinit();
+
+    const formatted_str = try std.fmt.allocPrint(allocator, "测试 {}", .{42});
+    defer allocator.free(formatted_str);
+
+    std.debug.print("{s}\n", .{formatted_str});
 }
 ```

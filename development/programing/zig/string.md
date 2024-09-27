@@ -9,9 +9,9 @@ zig 没有内置的 string 类型
 ```zig
 const std = @import("std");
 
-const string = []const u8;
+const String = []const u8;
 
-pub fn demo() string {
+pub fn demo() String {
     return "aaa";
 }
 
