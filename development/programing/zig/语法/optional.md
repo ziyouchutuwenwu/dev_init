@@ -57,11 +57,10 @@ pub fn deinit() void {
 ```zig
 const std = @import("std");
 const gpa = @import("gpa.zig");
-const arena = @import("arena.zig");
 
 pub fn main() !void {
-    const allocator = arena.get_allocator();
-    defer arena.deinit();
+    const allocator = gpa.get_allocator();
+    defer gpa.deinit();
 
     const formatted_str = try std.fmt.allocPrint(allocator, "测试 {}", .{42});
     defer allocator.free(formatted_str);
