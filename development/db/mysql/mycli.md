@@ -1,4 +1,6 @@
-# mycli 用法
+# mycli
+
+## 用法
 
 ```sh
 mycli -h 127.0.0.1 -P 4407 -u root -p root -D demo_db

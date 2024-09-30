@@ -1,6 +1,10 @@
 # changeset
 
-一般用于数据验证
+## 说明
+
+changeset 用来对 model 做验证和变更，有属性 valid 查看是否成功
+
+保存到数据库需要另外调用 Repo 的方法
 
 ## 例子
 
@@ -68,17 +72,22 @@ lib/demo.ex
 ```elixir
 defmodule Demo do
   alias OrmDemo.User
+  alias OrmDemo.Repo
   alias Ecto.Changeset
 
   def demo1() do
     user = %User{name: "xxx", email: "xxx@xxx.com"}
     user |> Changeset.change(email: "aaaaaaaaaaaaaaa")
-    user |> Changeset.change(%{email: "bbbbbbbbbbbbb"})
+    user |> Changeset.change(%{email: "bbbbbbbbbbbbb"}) |> Repo.insert()
   end
 
   def demo2 do
     user = %User{}
-    user |> User.custom_change(%{name: "mmc", email: "aaa@xxx.com"})
+
+    user
+    |> User.custom_change(%{name: "ccc", email: "aaa@xxx.com"})
+
+    # |> Repo.insert()
   end
 end
 ```
