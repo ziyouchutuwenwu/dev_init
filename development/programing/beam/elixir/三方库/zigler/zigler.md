@@ -17,7 +17,7 @@ mix new demo
 mix.exs
 
 ```elixir
-{:zigler, "~> 0.10.2", runtime: false}
+{:zigler, "~> 0.13.2", runtime: false}
 ```
 
 ```sh
@@ -30,14 +30,13 @@ lib/zig_src/bb.zig
 
 ```zig
 const std = @import("std");
-const print = @import("std").debug.print;
 
-pub fn demo(list: []u8, dataList: []u8) []u8 {
-    for (list) |_, index| {
-        dataList[index] = @truncate(u8, index*10+5);
+pub fn demo(list: []u8, data_list: []u8) []u8 {
+    for (list, 0..data_list.len) |_, index| {
+        data_list[index] = @truncate(index * 10);
     }
 
-    return dataList[0..];
+    return data_list[0..];
 }
 ```
 
@@ -46,20 +45,25 @@ lib/demo_zig.ex
 ```elixir
 defmodule DemoZig do
   use Zig,
-  otp_app: :demo,
-  local_zig: true,
-  leak_check: true
+    otp_app: :demo,
+    leak_check: true
 
   ~Z"""
   const std = @import("std");
-  const bb = @import("zig_src/bb.zig");
   const beam = @import("beam");
+  const bb = @import("zig_src/bb.zig");
+  const gpa = @import("zig_src/gpa.zig");
 
-  pub fn aaa(env: beam.env, list: []u8) !beam.term {
-      var dataList = try beam.allocator.alloc(u8, list.len);
-      // defer beam.allocator.free(dataList);
-      var result = bb.demo(list, dataList);
-      return beam.make(env, result, .{});
+  pub fn aaa(list: []u8) !beam.term {
+    // 在 beam.allocator 里面绑定了 beam.general_purpose_allocator，因此可以检测 leak
+    const allocator = beam.context.allocator;
+
+    const data_list = try allocator.alloc(u8, list.len);
+    defer allocator.free(data_list);
+
+    const result = bb.demo(list, data_list);
+
+    return beam.make(result, .{});
   }
   """
 end
@@ -69,36 +73,30 @@ lib/demo.ex
 
 ```elixir
 defmodule Demo do
+  require Logger
   def demo do
     data_list = DemoZig.aaa([11, 22, 33, 44])
-    IO.inspect(data_list)
+    Logger.debug("#{inspect(data_list)}")
   end
 end
 ```
 
-test/nif_test.exs
+test/demo_test.exs
 
 ```elixir
 defmodule DemoTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   test "nif leak check" do
     data_list = DemoZig.aaa([11, 22, 33, 44])
-    assert data_list == <<5, 15, 25, 35>>
+    assert data_list == <<0, 10, 20, 30>>
   end
 end
 ```
 
-### 单元测试
-
-内存泄漏的检测，编译期测试不出来，可以通过单元测试
+### 测试
 
 ```sh
-mix test test/nif_test.exs
-```
-
-### 运行
-
-```sh
+mix test test/demo_test.exs
 iex -S mix
 ```
