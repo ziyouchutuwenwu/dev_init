@@ -52,14 +52,13 @@ defmodule DemoZig do
   const std = @import("std");
   const beam = @import("beam");
   const bb = @import("zig_src/bb.zig");
-  const gpa = @import("zig_src/gpa.zig");
 
   pub fn aaa(list: []u8) !beam.term {
     // 在 beam.allocator 里面绑定了 beam.general_purpose_allocator，因此可以检测 leak
     const allocator = beam.context.allocator;
 
     const data_list = try allocator.alloc(u8, list.len);
-    defer allocator.free(data_list);
+    // defer allocator.free(data_list);
 
     const result = bb.demo(list, data_list);
 
