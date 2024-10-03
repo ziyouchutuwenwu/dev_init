@@ -1,6 +1,6 @@
-# 硬件信息
+# cpu
 
-## cpu
+## 用法
 
 型号
 
@@ -8,13 +8,13 @@
 cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c
 ```
 
-物理个数
+物理插槽数
 
 ```sh
 cat /proc/cpuinfo| grep "physical id"| sort| uniq| wc -l
 ```
 
-每个物理 cpu 中 core 的个数(即核数)
+每个物理 cpu 里面的物理核数
 
 ```sh
 cat /proc/cpuinfo| grep "cpu cores"| uniq
