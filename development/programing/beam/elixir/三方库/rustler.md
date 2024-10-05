@@ -163,7 +163,7 @@ fn tuple_demo(tuple: DemoTuple) -> DemoTuple {
     return tuple;
 }
 
-rustler::init!("Elixir.MyLib", [list_demo1, list_demo2, tuple_demo]);
+rustler::init!("Elixir.MyLib");
 ```
 
 ### 本地编译
