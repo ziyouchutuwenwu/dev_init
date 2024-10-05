@@ -118,9 +118,30 @@ end
 
 ### rust 代码
 
-```sh
-native/my_lib/src/lib.rs
+native/my_lib/src/demo_type.rs
+
+```rust
+use rustler::NifStruct;
+
+#[derive(Debug, NifStruct)]
+#[module = "DemoStruct"]
+pub struct DemoStruct {
+   pub name: String,
+   pub age: i32,
+}
+
+
+use rustler::NifTuple;
+use rustler::types::atom::Atom;
+
+#[derive(NifTuple)]
+pub struct DemoTuple {
+   pub aaa: Atom,
+   pub bbb: Atom
+}
 ```
+
+native/my_lib/src/lib.rs
 
 ```rust
 #[rustler::nif(schedule = "DirtyCpu")]
@@ -129,17 +150,10 @@ fn list_demo1(list: Vec<i32>) -> Vec<i32> {
     return vec![111, 222, 333, 444, 555]
 }
 // ----------------------------------------------
-use rustler::NifStruct;
-
-#[derive(Debug, NifStruct)]
-#[module = "DemoStruct"]
-struct DemoStruct {
-   name: String,
-   age: i32,
-}
+pub mod demo_type;
 
 #[rustler::nif(schedule = "DirtyCpu")]
-fn list_demo2(list: Vec<DemoStruct>) -> String {
+fn list_demo2(list: Vec<demo_type::DemoStruct>) -> String {
     println!("list in nif {:?}", list);
 
     if let Some(last_person) = list.last(){
@@ -149,17 +163,9 @@ fn list_demo2(list: Vec<DemoStruct>) -> String {
     }
 }
 // ----------------------------------------------
-use rustler::NifTuple;
-use rustler::types::atom::Atom;
-
-#[derive(NifTuple)]
-struct DemoTuple {
-    aaa: Atom,
-    bbb: Atom
-}
 
 #[rustler::nif(schedule = "DirtyCpu")]
-fn tuple_demo(tuple: DemoTuple) -> DemoTuple {
+fn tuple_demo(tuple: demo_type::DemoTuple) -> demo_type::DemoTuple {
     return tuple;
 }
 
