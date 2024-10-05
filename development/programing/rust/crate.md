@@ -23,19 +23,19 @@ cargo new demo_lib --lib
 
 文件
 
-`src/lib.rs`
+lib.rs
 
 ```rust
 pub mod aaa;
 ```
 
-`src/aaa/mod.rs`
+aaa/mod.rs
 
 ```rust
 pub mod demo1;
 ```
 
-`src/aaa/demo1.rs`
+aaa/demo1.rs
 
 ```rust
 pub fn demo(left: usize, right: usize) -> usize {
@@ -52,7 +52,7 @@ Cargo.toml
 demo_lib = { path = "../demo_lib" }
 ```
 
-src/main.rs
+main.rs
 
 ```rust
 extern crate demo_lib;
