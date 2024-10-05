@@ -1,4 +1,8 @@
-# tftp 加载内核
+# tftp
+
+## 说明
+
+用来加载内核
 
 ## 步骤
 
@@ -10,10 +14,18 @@ docker run --rm -d -it --name=tftpd -p 69:69/udp -v ~/projects/docker/tftp:/srv/
 
 ### 编译内核
 
+预定义参数
+
+```sh
+export CROSS_COMPILE=arm-linux-gnueabi-
+export ARCH=arm
+export O=./out_vexpress
+```
+
 linux 内核需要编译为 uImage 格式，才能被 uboot 加载
 
 ```sh
-make CROSS_COMPILE=arm-linux-gnueabi- ARCH=arm O=./out_vexpress LOADADDR=0x60003000 uImage -j8
+make LOADADDR=0x60003000 uImage -j12
 ```
 
 ### 启动测试

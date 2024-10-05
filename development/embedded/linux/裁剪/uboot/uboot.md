@@ -1,4 +1,4 @@
-# uboot 编译
+# uboot
 
 ## 步骤
 
@@ -12,9 +12,16 @@ https://ftp.denx.de/pub/u-boot/u-boot-2023.04.tar.bz2
 
 ### 编译
 
+预定义参数
+
 ```sh
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- vexpress_ca9x4_defconfig
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi-
+export CROSS_COMPILE=arm-linux-gnueabi-
+export ARCH=arm
+```
+
+```sh
+make O=./out_vexpress vexpress_ca9x4_defconfig
+make O=./out_vexpress -j12
 ```
 
 ### 测试

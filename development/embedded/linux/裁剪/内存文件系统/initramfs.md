@@ -2,7 +2,11 @@
 
 ## 说明
 
-这个是编译到内核里面去了
+编译到内核里面，在系统启动的早期阶段被加载到内存中。
+
+它通常包含了启动过程中所需的关键模块和工具，以便在真正的根文件系统可用之前，能够进行一些必要的初始化操作。
+
+作用是为内核提供一个临时的工作环境，使内核能够加载必要的驱动程序、挂载真正的根文件系统等。
 
 ## 步骤
 
@@ -14,10 +18,17 @@
 
 ### 编译内核
 
+预定义参数
+
+```sh
+export CROSS_COMPILE=arm-linux-gnueabi-
+export ARCH=arm
+```
+
 修改 linux 内核配置
 
 ```sh
-make CROSS_COMPILE=arm-linux-gnueabi- ARCH=arm O=./out_vexpress menuconfig
+make O=./out_vexpress menuconfig
 ```
 
 ```sh
@@ -27,7 +38,7 @@ General setup --->
 ```
 
 ```sh
-make CROSS_COMPILE=arm-linux-gnueabi- ARCH=arm O=./out_vexpress -j8
+make O=./out_vexpress -j12
 ```
 
 生成的文件系统压缩文件在这里

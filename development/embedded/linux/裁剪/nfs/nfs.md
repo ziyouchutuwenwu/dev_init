@@ -1,4 +1,8 @@
-# nfs 加载文件系统
+# nfs
+
+## 说明
+
+用于加载文件系统
 
 ## 步骤
 
@@ -17,12 +21,19 @@ docker logs -f nfs-server
 docker run --rm -d --name nfs-server -v ~/projects/docker/nfs/:/mnt/nfs -e NFS_EXPORT_DIR_1=/mnt/nfs -e NFS_EXPORT_DOMAIN_1=\* -e NFS_EXPORT_OPTIONS_1=rw,insecure,no_subtree_check,no_root_squash,fsid=1 -p 111:111 -p 111:111/udp -p 2049:2049 -p 2049:2049/udp -p 32765:32765 -p 32765:32765/udp -p 32766:32766 -p 32766:32766/udp -p 32767:32767 -p 32767:32767/udp --privileged=true fuzzle/docker-nfs-server:latest
 ```
 
+预定义参数
+
+```sh
+export CROSS_COMPILE=arm-linux-gnueabi-
+export ARCH=arm
+```
+
 ### linux 内核
 
 #### 重新配置
 
 ```sh
-make CROSS_COMPILE=arm-linux-gnueabi- ARCH=arm O=./out_vexpress menuconfig
+make O=./out_vexpress menuconfig
 ```
 
 ```sh
@@ -40,7 +51,7 @@ File systems  --->
 编译结束后，uImage 复制到 tftp 根目录
 
 ```sh
-make CROSS_COMPILE=arm-linux-gnueabi- ARCH=arm O=./out_vexpress LOADADDR=0x60003000 uImage -j8
+make O=./out_vexpress LOADADDR=0x60003000 uImage -j12
 ```
 
 ### uboot 修改
@@ -63,7 +74,7 @@ vexpress_common.h
 #### 重新编译
 
 ```sh
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi-
+make -j12
 ```
 
 ### 测试

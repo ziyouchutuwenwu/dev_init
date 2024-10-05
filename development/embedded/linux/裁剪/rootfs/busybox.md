@@ -10,8 +10,15 @@ https://busybox.net/downloads/busybox-1.36.1.tar.bz2
 
 ### menuconfig
 
+预定义参数
+
 ```sh
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- menuconfig
+export CROSS_COMPILE=arm-linux-gnueabi-
+export ARCH=arm
+```
+
+```sh
+make O=./out_vexpress menuconfig
 ```
 
 配置静态编译
@@ -24,8 +31,8 @@ Settings  --->
 ### 编译
 
 ```sh
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi-
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- CONFIG_PREFIX=./../rootfs/ install
+make O=./out_vexpress -j12
+make O=./out_vexpress CONFIG_PREFIX=./../rootfs/ install
 ```
 
 ### 生成 ext4 磁盘镜像

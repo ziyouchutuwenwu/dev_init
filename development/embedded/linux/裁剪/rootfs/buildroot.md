@@ -2,24 +2,29 @@
 
 ## 步骤
 
-### 源码
+### 源码下载
 
 ```sh
 https://buildroot.org/downloads/buildroot-2022.11.tar.xz
 ```
 
-### 默认配置
+### 预定义参数
+
+```sh
+export CROSS_COMPILE=arm-linux-gnueabi-
+export ARCH=arm
+```
 
 生成默认配置
 
 ```sh
-make CROSS_COMPILE=arm-linux-gnueabi- ARCH=arm O=./output defconfig
+make O=./output defconfig
 ```
 
 ### menuconfig
 
 ```sh
-make CROSS_COMPILE=arm-linux-gnueabi- ARCH=arm O=./output menuconfig
+make O=./output menuconfig
 ```
 
 配置 target
@@ -67,7 +72,7 @@ Filesystem images  --->
 ### 清理
 
 ```sh
-make CROSS_COMPILE=arm-linux-gnueabi- ARCH=arm O=./output mrproper
+make O=./output mrproper
 ```
 
 ### 编译
@@ -75,7 +80,13 @@ make CROSS_COMPILE=arm-linux-gnueabi- ARCH=arm O=./output mrproper
 编译的时候，它会自己下载很多源码，可以使用 proxychains 代理访问
 
 ```sh
-make CROSS_COMPILE=arm-linux-gnueabi- ARCH=arm O=./output -j8
+make O=./output -j12
+```
+
+或者编译所有
+
+```sh
+make O=./output all -j12
 ```
 
 ## 测试

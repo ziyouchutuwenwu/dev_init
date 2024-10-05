@@ -1,8 +1,10 @@
 # ramdisk
 
-ramfs 是将文件系统直接编译进内核镜像中
+## 说明
 
-ramdisk 是在内存中模拟磁盘
+内存中模拟磁盘。它将一部分内存空间作为磁盘来使用，可以像普通磁盘一样进行读写操作。
+
+用于提高某些频繁访问的数据的读写速度，因为内存的访问速度远远快于物理磁盘。
 
 ## 步骤
 
@@ -24,10 +26,17 @@ gzip -9 -f ramdisk.img
 
 ### 内核配置
 
+预定义参数
+
+```sh
+export CROSS_COMPILE=arm-linux-gnueabi-
+export ARCH=arm
+```
+
 menuconfig
 
 ```sh
-make CROSS_COMPILE=arm-linux-gnueabi- ARCH=arm O=./out_vexpress menuconfig
+make O=./out_vexpress menuconfig
 ```
 
 参数

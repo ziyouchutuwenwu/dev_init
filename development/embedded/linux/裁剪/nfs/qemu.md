@@ -1,4 +1,4 @@
-# qemu 配置网络
+# qemu
 
 ## 说明
 
@@ -80,14 +80,16 @@ sudo chmod +x qemu*
 
 ## 测试
 
-### 配置桥接网络
+### 网络配置
+
+配置桥接网络
 
 ```sh
 sudo qemu-ifup qemu_br0 enp1s0
 sudo qemu-ifdown qemu_br0
 ```
 
-### qemu
+### 运行
 
 ```sh
 sudo qemu-system-arm \
