@@ -1,8 +1,8 @@
-# glibc 兼容
+# glibc
 
 ## 场景
 
-cdylib 和 dylib 类型的项目不能静态编译，因此，考虑降低 glibc 的版本编译
+cdylib 和 dylib 类型的项目不能静态编译，因此，考虑降低需要的 glibc 的版本
 
 ## 步骤
 
