@@ -24,7 +24,7 @@ export fn add(a: i32, b: i32) i32 {
 zig build-exe src/demo.zig -target wasm32-freestanding -fno-entry --export=add
 
 # 验证
-wasm-dis xxx.wasm | grep
+wasm-dis xxx.wasm | grep export
 ```
 
 ### angular
