@@ -221,6 +221,7 @@ def install_zip_essential():
 
 def install_useful_tools():
     tool_list = [
+        "binaryen",
         "virt-what",
         "progress",
         "screen",
@@ -302,7 +303,7 @@ def remove_useless_applications():
         "hexchat",
     ]
     for app in app_list:
-        cmd = "yes | pacman --noconfirm -Rcns  %s" % app
+        cmd = "yes | pacman --noconfirm -Rcns %s" % app
         os.system(cmd)
 
 
@@ -362,10 +363,6 @@ def set_ntp_time():
     os.system("timedatectl set-timezone Asia/Shanghai")
 
 
-def install_musl():
-    os.system("yes | pacman --noconfirm -S musl")
-
-
 def install_remote_desktop():
     os.system("yes | pacman --noconfirm -S rdesktop")
 
@@ -375,7 +372,19 @@ def install_ios_essential():
 
 
 def install_net_tools():
-    os.system("yes | pacman --noconfirm -S sshfs traceroute bridge-utils netctl net-tools dnsutils gnu-netcat nmap")
+    app_list = [
+        "sshfs",
+        "traceroute",
+        "bridge-utils",
+        "netctl",
+        "net-tools",
+        "dnsutils",
+        "gnu-netcat",
+        "nmap",
+    ]
+    for app in app_list:
+        cmd = "yes | pacman --noconfirm -S %s" % app
+        os.system(cmd)
 
 
 def install_embedded_tools():
@@ -436,7 +445,6 @@ if __name__ == "__main__":
     install_printer_essential()
     install_qt5ct()
     set_global_profiles()
-    install_musl()
     install_beam()
     install_net_capture_tools(login_user)
     install_virt_manager(login_user)

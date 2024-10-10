@@ -88,6 +88,7 @@ def install_toys():
 
 def install_useful_tools():
     tool_list = [
+        "binaryen",
         "virt-what",
         "git",
         "rinetd",
