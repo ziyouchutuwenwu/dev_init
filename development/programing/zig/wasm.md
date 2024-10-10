@@ -24,7 +24,7 @@ export fn add(a: i32, b: i32) i32 {
 zig build-exe src/demo.zig -target wasm32-freestanding -fno-entry --export=add
 
 # 验证
-wasm-dis xxx.wasm | grep 
+wasm-dis xxx.wasm | grep
 ```
 
 ### angular
@@ -36,7 +36,7 @@ import axios from "axios";
 
 export class AppComponent {
   result: number | null = null;
-  wasmInstance: WebAssembly.Instance | null = null;
+  wasm: WebAssembly.Instance | null = null;
 
   async ngOnInit() {
     await this.loadWasm();
@@ -44,25 +44,26 @@ export class AppComponent {
 
   async loadWasm() {
     try {
-      const response = await axios.get("assets/demo.wasm", {
-        responseType: "arraybuffer",
+      // 这部分可以放服务端
+      const response = await axios.get('/xxx/demo.wasm', {
+        responseType: 'arraybuffer',
       });
       const bytes = new Uint8Array(response.data);
       const module = await WebAssembly.instantiate(bytes);
-      this.wasmInstance = module.instance;
+      this.wasm = module.instance;
     } catch (error) {
-      console.error("Error loading WASM:", error);
+      console.error('err loading wasm:', error);
     }
   }
 
-  wasmAdd() {
-    if (this.wasmInstance) {
-      console.log(this.wasmInstance.exports);
-      const addFunction = this.wasmInstance.exports["add"] as (a: number, b: number) => number;
-      const result = addFunction(5, 3);
+  doAdd() {
+    if (this.wasm) {
+      console.log(this.wasm.exports);
+      const wasmAdd = this.wasm.exports['add'] as (a: number, b: number) => number;
+      const result = wasmAdd(5, 3);
       this.result = result;
     } else {
-      console.warn("wasm instance is not initialized.");
+      console.warn('wasm instance is not initialized.');
     }
   }
 }
@@ -71,7 +72,7 @@ export class AppComponent {
 ```html
 <div>
   <h1>wasm with angular</h1>
-  <button (click)="wasmAdd()">call wasm</button>
+  <button (click)="doAdd()">call wasm</button>
   <p>result: {{ result }}</p>
 </div>
 ```
