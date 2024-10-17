@@ -1,4 +1,4 @@
-# umbrella 项目
+# umbrella
 
 ## 步骤
 
@@ -25,4 +25,4 @@ end
 
 ### 子项目
 
-需要自动启动的 application,在子应用的 mix.exs 里面修改
+需要自动启动的 application, 在子应用的 mix.exs 里面配置
