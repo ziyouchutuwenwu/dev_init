@@ -289,7 +289,8 @@ defmodule ClientDemo do
   end
 
   def file_upload_demo do
-    {:ok, file_bin} = File.read("/home/mmc/downloads/aaa.bin")
+    file = System.get_env("HOME") |> Path.join("downloads/aaa.bin")
+    {:ok, file_bin} = file |> File.read
 
     headers = []
     options = ConfigFetcher.get_httpoison_config()
