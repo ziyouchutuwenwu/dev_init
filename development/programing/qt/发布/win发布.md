@@ -1,21 +1,21 @@
 # win 发布
 
-通过 msys2
+## 说明
+
+通过 msys2 编译
 
 ## 步骤
 
-### 安装工具链
+### 工具链
 
 ```sh
 pacman -S --noconfirm mingw-w64-x86_64-qt5-static
 pacman -S --noconfirm make
 ```
 
-### 设置环境变量
+### 环境变量
 
-```sh
-vim /etc/profile.d/profile.sh
-```
+/etc/profile.d/qt.sh
 
 ```sh
 export PATH=$MSYS2_ROOT/mingw64/qt5-static/bin:$PATH
