@@ -1,5 +1,5 @@
 {
-  "python.defaultInterpreterPath": "${env:HOME}/dev/python/dev_env",
+  "python.defaultInterpreterPath": "${env:VIRTUAL_ENV}",
 
   // 设置比较大的深度，防止快速修复失败
   "python.analysis.packageIndexDepths": [{ "name": "", "depth": 10 }]
