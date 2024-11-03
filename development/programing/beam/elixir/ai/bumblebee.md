@@ -2,9 +2,11 @@
 
 ## 说明
 
-bumblebee 的 github 上有文章，提到公告视频，点过去，是一篇文章，里面提到 livebook 和 bumblebee 的集成，
+bumblebee 的 github 上有文章，提到公告视频，点过去，是一篇文章，里面提到 livebook 和 bumblebee 的集成
 
 ## 步骤
+
+照抄 kino_bumblebee 的依赖也可以
 
 ```elixir
 Mix.install([
