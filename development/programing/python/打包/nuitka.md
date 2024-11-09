@@ -17,20 +17,22 @@ pip install nuitka
 把引用的 aaa 和 bbb 两个目录一起编译到 exe 里面
 
 ```sh
-nuitka3 --onefile main.py --output-filename=xx --remove-output --follow-import-to=aaa,bbb --output-dir=build
+nuitka --onefile main.py --output-filename=xx --remove-output --follow-import-to=aaa,bbb --output-dir=build
 ```
 
 pyside6 程序
 
 ```sh
-nuitka3 --onefile main.py --output-filename=xx --remove-output --output-dir=build --enable-plugin=pyside6
+nuitka --onefile main.py --output-filename=xx --remove-output --output-dir=build --enable-plugin=pyside6
 ```
 
 某些代码使用 cython 编译为动态库以后，需要手动指定
 
 ```sh
-nuitka3 --onefile main.py --output-filename=xx --remove-output --follow-import-to=aaa,bbb --output-dir=build
+nuitka --onefile main.py --output-filename=xx --remove-output --follow-import-to=aaa,bbb --output-dir=build
 ```
+
+如果需要三方动态库，先打包 exe, 再把动态库手动复制过去
 
 ### win
 
