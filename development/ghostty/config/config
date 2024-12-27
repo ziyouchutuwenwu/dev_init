@@ -1,0 +1,9 @@
+background = 000000
+foreground = ffffff
+
+keybind = ctrl+z=close_surface
+keybind = ctrl+d=new_split:right
+
+font-family = monaco
+font-size = 11
+
