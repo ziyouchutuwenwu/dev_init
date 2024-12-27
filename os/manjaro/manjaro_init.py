@@ -199,7 +199,7 @@ def install_terminator(user):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "mkdir -p ~/.config/terminator/"
     proc.run_as_user(user, cmd)
-    cmd = "cp -rf %s/../../development/terminator/config ~/.config/terminator/" % (current_dir)
+    cmd = "cp -rf %s/../../development/terminal/terminator/config ~/.config/terminator/" % (current_dir)
     proc.run_as_user(user, cmd)
 
 
@@ -252,7 +252,7 @@ def install_useful_tools():
 def install_wezterm(user):
     os.system("yes | pacman --noconfirm -S wezterm")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "sh %s/../../development/wezterm/install.sh" % (current_dir)
+    cmd = "sh %s/../../development/terminal/wezterm/install.sh" % (current_dir)
     proc.run_as_user(user, cmd)
 
 

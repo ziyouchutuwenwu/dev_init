@@ -87,12 +87,12 @@ fc-cache -f -v
 
 # wezterm
 pkg install -y wezterm
-su $USER -c 'sh $CURRENT_DIR/../../development/wezterm/install.sh'
+su $USER -c 'sh $CURRENT_DIR/../../development/terminal/wezterm/install.sh'
 
 # terminator
 pkg install -y terminator
 su $USER -c 'mkdir -p ~/.config/terminator/'
-su $USER -c 'cp -rf $CURRENT_DIR/../../development/terminator/config ~/.config/terminator/'
+su $USER -c 'cp -rf $CURRENT_DIR/../../development/terminal/terminator/config ~/.config/terminator/'
 
 pkg install -y gnome-icons-faenza
 su $USER -c 'sh $CURRENT_DIR/themes/install.sh'
