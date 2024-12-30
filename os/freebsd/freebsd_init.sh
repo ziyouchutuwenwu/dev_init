@@ -85,10 +85,6 @@ mkdir -p /usr/local/share/fonts/
 cp -rf $CURRENT_DIR/fonts/* /usr/local/share/fonts/
 fc-cache -f -v
 
-# wezterm
-pkg install -y wezterm
-su $USER -c 'sh $CURRENT_DIR/../../development/terminal/wezterm/install.sh'
-
 # terminator
 pkg install -y terminator
 su $USER -c 'mkdir -p ~/.config/terminator/'

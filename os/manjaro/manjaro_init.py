@@ -249,13 +249,6 @@ def install_useful_tools():
         os.system(cmd)
 
 
-def install_wezterm(user):
-    os.system("yes | pacman --noconfirm -S wezterm")
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "sh %s/../../development/terminal/wezterm/install.sh" % (current_dir)
-    proc.run_as_user(user, cmd)
-
-
 def install_zellij():
     os.system("yes | pacman --noconfirm -S zellij")
 
@@ -437,7 +430,6 @@ if __name__ == "__main__":
     install_essential_fonts()
     install_sync_tool()
     install_ssh_server()
-    install_wezterm(login_user)
     install_zellij()
     install_ansible_essential()
     install_media_player()
