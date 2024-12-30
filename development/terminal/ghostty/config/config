@@ -1,8 +1,8 @@
-background = 000000
-foreground = ffffff
+theme = wombat_custom
 
 # 关闭自带的标题栏
-gtk-titlebar = false
+#gtk-titlebar = false
+
 gtk-wide-tabs = false
 
 font-family = monaco
