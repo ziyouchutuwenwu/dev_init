@@ -26,5 +26,5 @@ playwright install --help
 生成代码，非常方便
 
 ```sh
-playwright codegen https://www.baidu.com
+playwright codegen https://www.google.com --proxy-server=socks5://127.0.0.1:1080
 ```
