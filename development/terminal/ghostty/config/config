@@ -8,4 +8,4 @@ gtk-wide-tabs = false
 font-family = monaco
 font-size = 11
 
-keybind = ctrl+z=close_surface
+keybind = ctrl+q=close_surface
