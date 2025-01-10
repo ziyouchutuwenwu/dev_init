@@ -4,21 +4,40 @@
 
 ### 基本操作
 
+#### 创建
+
 ```sh
-# 创建
 zellij -s xxx
+```
 
-# attach
+#### 附加
+
+```sh
 zellij a xxx
+```
 
-# 查看
+#### 退到后台
+
+```sh
+ctrl+o, d
+```
+
+#### 查看
+
+```sh
 zellij ls
+```
 
-# kill
+#### kill
+
+```sh
 zellij k xxx
 zellij ka
+```
 
-# delete
+#### delete
+
+```sh
 zellij da
 ```
 
@@ -69,10 +88,6 @@ ctrl+s
 ```
 
 #### session 相关
-
-选择 session
-
-退出而不销毁整个 session
 
 ```sh
 ctrl+o
