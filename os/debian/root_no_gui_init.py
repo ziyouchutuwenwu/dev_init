@@ -86,6 +86,11 @@ def install_toys():
     os.system("apt install -y cmatrix cowsay")
 
 
+def install_search_tools():
+    os.system("apt install -y fd-find silversearcher-ag")
+    os.system("ln -s /usr/bin/fdfind /usr/bin/fd")
+
+
 def install_useful_tools():
     tool_list = [
         "binaryen",
@@ -109,7 +114,6 @@ def install_useful_tools():
         "genisoimage",
         "global",
         "tree",
-        "silversearcher-ag",
         "wget",
         "curl",
         "aria2",
@@ -230,6 +234,7 @@ if __name__ == "__main__":
     install_toys()
     install_ansible_essential()
     install_useful_tools()
+    install_search_tools()
     install_zip_essential()
     set_shang_hai_timezone()
     install_wifi_driver()
