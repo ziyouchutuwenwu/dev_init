@@ -5,7 +5,7 @@
 有两个 assets 目录
 
 - assets
-  这里的 css 和 js 是用 imort 的模式
+  这里的 css 和 js 是用 import 的模式
   发布时需要先编译，然后会自动复制到 priv 下的 assets 目录里面
   发布以后，只有一个 app.js 和 app.css 会被默认引用
 
