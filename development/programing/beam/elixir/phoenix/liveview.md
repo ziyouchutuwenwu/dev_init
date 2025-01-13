@@ -19,7 +19,6 @@ live "/live-demo", PageLive
 lib/web_demo_web/my_live/page_live.ex
 
 ```elixir
-
 defmodule WebDemoWeb.PageLive do
   use WebDemoWeb, :live_view
 
