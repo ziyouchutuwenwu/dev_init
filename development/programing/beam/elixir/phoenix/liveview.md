@@ -19,8 +19,21 @@ live "/live-demo", PageLive
 lib/web_demo_web/my_live/page_live.ex
 
 ```elixir
+
 defmodule WebDemoWeb.PageLive do
   use WebDemoWeb, :live_view
+
+  def render(assigns) do
+    ~H"""
+    <div>{@number}</div>
+
+    <button phx-click="inc">+</button>
+
+    <button phx-click="dec">-</button>
+
+    <button phx-click="clear">clear</button>
+    """
+  end
 
   def mount(_params, _session, socket) do
     {:ok, socket |> assign(number: 0)}
@@ -38,20 +51,6 @@ defmodule WebDemoWeb.PageLive do
     {:noreply, socket |> assign(number: 0)}
   end
 end
-```
-
-### 创建 html 模板
-
-lib/web_demo_web/my_live/page_live.html.heex
-
-```html
-<div><%= @number %></div>
-
-<button phx-click="inc">+</button>
-
-<button phx-click="dec">-</button>
-
-<button phx-click="clear">clear</button>
 ```
 
 ### 单元测试
