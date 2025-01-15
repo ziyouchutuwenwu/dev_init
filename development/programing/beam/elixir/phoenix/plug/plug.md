@@ -98,7 +98,7 @@ end
 controller 里面获取自定义变量
 
 ```elixir
-conn.assigns[:demo_locale]
+conn.assigns.demo_locale
 ```
 
 ## 注册位置
