@@ -1,28 +1,24 @@
 # umbrella
 
-## 步骤
+## 说明
 
-### 创建项目
+项目大了以后，db 和 web 等希望独立出来
+
+## 项目创建
 
 ```sh
 mix new umbrella_demo --umbrella
 cd umbrella_demo/apps
-mix new demo
-mix phx.new web_demo --no-assets --no-html --no-gettext --no-dashboard --no-live --no-mailer --no-ecto
+
+# 普通子项目
+mix new demo1
+
+# phoenix 子项目
+mix phx.new.web demo_web
+# ecto 子项目
+mix phx.new.ecto demo_ecto
 ```
 
-### 配置文件
+## 配置文件
 
-最外层的 config.exs
-
-```elixir
-import Config
-
-for config <- "../apps/*/config/config.exs" |> Path.expand(__DIR__) |> Path.wildcard() do
-  import_config config
-end
-```
-
-### 子项目
-
-需要自动启动的 application, 在子应用的 mix.exs 里面配置
+只读取最外层配置
