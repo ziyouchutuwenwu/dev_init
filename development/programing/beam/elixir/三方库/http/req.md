@@ -137,7 +137,7 @@ config/runtime.exs
 ```elixir
 import Config
 
-if config_env() === :prod do
+if config_env() == :prod do
   if System.get_env("BASE_URL") do
     config :client_demo,
       base_url: System.get_env("BASE_URL")
