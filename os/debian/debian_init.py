@@ -245,6 +245,7 @@ def install_video_recorder():
 def do_clean_after_install():
     app_list = [
         "imagemagic*",
+        "libproxy-tools",
     ]
     for app in app_list:
         cmd = "apt purge -y %s" % app
