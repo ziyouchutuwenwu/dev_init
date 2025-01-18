@@ -225,7 +225,7 @@ def install_disk_partition_tool():
     os.system("apt install -y gparted")
 
 
-def install_media_related():
+def install_media_player():
     os.system("apt install -y ffmpeg vlc smplayer audacious")
 
 
@@ -327,6 +327,10 @@ def install_terminator(user):
     os.system("update-alternatives --set x-terminal-emulator /usr/bin/terminator")
 
 
+def install_modbus_tool():
+    os.system("apt install -y mbpoll")
+
+
 def do_vim_config(user):
     os.system("apt install -y xfce4-terminal ripgrep xclip neovim")
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -420,7 +424,8 @@ if __name__ == "__main__":
     install_privoxy()
     install_rt_test_tools()
     install_terminator(login_user)
-    install_media_related()
+    install_media_player()
+    install_modbus_tool()
     install_notes_tool()
     install_pdf_reader()
     install_qt_setting_tool()
