@@ -83,13 +83,6 @@ def install_rinetd(user):
     proc.run_as_user(user, cmd)
 
 
-def install_rebar3(user):
-    sudo_ask_pass_info = "export SUDO_ASKPASS=/tmp/pass.sh"
-    install_cmd = "yes | yay --noconfirm -S --sudoflags -A rebar3"
-    cmd = "%s; %s" % (sudo_ask_pass_info, install_cmd)
-    proc.run_as_user(user, cmd)
-
-
 def install_modbus_tool(user):
     sudo_ask_pass_info = "export SUDO_ASKPASS=/tmp/pass.sh"
     install_cmd = "yes | yay --noconfirm -S --sudoflags -A mbpoll-git"
@@ -139,7 +132,6 @@ if __name__ == "__main__":
     install_themes(login_user)
     install_vscode(login_user)
     install_net_tools(login_user)
-    install_rebar3(login_user)
     install_modbus_tool(login_user)
     install_browser(login_user)
     install_pdf_viewer(login_user)
