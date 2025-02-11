@@ -14,8 +14,7 @@ from py_mods import file
 
 
 if __name__ == "__main__":
-    os.system("git clone --depth 1 https://github.com/asdf-vm/asdf.git ~/.asdf")
-
     path = os.path.expanduser("~")
     profile = path + "/" + ".profile"
-    file.set_to_file(profile, "source $HOME/.asdf/asdf.sh", need_new_blank_line=True)
+    file.set_to_file(profile, 'export ASDF_DATA_DIR="$HOME/.asdf"', need_new_blank_line=True)
+    file.set_to_file(profile, 'export PATH="$ASDF_DATA_DIR/shims:$PATH"')
