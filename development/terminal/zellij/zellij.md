@@ -16,12 +16,6 @@ zellij -s xxx
 zellij a xxx
 ```
 
-#### 退到后台
-
-```sh
-ctrl+o, d
-```
-
 #### 查看
 
 ```sh
@@ -93,8 +87,22 @@ ctrl+s
 ctrl+o
 ```
 
-#### 退出
+#### 完全退出
+
+会销毁 session
 
 ```sh
 crtl+q
+```
+
+#### 退到后台
+
+```sh
+ctrl+o, d
+```
+
+下次可以重新进来
+
+```sh
+zellij a xxx
 ```
