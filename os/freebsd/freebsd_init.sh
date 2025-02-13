@@ -37,6 +37,7 @@ pkg install -y nvidia-driver nvidia-settings nvidia-xconfig
 sysrc -f /etc/rc.conf kld_list="nvidia nvidia-modeset"
 sysrc -f /etc/rc.conf linux_enable="YES"
 
+# xfce
 pkg install -y xorg
 pkg install -y slim
 pkg install -y xfce
@@ -99,6 +100,10 @@ pkg install -y wireshark
 echo 'own  bpf* root:network' > /etc/devfs.conf
 echo 'perm bpf* 0660' >> /etc/devfs.conf
 
+# 不然东西太少
+pkg install -y xfce4-goodies
+pkg remove -y xfburn xfce4-dashboard
+
 pkg install -y networkmgr
 pkg install -y chromium
 pkg install -y qalculate-gtk
@@ -130,7 +135,6 @@ pkg install -y utouch-kmod
 echo 'utouch_load="YES"' >> /boot/loader.conf
 
 pkg install -y python
-# pkg install -y py39-pip
 
 # erlang
 pkg install -y erlang rebar3
