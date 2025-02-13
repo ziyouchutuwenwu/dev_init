@@ -76,7 +76,16 @@ def install_ansible_essential():
 
 
 def install_net_tools():
-    tool_list = ["sshfs", "nmap", "uml-utilities", "bridge-utils", "net-tools", "dnsutils", "tcptraceroute"]
+    tool_list = [
+        "cifs-utils"
+        "sshfs",
+        "nmap",
+        "uml-utilities",
+        "bridge-utils",
+        "net-tools",
+        "dnsutils",
+        "tcptraceroute"
+    ]
     for tool in tool_list:
         cmd = "apt install -y %s" % tool
         os.system(cmd)
