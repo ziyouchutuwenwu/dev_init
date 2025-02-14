@@ -102,7 +102,9 @@ echo 'perm bpf* 0660' >> /etc/devfs.conf
 
 # 不然东西太少
 pkg install -y xfce4-goodies
-pkg remove -y xfburn xfce4-dashboard
+pkg remove -y xfburn
+pkg remove -y xfce4-dashboard
+pkg remove -y gigolo
 
 pkg install -y networkmgr
 pkg install -y chromium
