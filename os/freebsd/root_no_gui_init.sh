@@ -7,6 +7,10 @@ fi
 
 CURRENT_DIR=$(cd "$(dirname "$0")";pwd)
 
+# 加速启动
+echo 'autoboot_delay="0"' >> /boot/loader.conf
+
+# 设置镜像源
 mkdir -p /usr/local/etc/pkg/repos/
 cp -rf $CURRENT_DIR/rc_files/pkg.conf /usr/local/etc/pkg/repos/
 ASSUME_ALWAYS_YES=yes pkg update -fq
