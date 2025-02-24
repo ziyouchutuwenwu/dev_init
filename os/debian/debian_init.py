@@ -319,9 +319,7 @@ def install_key_tool():
 def install_terminator(user):
     os.system("apt install -y terminator")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "mkdir -p ~/.config/terminator/"
-    proc.run_as_user(user, cmd)
-    cmd = "cp -rf %s/../../development/terminal/terminator/config ~/.config/terminator/" % (current_dir)
+    cmd = "sh %s/../../development/terminal/terminator/install.sh" % (current_dir)
     proc.run_as_user(user, cmd)
     # 查询 sudo update-alternatives --config x-terminal-emulator
     os.system("update-alternatives --set x-terminal-emulator /usr/bin/terminator")

@@ -88,8 +88,7 @@ fc-cache -f -v
 
 # terminator
 pkg install -y terminator
-su $USER -c 'mkdir -p ~/.config/terminator/'
-su $USER -c 'cp -rf $CURRENT_DIR/../../development/terminal/terminator/config ~/.config/terminator/'
+su $USER -c 'sh $CURRENT_DIR/../../development/terminal/terminator/install.sh'
 
 pkg install -y gnome-icons-faenza
 su $USER -c 'sh $CURRENT_DIR/themes/install.sh'
