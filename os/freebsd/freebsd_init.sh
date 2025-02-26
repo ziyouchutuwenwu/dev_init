@@ -42,9 +42,10 @@ pkg install -y xorg
 pkg install -y slim
 pkg install -y xfce
 
-# 系统原来的 rc.conf 里面有内容，只能追加
+# 配置鼠标，启用非标鼠标支持
 sysrc -f /etc/rc.conf moused_enable="YES"
-sysrc -f /etc/rc.conf hald_enable="YES"
+sysrc -f /etc/rc.conf moused_nondefault_enable="YES"
+
 sysrc -f /etc/rc.conf dbus_enable="YES"
 sysrc -f /etc/rc.conf slim_enable="YES"
 
