@@ -54,12 +54,27 @@ qemu 下，如果显示不全，可以手动调节分辨率
   时间 -> 格式 -> 自定义格式 -> %Y-%m-%d %H:%M:%S
 ```
 
-#### xfce 终端设置
+#### 终端设置
+
+xfce 终端设置
 
 ```sh
 外观 ->
   字体 -> Monaco 11
   默认几何属性 -> 100 22
+```
+
+#### 鼠标迟滞
+
+如果鼠标有迟滞, 尝试使用 edev 驱动
+
+```sh
+sudo pkg remove -f xf86-input-libinput
+sudo pkg install -y xf86-input-edev
+```
+
+```sh
+设置 -> 窗口管理器微调 -> 合成器，取消勾选
 ```
 
 ### 辅助工具
