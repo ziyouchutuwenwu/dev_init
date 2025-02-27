@@ -42,9 +42,9 @@ pkg install -y xorg
 pkg install -y slim
 pkg install -y xfce
 
-# 配置鼠标，启用非标鼠标支持
-sysrc -f /etc/rc.conf moused_enable="YES"
-sysrc -f /etc/rc.conf moused_nondefault_enable="YES"
+# cli 下禁用鼠标
+sysrc -f /etc/rc.conf moused_enable="NO"
+sysrc -f /etc/rc.conf moused_nondefault_enable="NO"
 
 sysrc -f /etc/rc.conf dbus_enable="YES"
 sysrc -f /etc/rc.conf slim_enable="YES"

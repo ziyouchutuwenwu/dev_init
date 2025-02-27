@@ -73,9 +73,13 @@ sudo pkg remove -f xf86-input-libinput
 sudo pkg install -y xf86-input-edev
 ```
 
+禁用合成器
+
 ```sh
 设置 -> 窗口管理器微调 -> 合成器，取消勾选
 ```
+
+cli 模式下，禁用鼠标似乎效果也有一点
 
 ### 辅助工具
 
