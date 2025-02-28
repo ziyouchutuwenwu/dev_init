@@ -66,11 +66,11 @@ xfce 终端设置
 
 #### 鼠标迟滞
 
-如果鼠标有迟滞, 尝试使用 edev 驱动
+如果鼠标有迟滞, 尝试使用 evdev 驱动
 
 ```sh
 sudo pkg remove -f xf86-input-libinput
-sudo pkg install -y xf86-input-edev
+sudo pkg install -y xf86-input-evdev
 ```
 
 禁用合成器
