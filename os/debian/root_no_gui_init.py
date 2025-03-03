@@ -151,7 +151,11 @@ def install_ntfs_support():
 
 def set_global_profiles():
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/profile.d/* /etc/profile.d/" % (current_dir)
+    cmd = "cp -rf %s/profile/*.sh /etc/profile.d/" % (current_dir)
+    os.system(cmd)
+    cmd = "mkdir -p /usr/local/etc/profile.d"
+    os.system(cmd)
+    cmd = "cp -rf %s/profile/profile.d/* /usr/local/etc/profile.d/" % (current_dir)
     os.system(cmd)
 
 
