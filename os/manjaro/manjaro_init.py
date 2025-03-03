@@ -180,10 +180,10 @@ def do_zsh_config(user):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/zsh/config.sh" % (current_dir)
     proc.run_as_user(user, cmd)
+    # 禁止生成 zprofile, 否则会导致菜单全部便英文
+    os.system("rm -rf /etc/zsh/zprofile; mkdir -p /etc/zsh/zprofile")
     cmd = "cp -rf %s/zsh/zshenv /etc/zsh/zshenv" % (current_dir)
     os.system(cmd)
-    # zprofile 设置为目录，防止大更新以后，重新生成 zprofile, 否则会导致菜单全部便英文
-    os.system("rm -rf /etc/zsh/zprofile; mkdir -p /etc/zsh/zprofile; touch /etc/zsh/zshenv")
 
 
 def install_beam():
