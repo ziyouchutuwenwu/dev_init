@@ -186,12 +186,6 @@ def do_zsh_config(user):
     os.system("rm -rf /etc/zsh/zprofile; mkdir -p /etc/zsh/zprofile; touch /etc/zsh/zshenv")
 
 
-def install_asdf(user):
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "python %s/../../development/asdf/asdf_init.py" % (current_dir)
-    proc.run_as_user(user, cmd)
-
-
 def install_beam():
     os.system("yes | pacman --noconfirm -S erlang")
     os.system("yes | pacman --noconfirm -S elixir")
@@ -472,7 +466,6 @@ if __name__ == "__main__":
     install_ios_essential()
 
     remove_useless_files()
-    install_asdf(login_user)
 
     # 太卡了，放最后
     do_zsh_config(login_user)

@@ -38,12 +38,6 @@ def enable_sleep():
     os.system(cmd)
 
 
-def install_asdf(user):
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "python %s/../../development/asdf/asdf_init.py" % (current_dir)
-    proc.run_as_user(user, cmd)
-
-
 def install_beam():
     os.system("apt install -y erlang rebar3 elixir")
 
@@ -428,7 +422,6 @@ if __name__ == "__main__":
     install_pdf_reader()
     install_qt_setting_tool()
     make_xfce_ftp_support()
-    install_asdf(login_user)
 
     do_vim_config(login_user)
     do_zsh_config(login_user)

@@ -142,9 +142,6 @@ pkg install -y python
 pkg install -y erlang rebar3
 pkg install -y elixir inotify-tools
 
-# asdf 不支持 freebsd
-#su $USER -c 'python $CURRENT_DIR/../../development/asdf/asdf_init.py'
-
 chsh -s $(which zsh) $USER
 su $USER -c 'sh $CURRENT_DIR/zsh/config.sh'
 
