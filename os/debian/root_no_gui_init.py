@@ -175,6 +175,9 @@ def set_fs_watches_config():
 
 def install_ssh_server():
     os.system("apt install -y openssh-server")
+    os.system("sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config")
+    os.system("sed -i 's/^#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config")
+    os.system("systemctl restart sshd; systemctl enable sshd")
 
 
 def install_docker():

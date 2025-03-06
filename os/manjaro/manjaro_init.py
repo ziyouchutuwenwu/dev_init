@@ -312,7 +312,9 @@ def install_ansible_essential():
 
 def install_ssh_server():
     os.system("yes | pacman --noconfirm -S openssh")
-    os.system("systemctl enable sshd")
+    os.system("sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config")
+    os.system("sed -i 's/^#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config")
+    os.system("systemctl restart sshd; systemctl enable sshd")
 
 
 def install_media_player():

@@ -39,6 +39,7 @@ cp -rf $CURRENT_DIR/rc_files/ports.conf /etc/make.conf
 
 # ssh 允许 root 登录
 sed -i "" 's/#PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config
+sed -i "" 's/^#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
 service sshd restart
 
 # jail 虚拟化
