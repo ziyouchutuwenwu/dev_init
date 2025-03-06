@@ -271,7 +271,6 @@ def remove_useless_files():
         "manjaro-hello.desktop",
         "manjaro-documentation.desktop",
         "hp-uiscan.desktop",
-        "avahi-discover.desktop",
         "kcm_fcitx5.desktop",
         "kcm_kaccounts.desktop",
         "kcm_trash.desktop"
@@ -283,6 +282,7 @@ def remove_useless_files():
 
 def remove_useless_applications():
     app_list = [
+        "ibus",
         "galculator",
         "engrampa",
         "mousepad",
