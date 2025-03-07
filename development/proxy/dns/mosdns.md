@@ -9,7 +9,7 @@
 ### 设置本地 dns 服务器
 
 ```sh
-/usr/local/etc/mosdns.yaml
+/usr/local/etc/mosdns/mosdns.yaml
 ```
 
 ```yaml
@@ -27,7 +27,7 @@ plugins:
     type: domain_set
     args:
       exps:
-        - "keyword:yozosoft.com"
+        - "keyword:xxx.com"
 
   - tag: forward_public
     type: forward
