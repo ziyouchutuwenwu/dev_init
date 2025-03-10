@@ -9,7 +9,7 @@ debian 和 manjaro 都是 systemd 模拟的
 manjaro 下默认 type 为 idle
 
 ```sh
-# /etc/systemd/system/multi-user.target.wants/rc-local.service
+# /usr/local/lib/systemd/system/rc-local.service
 [Unit]
 Description=rc.local
 ConditionPathExists=/etc/rc.local

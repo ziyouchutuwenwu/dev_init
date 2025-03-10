@@ -42,6 +42,7 @@ plugins:
     args:
       concurrent: 1
       upstreams:
+        - addr: tcp://192.168.9.153
         - addr: tcp://192.168.9.253
 
   # main_sequence 里面，不能执行多条 exec 指令，所以需要这里单独定义
@@ -85,7 +86,8 @@ plugins:
 设置开机自启
 
 ```sh
-sudo mosdns service install -d /usr/local/etc -c mosdns.yaml
+sudo mosdns service install -d /usr/local/etc/mosdns -c mosdns.yaml
+sudo mosdns service uninstall
 sudo mosdns service start
 sudo systemctl status mosdns
 ```

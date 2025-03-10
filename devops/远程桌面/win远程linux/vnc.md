@@ -12,7 +12,7 @@ sudo apt install x11vnc -y
 ### 服务
 
 ```sh
-/etc/systemd/system/vnc.service
+/usr/local/lib/systemd/system/vnc.service
 ```
 
 ```ini

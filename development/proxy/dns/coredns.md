@@ -2,7 +2,7 @@
 
 ## 说明
 
-按域名分流
+按域名分流，会和 virt-manager 冲突，本地转发还是建议 mosdns
 
 ## 配置
 
@@ -18,7 +18,7 @@ coredns.conf
     log
 }
 
-# 特定域名, 53 可以改
+# 特定域名
 example.com:53 {
     forward . 192.168.1.1
     cache
@@ -34,7 +34,7 @@ coredns -conf /usr/local/etc/coredns/coredns.conf
 
 ### systemd
 
-/etc/systemd/system/coredns.service
+/usr/local/lib/systemd/system/coredns.service
 
 ```ini
 [Unit]

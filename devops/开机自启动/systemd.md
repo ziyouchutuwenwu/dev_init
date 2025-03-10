@@ -16,7 +16,7 @@ type 很重要，详情如下
 ## 例子
 
 ```sh
-/etc/systemd/system/demo.service
+/usr/local/lib/systemd/system/demo.service
 ```
 
 ```ini
