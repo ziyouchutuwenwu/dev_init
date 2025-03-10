@@ -9,7 +9,7 @@ sudo apt install snmp snmpd
 修改配置
 
 ```sh
-vim /etc/snmp/snmpd.conf
+/etc/snmp/snmpd.conf
 ```
 
 ```sh

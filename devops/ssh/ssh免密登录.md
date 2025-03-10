@@ -46,7 +46,9 @@ ssh -i ~/downloads/key root@192.168.56.11
 
 可以不配置
 
-`vim /etc/ssh/sshd_config`
+```sh
+/etc/ssh/sshd_config
+```
 
 禁用密码验证
 

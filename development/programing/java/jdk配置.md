@@ -12,7 +12,7 @@ sudo update-alternatives --config javac
 ## 环境变量
 
 ```sh
-vim /etc/profile.d/jdk.sh
+/usr/local/etc/profile.d/jdk.sh
 ```
 
 ```sh

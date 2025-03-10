@@ -15,7 +15,7 @@ python -m http.server
 配置文件
 
 ```sh
-vim /etc/rinetd.conf
+/etc/rinetd.conf
 ```
 
 ```conf

@@ -24,7 +24,7 @@
 在 lvs 主机上配置
 
 ```sh
-vim /etc/sysctl.d/ip_forward.conf
+/etc/sysctl.d/ip_forward.conf
 ```
 
 ```sh
@@ -40,7 +40,7 @@ sysctl -p
 在 rs 配置, 如果 rs 和 lvs 在同一台机器，则不需要配置
 
 ```sh
-vim /etc/sysctl.d/lvs_dr_rs.conf
+/etc/sysctl.d/lvs_dr_rs.conf
 ```
 
 ```sh
@@ -60,7 +60,7 @@ sysctl -p
 在 rs 配置, 如果 rs 和 lvs 在同一台机器，则不需要配置
 
 ```sh
-vim /etc/network/interfaces.d/dr_rs
+/etc/network/interfaces.d/dr_rs
 ```
 
 ```sh

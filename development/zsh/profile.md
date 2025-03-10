@@ -9,13 +9,13 @@ zsh 加载 profile 需要模拟
 linux 下
 
 ```sh
-vim /etc/zsh/zshenv
+/etc/zsh/zshenv
 ```
 
 freebsd 下
 
 ```sh
-vim /usr/local/etc/zshenv
+/usr/local/etc/zshenv
 ```
 
 内容

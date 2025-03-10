@@ -7,7 +7,7 @@
 ### 修改配置
 
 ```sh
-vim /usr/lib/systemd/system/docker.service
+/usr/lib/systemd/system/docker.service
 ```
 
 类似 `--default-ulimit` 是关键

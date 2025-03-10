@@ -21,7 +21,7 @@ ip link delete br-9692e3bf1fd1
 ## 修改配置
 
 ```sh
-sudo vim /etc/docker/daemon.json
+/etc/docker/daemon.json
 ```
 
 ## 配置文件参考
