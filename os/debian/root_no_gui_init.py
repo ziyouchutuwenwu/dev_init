@@ -15,7 +15,6 @@ from py_mods import proc
 def disable_root_history():
     os.system("echo 'apt update; apt-file update; apt upgrade -y; apt full-upgrade -y; apt autopurge -y; apt autoclean' > ~/.bash_history")
     os.system("chattr +i ~/.bash_history")
-    os.system("bash -cl 'history -c'")
 
 
 def add_usr_sbin_to_path_env():
