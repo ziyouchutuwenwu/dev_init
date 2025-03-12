@@ -1,20 +1,24 @@
-# 参数调优
-
-## 说明
-
-[参考地址](https://www.erlang.org/doc/man/erl.html)
+# vm 参数
 
 ## 用法
 
-### 步骤
+生成模板
 
 ```sh
 mix release.init
-修改 vm.args.eex
+```
+
+打包
+
+```sh
 mix release
 ```
 
-### 一些用法
+## vm 参数
+
+vm.args.eex
+
+[参数说明](https://www.erlang.org/doc/man/erl.html)
 
 默认已经启用多核支持
 
