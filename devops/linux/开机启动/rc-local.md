@@ -2,7 +2,7 @@
 
 ## 说明
 
-适用于 debian, freebsd, manjaro
+适用于 debian, manjaro
 
 debian 和 manjaro 都是 systemd 模拟的
 
