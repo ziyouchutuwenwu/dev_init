@@ -50,7 +50,7 @@ sysrc -f /etc/rc.conf dbus_enable="YES"
 sysrc -f /etc/rc.conf slim_enable="YES"
 
 # ~/.xinitrc
-USER_HOME=`su $USER -c 'echo $HOME'`
+USER_HOME=$(su $USER -c 'echo $HOME')
 cp -rf $CURRENT_DIR/rc_files/xinitrc $USER_HOME/.xinitrc
 chown $USER $USER_HOME/.xinitrc
 chgrp $USER $USER_HOME/.xinitrc

@@ -45,12 +45,19 @@ service sshd restart
 # jail 虚拟化
 pkg install -y qjail
 # axel -o /tmp/ http://mirrors.ustc.edu.cn/freebsd/releases/amd64/13.0-RELEASE/base.txz
-axel -o /tmp/ http://mirrors.ustc.edu.cn/freebsd/releases/`uname -m`/`uname -r`/base.txz
+
+# 13.0-RELEASE
+# 14.1-RELEASE-p7
+RELEASE_VERSION=$(uname -r | sed 's/\(-p[0-9]*\)*$//')
+ARCH=$(uname -m)
+axel -o /tmp/ http://mirrors.ustc.edu.cn/freebsd/releases/$ARCH/$RELEASE_VERSION/base.txz
 qjail install -f /tmp/base.txz
 
 mkdir -p /usr/jails/template/usr/local/etc/pkg/repos
 cp -rf $CURRENT_DIR/rc_files/pkg.conf /usr/jails/template/usr/local/etc/pkg/repos/
-cp -rf /usr/share/zoneinfo/`cat /var/db/zoneinfo` /usr/jails/template/etc/localtime
+
+TIME_ZONE=$(cat /var/db/zoneinfo)
+cp -rf /usr/share/zoneinfo/$TIME_ZONE /usr/jails/template/etc/localtime
 # sed -i "" 's#update.FreeBSD.org#update.freebsd.cn#g' /usr/jails/template/etc/freebsd-update.conf
 sed -i "" 's/#PermitRootLogin no/PermitRootLogin yes/g' /usr/jails/template/etc/ssh/sshd_config
 
