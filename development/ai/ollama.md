@@ -6,7 +6,6 @@
 export OLLAMA_HOST=0.0.0.0:12345
 ollama serve
 
-```sh
 ollama pull deepseek-r1:70b
 ollama run deepseek-r1:70b
 ollama stop deepseek-r1:70b
