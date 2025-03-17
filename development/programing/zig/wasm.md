@@ -44,7 +44,6 @@ export class AppComponent {
 
   async loadWasm() {
     try {
-      // 这部分可以放服务端
       const response = await axios.get('/xxx/demo.wasm', {
         responseType: 'arraybuffer',
       });
@@ -59,8 +58,8 @@ export class AppComponent {
   doAdd() {
     if (this.wasm) {
       console.log(this.wasm.exports);
-      const wasmAdd = this.wasm.exports['add'] as (a: number, b: number) => number;
-      const result = wasmAdd(5, 3);
+      const add = this.wasm.exports['add'] as (a: number, b: number) => number;
+      const result = add(5, 3);
       this.result = result;
     } else {
       console.warn('wasm instance is not initialized.');
