@@ -3,6 +3,7 @@ theme = wombat_custom
 # 关闭自带的标题栏
 #gtk-titlebar = false
 window-theme=light
+title = 终端
 
 gtk-wide-tabs = false
 
