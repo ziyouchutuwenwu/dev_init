@@ -337,7 +337,7 @@ def install_privoxy():
 
 
 def do_vim_config(user):
-    os.system("yes | pacman --noconfirm -S xfce4-terminal ripgrep xclip neovim")
+    os.system("yes | pacman --noconfirm -S ripgrep xclip neovim")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/../../development/editor/nvim/install.sh" % (current_dir)
     proc.run_as_user(user, cmd)
