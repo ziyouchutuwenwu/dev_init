@@ -2,6 +2,7 @@ theme = wombat_custom
 
 # 关闭自带的标题栏
 #gtk-titlebar = false
+window-theme=light
 
 gtk-wide-tabs = false
 
@@ -16,3 +17,4 @@ keybind = ctrl+shift+w=close_surface
 keybind = alt+left=previous_tab
 keybind = alt+right=next_tab
 keybind = f11=toggle_fullscreen
+
