@@ -182,6 +182,10 @@ stream |> Stream.run
 
 ### 万能包装器
 
+第一个回调函数，需要返回一个值
+第二个回调函数的参数为第一个的返回值，如果是 {:halt, xxx} 则跳转到第三个函数
+第三个回调函数的参数为第二个为 {:halt, xxx} 的返回值 xxx
+
 ```elixir
 defmodule DemoStream do
   def open(file_name) do
@@ -189,7 +193,6 @@ defmodule DemoStream do
       fn ->
         _on_start(file_name)
       end,
-      # 第二个函数必须是主动获取数据，而不是被动接收
       fn(file) ->
         _on_read(file)
       end,

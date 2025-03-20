@@ -12,6 +12,8 @@ zellij -s xxx
 
 #### 附加
 
+exit 以后也能 attach
+
 ```sh
 zellij a xxx
 ```
@@ -32,7 +34,7 @@ zellij ka
 #### delete
 
 ```sh
-zellij da
+zellij da -y
 ```
 
 ### 快捷键
@@ -49,6 +51,13 @@ ctrl+g
 
 ```sh
 ctrl+t
+```
+
+移动位置
+
+```sh
+alt + i
+alt + o
 ```
 
 #### panel 操作

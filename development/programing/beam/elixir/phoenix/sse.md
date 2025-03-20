@@ -13,7 +13,7 @@ mix phx.new web_demo --no-assets --no-html --no-gettext --no-dashboard --no-live
 依赖
 
 ```elixir
-{:httpoison, "~> 2.1"}
+{:req, "~> 0.5.9"},
 ```
 
 ### 流式转发
@@ -43,62 +43,164 @@ end
 
 #### 流式包装
 
-http_stream.ex
+finch_http_stream.ex
 
 ```elixir
-defmodule HTTPStream do
+defmodule FinchHTTPStream do
   require Logger
+  @name :finch_stream
 
   def get(url) do
     Stream.resource(
-      fn ->
-        _start_stream_request(url)
-      end,
-      fn resp ->
-        _on_stream(resp)
-      end,
-      fn resp ->
-        _on_stream_finish(resp)
-      end
+      fn -> _start_stream_request(url) end,
+      fn state -> _on_stream(state) end,
+      fn state -> _on_stream_finish(state) end
     )
   end
 
   def _start_stream_request(url) do
     Logger.debug("on stream start")
 
-    HTTPoison.get!(
-      url,
-      %{},
-      stream_to: self(),
-      async: :once
-    )
+    parent_pid = self()
+
+    Task.start_link(fn ->
+      {:ok, _pid} = Finch.start_link(name: @name)
+      request = Finch.build(:get, url)
+
+      Finch.stream(request, @name, nil, fn
+        {:status, status}, _acc ->
+          Logger.info("received status: #{status}")
+          {:cont, nil}
+
+        {:headers, headers}, _acc ->
+          Logger.info("received headers: #{inspect(headers)}")
+          {:cont, nil}
+
+        {:data, chunk}, _acc ->
+          send(parent_pid, {:sse_event, chunk})
+          {:cont, nil}
+
+        :done, _acc ->
+          Logger.info("stream finished")
+          send(parent_pid, {:sse_finished, :done})
+          {:halt, nil}
+
+        {:error, reason}, _acc ->
+          Logger.error("stream error: #{inspect(reason)}")
+          send(parent_pid, {:sse_error, reason})
+          {:halt, nil}
+      end)
+    end)
+
+    parent_pid
   end
 
-  def _on_stream(%HTTPoison.AsyncResponse{id: id} = resp) do
+  def _on_stream(pid) do
     receive do
-      %HTTPoison.AsyncStatus{id: ^id, code: code} ->
-        Logger.debug("on stream status: #{inspect(code)}")
-        HTTPoison.stream_next(resp)
-        {[], resp}
+      {:sse_event, chunk} ->
+        Logger.info("on sse_event: #{inspect(chunk)}")
+        {[chunk], pid}
 
-      %HTTPoison.AsyncHeaders{id: ^id, headers: headers} ->
-        Logger.debug("on stream headers: #{inspect(headers, pretty: true)}")
-        HTTPoison.stream_next(resp)
-        {[], resp}
+      {:sse_finished, _} ->
+        Logger.info("on sse_finished")
+        {:halt, pid}
 
-      %HTTPoison.AsyncChunk{id: ^id, chunk: chunk} ->
-        Logger.debug("on chunk #{chunk}")
-        HTTPoison.stream_next(resp)
-        {[chunk], resp}
-
-      %HTTPoison.AsyncEnd{id: ^id} ->
-        {:halt, resp}
+      {:sse_error, reason} ->
+        Logger.error("on sse_error: #{inspect(reason)}")
+        {:halt, pid}
+    after
+      5000 ->
+        Logger.info("on sse_timeout")
+        {:halt, pid}
     end
   end
 
-  def _on_stream_finish(resp) do
+  def _on_stream_finish(_pid) do
     Logger.debug("on stream finish")
-    :hackney.stop_async(resp.id)
+  end
+end
+```
+
+req_http_stream.ex
+
+```elixir
+defmodule ReqHTTPStream do
+  require Logger
+
+  def get(url) do
+    Stream.resource(
+      fn -> _start_stream_request(url) end,
+      fn state -> _on_stream(state) end,
+      fn state -> _on_stream_finish(state) end
+    )
+  end
+
+  def _start_stream_request(url) do
+    Logger.debug("on stream start")
+
+    parent_pid = self()
+
+    Task.start(fn ->
+      try do
+        Req.get!(url,
+          into: fn chunk, _acc ->
+            send(parent_pid, {:sse_event, chunk})
+            {:cont, nil}
+          end
+        )
+
+        send(parent_pid, {:sse_finished, :done})
+      rescue
+        exception ->
+          # 不知道为什么，结束的时候会遇到异常
+          Logger.error("Request error: #{inspect(exception)}")
+          send(parent_pid, {:sse_error, exception})
+      end
+    end)
+
+    parent_pid
+  end
+
+  def _on_stream(pid) do
+    receive do
+      {:sse_event, chunk} ->
+        {:data, chunk_data} = chunk
+        Logger.info("on sse_event: #{inspect(chunk)}")
+        {[chunk_data], pid}
+
+      {:sse_finished, _} ->
+        Logger.info("on sse_finished")
+        {:halt, pid}
+
+      {:sse_error, reason} ->
+        Logger.error("on sse_error: #{inspect(reason)}")
+        {:halt, pid}
+    after
+      50000 ->
+        Logger.info("on sse_timeout")
+        {[], pid}
+    end
+  end
+
+  def _on_stream_finish(_pid) do
+    Logger.debug("on stream finish")
+  end
+end
+```
+
+或者
+
+```elixir
+defmodule ReqHTTPStream do
+  require Logger
+
+  def get(url) do
+    resp = url |> Req.get!(into: :self)
+    resp.body
+  end
+
+  def debug(url) do
+    url |> Req.get!(into: IO.stream())
   end
 end
 ```
@@ -137,6 +239,7 @@ defmodule WebDemoWeb.StreamController do
 
     url = "http://127.0.0.1:4000/api/stream"
 
+    # 这里换成 ReqHTTPStream
     HTTPStream.get(url)
     |> Enum.reduce_while(conn, fn chunk, conn ->
       case Plug.Conn.chunk(conn, chunk) do
