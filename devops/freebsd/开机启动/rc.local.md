@@ -13,6 +13,8 @@ chmod a+x /etc/rc.local
 ```sh
 #!/bin/sh -e
 
+. /etc/profile
+
 # nohup xxx > /dev/null 2>&1 &
 # screen -dm xxx
 

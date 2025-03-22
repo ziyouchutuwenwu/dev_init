@@ -34,6 +34,8 @@ WantedBy=multi-user.target
 ```sh
 #!/bin/sh -e
 
+. /etc/profile
+
 # nohup xxx > /dev/null 2>&1 &
 # screen -dm xxx
 
