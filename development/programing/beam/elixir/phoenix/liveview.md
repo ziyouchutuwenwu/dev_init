@@ -54,15 +54,23 @@ defmodule WebDemoWeb.PageLive do
   end
 
   def handle_event("inc", _params, socket) do
-    {:noreply, socket |> update(:number, &(&1 + 1))}
+    {:noreply, update(socket, :number, &increment/1)}
   end
 
   def handle_event("dec", _params, socket) do
-    {:noreply, socket |> update(:number, &(&1 - 1))}
+    {:noreply, update(socket, :number, &decrement/1)}
   end
 
   def handle_event("clear", _params, socket) do
     {:noreply, socket |> assign(number: 0)}
+  end
+
+  defp increment(number) do
+    number + 1
+  end
+
+  defp decrement(number) do
+    number - 1
   end
 end
 ```
