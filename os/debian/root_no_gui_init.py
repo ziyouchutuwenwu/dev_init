@@ -21,7 +21,7 @@ def add_usr_sbin_to_path_env():
     os.environ["PATH"] += ":/usr/sbin/"
 
 
-def set_mirror_apt_config(mirror_name):
+def set_apt_mirror(mirror_name):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/apt/%s.list /etc/apt/sources.list" % (current_dir, mirror_name)
     os.system(cmd)
@@ -233,7 +233,7 @@ if __name__ == "__main__":
     set_global_profiles()
     set_swapping_config()
     set_fs_watches_config()
-    set_mirror_apt_config(mirror_name)
+    set_apt_mirror(mirror_name)
 
     remove_useless_applications()
 

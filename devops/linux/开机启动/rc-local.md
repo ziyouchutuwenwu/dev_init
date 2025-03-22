@@ -2,14 +2,19 @@
 
 ## 说明
 
-适用于 debian, manjaro
-
-debian 和 manjaro 都是 systemd 模拟的
+适用于 debian, manjaro, 都是 systemd 模拟的
 
 manjaro 下默认 type 为 idle
 
+## 例子
+
+位置
+
 ```sh
-# /usr/local/lib/systemd/system/rc-local.service
+/usr/local/lib/systemd/system/rc-local.service
+```
+
+```sh
 [Unit]
 Description=rc.local
 ConditionPathExists=/etc/rc.local
@@ -40,6 +45,6 @@ exit 0
 然后
 
 ```sh
-sudo chmod +x /etc/rc.local
-sudo systemctl enable rc-local --now
+chmod a+x /etc/rc.local
+systemctl enable rc-local --now
 ```
