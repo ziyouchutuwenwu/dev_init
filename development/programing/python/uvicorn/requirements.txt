@@ -1,5 +1,0 @@
-setuptools==57.5.0
-demjson
-
-fastapi
-uvicorn
