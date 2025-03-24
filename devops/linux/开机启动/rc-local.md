@@ -2,13 +2,11 @@
 
 ## 说明
 
-适用于 debian, manjaro, 都是 systemd 模拟的
+都是 systemd 模拟，/etc/profile 默认不会加载
 
 manjaro 下默认 type 为 idle
 
 ## 例子
-
-位置
 
 ```sh
 /usr/local/lib/systemd/system/rc-local.service
@@ -30,6 +28,8 @@ RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target
 ```
+
+/etc/rc.local
 
 ```sh
 #!/bin/sh -e
