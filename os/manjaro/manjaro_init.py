@@ -379,7 +379,6 @@ def install_net_tools():
         "netctl",
         "net-tools",
         "dnsutils",
-        "gnu-netcat",
         "nmap",
     ]
     for app in app_list:

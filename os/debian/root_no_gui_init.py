@@ -79,6 +79,7 @@ def install_net_tools():
         "cifs-utils"
         "sshfs",
         "nmap",
+        "ncat",
         "uml-utilities",
         "bridge-utils",
         "net-tools",
@@ -199,6 +200,7 @@ def remove_useless_applications():
         "epiphany-browser",
         "libreoffice*",
         "quodlibet",
+        "netcat-traditional",
         "goldendict",
         "exfalso",
         "xfburn",
