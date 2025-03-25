@@ -74,12 +74,16 @@ def install_ansible_essential():
     os.system("apt install -y sshpass")
 
 
+def install_ncat():
+    os.system("apt install -y ncat")
+    os.system("update-alternatives --set nc /usr/bin/ncat")
+
+
 def install_net_tools():
     tool_list = [
         "cifs-utils"
         "sshfs",
         "nmap",
-        "ncat",
         "uml-utilities",
         "bridge-utils",
         "net-tools",
@@ -248,6 +252,7 @@ if __name__ == "__main__":
     install_gdebi()
     add_chinese_support()
     install_net_tools()
+    install_ncat()
     install_toys()
     install_ansible_essential()
     install_useful_tools()

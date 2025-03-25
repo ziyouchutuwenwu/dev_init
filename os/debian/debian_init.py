@@ -240,6 +240,7 @@ def do_clean_after_install():
     app_list = [
         "imagemagic*",
         "libproxy-tools",
+        # "netcat-openbsd",
     ]
     for app in app_list:
         cmd = "apt purge -y %s" % app
