@@ -74,7 +74,7 @@ def install_ansible_essential():
     os.system("apt install -y sshpass")
 
 
-def install_ncat():
+def install_netcat():
     os.system("apt install -y ncat")
     os.system("update-alternatives --set nc /usr/bin/ncat")
 
@@ -252,7 +252,7 @@ if __name__ == "__main__":
     install_gdebi()
     add_chinese_support()
     install_net_tools()
-    install_ncat()
+    install_netcat()
     install_toys()
     install_ansible_essential()
     install_useful_tools()

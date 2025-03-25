@@ -22,7 +22,7 @@ def update_sudo_passwd_template(pwd):
     sudo_passwd_template = "/tmp/pass.sh"
     os.system("rm -rf %s" % sudo_passwd_template)
     os.system("touch %s" % sudo_passwd_template)
-    os.system("chmod +x %s" % sudo_passwd_template)
+    os.system("chmod a+x %s" % sudo_passwd_template)
     file.set_to_file(sudo_passwd_template, "'#! /bin/bash'")
     file.set_to_file(sudo_passwd_template, "echo %s" % pwd)
 
@@ -240,7 +240,8 @@ def do_clean_after_install():
     app_list = [
         "imagemagic*",
         "libproxy-tools",
-        # "netcat-openbsd",
+        # virt-manager 会自动装这个
+        "netcat-openbsd",
     ]
     for app in app_list:
         cmd = "apt purge -y %s" % app

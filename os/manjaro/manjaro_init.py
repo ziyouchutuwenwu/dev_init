@@ -371,6 +371,11 @@ def install_ios_essential():
     os.system("yes | pacman --noconfirm -S libimobiledevice")
 
 
+def install_netcat():
+    os.system("yes | pacman --noconfirm -S nmap")
+    os.system("ln -s $(which ncat) /usr/bin/nc")
+
+
 def install_net_tools():
     app_list = [
         "sshfs",
@@ -379,7 +384,6 @@ def install_net_tools():
         "netctl",
         "net-tools",
         "dnsutils",
-        "nmap",
     ]
     for app in app_list:
         cmd = "yes | pacman --noconfirm -S %s" % app
@@ -461,6 +465,7 @@ if __name__ == "__main__":
     install_search_tools()
 
     install_net_tools()
+    install_netcat()
     install_remote_desktop()
     install_embedded_tools()
     install_ios_essential()

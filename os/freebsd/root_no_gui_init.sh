@@ -27,7 +27,7 @@ pkg install -y neovim
 
 # 开机启动
 cp -rf $CURRENT_DIR/rc_files/rc.local /etc/rc.local
-chmod +x /etc/rc.local
+chmod a+x /etc/rc.local
 
 fetch https://mirrors.ustc.edu.cn/freebsd-ports/ports.tar.gz
 tar -zxvf ports.tar.gz -C /usr/ports
@@ -85,4 +85,3 @@ cp -rf $CURRENT_DIR/zsh/zshenv /usr/local/etc/zshenv
 # 启动加载
 mkdir -p /usr/local/etc/profile.d/
 cp -rf $CURRENT_DIR/profile.d/*.sh /usr/local/etc/profile.d/
-chmod +x /usr/local/etc/profile.d/*.sh

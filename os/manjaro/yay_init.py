@@ -17,7 +17,7 @@ def update_sudo_passwd_template(pwd):
     sudo_passwd_template = "/tmp/pass.sh"
     os.system("rm -rf %s" % sudo_passwd_template)
     os.system("touch %s" % sudo_passwd_template)
-    os.system("chmod +x %s" % sudo_passwd_template)
+    os.system("chmod a+x %s" % sudo_passwd_template)
     file.set_to_file(sudo_passwd_template, "'#! /bin/bash'")
     file.set_to_file(sudo_passwd_template, "echo %s" % pwd)
 
