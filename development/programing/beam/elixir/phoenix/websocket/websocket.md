@@ -4,13 +4,7 @@
 
 不使用 channel 来操作 websocket
 
-配置的位置，参考如下命令
-
-```sh
-mix phx.gen.socket User
-```
-
-## 服务端
+## 例子
 
 ### 创建
 
@@ -105,7 +99,7 @@ end
 mix phx.routes
 ```
 
-## 客户端
+## 测试
 
 ### deps
 

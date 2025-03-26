@@ -1,5 +1,9 @@
 # channel
 
+## 说明
+
+封装过的 websocket
+
 ## 例子
 
 ### 创建项目
