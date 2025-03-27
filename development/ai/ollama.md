@@ -24,7 +24,7 @@ ollama serve
 
 ```sh
 ollama pull deepseek-r1:70b
-ollama run deepseek-r1:70b
+ollama run deepseek-r1:70b --verbose
 ollama stop deepseek-r1:70b
 ```
 

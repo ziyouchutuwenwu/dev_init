@@ -20,6 +20,8 @@ routes.py
 from robyn import Robyn
 import ctllers
 
+
+# GTE, POST 等一定要大写
 def make(app: Robyn):
     app.add_route("GET", "/", ctllers.demo)
 ```
@@ -29,6 +31,7 @@ main.py
 ```python
 from robyn import Robyn
 import routes
+
 
 app = Robyn(__file__)
 routes.make(app)
