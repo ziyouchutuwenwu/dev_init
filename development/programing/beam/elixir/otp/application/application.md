@@ -1,6 +1,6 @@
-# application 例子
+# application
 
-## 代码
+## 例子
 
 ```elixir
 defmodule DemoApp do

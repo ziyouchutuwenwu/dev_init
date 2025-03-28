@@ -207,6 +207,8 @@ end
 
 #### controller
 
+stream_controller.ex
+
 ```elixir
 defmodule WebDemoWeb.StreamController do
   use WebDemoWeb, :controller
