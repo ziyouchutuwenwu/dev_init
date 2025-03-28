@@ -273,7 +273,8 @@ def remove_useless_files():
         "hp-uiscan.desktop",
         "kcm_fcitx5.desktop",
         "kcm_kaccounts.desktop",
-        "kcm_trash.desktop"
+        "kcm_trash.desktop",
+        "org.kde.kiod6.desktop"
     ]
     for link in links:
         cmd = "rm -rf /usr/share/applications/%s" % link
