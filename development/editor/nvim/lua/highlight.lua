@@ -13,6 +13,7 @@ return {
       "dockerfile",
       "lua",
       "sql",
+      "javascript",
       "typescript",
       "rust",
       "cpp",
