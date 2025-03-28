@@ -3,11 +3,12 @@
 ## 代码
 
 ```elixir
-defmodule HelloworldApp do
+defmodule DemoApp do
   use Application
+  require Logger
 
   def start(_type, _args) do
-    IO.puts "aaa"
+    Logger.debug("in app start")
     {:ok, self()}
   end
 end
@@ -18,7 +19,7 @@ mix.exs
 ```elixir
 def application do
   [
-    mod: {HelloworldApp, []},
+    mod: {DemoApp, []},
   ]
 end
 ```
