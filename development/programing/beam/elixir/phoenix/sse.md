@@ -165,13 +165,23 @@ defmodule ReqHTTPStream do
 
     Task.start(fn ->
       try do
-        Req.get!(url,
-          into: fn {:data, data}, {req, resp} ->
-            send(parent_pid, {:sse_event, data})
-            {:cont, {req, resp}}
-          end
-        )
+        default_options = [
+          retry: false,
+          receive_timeout: :infinity,
+          finch: ConfigedFinch
+        ]
 
+        options =
+          [
+            into: fn {:data, data}, {req, resp} ->
+              Logger.debug("on chunk in options #{inspect(data)}")
+              send(parent_pid, {:sse_event, data})
+              {:cont, {req, resp}}
+            end
+          ]
+          |> Keyword.merge(default_options)
+
+        Req.get!(url, options)
         send(parent_pid, {:sse_finished, :done})
       rescue
         exception ->
@@ -215,7 +225,15 @@ defmodule ReqHTTPStream do
   require Logger
 
   def get(url) do
-    resp = url |> Req.get!(into: :self)
+    default_options = [
+      retry: false,
+      receive_timeout: :infinity,
+      finch: ConfigedFinch
+    ]
+
+    options = [into: :self] |> Keyword.merge(default_options)
+
+    resp = url |> Req.get!(options)
     resp.body
   end
 
