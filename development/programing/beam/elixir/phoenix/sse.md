@@ -20,6 +20,30 @@ mix phx.new web_demo --no-assets --no-html --no-gettext --no-dashboard --no-live
 
 流式转发依赖于本地流式服务，所以两个例子合并到一起
 
+#### app
+
+启用 finch
+
+```elixir
+defmodule DemoApp do
+  use Application
+  require Logger
+
+  def start(_type, _args) do
+    Logger.debug("in app start")
+
+    children = [
+      {
+        Finch,
+        name: ConfigedFinch,
+      }
+    ]
+
+    Supervisor.start_link(children, strategy: :one_for_one)
+  end
+end
+```
+
 #### router
 
 router.ex
@@ -48,7 +72,6 @@ finch_http_stream.ex
 ```elixir
 defmodule FinchHTTPStream do
   require Logger
-  @name :finch_stream
 
   def get(url) do
     Stream.resource(
@@ -64,10 +87,9 @@ defmodule FinchHTTPStream do
     parent_pid = self()
 
     Task.start_link(fn ->
-      {:ok, _pid} = Finch.start_link(name: @name)
       request = Finch.build(:get, url)
 
-      Finch.stream(request, @name, nil, fn
+      Finch.stream(request, ConfigedFinch, nil, fn
         {:status, status}, _acc ->
           Logger.info("received status: #{status}")
           {:cont, nil}
@@ -101,6 +123,7 @@ defmodule FinchHTTPStream do
         Logger.info("on sse_event: #{inspect(chunk)}")
         {[chunk], pid}
 
+      # 已知的 bug,无法识别结束，只能靠 timeout
       {:sse_finished, _} ->
         Logger.info("on sse_finished")
         {:halt, pid}
@@ -109,7 +132,7 @@ defmodule FinchHTTPStream do
         Logger.error("on sse_error: #{inspect(reason)}")
         {:halt, pid}
     after
-      5000 ->
+      2000 ->
         Logger.info("on sse_timeout")
         {:halt, pid}
     end
@@ -143,17 +166,15 @@ defmodule ReqHTTPStream do
     Task.start(fn ->
       try do
         Req.get!(url,
-          into: fn chunk, _acc ->
-            send(parent_pid, {:sse_event, chunk})
-            {:cont, nil}
+          into: fn {:data, data}, {req, resp} ->
+            send(parent_pid, {:sse_event, data})
+            {:cont, {req, resp}}
           end
         )
 
         send(parent_pid, {:sse_finished, :done})
       rescue
         exception ->
-          # 不知道为什么，结束的时候会遇到异常
-          Logger.error("Request error: #{inspect(exception)}")
           send(parent_pid, {:sse_error, exception})
       end
     end)
@@ -163,9 +184,8 @@ defmodule ReqHTTPStream do
 
   def _on_stream(pid) do
     receive do
-      {:sse_event, chunk} ->
-        {:data, chunk_data} = chunk
-        Logger.info("on sse_event: #{inspect(chunk)}")
+      {:sse_event, chunk_data} ->
+        Logger.info("on sse_event: #{inspect(chunk_data)}")
         {[chunk_data], pid}
 
       {:sse_finished, _} ->
