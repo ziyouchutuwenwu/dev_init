@@ -214,10 +214,6 @@ def install_pg_essential():
     os.system("yes | pacman --noconfirm -S postgresql-libs")
 
 
-def install_image_viewer():
-    os.system("yes | pacman --noconfirm -S phonon-qt5-gstreamer gwenview")
-
-
 def install_zip_essential():
     os.system("yes | pacman --noconfirm -S p7zip zip unzip")
 
@@ -454,7 +450,6 @@ if __name__ == "__main__":
     install_privoxy()
     install_docker(login_user)
     install_useful_tools()
-    install_image_viewer()
     install_terminator(login_user)
     install_ghostty(login_user)
     do_vim_config(login_user)
