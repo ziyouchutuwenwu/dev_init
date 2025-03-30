@@ -129,7 +129,7 @@ pkg install -y xfce4-terminal ripgrep xclip neovim wget
 su $USER -c 'sh $CURRENT_DIR/../../development/editor/nvim/install.sh'
 
 pkg install -y proxychains
-cp -rf $CURRENT_DIR/proxychains/proxychains.conf /usr/local/etc/proxychains.conf
+cp -rf $CURRENT_DIR/../../development/proxy/proxychains/proxychains.conf /usr/local/etc/proxychains.conf
 
 # 代理转发
 pkg install -y privoxy
