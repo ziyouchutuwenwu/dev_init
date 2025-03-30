@@ -128,6 +128,10 @@ su $USER -c 'cp -rf $CURRENT_DIR/englih_user_dir/user-dirs.dirs ~/.config/'
 pkg install -y xfce4-terminal ripgrep xclip neovim wget
 su $USER -c 'sh $CURRENT_DIR/../../development/editor/nvim/install.sh'
 
+pkg install -y proxychains
+cp -rf $CURRENT_DIR/proxychains/proxychains.conf /usr/local/etc/proxychains.conf
+
+# 代理转发
 pkg install -y privoxy
 cp -rf $CURRENT_DIR/../../development/proxy/privoxy/config /usr/local/etc/privoxy/config
 sysrc -f /etc/rc.conf privoxy_enable="YES"
