@@ -11,4 +11,4 @@ if __name__ == "__main__":
     parser.add_argument('--port', required=True, help='监听端口')
     args = parser.parse_args()
 
-    app.start(port=args.port)
+    app.start(host="0.0.0.0", port=args.port)
