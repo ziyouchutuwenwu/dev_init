@@ -3,5 +3,10 @@
     "https://docker.anyhub.us.kg",
     "https://dockerhub.icu",
     "https://docker.awsl9527.cn"
-  ]
+  ],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
 }
