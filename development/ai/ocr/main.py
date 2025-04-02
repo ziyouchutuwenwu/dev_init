@@ -1,4 +1,3 @@
- # type: ignore
 from robyn import Robyn
 import routes
 import argparse

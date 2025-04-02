@@ -1,7 +1,8 @@
 from robyn import Robyn
-import ctllers
+from ctller.ocr import OCRController
 
 
 # GTE, POST 等一定要大写
 def make(app: Robyn):
-    app.add_route("POST", "/ocr", ctllers.on_ocr)
+    ocr_ctller = OCRController()
+    app.add_route("POST", "/ocr", ocr_ctller.on_ocr)
