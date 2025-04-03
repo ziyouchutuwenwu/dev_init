@@ -49,8 +49,19 @@ defmodule WebDemoWeb.RoomChannel do
 
   @impl true
   def handle_in("client_msg", %{"body" => body}, socket) do
-    Logger.debug("on new_msg")
-    broadcast!(socket, "resp_msg", %{body: body})
+    Logger.debug("on client_msg")
+    broadcast!(socket, "room_msg", %{body: body})
+    {:noreply, socket}
+  end
+
+
+  # 这里要写，不然不拦截
+  intercept ["room_msg"]
+
+  @impl true
+  def handle_out("room_msg", payload, socket) do
+    Logger.debug("拦截返回客户端的消息 #{inspect(payload)}")
+    push(socket, "room_msg", %{body: "11111111111111111"})
     {:noreply, socket}
   end
 end
@@ -59,15 +70,32 @@ end
 ### html
 
 ```html
-<input id="chat-input" type="text" />
-<div id="messages"></div>
+<div class="flex flex-col md:flex-row items-center p-4 gap-4">
+  <div class="flex flex-col space-y-4 w-full md:w-auto">
+    <p class="text-sm text-center text-gray-600">room 信息</p>
+    <div class="flex space-x-2">
+      <button id="enter-room" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors h-10">
+        进入
+      </button>
+      <button id="leave-room" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors h-10">
+        离开
+      </button>
+    </div>
+    <div id="room-msg" class="flex-1 overflow-auto p-2"></div>
+  </div>
+  <div class="px-40 flex-1 flex flex-col">
+    <input
+      id="chat-input"
+      type="text"
+      class="w-full h-10 px-2 border-b border-gray-300 focus:outline-none"
+      placeholder="输入消息..."
+    />
+    <div id="msg" class="flex-1 overflow-auto p-2"></div>
+  </div>
+</div>
 ```
 
 ### js
-
-js 和 ts 二选一
-
-#### javascript
 
 user_socket.js
 
@@ -75,32 +103,46 @@ user_socket.js
 import { Socket } from "phoenix";
 
 let socket = new Socket("/socket", { params: { token: window.userToken } });
+let channel = socket.channel("room:lobby", {});
+
+let enterRoom = document.querySelector("#enter-room");
+let leaveRoom = document.querySelector("#leave-room");
+let roomMsg = document.querySelector("#room-msg");
+
+let inputContent = document.querySelector("#chat-input");
+let htmlMsg = document.querySelector("#msg");
+
 socket.connect();
 
-let channel = socket.channel("room:lobby", {});
-channel
-  .join()
-  .receive("ok", (resp) => {
+enterRoom.addEventListener("click", () => {
+  channel.join().receive("ok", (resp) => {
     console.log("Joined successfully", resp);
-  })
-  .receive("error", (resp) => {
-    console.log("Unable to join", resp);
+    let msgItem = document.createElement("p");
+    msgItem.innerText = `成功加入房间`;
+    roomMsg.appendChild(msgItem);
   });
+});
 
-let chatInput = document.querySelector("#chat-input");
-let msgInHtml = document.querySelector("#messages");
+leaveRoom.addEventListener("click", () => {
+  channel.leave().receive("ok", () => {
+    console.log("Left the channel successfully");
+    let msgItem = document.createElement("p");
+    msgItem.innerText = `离开房间`;
+    roomMsg.appendChild(msgItem);
+  });
+});
 
-chatInput.addEventListener("keypress", (event) => {
+inputContent.addEventListener("keypress", (event) => {
   if (event.key === "Enter") {
-    channel.push("client_msg", { body: chatInput.value });
-    chatInput.value = "";
+    channel.push("client_msg", { body: inputContent.value });
+    inputContent.value = "";
   }
 });
 
-channel.on("resp_msg", (payload) => {
-  let messageItem = document.createElement("p");
-  messageItem.innerText = `on resp_msg ${payload.body}`;
-  msgInHtml.appendChild(messageItem);
+channel.on("room_msg", (payload) => {
+  let msgItem = document.createElement("p");
+  msgItem.innerText = `on room_msg ${payload.body}`;
+  htmlMsg.appendChild(msgItem);
 });
 
 export default socket;
@@ -110,114 +152,4 @@ app.js
 
 ```javascript
 import "./user_socket.js";
-```
-
-#### typescript
-
-```sh
-npm install phoenix
-```
-
-user_socket.ts
-
-```typescript
-import { Socket, Channel } from "phoenix";
-
-type MsgPayload = {
-  body: string;
-};
-
-type JoinResponse = {
-  status: string;
-};
-
-export class ChatSocket {
-  private socket: Socket;
-  private channel: Channel | null = null;
-  private chatInput: HTMLInputElement | null = null;
-  private msgInHtml: HTMLElement | null = null;
-
-  constructor() {
-    this.socket = new Socket("/socket", { params: { token: window.userToken } });
-  }
-
-  private prepare(): void {
-    this.socket.connect();
-    this.chatInput = document.querySelector("#chat-input");
-    this.msgInHtml = document.querySelector("#messages");
-
-    if (this.chatInput) {
-      this.chatInput.addEventListener("keypress", this.onKeyPress.bind(this));
-    }
-  }
-
-  public enterRoom(roomName: string): Promise<JoinResponse> {
-    return new Promise((resolve, reject) => {
-      this.channel = this.socket.channel(roomName, {});
-
-      this.channel
-        .join()
-        .receive("ok", (resp: JoinResponse) => {
-          console.log("Joined successfully", resp);
-          this.setMsgHandlers();
-          resolve(resp);
-        })
-        .receive("error", (resp: JoinResponse) => {
-          console.log("Unable to join", resp);
-          reject(resp);
-        });
-    });
-  }
-
-  private setMsgHandlers(): void {
-    if (!this.channel) return;
-
-    this.channel.on("resp_msg", (payload: MsgPayload) => {
-      this.onMsg(payload);
-    });
-  }
-
-  public sendMsg(message: string): void {
-    if (!this.channel) {
-      console.error("Not connected to a channel");
-      return;
-    }
-
-    this.channel.push("client_msg", { body: message });
-  }
-
-  private onMsg(payload: MsgPayload): void {
-    if (!this.msgInHtml) return;
-
-    const messageItem = document.createElement("p");
-    messageItem.innerText = `on resp_msg ${payload.body}`;
-    this.msgInHtml.appendChild(messageItem);
-  }
-
-  private onKeyPress(event: KeyboardEvent): void {
-    if (!this.chatInput) return;
-
-    if (event.key === "Enter") {
-      this.sendMsg(this.chatInput.value);
-      this.chatInput.value = "";
-    }
-  }
-}
-
-export default ChatSocket;
-```
-
-app.js
-
-```javascript
-import ChatSocket from "./user_socket.js";
-
-document.addEventListener("DOMContentLoaded", (event) => {
-  console.log(window.location.pathname);
-  if (window.location.pathname === "/") {
-    const chat = new ChatSocket();
-    chat.prepare();
-    chat.enterRoom("room:lobby");
-  }
-});
 ```
