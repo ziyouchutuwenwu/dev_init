@@ -1,20 +1,19 @@
 # plug
 
-就是其他语言的 web 框架里面的 middleware
-
-[参考文档](https://hexdocs.pm/plug/readme.html)
-
 ## 说明
 
-有前置和后置
+类似其他语言里面的 middleware
 
 ## 种类
 
-### 方法级 plug
+### 方法级
+
+访问 index 页面的时候，会触发 plug
 
 ```elixir
 defmodule WebDemoWeb.PageController do
   use WebDemoWeb, :controller
+  require Logger
 
   plug :aaa
   plug :bbb
@@ -25,27 +24,28 @@ defmodule WebDemoWeb.PageController do
   end
 
   defp aaa(conn, _opts) do
-    IO.puts("aaa")
+    Logger.debug("aaa")
     conn
   end
 
   defp bbb(conn, _opts) do
-    IO.puts("bbb")
+    Logger.debug("bbb")
     conn
   end
 
   defp ccc(conn, _opts) do
-    IO.puts("ccc")
+    Logger.debug("ccc")
     conn
   end
 end
 ```
 
-### 模块级 plug
+### 模块级
 
 ```elixir
-defmodule HelloWeb.Plugs.Locale do
+defmodule WebDemoWeb.Plugs.Locale do
   import Plug.Conn
+  require Logger
 
   def init(default_locale) do
     # 返回值是 call 的第二个参数
@@ -63,7 +63,7 @@ defmodule HelloWeb.Plugs.Locale do
 
   # 必须返回 conn， 或者 halt() 不让 controller 处理请求
   def on_post_call(conn) do
-    IO.puts("on_post_call")
+    Logger.debug("on_post_call")
 
     err_map =
       Map.new()
@@ -85,7 +85,7 @@ end
 ```elixir
 pipeline :browser do
   # 必须放在 pipeline 里面
-  plug HelloWeb.Plugs.Locale, "xxxxxxx"
+  plug WebDemoWeb.Plugs.Locale, "xxxxxxx"
 end
 ```
 
@@ -111,10 +111,10 @@ conn.assigns.demo_locale
 pipeline :browser do
   plug :aaa
   plug :bbb
-  plug HelloWeb.Plugs.Locale, "en"
+  plug WebDemoWeb.Plugs.Locale, "en"
 end
 
-scope "/", HelloWeb do
+scope "/", WebDemoWeb do
   pipe_through :browser
 
 end
@@ -125,8 +125,29 @@ end
 一般在 controller 里面注册，用于响应某些 action
 
 ```elixir
-defmodule HelloWeb.HelloController do
-  use HelloWeb, :controller
+defmodule WebDemoWeb.HelloController do
+  use WebDemoWeb, :controller
 
-  plug HelloWeb.Plugs.Locale, "zzz" when action in [:index]
+  plug WebDemoWeb.Plugs.Locale, "zzz" when action in [:index]
+```
+
+### 在 endpoint 注册
+
+为全局效果
+
+```elixir
+def introspect(conn, _opts) do
+  Logger.debug("""
+  Verb: #{inspect(conn.method)}
+  Host: #{inspect(conn.host)}
+  Headers: #{inspect(conn.req_headers)}
+  """)
+
+  conn
+end
+
+
+# 所有的请求都会打印出来
+plug :introspect
+plug WebDemoWeb.Router
 ```

@@ -13,20 +13,20 @@ pipeline :browser do
   plug :accepts, ["html", "json"]
 end
 
-scope "/", HelloWeb do
+scope "/", WebDemoWeb do
   pipe_through :browser
 
   get "/", PageController, :index
 end
 ```
 
-lib/hello_web/controllers/page_controller.ex
+page_controller.ex
 
 ```elixir
-defmodule HelloWeb.PageController do
-  use HelloWeb, :controller
+defmodule WebDemoWeb.PageController do
+  use WebDemoWeb, :controller
 
-  plug :put_view, html: HelloWeb.PageHTML, json: HelloWeb.PageJSON
+  plug :put_view, html: WebDemoWeb.PageHTML, json: WebDemoWeb.PageJSON
 
   def index(conn, _params) do
     render(conn, :index, layout: false)
@@ -34,10 +34,10 @@ defmodule HelloWeb.PageController do
 end
 ```
 
-lib/hello_web/controllers/page_json.ex
+page_json.ex
 
 ```elixir
-defmodule HelloWeb.PageJSON do
+defmodule WebDemoWeb.PageJSON do
   def index(_assigns) do
     %{message: "this is some JSON"}
   end

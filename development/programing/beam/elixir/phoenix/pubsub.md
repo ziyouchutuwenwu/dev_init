@@ -1,6 +1,4 @@
-# 发布订阅
-
-直接上代码
+# pubsub
 
 ## 例子
 
@@ -8,10 +6,10 @@
 defmodule Demo do
   def start_pubsub() do
     children = [
-      {Phoenix.PubSub, name: :my_pubsub},
+      {Phoenix.PubSub, name: :demo_pubsub},
     ]
 
-    opts = [strategy: :one_for_one, name: :my_pubsub_sup]
+    opts = [strategy: :one_for_one, name: :demo_pubsub_sup]
     Supervisor.start_link(children, opts)
   end
 end
@@ -21,8 +19,8 @@ end
 Demo.start_pubsub()
 
 alias Phoenix.PubSub
-PubSub.subscribe :my_pubsub, "user:123"
+PubSub.subscribe :demo_pubsub, "user:123"
 Process.info(self(), :messages)
-PubSub.broadcast :my_pubsub, "user:123", {:user_update, %{id: 123, name: "Shane"}}
+PubSub.broadcast :demo_pubsub, "user:123", {:user_update, %{id: 123, name: "Shane"}}
 Process.info(self(), :messages)
 ```
