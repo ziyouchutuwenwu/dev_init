@@ -82,12 +82,12 @@ port_gen_server.ex
 
 ```elixir
 defmodule PortGenServer do
-  require Logger
   use GenServer
+  require Logger
 
   def start_link(port_bin_file_path) do
     {:ok, pid} = GenServer.start_link(__MODULE__, port_bin_file_path, name: __MODULE__)
-    IO.puts("gen_server pid is #{inspect(pid)}")
+    Logger.debug("gen_server pid is #{inspect(pid)}")
     {:ok, pid}
   end
 

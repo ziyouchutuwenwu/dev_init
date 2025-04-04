@@ -8,6 +8,8 @@ https://github.com/bitcrowd/sshkit.ex
 
 ```elixir
 defmodule Demo do
+  require Logger
+
   def demo do
     {:ok, conn} =
       SSHKit.SSH.connect("localhost",
@@ -27,7 +29,7 @@ defmodule Demo do
       {:stderr, data} -> IO.write([IO.ANSI.red(), data, IO.ANSI.reset()])
     end)
 
-    IO.puts("status: #{status}")
+    Logger.debug("status: #{status}")
 
     tmp_dir = System.tmp_dir()
 

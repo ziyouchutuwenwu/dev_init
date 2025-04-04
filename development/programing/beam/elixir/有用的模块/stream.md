@@ -168,8 +168,10 @@ File.stream!("/path/to/file")
 
 ```elixir
 defmodule Demo do
+  require Logger
+
   def demo(data)do
-    IO.puts("aaaa #{inspect(data)}")
+    Logger.debug("aaaa #{inspect(data)}")
   end
 end
 
@@ -188,6 +190,8 @@ stream |> Stream.run
 
 ```elixir
 defmodule DemoStream do
+  require Logger
+
   def open(file_name) do
     Stream.resource(
       fn ->
@@ -221,7 +225,7 @@ defmodule DemoStream do
   end
 
   def on_data(data)do
-    IO.puts("on_data #{inspect(data)}")
+    Logger.debug("on_data #{inspect(data)}")
   end
 end
 ```

@@ -23,10 +23,11 @@ Repo.to_sql(:all, Post)
 ```elixir
 import Ecto.Query
 alias OrmDemo.{Repo, Tag, Post}
+require Logger
 
 query = from p in Post
 {query, params} = Ecto.Adapters.SQL.to_sql(:all, Repo, query)
-IO.puts("#{query}, #{inspect(params)}")
+Logger.debug("#{query}, #{inspect(params)}")
 ```
 
 ```elixir

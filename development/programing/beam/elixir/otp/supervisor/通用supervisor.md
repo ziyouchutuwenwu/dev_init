@@ -58,10 +58,11 @@ demo_server.ex
 ```elixir
 defmodule DemoServer do
   use GenServer
+  require Logger
 
   def start_link(init_arg1, init_arg2) do
     {:ok, pid} = GenServer.start_link(__MODULE__, {init_arg1, init_arg2}, name: __MODULE__)
-    IO.puts("gen_server pid is #{inspect(pid)}")
+    Logger.debug("gen_server pid is #{inspect(pid)}")
     {:ok, pid}
   end
 
@@ -116,6 +117,8 @@ end
 
 ```elixir
 defmodule DemoServer do
+  require Logger
+
   def start_link(init_arg1, init_arg2) do
     pid = spawn_link(__MODULE__, :loop, [init_arg1, init_arg2])
     {:ok, pid}
@@ -124,7 +127,7 @@ defmodule DemoServer do
   def loop(init_arg1, init_arg2) do
     receive do
       _msg ->
-        IO.puts("received msg #{init_arg1} #{init_arg2}")
+        Logger.debug("received msg #{init_arg1} #{init_arg2}")
     end
   end
 end

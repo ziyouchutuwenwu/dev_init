@@ -18,29 +18,32 @@ end
 
 defmodule Demo1 do
   @behaviour Demo.IDemoBehaviour
+  require Logger
+
   def say_hello(name) do
-    IO.puts("say_hello in demo1 " <> name)
+    Logger.debug("say_hello in demo1 " <> name)
   end
 
   def say_bye(name) do
-    IO.puts("say_bye in demo1 " <> name)
+    Logger.debug("say_bye in demo1 " <> name)
   end
 end
 
 defmodule Demo2 do
   @behaviour Demo.IDemoBehaviour
+  require Logger
 
   # @impl true 主要用于静态分析器
   # 其修饰的方法必须在 behaviour 里面存在，否则会警告
   @impl true
   def say_hello(name) do
-    IO.puts("say_hello in demo2 " <> name)
+    Logger.debug"say_hello in demo2 " <> name)
   end
 
   # 一个方法用 @impl 修饰了，其它的也必须用 @impl 修饰，否则会警告
   @impl Demo.IDemoBehaviour
   def say_bye(name) do
-    IO.puts("say_bye in demo2 " <> name)
+    Logger.debug("say_bye in demo2 " <> name)
   end
 end
 ```

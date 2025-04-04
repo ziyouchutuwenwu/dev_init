@@ -27,23 +27,29 @@ defmodule DemoStruct2 do
 end
 
 defimpl DemoProtocol, for: DemoStruct1 do
+  require Logger
+
   def xxx(%DemoStruct1{aaa: aaa, bbb: bbb}, source, dest) do
     info = "第一个 #{inspect(aaa)} #{inspect(bbb)} #{inspect(source)} #{inspect(dest)}"
-    IO.puts(info)
+    Logger.debug(info)
   end
 end
 
 defimpl DemoProtocol, for: DemoStruct2 do
+  require Logger
+
   def xxx(%DemoStruct2{ccc: ccc, ddd: ddd}, source, dest) do
     info = "另外一个 #{inspect(ccc)} #{inspect(ddd)} #{inspect(source)} #{inspect(dest)}"
-    IO.puts(info)
+    Logger.debug(info)
   end
 end
 
 defimpl DemoProtocol, for: Any do
+  require Logger
+
   def xxx(object, source, dest) do
     info = "any 类型 #{inspect(object)} #{inspect(source)} #{inspect(dest)}"
-    IO.puts(info)
+    Logger.debug(info)
   end
 end
 

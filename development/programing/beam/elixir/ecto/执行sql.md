@@ -3,40 +3,44 @@
 ## 例子
 
 ```elixir
-def demo do
-  # param_title = "标题"
-  # param_category = "分类 1"
+defmodule Demo do
+  require Logger
 
-  param_title = ""
-  param_category = ""
+  def demo do
+    # param_title = "标题"
+    # param_category = "分类 1"
 
-  dynamc_title =
-    case param_title do
-      "" ->
-        %{where: "", param: []}
+    param_title = ""
+    param_category = ""
 
-      _ ->
-        %{where: "and title = ?", param: [param_title]}
-    end
+    dynamc_title =
+      case param_title do
+        "" ->
+          %{where: "", param: []}
 
-  dynamc_category =
-    case param_category do
-      "" ->
-        %{where: "", param: []}
+        _ ->
+          %{where: "and title = ?", param: [param_title]}
+      end
 
-      _ ->
-        %{where: "and category = ?", param: [param_category]}
-    end
+    dynamc_category =
+      case param_category do
+        "" ->
+          %{where: "", param: []}
 
-  query = """
-    select * from articles where 1=1
-    #{dynamc_category.where}
-    #{dynamc_title.where}
-  """
+        _ ->
+          %{where: "and category = ?", param: [param_category]}
+      end
 
-  params = dynamc_title.param ++ dynamc_category.param
+    query = """
+      select * from articles where 1=1
+      #{dynamc_category.where}
+      #{dynamc_title.where}
+    """
 
-  result = Ecto.Adapters.SQL.query(AiData.Repo, query, params)
-  IO.puts("#{inspect(result.rows)}")
+    params = dynamc_title.param ++ dynamc_category.param
+
+    result = Ecto.Adapters.SQL.query(AiData.Repo, query, params)
+    Logger.debug("#{inspect(result.rows)}")
+  end
 end
 ```
