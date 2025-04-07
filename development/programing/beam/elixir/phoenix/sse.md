@@ -25,7 +25,7 @@ mix phx.new web_demo --no-assets --no-html --no-gettext --no-dashboard --no-live
 启用 finch
 
 ```elixir
-defmodule DemoApp do
+defmodule WebDemo.Application do
   use Application
   require Logger
 
@@ -330,14 +330,14 @@ controller 内，订阅消息
 
 ```elixir
 defmodule WebDemoWeb.StreamController do
-  require Logger
-  alias Phoenix.PubSub
   use WebDemoWeb, :controller
+  alias Phoenix.PubSub
+  require Logger
 
   def stream_in_umbrella(conn, _params) do
+    Logger.debug("当前 pid #{inspect(self())}")
     PubSub.subscribe(WebDemo.PubSub, "custom_data")
 
-    # 启用分片消息
     conn =
       conn
       |> put_resp_content_type("text/event-stream")
@@ -348,15 +348,21 @@ defmodule WebDemoWeb.StreamController do
       chunk(conn, "分片数据 #{data}\n")
     end)
 
+    chunk(conn, "")
+    PubSub.unsubscribe(WebDemo.PubSub, "custom_data")
     conn
   end
 
   defp waiting_chunk(on_data_proc) do
     receive do
+      # send_chunked 以后会收到这个消息
       {:plug_conn, :sent} ->
-        # 在 put_resp_content_type 以后会收到这个消息
         waiting_chunk(on_data_proc)
 
+      :done ->
+        Logger.debug("收到结束信号，终止连接")
+
+      # 其它消息，这里就是订阅的消息
       data ->
         on_data_proc.(data)
         waiting_chunk(on_data_proc)
@@ -367,22 +373,24 @@ end
 
 #### 普通子项目
 
-发送消息
+给 web_demo 发送消息
 
 ```elixir
 defmodule Demo do
-  require Logger
   alias Phoenix.PubSub
+  require Logger
 
   def send do
     Process.spawn(
       fn ->
-        list = 1..30
+        list = 1..5
 
         Enum.each(list, fn item ->
           PubSub.broadcast(WebDemo.PubSub, "custom_data", item |> Integer.to_string())
           Process.sleep(1000)
         end)
+
+        PubSub.broadcast(WebDemo.PubSub, "custom_data", :done)
       end,
       []
     )
@@ -394,9 +402,12 @@ end
 
 ```sh
 iex -S mix phx.server
-Demo.send
 ```
 
 ```sh
 curl http://127.0.0.1:4000/api/stream-in-umbrella
+```
+
+```elixir
+Demo.send
 ```
