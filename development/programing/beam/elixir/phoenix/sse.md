@@ -91,27 +91,32 @@ defmodule FinchHTTPStream do
 
       Finch.stream(request, ConfigedFinch, nil, fn
         {:status, status}, _acc ->
-          Logger.info("received status: #{status}")
+          Logger.debug("{:status, status} #{status}")
           {:cont, nil}
 
-        {:headers, headers}, _acc ->
-          Logger.info("received headers: #{inspect(headers)}")
+        {:headers, _headers}, _acc ->
+          Logger.debug("{:headers, headers}")
           {:cont, nil}
 
         {:data, chunk}, _acc ->
+          Logger.debug("{:data, chunk}")
           send(parent_pid, {:sse_event, chunk})
           {:cont, nil}
 
+        # 这里无法触发
         :done, _acc ->
-          Logger.info("stream finished")
+          Logger.debug(":done, _acc")
           send(parent_pid, {:sse_finished, :done})
           {:halt, nil}
 
         {:error, reason}, _acc ->
-          Logger.error("stream error: #{inspect(reason)}")
+          Logger.error(" {:error, reason} #{inspect(reason)}")
           send(parent_pid, {:sse_error, reason})
           {:halt, nil}
       end)
+
+      # 手动 send finish 消息
+      send(parent_pid, {:sse_finished, :done})
     end)
 
     parent_pid
@@ -123,7 +128,6 @@ defmodule FinchHTTPStream do
         Logger.info("on sse_event: #{inspect(chunk)}")
         {[chunk], pid}
 
-      # 已知的 bug,无法识别结束，只能靠 timeout
       {:sse_finished, _} ->
         Logger.info("on sse_finished")
         {:halt, pid}
@@ -132,7 +136,7 @@ defmodule FinchHTTPStream do
         Logger.error("on sse_error: #{inspect(reason)}")
         {:halt, pid}
     after
-      2000 ->
+      20000 ->
         Logger.info("on sse_timeout")
         {:halt, pid}
     end
@@ -343,29 +347,31 @@ defmodule WebDemoWeb.StreamController do
       |> put_resp_content_type("text/event-stream")
       |> send_chunked(200)
 
-    waiting_chunk(fn data ->
-      Logger.debug("测试 #{inspect(data)}")
-      chunk(conn, "分片数据 #{data}\n")
-    end)
-
+    data_waiting(conn, &on_data/2)
     chunk(conn, "")
+
     PubSub.unsubscribe(WebDemo.PubSub, "custom_data")
     conn
   end
 
-  defp waiting_chunk(on_data_proc) do
+  defp on_data(conn, data) do
+    Logger.debug("测试 #{inspect(data)}")
+    chunk(conn, "分片数据 #{data}\n")
+  end
+
+  defp data_waiting(conn, on_data_proc) do
     receive do
       # send_chunked 以后会收到这个消息
       {:plug_conn, :sent} ->
-        waiting_chunk(on_data_proc)
+        data_waiting(conn, on_data_proc)
 
       :done ->
         Logger.debug("收到结束信号，终止连接")
 
       # 其它消息，这里就是订阅的消息
       data ->
-        on_data_proc.(data)
-        waiting_chunk(on_data_proc)
+        on_data_proc.(conn, data)
+        data_waiting(conn, on_data_proc)
     end
   end
 end
