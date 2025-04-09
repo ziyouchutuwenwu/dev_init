@@ -14,8 +14,8 @@ palette = 12=#a5c7ff
 palette = 13=#ddaaff
 palette = 14=#b7fff9
 palette = 15=#ffffff
-background = 171717
-foreground = dedacf
+background = 000000
+foreground = aaaaaa
 cursor-color = bbbbbb
 selection-background = eeeeec
 selection-foreground = 333333
