@@ -1,6 +1,6 @@
 # token 验证
 
-## 方法
+## 用法
 
 ```elixir
 defmodule TokenHelper do
