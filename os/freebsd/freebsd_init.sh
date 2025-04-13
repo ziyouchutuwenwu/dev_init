@@ -41,6 +41,7 @@ sysrc -f /etc/rc.conf linux_enable="YES"
 pkg install -y xorg
 pkg install -y slim
 pkg install -y xfce
+pkg install -y xfce4-session
 
 # cli 下禁用鼠标
 sysrc -f /etc/rc.conf moused_enable="NO"
@@ -124,8 +125,9 @@ su $USER -c 'rm -rf ~/Desktop'
 su $USER -c 'mkdir -p ~/.templates'
 su $USER -c 'cp -rf $CURRENT_DIR/englih_user_dir/user-dirs.dirs ~/.config/'
 
+pkg install -y xfce4-terminal ripgrep xclip wget
+
 # neovim
-pkg install -y xfce4-terminal ripgrep xclip neovim wget
 su $USER -c 'sh $CURRENT_DIR/../../development/editor/nvim/install.sh'
 
 pkg install -y proxychains
@@ -138,7 +140,7 @@ sysrc -f /etc/rc.conf privoxy_enable="YES"
 
 # qemu 下鼠标支持
 pkg install -y utouch-kmod
-echo 'utouch_load="YES"' >> /boot/loader.conf
+sysrc -f /boot/loader.conf utouch_load="YES"
 
 pkg install -y python
 

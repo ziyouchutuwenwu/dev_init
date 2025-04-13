@@ -8,10 +8,10 @@ fi
 CURRENT_DIR=$(cd "$(dirname "$0")";pwd)
 
 # 加速启动
-echo 'autoboot_delay="0"' >> /boot/loader.conf
+sysrc -f /boot/loader.conf autoboot_delay="0"
 
 # 启用 carp
-echo 'carp_load="YES"' >> /boot/loader.conf
+sysrc -f /boot/loader.conf carp_load="YES"
 
 # 设置镜像源
 mkdir -p /usr/local/etc/pkg/repos/
