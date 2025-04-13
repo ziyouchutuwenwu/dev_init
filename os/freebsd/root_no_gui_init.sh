@@ -13,17 +13,13 @@ sysrc -f /boot/loader.conf autoboot_delay="0"
 # 启用 carp
 sysrc -f /boot/loader.conf carp_load="YES"
 
-# 设置镜像源
+# pkg mirror
 mkdir -p /usr/local/etc/pkg/repos/
 cp -rf $CURRENT_DIR/rc_files/pkg.conf /usr/local/etc/pkg/repos/
 ASSUME_ALWAYS_YES=yes pkg update -fq
 
 # 安装预装的工具
 pkg install -y axel curl aria2 git
-
-# 历史记录部分
-echo "pkg update -fq; pkg upgrade -y; pkg autoremove -y; pkg clean -y; freebsd-update fetch install" > ~/.history
-chmod -w ~/.history
 
 # 暂时不放配置
 pkg install -y neovim
@@ -81,10 +77,24 @@ pkg install -y nmap
 pkg install -y rinetd
 pkg install -y binaryen
 
+# 启动加载
+mkdir -p /usr/local/etc/profile.d/
+cp -rf $CURRENT_DIR/profile.d/*.sh /usr/local/etc/profile.d/
+
+# bash 无法自动加载 /etc/profile, bash -l 也不行，必须要手动 source /etc/profile
+# 因此用 zsh
 pkg install -y zsh
 chsh -s $(which zsh) $(whoami)
 cp -rf $CURRENT_DIR/zsh/zshenv /usr/local/etc/zshenv
 
-# 启动加载
-mkdir -p /usr/local/etc/profile.d/
-cp -rf $CURRENT_DIR/profile.d/*.sh /usr/local/etc/profile.d/
+echo "pkg update -fq; pkg upgrade -y; pkg autoremove -y; pkg clean -ay" > ~/.zsh_history
+echo "freebsd-update fetch install" >> ~/.zsh_history
+chmod -w ~/.zsh_history
+
+rm -rf ~/.history
+rm -rf .cshrc
+rm -rf .k5login
+rm -rf .login
+rm -rf .profile
+rm -rf .sh_history
+rm -rf .shrc

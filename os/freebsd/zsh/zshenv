@@ -1,1 +1,2 @@
+export HISTFILE=~/.zsh_history
 emulate sh -c "source /etc/profile"
