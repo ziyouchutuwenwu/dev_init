@@ -85,16 +85,12 @@ cp -rf $CURRENT_DIR/profile.d/*.sh /usr/local/etc/profile.d/
 # 因此用 zsh
 pkg install -y zsh
 chsh -s $(which zsh) $(whoami)
-cp -rf $CURRENT_DIR/zsh/zshenv /usr/local/etc/zshenv
-
-echo "pkg update -fq; pkg upgrade -y; pkg autoremove -y; pkg clean -ay" > ~/.zsh_history
-echo "freebsd-update fetch install" >> ~/.zsh_history
-chmod -w ~/.zsh_history
+sh $CURRENT_DIR/zsh/global/config.sh
 
 rm -rf ~/.history
-rm -rf .cshrc
-rm -rf .k5login
-rm -rf .login
-rm -rf .profile
-rm -rf .sh_history
-rm -rf .shrc
+rm -rf ~/.cshrc
+rm -rf ~/.k5login
+rm -rf ~/.login
+rm -rf ~/.profile
+rm -rf ~/.shrc
+rm -rf ~/.sh_history

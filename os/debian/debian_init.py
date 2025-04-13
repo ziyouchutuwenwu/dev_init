@@ -310,10 +310,11 @@ def do_zsh_config(user):
     cmd = "chsh -s $(which zsh) %s" % user
     os.system(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "sh %s/zsh/config.sh" % (current_dir)
-    proc.run_as_user(user, cmd)
-    cmd = "cp -rf %s/zsh/zshenv /etc/zsh/zshenv" % (current_dir)
+    cmd = "sh %s/zsh/global/config.sh" % (current_dir)
     os.system(cmd)
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cmd = "sh %s/zsh/user/config.sh" % (current_dir)
+    proc.run_as_user(user, cmd)
 
 
 def install_key_tool():

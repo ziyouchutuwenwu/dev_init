@@ -1,13 +1,5 @@
 source ~/.zinit/bin/zinit.zsh
 source ~/.profile
-# 修复键盘映射的问题
-source ~/.zinit/custom/keymap_rc
-
-# 不解释*?等字符
-setopt no_nomatch
-
-# 启用 bash 的注释
-setopt interactivecomments
 
 zinit light zsh-users/zsh-autosuggestions
 zinit light zdharma-continuum/fast-syntax-highlighting

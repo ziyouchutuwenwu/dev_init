@@ -2,13 +2,9 @@
 
 CURRENT_DIR=$(cd "$(dirname "$0")";pwd)
 
-# 键盘映射
-mkdir -p ~/.zinit/custom
-cp -rf $CURRENT_DIR/zinit/keymap_rc ~/.zinit/custom/keymap_rc
-
 git clone --depth 1 https://github.com/zdharma-continuum/zinit.git ~/.zinit/bin
 rm -rf ~/.zshrc
-cp -rf $CURRENT_DIR/zinit/zshrc ~/.zshrc
+cp -rf $CURRENT_DIR/zshrc ~/.zshrc
 chmod -w ~/.zshrc
 
 echo "yes | yay --noconfirm -Syyu; yes | yay --noconfirm -Scc" > ~/.zsh_history
