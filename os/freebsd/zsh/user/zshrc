@@ -1,16 +1,19 @@
 source ~/.zinit/bin/zinit.zsh
 source ~/.profile
 
+# 插件
 zinit light zsh-users/zsh-autosuggestions
 zinit light zdharma-continuum/fast-syntax-highlighting
 zinit light zsh-users/zsh-syntax-highlighting
-
 zinit light zsh-users/zsh-completions
-autoload -U compinit && compinit
 
+# oh-my-zsh 的插件
 zinit snippet OMZ::lib/completion.zsh
 zinit snippet OMZ::lib/history.zsh
 zinit snippet OMZ::lib/git.zsh
+
+# 最后设置补全
+autoload -U compinit && compinit
 
 # 主题
 zinit snippet OMZT::steeef
