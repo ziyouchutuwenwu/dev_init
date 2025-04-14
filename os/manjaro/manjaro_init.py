@@ -111,9 +111,8 @@ def install_docker(user):
     os.system("yes | pacman --noconfirm -S docker")
     cmd = "usermod -a -G docker %s" % user
     os.system(cmd)
-
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "mkdir -p /etc/docker/; cp -rf %s/docker/daemon.json /etc/docker/daemon.json" % (current_dir)
+    cmd = "mkdir -p /etc/docker/; cp -rf %s/docker/daemon.json /etc/docker/" % (current_dir)
     os.system(cmd)
     os.system("systemctl enable docker.service")
 
