@@ -1,1 +1,1 @@
-IgnorePkg = jdk-openjdk
+IgnorePkg = *jdk
