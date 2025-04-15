@@ -184,6 +184,11 @@ def do_zsh_config(user):
 
 
 def install_beam():
+    os.system("sed -i '/^#IgnorePkg[[:space:]]*=/,/^#IgnoreGroup[[:space:]]*=/c\Include = /etc/pacman.d/ignored-pkgs' /etc/pacman.conf")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cmd = "cp -rf %s/pacman/* /etc/pacman.d/" % (current_dir)
+    os.system(cmd)
+
     # 这样就不会强制安装 jdk 了
     os.system("yes | pacman --noconfirm -S erlang --assume-installed java-runtime --assume-installed jdk-openjdk")
     os.system("yes | pacman --noconfirm -S elixir")
