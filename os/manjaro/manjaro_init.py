@@ -290,6 +290,7 @@ def remove_useless_applications():
         "kvantum",
         "timeshift",
         "manjaro-hello",
+        "xfce4-terminal",
         "xfce4-clipman",
         "firefox",
         "evince",
