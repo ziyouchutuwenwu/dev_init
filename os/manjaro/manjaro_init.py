@@ -225,6 +225,10 @@ def install_search_tools():
     os.system("yes | pacman --noconfirm -S fd the_silver_searcher")
 
 
+def install_encoding_tools():
+    os.system("yes | pacman --noconfirm -S enca")
+
+
 def install_useful_tools():
     tool_list = [
         "binaryen",
@@ -471,7 +475,7 @@ if __name__ == "__main__":
     install_serial_tools()
     install_android_tools()
     install_search_tools()
-
+    install_encoding_tools()
     install_net_tools()
     install_netcat()
     install_remote_desktop()

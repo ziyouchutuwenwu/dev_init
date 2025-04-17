@@ -104,6 +104,10 @@ def install_search_tools():
     os.system("ln -s /usr/bin/fdfind /usr/bin/fd")
 
 
+def install_encoding_tools():
+    os.system("apt install -y enca")
+
+
 def install_useful_tools():
     tool_list = [
         "binaryen",
@@ -251,6 +255,7 @@ if __name__ == "__main__":
     install_keepalived()
     install_gdebi()
     add_chinese_support()
+    install_encoding_tools()
     install_net_tools()
     install_netcat()
     install_toys()
