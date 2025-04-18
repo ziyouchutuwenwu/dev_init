@@ -17,5 +17,6 @@ paddleocr
 ## 测试
 
 ```sh
-curl -X POST --data-binary @"desktop/111.png" http://localhost:8888/ocr
+curl -X POST --data-binary @"/desktop/111.png" http://localhost:8888/ocr1
+curl -X POST -F "111.png=@/desktop/111.png" http://localhost:8888/ocr2
 ```
