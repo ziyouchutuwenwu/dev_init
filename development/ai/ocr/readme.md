@@ -13,3 +13,9 @@ robyn
 paddlepaddle
 paddleocr
 ```
+
+## 测试
+
+```sh
+curl -X POST --data-binary @"desktop/111.png" http://localhost:8888/ocr
+```

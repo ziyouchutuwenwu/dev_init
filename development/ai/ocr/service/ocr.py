@@ -13,6 +13,6 @@ class OCRService:
                 show_log=False
             )
 
-
-    def do_ocr(self, img):
-        return self.engine.ocr(img, cls=True)
+    # img_path 和 img_bin 都支持
+    def do_ocr(self, img_bin):
+        return self.engine.ocr(img_bin, cls=True)

@@ -2,8 +2,10 @@ from robyn import Robyn
 import routes
 import argparse
 
+
 app = Robyn(__file__)
 routes.make(app)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
