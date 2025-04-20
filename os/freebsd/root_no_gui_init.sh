@@ -19,7 +19,7 @@ cp -rf $CURRENT_DIR/rc_files/pkg.conf /usr/local/etc/pkg/repos/
 ASSUME_ALWAYS_YES=yes pkg update -fq
 
 # 安装预装的工具
-pkg install -y axel curl aria2 git
+pkg install -y axel curl aria2
 
 # 暂时不放配置
 pkg install -y neovim
