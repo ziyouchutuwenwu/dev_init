@@ -2,7 +2,7 @@
 
 ## 说明
 
-[参考文档地址](https://book.bsdcn.org)
+xfce 现在有 bug, 建议用无桌面的 root 脚本
 
 ## 配置
 
@@ -10,9 +10,15 @@
 
 先开启 ssh 的 root 登录，然后 scp 过去
 
-### 配置代理
+### 代理
 
-带桌面的话，配置非 root 用户的 git 代理
+#### 无桌面
+
+root 脚本，pkg 支持 `HTTP_PROXY` 和 `HTTPS_PROXY`
+
+#### 桌面
+
+带桌面的脚本，配置非 root 用户的 git 代理
 
 不要用 `HTTP_PROXY` 和 `HTTPS_PROXY`
 
