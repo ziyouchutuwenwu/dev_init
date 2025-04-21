@@ -72,6 +72,7 @@ su $USER -c 'git config --global core.quotepath off'
 pkg install -y bash
 
 # 中文和输入法
+sed -i "" 's/#export LANG=zh_CN.UTF-8/export LANG=zh_CN.UTF-8/g' /usr/local/etc/profile.d/lang.sh
 pkg install -y wqy-fonts
 pkg install -y fcitx5 fcitx5-configtool
 pkg install -y zh-fcitx5-chinese-addons
