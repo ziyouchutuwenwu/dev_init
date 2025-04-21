@@ -2,25 +2,15 @@
 
 ## 说明
 
-xfce 现在有 bug, 建议用无桌面的 root 脚本
+pkg, ports, freebsd-update 都支持 `HTTP_PROXY` 和 `HTTPS_PROXY`
 
 ## 配置
 
-### 准备工作
+### 配置代理
 
-先开启 ssh 的 root 登录，然后 scp 过去
+带桌面的脚本，不要用 `HTTP_PROXY` 和 `HTTPS_PROXY`
 
-### 代理
-
-#### 无桌面
-
-root 脚本，pkg 支持 `HTTP_PROXY` 和 `HTTPS_PROXY`
-
-#### 桌面
-
-带桌面的脚本，配置非 root 用户的 git 代理
-
-不要用 `HTTP_PROXY` 和 `HTTPS_PROXY`
+配置非 root 用户的 git 代理
 
 ```sh
 ~/.gitconfig
