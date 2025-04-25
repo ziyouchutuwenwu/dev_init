@@ -88,3 +88,11 @@ xfce 终端设置
   字体 -> Monaco 11
   默认几何属性 -> 100 22
 ```
+
+### lightdm
+
+用户头像
+
+```sh
+/usr/share/icons/Faenza/devices/scalable/display.png
+```

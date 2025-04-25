@@ -74,6 +74,20 @@ xfce 终端设置
   默认几何属性 -> 100 22
 ```
 
+### lightdm
+
+用户头像
+
+```sh
+/usr/share/icons/Faenza/devices/scalable/display.png
+```
+
+主题
+
+```sh
+Matcha-light-azul
+```
+
 ### 开机启动
 
 PolicyKit 服务必须启动，否则基于 polkit 运行的程序会有问题，可以用 xfce-polkit 代替
