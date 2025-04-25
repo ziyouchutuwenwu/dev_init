@@ -106,7 +106,7 @@ def englishization_user_dir_name(user):
 
 
 def rm_unused_menu(user):
-    proc.run_as_user(user, "rm -rf ~/.local/share/applications/*.wine")
+    proc.run_as_user(user, "rm -rf '~/.local/share/applications/*.wine'")
 
 
 def make_git_default_config(user):
