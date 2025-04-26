@@ -12,7 +12,7 @@
 ### 基本用法
 
 ```sh
-autossh -i ./keys/id_rsa -M 0 -o "StrictHostKeyChecking no" -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" $VPS_USER@$VPS_IP
+autossh -i ./keys/id_rsa -o "StrictHostKeyChecking no" -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" $VPS_USER@$VPS_IP
 ```
 
 ### 代理服务器
@@ -20,7 +20,7 @@ autossh -i ./keys/id_rsa -M 0 -o "StrictHostKeyChecking no" -o "ServerAliveInter
 把本地 1080 的流量转发给 VPS, socks5 代理模式
 
 ```sh
-autossh -i ./keys/id_rsa -M 0 -o "StrictHostKeyChecking no" -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" -CfND 0.0.0.0:1080 $VPS_USER@$VPS_IP
+autossh -i ./keys/id_rsa -o "StrictHostKeyChecking no" -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" -CfND 0.0.0.0:1080 $VPS_USER@$VPS_IP
 ```
 
 ### 本地隧道
@@ -30,7 +30,7 @@ autossh -i ./keys/id_rsa -M 0 -o "StrictHostKeyChecking no" -o "ServerAliveInter
 TARGET_IP 和 VPS_IP 可以不相同
 
 ```sh
-autossh -i ./keys/id_rsa -M 0 -o "StrictHostKeyChecking no" -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" -CfNg -L $LOCAL_IP:$LOCAL_PORT:$TARGET_IP:$TARGET_PORT $VPS_USER@$VPS_IP
+autossh -i ./keys/id_rsa -o "StrictHostKeyChecking no" -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" -CfNg -L $LOCAL_IP:$LOCAL_PORT:$TARGET_IP:$TARGET_PORT $VPS_USER@$VPS_IP
 ```
 
 ### 远程隧道
@@ -38,5 +38,5 @@ autossh -i ./keys/id_rsa -M 0 -o "StrictHostKeyChecking no" -o "ServerAliveInter
 把服务转发给其它机器
 
 ```sh
-autossh -i ./keys/id_rsa -M 0 -o "StrictHostKeyChecking no" -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" -CfNg -R $NEW_SERVER_PORT:$OLD_SERVER_IP:$OLD_SERVER_PORT $VPS_USER@$NEW_SERVER_IP
+autossh -i ./keys/id_rsa -o "StrictHostKeyChecking no" -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" -CfNg -R $NEW_SERVER_PORT:$OLD_SERVER_IP:$OLD_SERVER_PORT $VPS_USER@$NEW_SERVER_IP
 ```

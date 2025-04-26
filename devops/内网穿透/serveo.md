@@ -9,7 +9,7 @@
 ### ssh
 
 ```sh
-autossh -M 0 -o "ServerAliveInterval 60" -o "ServerAliveCountMax 3" -R 0:localhost:22 serveo.net
+autossh -o "ServerAliveInterval 60" -o "ServerAliveCountMax 3" -R 0:localhost:22 serveo.net
 ```
 
 客户端访问
