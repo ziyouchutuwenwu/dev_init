@@ -6,44 +6,46 @@
 
 需要公网 vps
 
-域名，ssl 全部需要自己处理
-
 ## 配置
 
 ### vps 配置
 
-frps.ini
+frps.toml
 
-```ini
-[common]
-bind_port = 7890
-# bind_udp_port = 7890
-token = 123456
+```toml
+bindPort = 6000
 ```
 
 启动
 
 ```sh
-frps -c frps.ini
+frps -c frps.toml
 ```
 
 ### 内网配置
 
-frpc.ini
+frpc.toml
 
-```ini
-[common]
-server_addr = $VPS_IP
-server_port = 7890
-# protocol = udp
-token = 123456
+```toml
+serverAddr = "x.x.x.x"
+serverPort = 7000
 
-# 任意名字
-[abc]
-type = tcp
-local_ip = 127.0.0.1
-local_port = 8888
-remote_port = 12316
+serverAddr = "127.0.0.1"
+serverPort = 7000
+
+[[proxies]]
+name = "ssh"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 22
+remotePort = 6000
+
+[[proxies]]
+name = "web1"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 8000
+remotePort = 9000
 ```
 
 启动
@@ -55,5 +57,6 @@ frpc -c frpc.ini
 ### 测试
 
 ```sh
-curl http://$VPS_IP:12316
+ssh -p 6000 xxx@xx.xx.xx.xx
+curl http://xx.xx.xx.xx:9000
 ```
