@@ -29,9 +29,10 @@ cp -rf $CURRENT_DIR/rc_files/rc.local /etc/rc.local
 chmod a+x /etc/rc.local
 
 # fetch https://mirrors.ustc.edu.cn/freebsd-ports/ports.tar.gz
-fetch https://download.freebsd.org/ports/ports/ports.tar.gz
-tar -zxvf ports.tar.gz -C /usr/
-rm ports.tar.gz
+# fetch https://download.freebsd.org/ports/ports/ports.tar.gz
+# tar -zxvf ports.tar.gz -C /usr/
+# rm ports.tar.gz
+git clone --depth 1 https://git.FreeBSD.org/ports.git /usr/ports
 cp -rf $CURRENT_DIR/rc_files/ports.conf /etc/make.conf
 
 # update 源
