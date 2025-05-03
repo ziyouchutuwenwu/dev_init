@@ -13,7 +13,7 @@ sysrc -f /boot/loader.conf autoboot_delay="0"
 # 启用 carp
 sysrc -f /boot/loader.conf carp_load="YES"
 
-# 中科大的镜像似乎会有校验码错误，目前用代理更好
+# 中科大的镜像似乎会有校验码错误，目前用官方加代理
 # mkdir -p /usr/local/etc/pkg/repos/
 #cp -rf $CURRENT_DIR/rc_files/pkg.conf /usr/local/etc/pkg/repos/
 ASSUME_ALWAYS_YES=yes pkg update -fq
@@ -28,7 +28,8 @@ pkg install -y neovim
 cp -rf $CURRENT_DIR/rc_files/rc.local /etc/rc.local
 chmod a+x /etc/rc.local
 
-fetch https://mirrors.ustc.edu.cn/freebsd-ports/ports.tar.gz
+# fetch https://mirrors.ustc.edu.cn/freebsd-ports/ports.tar.gz
+fetch https://download.freebsd.org/ports/ports/ports.tar.gz
 tar -zxvf ports.tar.gz -C /usr/ports
 rm ports.tar.gz
 cp -rf $CURRENT_DIR/rc_files/ports.conf /etc/make.conf
@@ -43,6 +44,7 @@ service sshd restart
 
 # jail 虚拟化
 pkg install -y qjail
+# axel -o /tmp/ https://download.freebsd.org/releases/amd64/14.2-RELEASE/base.txz
 # axel -o /tmp/ http://mirrors.ustc.edu.cn/freebsd/releases/amd64/13.0-RELEASE/base.txz
 
 # 13.0-RELEASE
@@ -50,6 +52,7 @@ pkg install -y qjail
 RELEASE_VERSION=$(uname -r | sed 's/\(-p[0-9]*\)*$//')
 ARCH=$(uname -m)
 axel -o /tmp/ http://mirrors.ustc.edu.cn/freebsd/releases/$ARCH/$RELEASE_VERSION/base.txz
+# axel -o /tmp/ https://download.freebsd.org/releases/$ARCH/$RELEASE_VERSION/base.txz
 qjail install -f /tmp/base.txz
 
 mkdir -p /usr/jails/template/usr/local/etc/pkg/repos
