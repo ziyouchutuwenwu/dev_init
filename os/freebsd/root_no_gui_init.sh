@@ -30,7 +30,7 @@ chmod a+x /etc/rc.local
 
 # fetch https://mirrors.ustc.edu.cn/freebsd-ports/ports.tar.gz
 fetch https://download.freebsd.org/ports/ports/ports.tar.gz
-tar -zxvf ports.tar.gz -C /usr/ports
+tar -zxvf ports.tar.gz -C /usr/
 rm ports.tar.gz
 cp -rf $CURRENT_DIR/rc_files/ports.conf /etc/make.conf
 
