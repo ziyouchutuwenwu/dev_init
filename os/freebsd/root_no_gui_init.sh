@@ -13,9 +13,9 @@ sysrc -f /boot/loader.conf autoboot_delay="0"
 # 启用 carp
 sysrc -f /boot/loader.conf carp_load="YES"
 
-# pkg mirror
-mkdir -p /usr/local/etc/pkg/repos/
-cp -rf $CURRENT_DIR/rc_files/pkg.conf /usr/local/etc/pkg/repos/
+# 中科大的镜像似乎会有校验码错误，目前用代理更好
+# mkdir -p /usr/local/etc/pkg/repos/
+#cp -rf $CURRENT_DIR/rc_files/pkg.conf /usr/local/etc/pkg/repos/
 ASSUME_ALWAYS_YES=yes pkg update -fq
 
 # 安装预装的工具
