@@ -8,9 +8,9 @@
 
 以 qemu-virt64-aarch64 为例
 
-### userapp
+### 用户态
 
-编译用户态程序
+工具链需要通过编译用户态程序才能导出，有点奇怪
 
 ```sh
 git clone --depth 1 https://github.com/RT-Thread/userapps.git
@@ -18,22 +18,31 @@ cd userapps; source env.sh
 cd apps
 ```
 
-先编译
+下载工具链
 
 ```sh
-# 配置为 aarch64平台，这个命令会下载一堆东西，包括toolchain
-# 如果下载失败，手动下载，放在 userapps/downloaded/, 注意文件名需要按照提示里面的改掉
 xmake config --arch=aarch64 -y
-xmake -j8
 ```
 
-导出 toolchain 和应用层开发的需要的 sdk，在 `apps/build/packages` 和 `apps/build/sdk` 下
+导出 toolchain 需要先编译
+
+每次修改完应用程序，都需要 xmake 一下
+
+```sh
+xmake
+```
+
+toolchain 在 `apps/build/packages` 下
+
+sdk 在`apps/build/sdk` 下
 
 ```sh
 xmake smart-rootfs --export=all
 ```
 
-生成 rootfs，执行以后，在 `apps/build/` 下会生成一个 rootfs 目录
+生成 rootfs，执行以后，在 `apps/build/` 下
+
+如果需要把 zig 编译的程序放进去，可以放在这个里面
 
 ```sh
 xmake smart-rootfs
@@ -47,7 +56,7 @@ xmake smart-image -f ext4
 
 ### 内核
 
-toolchain 在 userapp 里面已经下载好了
+toolchain 在 `userapps/apps/build/packages` 里面，复制出来
 
 ```sh
 export RTT_CC="gcc"
@@ -60,7 +69,7 @@ export PATH="$RTT_EXEC_PATH:$PATH"
 
 ```sh
 git clone --depth 1 https://github.com/RT-Thread/rt-thread
-cd bsp/qemu-virt64-aarch64
+cd rt-thread/bsp/qemu-virt64-aarch64/
 scons --menuconfig
 ```
 
@@ -74,10 +83,19 @@ RT-Thread online packages  --->
 ```
 
 ```sh
+source ~/.env/env.sh
+pkgs --update
+
 scons -c; scons
 # scons --dist
 ```
 
 ### 运行
+
+```sh
+cp ext4.img ../../../rt-thread/bsp/qemu-virt64-aarch64/
+```
+
+修改 qemu.sh 里面的 sd.bin 为 ext4.img
 
 参考[这里](https://github.com/RT-Thread/userapps)最后生成 prebuilt 的部分里面的 run.sh
