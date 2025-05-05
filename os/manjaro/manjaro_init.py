@@ -190,7 +190,7 @@ def install_beam():
     os.system(cmd)
 
     # 这样就不会强制安装 jdk 了
-    os.system("yes | pacman --noconfirm -S erlang --assume-installed java-runtime --assume-installed jdk-openjdk")
+    os.system("yes | pacman --noconfirm -S erlang --assume-installed erlang-jinterface --assume-installed java-runtime --assume-installed jdk-openjdk")
     os.system("yes | pacman --noconfirm -S elixir")
     os.system("yes | pacman --noconfirm -S inotify-tools")
 
