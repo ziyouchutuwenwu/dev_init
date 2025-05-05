@@ -39,11 +39,21 @@ def add_chinese_support():
 
 
 def do_apt_update():
-    os.system("apt update; apt upgrade -y; apt install -y build-essential; apt autoremove -y; apt autoclean")
+    os.system("apt update; apt upgrade -y; apt autoremove -y; apt autoclean")
 
 
 def add_apt_https_support():
     os.system("apt install -y apt-transport-https")
+
+
+def install_build_tools():
+    tool_list = [
+        "build-essential",
+        "autoconf"
+    ]
+    for tool in tool_list:
+        cmd = "apt install -y %s" % tool
+        os.system(cmd)
 
 
 def install_aptitude():
@@ -252,6 +262,8 @@ if __name__ == "__main__":
 
     install_aptitude()
     install_apt_file()
+    install_build_tools()
+
     install_keepalived()
     install_gdebi()
     add_chinese_support()

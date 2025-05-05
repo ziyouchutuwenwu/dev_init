@@ -23,7 +23,7 @@ cd apps
 ```sh
 # 配置为 aarch64平台，这个命令会下载一堆东西，包括toolchain
 # 如果下载失败，手动下载，放在 userapps/downloaded/, 注意文件名需要按照提示里面的改掉
-xmake f -a aarch64
+xmake config --arch=aarch64 -y
 xmake -j8
 ```
 
