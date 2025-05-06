@@ -183,16 +183,8 @@ def do_zsh_config(user):
     proc.run_as_user(user, cmd)
 
 
-def set_pacman_ignore():
-    os.system("sed -i '/^#IgnorePkg[[:space:]]*=/,/^#IgnoreGroup[[:space:]]*=/c\Include = /etc/pacman.d/ignored-pkgs' /etc/pacman.conf")
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/pacman/* /etc/pacman.d/" % (current_dir)
-    os.system(cmd)
-
-
 def install_beam():
-    # 这样就不会强制安装 jdk 了
-    os.system("yes | pacman --noconfirm -S erlang --assume-installed java-runtime --assume-installed jdk-openjdk")
+    os.system("yes | pacman --noconfirm -S jre-openjdk erlang")
     os.system("yes | pacman --noconfirm -S elixir")
     os.system("yes | pacman --noconfirm -S inotify-tools")
 
@@ -428,7 +420,6 @@ if __name__ == "__main__":
 
     disable_root_history()
     make_colorful()
-    set_pacman_ignore()
     set_swapping_config()
     set_fs_watches_config()
 
