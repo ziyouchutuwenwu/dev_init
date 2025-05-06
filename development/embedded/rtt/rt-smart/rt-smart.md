@@ -42,7 +42,7 @@ xmake smart-rootfs --export=all
 
 生成 rootfs，执行以后，在 `apps/build/` 下
 
-如果需要把 zig 编译的程序放进去，可以放在这个里面
+如果需要把 zig 编译的程序放进去，可以放在这个里面, 实际测试，运行会崩溃
 
 ```sh
 xmake smart-rootfs
@@ -60,7 +60,7 @@ toolchain 在 `userapps/apps/build/packages` 里面，复制出来
 
 ```sh
 export RTT_CC="gcc"
-export RTT_EXEC_PATH="/opt/aarch64-linux-musleabi/bin/"
+export RTT_EXEC_PATH="./toolchain/bin/"
 export RTT_CC_PREFIX="aarch64-linux-musleabi-"
 export PATH="$RTT_EXEC_PATH:$PATH"
 ```
