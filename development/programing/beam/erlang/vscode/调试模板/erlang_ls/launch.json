@@ -4,7 +4,7 @@
     // 具体参数见 https://github.com/erlang-ls/vscode/blob/main/package.json
     // 按 F5, 会先启动一个 erlang 的 shell, 然后输入模块方法，触发断点
     {
-      "name": "debug",
+      "name": "erl_ls_debug",
       "type": "erlang",
       "request": "launch",
       "use_long_names": true,

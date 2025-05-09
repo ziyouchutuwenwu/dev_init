@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Erlang EDB",
+      "type": "erlang-edb",
+      "request": "launch",
+      "launchCommand": {
+        "cwd": "",
+        "command": "rebar3",
+        "arguments": ["shell", "--name", "erl-dbg@127.0.0.1", "--setcookie", "123456"]
+      },
+      "targetNode": {
+        "name": "erl-dbg@127.0.0.1"
+      }
+    }
+  ]
+}
