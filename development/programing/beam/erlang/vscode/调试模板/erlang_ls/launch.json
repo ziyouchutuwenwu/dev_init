@@ -2,18 +2,18 @@
   "version": "0.2.0",
   "configurations": [
     // 具体参数见 https://github.com/erlang-ls/vscode/blob/main/package.json
-    // 按 F5, 会先启动一个 erlang 的 shell, 然后输入模块方法，触发断点
     {
-      "name": "erl_ls_debug",
+      "name": "debug",
       "type": "erlang",
       "request": "launch",
-      "use_long_names": true,
+      // dap 通过以下配置连接远程节点
       "projectnode": "erl-dbg@127.0.0.1",
       "cookie": "123456",
+      "use_long_names": true,
       "timeout": 300,
       "cwd": "${workspaceRoot}",
-      // 和手动执行一致，其实就是附加到远程节点
-      "runinterminal": ["rebar3", "shell", "--name", "erl-dbg@127.0.0.1", "--setcookie", "123456"]
+      // 自动启动 shell，代替手工操作
+      "runinterminal": ["rebar3", "as", "dev", "shell", "--name", "erl-dbg@127.0.0.1", "--setcookie", "123456"]
     }
   ]
 }
