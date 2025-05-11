@@ -358,6 +358,8 @@ def fix_translation_bug(user):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/translations/* ~/.local/share/applications/" % (current_dir)
     proc.run_as_user(user, cmd)
+    cmd = "update-desktop-database ~/.local/share/applications"
+    proc.run_as_user(user, cmd)
 
 
 if __name__ == "__main__":

@@ -155,3 +155,4 @@ su $USER -c 'sh $CURRENT_DIR/zsh/user/config.sh'
 # 处理桌面图标的问题
 su $USER -c 'mkdir -p ~/.local/share/applications/'
 su $USER -c 'cp -rf $CURRENT_DIR/translations/* ~/.local/share/applications/'
+su $USER -c 'update-desktop-database ~/.local/share/applications'
