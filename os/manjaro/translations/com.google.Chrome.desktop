@@ -1,11 +1,13 @@
 [Desktop Entry]
-# This is the same as google-chrome.desktop except NoDisplay=true prevents
+# This is the same as google-chrome.desktop except NoDisplay=true
+Hidden=true prevents
 # duplicate menu entries. This is required to match the application ID
 # used by XDG desktop portal, which has stricter naming requirements.
 # The old desktop file is kept to preserve default browser settings.
 NoDisplay=true
+Hidden=true
 Version=1.0
-Name=chrome
+Name=Google Chrome
 # Only KDE 4 seems to use GenericName, so we reuse the KDE strings.
 # From Ubuntu's language-pack-kde-XX-base packages, version 9.04-20090413.
 GenericName=Web Browser
