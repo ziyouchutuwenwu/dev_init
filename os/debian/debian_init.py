@@ -174,11 +174,11 @@ def install_power_management_tool():
     os.system("apt install -y tlp")
 
 
-def set_peripheral_permission():
+def set_dev_rules():
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/peripheral_permission/* /etc/udev/rules.d/" % (current_dir)
+    cmd = "cp -rf %s/dev_rules/* /etc/udev/rules.d/" % (current_dir)
     os.system(cmd)
-    cmd = "sh %s/peripheral_permission/reload_rules.sh" % (current_dir)
+    cmd = "sh %s/dev_rules/reload_rules.sh" % (current_dir)
     os.system(cmd)
 
 
@@ -415,7 +415,7 @@ if __name__ == "__main__":
     install_clang_llvm_lldb()
     install_serial_tools()
     install_printer_essential()
-    set_peripheral_permission()
+    set_dev_rules()
     install_embedded_tools()
     install_key_tool()
     install_image_viewer()

@@ -42,11 +42,11 @@ def init_profile(user):
     proc.run_as_user(user, "touch ~/.profile")
 
 
-def set_peripheral_permission():
+def set_dev_rules():
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/peripheral_permission/* /etc/udev/rules.d/" % (current_dir)
+    cmd = "cp -rf %s/dev_rules/* /etc/udev/rules.d/" % (current_dir)
     os.system(cmd)
-    cmd = "sh %s/peripheral_permission/reload_rules.sh" % (current_dir)
+    cmd = "sh %s/dev_rules/reload_rules.sh" % (current_dir)
     os.system(cmd)
 
 
@@ -466,7 +466,7 @@ if __name__ == "__main__":
     install_ghostty(login_user)
     do_vim_config(login_user)
     install_chinese_input(login_user)
-    set_peripheral_permission()
+    set_dev_rules()
 
     install_serial_tools()
     install_android_tools()
