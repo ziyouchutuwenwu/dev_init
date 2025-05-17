@@ -27,8 +27,9 @@ sh $CURRENT_DIR/root_no_gui_init.sh
 # 显卡
 pkg install -y drm-kmod
 sysrc -f /etc/rc.conf kld_list="i915kms"
-# intel 集成显卡
-pkg install -y xf86-video-intel
+
+# 自带 modesetting 驱动，更加现代
+# 这个用来硬解码
 pkg install -y libva-intel-driver
 pw groupmod video -m $USER
 
