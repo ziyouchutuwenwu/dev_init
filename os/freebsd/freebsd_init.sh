@@ -38,9 +38,9 @@ pkg install -y nvidia-driver nvidia-settings nvidia-xconfig
 sysrc -f /etc/rc.conf kld_list="nvidia nvidia-modeset"
 sysrc -f /etc/rc.conf linux_enable="YES"
 
-# xfce
-pkg install -y xorg
+# lightdm 在登录的时候，会有一个很诡异的用户，非常丑，所以换掉
 pkg install -y slim
+pkg install -y xorg
 pkg install -y xfce
 pkg install -y xfce4-session
 
