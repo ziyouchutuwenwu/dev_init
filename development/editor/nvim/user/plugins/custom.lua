@@ -1,8 +1,3 @@
-vim.cmd([[
-  cmap <Down> <C-n>
-  cmap <Up> <C-p>
-]])
-
 return {
   {
     "nvimtools/none-ls.nvim",
