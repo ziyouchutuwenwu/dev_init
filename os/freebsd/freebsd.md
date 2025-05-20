@@ -11,8 +11,8 @@ pkg, ports, freebsd-update 都支持 `HTTP_PROXY` 和 `HTTPS_PROXY`
 直接配置
 
 ```sh
-export HTTP_PROXY=http://10.0.2.1:8118
-export HTTPS_PROXY=http://10.0.2.1:8118
+export HTTP_PROXY=http://127.0.0.1:8118
+export HTTPS_PROXY=http://127.0.0.1:8118
 ```
 
 ### 脚本结束

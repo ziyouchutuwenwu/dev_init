@@ -55,9 +55,9 @@ ln -s /usr/bin/python3 /usr/bin/python
 
 ```sh
 [http]
-  proxy = socks5://10.0.2.1:1080
+  proxy = socks5://127.0.0.1:1080
 [https]
-  proxy = socks5://10.0.2.1:1080
+  proxy = socks5://127.0.0.1:1080
 ```
 
 配置非 root 用户的 curl 代理
@@ -67,7 +67,7 @@ ln -s /usr/bin/python3 /usr/bin/python
 ```
 
 ```sh
-proxy=socks5://10.0.2.1:1080
+proxy=socks5://127.0.0.1:1080
 ```
 
 ### 脚本运行后

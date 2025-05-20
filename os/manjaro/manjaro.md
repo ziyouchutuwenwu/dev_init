@@ -24,7 +24,7 @@ input("暂停的信息")
 
 ### 脚本运行前
 
-manjaro_init.py 运行前, 配置非 root 用户的 git 代理, 不要用 `HTTP_PROXY` 和 `HTTPS_PROXY`
+manjaro_init.py 运行前, 普通用户配 git 代理, 不要用环境变量
 
 ```sh
 ~/.gitconfig
@@ -32,12 +32,12 @@ manjaro_init.py 运行前, 配置非 root 用户的 git 代理, 不要用 `HTTP_
 
 ```sh
 [http]
-  proxy = socks5://10.0.2.1:1080
+  proxy = socks5://127.0.0.1:1080
 [https]
-  proxy = socks5://10.0.2.1:1080
+  proxy = socks5://127.0.0.1:1080
 ```
 
-yay_init.py 运行前, 取消 git 代理, `~/.profile` 内启用 pon
+yay_init.py 运行前, 取消 git 代理, 用环境变量做代理
 
 ### 脚本运行后
 
@@ -53,8 +53,6 @@ yay_init.py 运行前, 取消 git 代理, `~/.profile` 内启用 pon
         1 和 4 不选
         菜单宽度 360
         菜单高度 640
-
-lightdm 主题设置为 Matcha-light-azul
 ```
 
 桌面右下角设置

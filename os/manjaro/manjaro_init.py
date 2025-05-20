@@ -366,8 +366,11 @@ def fix_translation_bug(user):
     proc.run_as_user(user, cmd)
 
 
-def set_ntp_time():
+def set_ntp():
     os.system("timedatectl set-ntp true")
+
+
+def set_timezone():
     os.system("timedatectl set-timezone Asia/Shanghai")
 
 
@@ -427,8 +430,8 @@ if __name__ == "__main__":
 
     init_profile(login_user)
     disable_file_history(login_user)
-    set_ntp_time()
-
+    set_ntp()
+    set_timezone()
     do_upgrade()
 
     remove_useless_applications()

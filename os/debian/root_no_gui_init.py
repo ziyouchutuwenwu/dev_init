@@ -151,7 +151,11 @@ def install_useful_tools():
         os.system(cmd)
 
 
-def set_shang_hai_timezone():
+def set_ntp():
+    os.system("timedatectl set-ntp true")
+
+
+def set_timezone():
     os.system("timedatectl set-timezone Asia/Shanghai")
 
 
@@ -257,6 +261,8 @@ if __name__ == "__main__":
 
     remove_useless_applications()
 
+    set_ntp()
+    set_timezone()
     do_apt_update()
     add_apt_https_support()
 
@@ -275,7 +281,6 @@ if __name__ == "__main__":
     install_useful_tools()
     install_search_tools()
     install_zip_essential()
-    set_shang_hai_timezone()
     install_wifi_driver()
     install_ntfs_support()
     install_ssh_server()
