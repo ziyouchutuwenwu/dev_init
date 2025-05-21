@@ -18,8 +18,17 @@ def disable_root_history():
     os.system("bash -cl 'history -c'")
 
 
-def do_upgrade():
+def set_mirror():
     os.system("pacman-mirrors --geoip")
+
+
+def update_keyring():
+    os.system("yes | pacman --noconfirm -S archlinux-keyring manjaro-keyring")
+    os.system("yes | pacman-key --populate")
+    os.system("yes | pacman --noconfirm -S ca-certificates")
+
+
+def do_upgrade():
     os.system("yes | pacman --noconfirm -Syyu")
 
 
@@ -432,6 +441,8 @@ if __name__ == "__main__":
     disable_file_history(login_user)
     set_ntp()
     set_timezone()
+    set_mirror()
+    update_keyring()
     do_upgrade()
 
     remove_useless_applications()

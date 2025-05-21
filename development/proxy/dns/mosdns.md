@@ -87,9 +87,10 @@ plugins:
 
 ```sh
 sudo mosdns service install -d /usr/local/etc/mosdns -c mosdns.yaml
-sudo mosdns service uninstall
 sudo mosdns service start
 sudo systemctl status mosdns
+
+sudo mosdns service uninstall
 ```
 
 ### 验证
