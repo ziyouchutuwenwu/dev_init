@@ -54,13 +54,6 @@ def install_themes(user):
     proc.run_as_user(user, cmd)
 
 
-def install_net_tools(user):
-    sudo_ask_pass_info = "export SUDO_ASKPASS=/tmp/pass.sh"
-    install_cmd = "yes | yay --noconfirm -S --sudoflags -A besttrace"
-    cmd = "%s; %s" % (sudo_ask_pass_info, install_cmd)
-    proc.run_as_user(user, cmd)
-
-
 def install_pdf_viewer(user):
     sudo_ask_pass_info = "export SUDO_ASKPASS=/tmp/pass.sh"
     install_cmd = "yes | yay --noconfirm -S --sudoflags -A qpdfview"
@@ -131,7 +124,6 @@ if __name__ == "__main__":
     install_rinetd(login_user)
     install_themes(login_user)
     install_vscode(login_user)
-    install_net_tools(login_user)
     install_modbus_tool(login_user)
     install_browser(login_user)
     install_pdf_viewer(login_user)
