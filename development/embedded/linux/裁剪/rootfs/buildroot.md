@@ -17,13 +17,13 @@ https://buildroot.org/downloads/buildroot-2025.02.3.tar.gz
 默认配置
 
 ```sh
-make defconfig
+make O=output defconfig
 ```
 
 ### menuconfig
 
 ```sh
-make menuconfig
+make O=output menuconfig
 ```
 
 ````sh
@@ -47,6 +47,8 @@ Target options  --->
 ```sh
 Toolchain type --->
   (Buildroot toolchain)
+  GCC compiler Version --->
+    (gcc 12.x)
 
 # tty 名字必须和 qemu 的 append 里面的 console 参数一致
 System configuration
@@ -66,7 +68,7 @@ Filesystem images  --->
 ### 清理
 
 ```sh
-make mrproper
+make O=output mrproper
 ```
 
 ### 编译
@@ -74,7 +76,7 @@ make mrproper
 编译的时候，它会自己下载很多源码，可以使用代理访问
 
 ```sh
-make -j$(nproc)
+make O=output -j$(nproc)
 ```
 
 ## 测试
