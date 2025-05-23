@@ -1,19 +1,18 @@
 # buildroot
 
+## 说明
+
+可以把 uboot, 内核，rootfs 一起都编译, 这里用它来编译 rootfs
+
 ## 步骤
 
 ### 源码下载
 
 ```sh
-https://buildroot.org/downloads/buildroot-2022.11.tar.xz
+https://buildroot.org/downloads/buildroot-2025.02.3.tar.gz
 ```
 
-### 预定义参数
-
-```sh
-export CROSS_COMPILE=arm-linux-gnueabi-
-export ARCH=arm
-```
+### 默认配置
 
 生成默认配置
 
@@ -27,47 +26,33 @@ make O=./output defconfig
 make O=./output menuconfig
 ```
 
-配置 target
-
-```sh
-Target options  --->
-   Target Architecture (ARM (big endian))
-   Target Architecture Variant (cortex-A9)
-   Target ABI (EABI)
-   Floating point strategy (NEON/VFPv4)
-   ARM instruction set (ARM)
-   Target Binary Format (ELF)
-```
-
-libc 和内核版本
-
+````sh
+# libc 和内核版本
 ```sh
 Toolchain  --->
-  C library (musl)
-  Kernel Headers (Linux 5.10.x kernel headers)
-```
+  Toolchain type --->
+    (X) External toolchain
+  Toolchain (Custom toolchain)
+  Toolchain origin (Pre-installed toolchain)
+  Toolchain path
+    /usr/
+  Toolchain prefix
+    arm-linux-gnueabi
 
-设置系统信息，比如 banner, 密码等等
-
-tty 名字必须和 qemu 的 append 里面的 console 参数一致
-
-```sh
+# tty 名字必须和 qemu 的 append 里面的 console 参数一致
 System configuration
   /dev management--->
     (X) Dynamic using devtmpfs + mdev
   [*] Run a getty (login prompt) after boot  --->
     (ttyAMA0) TTY port
-```
 
-开启 ext2 的支持，大小设置 64M, 默认的 60M 会无法加载
-
-```sh
+# 开启 ext2 的支持，大小设置 64M, 默认的 60M 会无法加载
 Filesystem images  --->
   [*] ext2/3/4 root filesystem
     ext2/3/4 variant (ext2 (rev1))
     (rootfs) filesystem label (NEW)
     (64M) exact size
-```
+````
 
 ### 清理
 
@@ -77,16 +62,10 @@ make O=./output mrproper
 
 ### 编译
 
-编译的时候，它会自己下载很多源码，可以使用 proxychains 代理访问
+编译的时候，它会自己下载很多源码，可以使用代理访问
 
 ```sh
-make O=./output -j12
-```
-
-或者编译所有
-
-```sh
-make O=./output all -j12
+make O=./output -j$(nproc)
 ```
 
 ## 测试
@@ -95,9 +74,9 @@ make O=./output all -j12
 qemu-system-arm \
   -M vexpress-a9 \
   -m 512M \
-  -kernel ~/downloads/linux-5.10.191/out_vexpress/arch/arm/boot/zImage \
-  -dtb ~/downloads/linux-5.10.191/out_vexpress/arch/arm/boot/dts/vexpress-v2p-ca9.dtb \
+  -kernel ~/downloads/linux-5.10.191/output/arch/arm/boot/zImage \
+  -dtb ~/downloads/linux-5.10.191/output/arch/arm/boot/dts/vexpress-v2p-ca9.dtb \
   -nographic \
   -append "root=/dev/mmcblk0 rw console=ttyAMA0" \
-  -sd ~/downloads/buildroot-2023.02.2/output/images/rootfs.ext2
+  -sd ~/downloads/buildroot-2025.02.3/output/images/rootfs.ext2
 ```

@@ -95,8 +95,8 @@ sudo qemu-ifdown qemu_br0
 sudo qemu-system-arm \
   -M vexpress-a9 \
   -m 512M \
-  -kernel ~/downloads/linux-5.10.191/out_vexpress/arch/arm/boot/zImage \
-  -dtb ~/downloads/linux-5.10.191/out_vexpress/arch/arm/boot/dts/vexpress-v2p-ca9.dtb \
+  -kernel ~/downloads/linux-5.10.191/output/arch/arm/boot/zImage \
+  -dtb ~/downloads/linux-5.10.191/output/arch/arm/boot/dts/vexpress-v2p-ca9.dtb \
   -nographic \
   -append "root=/dev/mmcblk0 rw console=ttyAMA0" \
   -sd ~/downloads/buildroot-2023.02.2/output/images/rootfs.ext2 \

@@ -12,16 +12,9 @@ https://ftp.denx.de/pub/u-boot/u-boot-2023.04.tar.bz2
 
 ### 编译
 
-预定义参数
-
 ```sh
-export CROSS_COMPILE=arm-linux-gnueabi-
-export ARCH=arm
-```
-
-```sh
-make O=./out_vexpress vexpress_ca9x4_defconfig
-make O=./out_vexpress -j12
+make vexpress_ca9x4_defconfig
+make -j$(nproc)
 ```
 
 ### 测试
@@ -30,6 +23,6 @@ make O=./out_vexpress -j12
 qemu-system-arm \
   -M vexpress-a9 \
   -m 512M \
-  -kernel ~/downloads/u-boot-2023.04/u-boot \
+  -kernel ~/downloads/u-boot-2023.04/output/u-boot \
   -nographic
 ```

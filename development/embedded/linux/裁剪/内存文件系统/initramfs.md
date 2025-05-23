@@ -28,7 +28,7 @@ export ARCH=arm
 修改 linux 内核配置
 
 ```sh
-make O=./out_vexpress menuconfig
+make menuconfig
 ```
 
 ```sh
@@ -38,13 +38,13 @@ General setup --->
 ```
 
 ```sh
-make O=./out_vexpress -j12
+make -j$(nproc)
 ```
 
 生成的文件系统压缩文件在这里
 
 ```sh
-out_vexpress/usr/initramfs_data.cpio
+output/usr/initramfs_data.cpio
 ```
 
 ## 测试
@@ -53,8 +53,8 @@ out_vexpress/usr/initramfs_data.cpio
 qemu-system-arm \
  -M vexpress-a9 \
  -m 512M \
- -kernel ~/downloads/linux-5.10.191/out_vexpress/arch/arm/boot/zImage \
- -dtb ~/downloads/linux-5.10.191/out_vexpress/arch/arm/boot/dts/vexpress-v2p-ca9.dtb \
+ -kernel ~/downloads/linux-5.10.191/output/arch/arm/boot/zImage \
+ -dtb ~/downloads/linux-5.10.191/output/arch/arm/boot/dts/vexpress-v2p-ca9.dtb \
  -nographic \
  -append "noinitrd console=ttyAMA0,115200 root=/dev/ram0 rw"
 ```
@@ -65,8 +65,8 @@ qemu-system-arm \
 qemu-system-arm \
  -M vexpress-a9 \
  -m 512M \
- -kernel ~/downloads/linux-5.10.191/out_vexpress/arch/arm/boot/zImage \
- -dtb ~/downloads/linux-5.10.191/out_vexpress/arch/arm/boot/dts/vexpress-v2p-ca9.dtb \
+ -kernel ~/downloads/linux-5.10.191/output/arch/arm/boot/zImage \
+ -dtb ~/downloads/linux-5.10.191/output/arch/arm/boot/dts/vexpress-v2p-ca9.dtb \
  -nographic \
- -initrd ~/downloads/linux-5.10.191/out_vexpress/usr/initramfs_data.cpio
+ -initrd ~/downloads/linux-5.10.191/output/usr/initramfs_data.cpio
 ```

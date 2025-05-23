@@ -36,7 +36,7 @@ export ARCH=arm
 menuconfig
 
 ```sh
-make O=./out_vexpress menuconfig
+make menuconfig
 ```
 
 参数
@@ -67,8 +67,8 @@ File systems  --->
 ```sh
 qemu-system-arm \
   -M vexpress-a9 \
-  -kernel ~/downloads/linux-5.10.191/out_vexpress/arch/arm/boot/zImage \
-  -dtb ~/downloads/linux-5.10.191/out_vexpress/arch/arm/boot/dts/vexpress-v2p-ca9.dtb \
+  -kernel ~/downloads/linux-5.10.191/output/arch/arm/boot/zImage \
+  -dtb ~/downloads/linux-5.10.191/output/arch/arm/boot/dts/vexpress-v2p-ca9.dtb \
   -nographic \
   -initrd ~/downloads/buildroot-2023.02.2/output/images/ramdisk.img.gz \
   -append "root=/dev/ram0 rw console=ttyAMA0"

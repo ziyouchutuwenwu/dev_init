@@ -1,5 +1,9 @@
 # busybox
 
+## 说明
+
+编译成功以后，貌似需要做很多其它的工作
+
 ## 步骤
 
 ### 源码
@@ -10,15 +14,9 @@ https://busybox.net/downloads/busybox-1.36.1.tar.bz2
 
 ### menuconfig
 
-预定义参数
-
 ```sh
-export CROSS_COMPILE=arm-linux-gnueabi-
-export ARCH=arm
-```
-
-```sh
-make O=./out_vexpress menuconfig
+mkdir output
+make menuconfig
 ```
 
 配置静态编译
@@ -31,8 +29,7 @@ Settings  --->
 ### 编译
 
 ```sh
-make O=./out_vexpress -j12
-make O=./out_vexpress CONFIG_PREFIX=./../rootfs/ install
+make -j$(nproc) CONFIG_PREFIX=$(pwd)/../rootfs/ install
 ```
 
 ### 生成 ext4 磁盘镜像
@@ -43,7 +40,7 @@ mkdir  dev  etc  lib  usr  var  proc  tmp  home  root  mnt  sys
 ```
 
 ```sh
-cp -rf ~/downloads/busybox-1.36.1/examples/bootfloppy/etc/* ./etc
+cp -rf busybox-1.36.1/examples/bootfloppy/etc/* ./etc
 ```
 
 修改 etc/profile
@@ -106,8 +103,8 @@ append 后面的 root 不能缺
 qemu-system-arm \
   -M vexpress-a9 \
   -m 512M \
-  -kernel ~/downloads/linux-5.10.191/out_vexpress/arch/arm/boot/zImage \
-  -dtb ~/downloads/linux-5.10.191/out_vexpress/arch/arm/boot/dts/vexpress-v2p-ca9.dtb \
+  -kernel ~/downloads/linux-5.10.191/output/arch/arm/boot/zImage \
+  -dtb ~/downloads/linux-5.10.191/output/arch/arm/boot/dts/vexpress-v2p-ca9.dtb \
   -nographic \
   -append "root=/dev/mmcblk0 rw console=ttyAMA0" \
   -sd ~/downloads/rootfs.ext4
