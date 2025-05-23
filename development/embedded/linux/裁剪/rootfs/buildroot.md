@@ -2,7 +2,7 @@
 
 ## 说明
 
-可以把 uboot, 内核，rootfs 一起都编译, 这里用它来编译 rootfs
+这里用来编译 rootfs
 
 ## 步骤
 
@@ -14,30 +14,39 @@ https://buildroot.org/downloads/buildroot-2025.02.3.tar.gz
 
 ### 默认配置
 
-生成默认配置
+默认配置
 
 ```sh
-make O=./output defconfig
+make defconfig
 ```
 
 ### menuconfig
 
 ```sh
-make O=./output menuconfig
+make menuconfig
 ```
 
 ````sh
-# libc 和内核版本
+# target 往外部的 toolchain 上凑
+Target options  --->
+  Target Architecture
+     (ARM (big endian))
+  Target Architecture Variant
+     (cortex-A9)
+  [*] Enable NEON SIMD extension support
+  [*] Enable VFP extension support
+  Target ABI (EABI)
+  Floating point strategy
+     (NEON)
+  ARM instruction set
+     (ARM)
+  Target Binary Format
+     (ELF)
+
+# toolchain 一定要用自带的，不要用外部的，否则编译会失败，target 和外部的保持一致即可
 ```sh
-Toolchain  --->
-  Toolchain type --->
-    (X) External toolchain
-  Toolchain (Custom toolchain)
-  Toolchain origin (Pre-installed toolchain)
-  Toolchain path
-    /usr/
-  Toolchain prefix
-    arm-linux-gnueabi
+Toolchain type --->
+  (Buildroot toolchain)
 
 # tty 名字必须和 qemu 的 append 里面的 console 参数一致
 System configuration
@@ -57,7 +66,7 @@ Filesystem images  --->
 ### 清理
 
 ```sh
-make O=./output mrproper
+make mrproper
 ```
 
 ### 编译
@@ -65,7 +74,7 @@ make O=./output mrproper
 编译的时候，它会自己下载很多源码，可以使用代理访问
 
 ```sh
-make O=./output -j$(nproc)
+make -j$(nproc)
 ```
 
 ## 测试
