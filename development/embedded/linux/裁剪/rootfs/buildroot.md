@@ -9,7 +9,7 @@
 ### 源码下载
 
 ```sh
-https://buildroot.org/downloads/buildroot-2025.02.3.tar.gz
+https://buildroot.org/downloads/buildroot-2022.11.tar.xz
 ```
 
 ### 默认配置
@@ -65,12 +65,6 @@ Filesystem images  --->
     (64M) exact size
 ````
 
-### 清理
-
-```sh
-make O=output mrproper
-```
-
 ### 编译
 
 编译的时候，它会自己下载很多源码，可以使用代理访问
@@ -89,5 +83,5 @@ qemu-system-arm \
   -dtb ~/downloads/linux-5.10.191/output/arch/arm/boot/dts/vexpress-v2p-ca9.dtb \
   -nographic \
   -append "root=/dev/mmcblk0 rw console=ttyAMA0" \
-  -sd ~/downloads/buildroot-2025.02.3/output/images/rootfs.ext2
+  -sd ~/downloads/buildroot-2022.11/output/images/rootfs.ext2
 ```

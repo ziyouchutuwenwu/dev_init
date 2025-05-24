@@ -1,6 +1,6 @@
-# chrome 翻墙
+# chrome
 
-一句话
+## 用法
 
 ```sh
 google-chrome --proxy-server=socks5://127.0.0.1:1080
