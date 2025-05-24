@@ -8,22 +8,13 @@
 
 ## 用法
 
-只要 mgraftcp 就可以
-
-mgraftcp 放在
-
 ```sh
-/usr/local/bin/
+# --http_proxy 模式似乎有 bug
+alias proxy='mgraftcp --socks5="127.0.0.1:1080"'
 ```
 
-conf 放在
+测试
 
 ```sh
-/usr/local/etc/
-```
-
-运行例子
-
-```sh
-mgraftcp curl ipinfo.io/ip
+proxy curl https://ipinfo.io/ip
 ```
