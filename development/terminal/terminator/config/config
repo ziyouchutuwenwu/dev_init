@@ -3,7 +3,8 @@
 [keybindings]
 [profiles]
   [[default]]
-    scrollbar_position = hidden    
+    # 如果很长，需要用鼠标拖
+    # scrollbar_position = hidden
     scrollback_infinite = True
     use_system_font = False
     font = Monaco 11
