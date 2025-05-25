@@ -8,7 +8,7 @@ cp -rf $CURRENT_DIR/zshrc ~/.zshrc
 chmod -w ~/.zshrc
 
 echo "yes | yay --noconfirm -Syyu; yes | yay --noconfirm -Scc" > ~/.zsh_history
-echo "zinit self-update; zinit delete --clean -y; zinit update" >> ~/.zsh_history
+echo "zinit self-update && (zinit update && zinit delete --clean -y)" >> ~/.zsh_history
 chmod -w ~/.zsh_history
 
 rm -rf ~/.bashrc

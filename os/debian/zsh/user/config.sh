@@ -8,7 +8,7 @@ cp -rf $CURRENT_DIR/zshrc ~/.zshrc
 chmod -w ~/.zshrc
 
 echo "sudo apt update; sudo apt-file update; sudo apt upgrade -y; sudo apt full-upgrade -y; sudo apt autopurge -y; sudo apt autoclean" > ~/.zsh_history
-echo "zinit self-update; zinit delete --clean -y; zinit update" >> ~/.zsh_history
+echo "zinit self-update && (zinit update && zinit delete --clean -y)" >> ~/.zsh_history
 chmod -w ~/.zsh_history
 
 rm -rf ~/.bashrc
