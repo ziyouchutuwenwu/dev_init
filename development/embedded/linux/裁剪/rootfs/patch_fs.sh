@@ -95,7 +95,12 @@ EOF
 
 cat > etc/inittab << EOF
 ::sysinit:/etc/init.d/rcS
-${TTY_NAME}::respawn:/sbin/getty -L ${TTY_NAME} 115200 vt100
+
+#${TTY_NAME}::respawn:/sbin/getty -L ${TTY_NAME} 115200 vt100
+
+# 免密
+${TTY_NAME}::respawn:/bin/sh </dev/${TTY_NAME} >/dev/${TTY_NAME} 2>&1
+
 ::restart:/sbin/init
 ::ctrlaltdel:/sbin/reboot
 ::shutdown:/bin/umount -a -r
@@ -132,18 +137,13 @@ chmod 600 etc/shadow
 mkdir -p etc/init.d
 cat > etc/init.d/rcS << EOF
 #!/bin/sh
-echo "正在执行 /etc/init.d/rcS..."
-echo "确保挂载点目录存在..."
 mkdir -p /tmp
 mkdir -p /dev/pts
 mkdir -p /dev/shm
-echo "正在从 /etc/fstab 挂载文件系统..."
 /bin/mount -a
 if [ -f /etc/hostname ]; then
-    echo "正在设置主机名..."
     /bin/hostname -F /etc/hostname
 fi
-echo "系统初始化完成。欢迎！"
 EOF
 chmod +x etc/init.d/rcS
 
