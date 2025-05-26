@@ -8,11 +8,7 @@
 
 ### 准备工作
 
-```sh
-# tftp 10.0.2.1
-# get xxx
-docker run --rm -d -it --name=tftpd --net=host -v ~/projects/docker/tftp:/srv/tftp hkarhani/tftpd
-```
+启动 tftp 服务
 
 ### 编译内核
 

@@ -8,18 +8,7 @@
 
 ### 准备工作
 
-这里用的 nfs 的版本是 3,可以通过以下命令看到
-
-```sh
-docker logs -f nfs-server
-```
-
-```sh
-# mount -t nfs -o nolock 10.0.2.1:/mnt/nfs ./nfs
-docker run --rm -d --name nfs-server -v ~/projects/docker/nfs/:/mnt/nfs -e NFS_EXPORT_DIR_1=/mnt/nfs -e NFS_EXPORT_DOMAIN_1=\* -e NFS_EXPORT_OPTIONS_1=rw,insecure,no_subtree_check,no_root_squash,fsid=1 --net=host --privileged=true fuzzle/docker-nfs-server:latest
-```
-
-把 `rootfs` 文件夹放到 `~/projects/docker/nfs/` 下
+启动 nfs 服务，把 `rootfs` 文件夹放到 nfs 的根目录下
 
 ### 内核
 

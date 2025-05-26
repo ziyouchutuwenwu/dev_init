@@ -1,5 +1,9 @@
 # nfs
 
+## 准备工作
+
+配置好网络, tftp, nfs 等服务
+
 ## 配置
 
 ### 内核配置
@@ -40,11 +44,11 @@ Filesystem images  --->
   [*] tar the root filesystem
 ```
 
-uboot 配置
+uboot 配置环境变量，最好用绝对路径，否则可能会找不到
 
 ```sh
 Bootloaders  --->
-  (boot.env) Text file with default environment
+  (/xxx/xxx/boot.env) Text file with default environment
 ```
 
 ### 编译
@@ -53,37 +57,28 @@ Bootloaders  --->
 make O=output -j$(nproc)
 ```
 
+编译结束以后，`output/build/uboot-xxxx` 下的 uboot, 是 elf 格式，qemu 可以支持，复制到 `output/images/` 下
+
 ### 测试
 
 ```sh
 sudo qemu-system-arm \
   -M vexpress-a9 \
   -m 512M \
-  -kernel ~/downloads/u-boot-2023.04/output/u-boot \
+  -kernel ~/downloads/buildroot-2025.02.3/output/images/u-boot \
   -nographic \
   -netdev bridge,id=net0,br=virbr0 \
   -net nic,netdev=net0
 ```
 
-```sh
-sudo qemu-system-arm \
-  -M vexpress-a9 \
-  -m 512M \
-  -kernel /home/mmc/downloads/buildroot-2025.02.3/output/images/u-boot \
-  -nographic \
-  -netdev bridge,id=net0,br=virbr0 \
-  -net nic,netdev=net0 \
-  -no-reboot
-```
+手动
 
 ```sh
 setenv ipaddr 10.0.2.222
 setenv serverip 10.0.2.1
-setenv bootargs 'root=/dev/nfs rw nfsvers=3 nfsroot=10.0.2.1:/mnt/nfs/rootfs init=/linuxrc console=ttyAMA0 ip=10.0.2.222'
+setenv bootargs 'root=/dev/nfs rw nfsvers=4 nfsroot=10.0.2.170:/mnt/nfs/rootfs,nfsvers=3 init=/linuxrc console=ttyAMA0 ip=10.0.2.222'
 setenv bootcmd 'tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb; bootm 0x60003000 - 0x60500000'
 saveenv
 
-tftp 0x60003000 uImage
-tftp 0x60500000 vexpress-v2p-ca9.dtb
-bootm 0x60003000 - 0x60500000
+run bootcmd
 ```
