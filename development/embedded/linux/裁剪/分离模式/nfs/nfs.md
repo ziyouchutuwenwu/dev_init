@@ -39,8 +39,6 @@ File systems  --->
 
 #### 编译
 
-使用 uImage, 支持 uboot 从网络加载
-
 编译结束后，uImage 复制到 tftp 根目录
 
 ```sh
@@ -49,22 +47,15 @@ make LOADADDR=0x60003000 uImage -j$(nproc)
 
 ### uboot
 
-#### 修改宏
+#### 环境变量
 
-vexpress_common.h
+uboot.env
 
-注意 nfs 的版本号
-
-```h
-#ifdef CONFIG_BOOTCOMMAND
-#undef CONFIG_BOOTCOMMAND
-#endif
-#define CONFIG_BOOTCOMMAND \
-  "setenv ipaddr 10.0.2.222; \
-    setenv serverip 10.0.2.1; \
-    tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb;  \
-    setenv bootargs 'root=/dev/nfs rw nfsvers=4 nfsroot=10.0.2.1:/mnt/nfs/rootfs,nfsvers=3 init=/linuxrc console=ttyAMA0 ip=10.0.2.222';  \
-    bootm 0x60003000 - 0x60500000;"
+```sh
+ipaddr=10.0.2.222
+serverip=10.0.2.1
+bootargs=root=/dev/nfs rw nfsvers=4 nfsroot=10.0.2.1:/mnt/nfs/rootfs,nfsvers=3 init=/linuxrc console=ttyAMA0 ip=10.0.2.222
+bootcmd=tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb; bootm 0x60003000 - 0x60500000
 ```
 
 #### make

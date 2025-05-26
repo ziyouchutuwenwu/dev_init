@@ -19,6 +19,10 @@ make -j$(nproc)
 
 ### 测试
 
+qemu 加载 uboot 需要用 elf 的格式
+
+bin 格式的没有入口点，适合烧录到板子上
+
 ```sh
 qemu-system-arm \
   -M vexpress-a9 \

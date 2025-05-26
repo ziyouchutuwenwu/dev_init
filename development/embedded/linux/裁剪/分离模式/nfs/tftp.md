@@ -26,7 +26,7 @@ make LOADADDR=0x60003000 uImage -j$(nproc)
 
 ### uboot
 
-#### 启动
+#### 手动测试
 
 进入 uboot 后中断
 
@@ -40,7 +40,7 @@ sudo qemu-system-arm \
   -net nic,netdev=net0
 ```
 
-#### 设置参数
+手动设置变量
 
 ```sh
 # qemu 虚拟机 ip
@@ -59,20 +59,25 @@ tftp 0x60500000 vexpress-v2p-ca9.dtb
 bootm 0x60003000 - 0x60500000
 ```
 
-#### 定义宏
+#### 配置
 
-vexpress_common.h
+```sh
+make menuconfig
+```
 
-```h
-#ifdef CONFIG_BOOTCOMMAND
-#undef CONFIG_BOOTCOMMAND
-#endif
-#define CONFIG_BOOTCOMMAND \
-  "setenv ipaddr 10.0.2.222; \
-    setenv serverip 10.0.2.1; \
-    tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb;  \
-    setenv bootargs 'root=/dev/mmcblk0 rw init=/linuxrc ip=10.0.2.222 console=ttyAMA0';  \
-    bootm 0x60003000 - 0x60500000;"
+```sh
+Environment  --->
+  [*] Create default environment from file
+  (uboot.env)  Path to default environment file (NEW)
+```
+
+uboot.env
+
+```sh
+ipaddr=10.0.2.222
+serverip=10.0.2.1
+bootargs=root=/dev/mmcblk0 rw init=/linuxrc ip=10.0.2.222 console=ttyAMA0
+bootcmd=tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb; bootm 0x60003000 - 0x60500000
 ```
 
 #### 编译
