@@ -30,3 +30,23 @@ qemu-system-arm \
   -kernel ~/downloads/u-boot-2023.04/output/u-boot \
   -nographic
 ```
+
+### 调试
+
+查看变量
+
+```sh
+printenv xxx
+```
+
+手动执行，比如你定义了 bootcmd
+
+```sh
+run bootcmd
+```
+
+重启
+
+```sh
+reset
+```

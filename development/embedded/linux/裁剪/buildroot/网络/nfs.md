@@ -47,7 +47,7 @@ make O=output menuconfig
 Kernel  --->
   [*] Linux Kernel
     Kernel binary format (uImage)
-    (0x60003000) load address (for 3.7+ multi-platform image)
+    (0x60010000) load address (for 3.7+ multi-platform image)
 ```
 
 打包 rootfs
@@ -66,7 +66,7 @@ Bootloaders  --->
 
 uboot.env
 
-根据实际情况修改
+内存地址一定要注意，否则可能会无法启动
 
 ```sh
 ipaddr=10.0.2.222
@@ -74,7 +74,7 @@ serverip=10.0.2.1
 # 最后的 ip 不能缺
 bootargs=root=/dev/nfs rw nfsroot=10.0.2.1:/mnt/nfs/rootfs,nfsvers=3 init=/linuxrc console=ttyAMA0 ip=10.0.2.222
 # bootm 中间的 - 不能缺
-bootcmd=tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb; bootm 0x60003000 - 0x60500000
+bootcmd=tftp 0x60010000 uImage; tftp 0x61000000 vexpress-v2p-ca9.dtb; bootm 0x60010000 - 0x61000000
 ```
 
 ### 编译
@@ -101,7 +101,7 @@ sudo qemu-system-arm \
 setenv ipaddr 10.0.2.222
 setenv serverip 10.0.2.1
 setenv bootargs 'root=/dev/nfs rw nfsroot=10.0.2.1:/mnt/nfs/rootfs,nfsvers=3 init=/linuxrc console=ttyAMA0 ip=10.0.2.222'
-setenv bootcmd 'tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb; bootm 0x60003000 - 0x60500000'
+setenv bootcmd 'tftp 0x60010000 uImage; tftp 0x61000000 vexpress-v2p-ca9.dtb; bootm 0x60010000 - 0x61000000'
 saveenv
 
 run bootcmd

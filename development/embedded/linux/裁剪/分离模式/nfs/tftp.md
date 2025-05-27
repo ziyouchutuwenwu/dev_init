@@ -93,17 +93,3 @@ sudo qemu-system-arm \
   -netdev bridge,id=net0,br=virbr0 \
   -net nic,netdev=net0
 ```
-
-#### 调试
-
-查看变量
-
-```sh
-print xxx
-```
-
-手动执行
-
-```sh
-run bootcmd
-```
