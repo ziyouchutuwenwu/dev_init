@@ -43,7 +43,9 @@ uboot.env
 ```sh
 ipaddr=10.0.2.222
 serverip=10.0.2.1
-bootargs=root=/dev/nfs rw nfsvers=4 nfsroot=10.0.2.1:/mnt/nfs/rootfs,nfsvers=3 init=/linuxrc console=ttyAMA0 ip=10.0.2.222
+# 最后的 ip 不能缺
+bootargs=root=/dev/nfs rw nfsroot=10.0.2.1:/mnt/nfs/rootfs,nfsvers=3 init=/linuxrc console=ttyAMA0 ip=10.0.2.222
+# bootm 中间的 - 不能缺
 bootcmd=tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb; bootm 0x60003000 - 0x60500000
 ```
 
@@ -63,4 +65,16 @@ sudo qemu-system-arm \
   -nographic \
   -netdev bridge,id=net0,br=virbr0 \
   -net nic,netdev=net0
+```
+
+手动
+
+```sh
+setenv ipaddr 10.0.2.222
+setenv serverip 10.0.2.1
+setenv bootargs 'root=/dev/nfs rw nfsroot=10.0.2.1:/mnt/nfs/rootfs,nfsvers=3 init=/linuxrc console=ttyAMA0 ip=10.0.2.222'
+setenv bootcmd 'tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb; bootm 0x60003000 - 0x60500000'
+saveenv
+
+run bootcmd
 ```

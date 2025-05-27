@@ -24,6 +24,8 @@ make O=output menuconfig
 Bootloaders  --->
   [*] U-Boot
   (vexpress_ca9x4) Board defconfig
+  U-Boot binary format  --->
+    [*] u-boot
 ```
 
 ### 编译
