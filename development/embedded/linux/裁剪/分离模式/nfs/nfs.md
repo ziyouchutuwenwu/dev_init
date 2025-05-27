@@ -67,12 +67,12 @@ sudo qemu-system-arm \
   -net nic,netdev=net0
 ```
 
-手动
+手动，支持变量展开，需要用双引号，单引号不支持
 
 ```sh
 setenv ipaddr 10.0.2.222
 setenv serverip 10.0.2.1
-setenv bootargs 'root=/dev/nfs rw nfsroot=10.0.2.1:/mnt/nfs/rootfs,nfsvers=3 init=/linuxrc console=ttyAMA0 ip=10.0.2.222'
+setenv bootargs "root=/dev/nfs rw nfsroot=${serverip}:/mnt/nfs/rootfs,nfsvers=3 init=/linuxrc console=ttyAMA0 ip=${ipaddr}"
 setenv bootcmd 'tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb; bootm 0x60003000 - 0x60500000'
 saveenv
 

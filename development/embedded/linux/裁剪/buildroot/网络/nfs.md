@@ -24,7 +24,7 @@ File systems  --->
 
 ### uboot
 
-启用 nfs
+核心已经支持, 就算不选中, nfs 也可以加载
 
 ```sh
 make O=output uboot-menuconfig
@@ -61,7 +61,7 @@ uboot 配置环境变量
 
 ```sh
 Bootloaders  --->
-  (boot.env) Text file with default environment
+  (uboot.env) Text file with default environment
 ```
 
 uboot.env
@@ -70,9 +70,10 @@ uboot.env
 
 ```sh
 ipaddr=10.0.2.222
+# ttfp 服务器 ip
 serverip=10.0.2.1
 # 最后的 ip 不能缺
-bootargs=root=/dev/nfs rw nfsroot=10.0.2.1:/mnt/nfs/rootfs,nfsvers=3 init=/linuxrc console=ttyAMA0 ip=10.0.2.222
+root=/dev/nfs rw nfsroot=10.0.2.1:/mnt/nfs/rootfs,nfsvers=3 init=/linuxrc console=ttyAMA0 ip=10.0.2.222
 # bootm 中间的 - 不能缺
 bootcmd=tftp 0x60010000 uImage; tftp 0x61000000 vexpress-v2p-ca9.dtb; bootm 0x60010000 - 0x61000000
 ```
@@ -95,12 +96,12 @@ sudo qemu-system-arm \
   -net nic,netdev=net0
 ```
 
-手动
+手动，支持变量展开，需要用双引号，单引号不支持
 
 ```sh
 setenv ipaddr 10.0.2.222
 setenv serverip 10.0.2.1
-setenv bootargs 'root=/dev/nfs rw nfsroot=10.0.2.1:/mnt/nfs/rootfs,nfsvers=3 init=/linuxrc console=ttyAMA0 ip=10.0.2.222'
+setenv bootargs "root=/dev/nfs rw nfsroot=${serverip}:/mnt/nfs/rootfs,nfsvers=3 init=/linuxrc console=ttyAMA0 ip=${ipaddr}"
 setenv bootcmd 'tftp 0x60010000 uImage; tftp 0x61000000 vexpress-v2p-ca9.dtb; bootm 0x60010000 - 0x61000000'
 saveenv
 
