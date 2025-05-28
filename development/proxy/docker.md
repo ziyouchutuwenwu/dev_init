@@ -13,9 +13,9 @@ sudo nvim /etc/systemd/system/docker.service.d/proxy.conf
 
 ```sh
 [Service]
-Environment="HTTP_PROXY=http://127.0.0.1:8118"
-Environment="HTTPS_PROXY=http://127.0.0.1:8118"
-Environment="NO_PROXY=localhost,127.0.0.1, 10.0.2."
+Environment="HTTP_PROXY=http://10.0.2.1:8118"
+Environment="HTTPS_PROXY=http://10.0.2.1:8118"
+Environment="NO_PROXY=localhost,127.0.0.1,10.0"
 ```
 
 重启
@@ -44,9 +44,9 @@ nvim ~/.docker/config.json
 {
   "proxies": {
     "default": {
-      "httpProxy": "socks5://192.168.88.96:1080",
-      "httpsProxy": "socks5://192.168.88.96:1080",
-      "noProxy": "localhost,127.0.0.1"
+      "httpProxy": "socks5://10.0.2.1:1080",
+      "httpsProxy": "socks5://10.0.2.1:1080",
+      "noProxy": "localhost,127.0.0.1,10.0"
     }
   }
 }
@@ -63,8 +63,8 @@ curl --head xxx.com
 
 ```sh
 docker build . \
-    --build-arg "HTTP_PROXY=socks5://192.168.88.96:1080" \
-    --build-arg "HTTPS_PROXY=socks5://192.168.88.96:1080" \
-    --build-arg "NO_PROXY=localhost,127.0.0.1" \
+    --build-arg "HTTP_PROXY=socks5://10.0.2.1:1080" \
+    --build-arg "HTTPS_PROXY=socks5://10.0.2.1:1080" \
+    --build-arg "NO_PROXY=localhost,127.0.0.1,10.0" \
     -t your/image:tag
 ```
