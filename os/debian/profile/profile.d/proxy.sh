@@ -1,4 +1,4 @@
-alias pon="export HTTP_PROXY=http://127.0.0.1:8118 HTTPS_PROXY=http://127.0.0.1:8118 ALL_PROXY=socks5://127.0.0.1:1080"
-alias poff="unset HTTP_PROXY HTTPS_PROXY ALL_PROXY"
+alias pon="export HTTP_PROXY=http://127.0.0.1:8118 HTTPS_PROXY=http://127.0.0.1:8118 ALL_PROXY=socks5://127.0.0.1:1080 NO_PROXY=localhost,127.0.0.1,10.0.2.1"
+alias poff="unset HTTP_PROXY HTTPS_PROXY ALL_PROXY NO_PROXY"
 
 #alias proxy='mgraftcp --socks5="127.0.0.1:1080"'
