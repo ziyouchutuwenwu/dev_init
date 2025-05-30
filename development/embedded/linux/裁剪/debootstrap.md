@@ -14,6 +14,12 @@ debian
 sudo apt install qemu-user-static debootstrap binfmt-support
 ```
 
+manjaro
+
+```sh
+sudo apt install qemu-user-static debootstrap qemu-user-static-binfmt
+```
+
 ### 下载
 
 在 deb_fs 目录下创建
