@@ -17,7 +17,7 @@ sudo apt install qemu-user-static debootstrap binfmt-support
 manjaro
 
 ```sh
-sudo apt install qemu-user-static debootstrap qemu-user-static-binfmt
+sudo pacman -S qemu-user-static debootstrap qemu-user-static-binfmt
 ```
 
 ### 下载
@@ -37,12 +37,22 @@ sudo chroot deb_fs
 /debootstrap/debootstrap --second-stage
 ```
 
-```sh
-vi /etc/profile.d/sys_env.sh
-```
+/etc/profile.d/sys_env.sh
 
 ```sh
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+```
+
+/etc/fstab
+
+```sh
+devpts  /dev/pts  devpts  defaults  0 0
+```
+
+~/.bashrc
+
+```sh
+[[ -f /etc/profile ]] && source /etc/profile
 ```
 
 ### 安装必备工具
