@@ -24,6 +24,17 @@ source oe-init-build-env
 source oe-init-build-env build_aarch64
 ```
 
+## 配置说明
+
+build/conf/local.conf
+
+```sh
+GIT_CLONE_DEPTH = "1"
+
+# 构建完成后会自动删除中间文件，保留 sstate 缓存、下载的源码包
+INHERIT += "rm_work"
+```
+
 ## 命令说明
 
 | 命令                    | 说明                     |
@@ -43,7 +54,44 @@ source oe-init-build-env build_aarch64
 
 ```sh
 bitbake xxx
+```
 
-# 清理
-bitbake -c cleanall xxx
+## 清理
+
+```sh
+bitbake xxx -c clean
+```
+
+| 命令        | 删除                                                  | 保留                |
+| ----------- | ----------------------------------------------------- | ------------------- |
+| clean       | 构建产物                                              | sstate 缓存和源码包 |
+| cleansstate | 构建产物和 sstate 缓存，清理 recipe 的缓存            | 源码包              |
+| cleanall    | 构建产物，sstate 缓存，清理 recipe 及其所有依赖的缓存 | 源码包              |
+
+## 遇到错误
+
+忽略遇到的错误，继续进行
+
+```sh
+bitbake xxx --continue
+```
+
+## 下载太慢
+
+手动下载
+
+```sh
+git clone --branch v6.12/standard/base https://git.yoctoproject.org/linux-yocto.git git.yoctoproject.org.linux-yocto.git --depth=1
+
+# 手动挪到 build/downloads/git2/ 下
+# 创建 done 文件
+touch git.yoctoproject.org.linux-yocto.git.done
+```
+
+## 运行
+
+bitbake 结束以后，运行虚拟机
+
+```sh
+runqemu qemux86-64
 ```
