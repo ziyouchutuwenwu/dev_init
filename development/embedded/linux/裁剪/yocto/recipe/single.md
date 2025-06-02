@@ -1,28 +1,17 @@
-# recipe
-
-## 调试准备
-
-如果需要看临时文件
-
-local.conf
-
-```sh
-# 注释掉
-# INHERIT += "rm_work"
-```
+# single
 
 ## 例子
 
 ### 目录结构
 
-`recipes-aaa` 是从 `meta-skeleton/recipes-skeleton/hello-single` 里面抄过来的
+`recipes-demo` 是从 `meta-skeleton/recipes-skeleton/hello-single` 里面抄过来的
 
 ```sh
 $ tree
 .
 ├── conf
 │   └── layer.conf
-├── recipes-aaa
+├── recipes-demo
 │   └── aaa
 │       ├── aaa_1.0.bb
 │       └── files
