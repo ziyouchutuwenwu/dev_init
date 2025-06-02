@@ -33,7 +33,9 @@ sudo debootstrap --arch armel --foreign --no-check-gpg bookworm deb_fs https://m
 
 ```sh
 sudo cp /usr/bin/qemu-arm-static ./deb_fs/usr/bin/
-sudo chroot deb_fs
+
+# sudo chroot ./deb_fs
+sudo systemd-nspawn -D ./deb_fs
 /debootstrap/debootstrap --second-stage
 ```
 
@@ -41,12 +43,6 @@ sudo chroot deb_fs
 
 ```sh
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-```
-
-/etc/fstab
-
-```sh
-devpts  /dev/pts  devpts  defaults  0 0
 ```
 
 ~/.bashrc
