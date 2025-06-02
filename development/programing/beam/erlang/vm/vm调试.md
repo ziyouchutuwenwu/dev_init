@@ -5,7 +5,7 @@
 ### 构建
 
 ```sh
-./configure; make TYPE=debug; make
+./configure; make TYPE=debug -j$(nproc)
 ```
 
 ### 调试
