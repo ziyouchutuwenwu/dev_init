@@ -8,6 +8,10 @@
 ldd --version
 ```
 
+```sh
+strings /lib/libc.so.6 | grep "release version"
+```
+
 ### 查看实际 glibc 路径
 
 ```sh
