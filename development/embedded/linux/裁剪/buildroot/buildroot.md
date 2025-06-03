@@ -26,6 +26,15 @@ Bootloaders  --->
   (vexpress_ca9x4) Board defconfig
   U-Boot binary format  --->
     [*] u-boot
+
+# erlang 运行同样的指令集的 release 包的时候需要
+System configuration  --->
+  Init system (systemd)
+
+Target packages  --->
+  Libraries  --->
+    Text and terminal handling  --->
+      [*] ncurses
 ```
 
 ### 编译

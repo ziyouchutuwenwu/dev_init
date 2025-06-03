@@ -26,7 +26,7 @@ sudo pacman -S qemu-user-static debootstrap qemu-user-static-binfmt
 
 ```sh
 # 用 https 的源
-sudo debootstrap --arch armel --foreign --no-check-gpg bookworm deb_fs https://mirrors.ustc.edu.cn/debian
+sudo debootstrap --arch armhf --foreign --no-check-gpg bookworm deb_fs https://mirrors.ustc.edu.cn/debian
 ```
 
 ### 基础配置
@@ -63,13 +63,17 @@ apt install -y iputils-ping net-tools neovim
 ### 制作镜像
 
 ```sh
-dd if=/dev/zero of=deb_rootfs.img bs=1M count=512
-sudo mkfs.ext2 deb_rootfs.img
-mkdir deb_rootfs
-sudo mount -o loop deb_rootfs.img deb_rootfs
-sudo cp -rf deb_fs/* deb_rootfs/
-sudo umount deb_rootfs
-rm -rf deb_rootfs
+# dd if=/dev/zero of=rootfs.ext4 bs=1M count=512
+dd if=/dev/zero of=rootfs.ext4 bs=1G count=1
+sudo mkfs.ext4 rootfs.ext4
+
+mkdir mnt_fs
+sudo mount -o loop rootfs.ext4 mnt_fs
+
+sudo cp -rf ./deb_fs/* ./mnt_fs/
+
+sudo umount mnt_fs
+rm -rf mnt_fs
 ```
 
 ### qemu
@@ -82,5 +86,5 @@ qemu-system-arm \
   -dtb ~/downloads/linux-5.10.191/output/arch/arm/boot/dts/vexpress-v2p-ca9.dtb \
   -nographic \
   -append "root=/dev/mmcblk0 rw console=ttyAMA0" \
-  -sd ~/downloads/deb_rootfs.img
+  -sd ~/downloads/rootfs.ext4
 ```
