@@ -55,7 +55,7 @@ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 ```sh
 source /etc/profile
-apt install -y iputils-ping net-tools neovim
+apt install -y iputils-ping net-tools neovim file
 ```
 
 ## 测试

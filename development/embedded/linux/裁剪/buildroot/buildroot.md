@@ -27,14 +27,15 @@ Bootloaders  --->
   U-Boot binary format  --->
     [*] u-boot
 
-# erlang 运行同样的指令集的 release 包的时候需要
-System configuration  --->
-  Init system (systemd)
-
 Target packages  --->
-  Libraries  --->
-    Text and terminal handling  --->
-      [*] ncurses
+  # sh 对标准的支持太差
+  Shell and utilities  --->
+    [*] bash
+
+  # 这个要选中，不然看不到 vim
+  [*]   Show packages that are also provided by busybox
+  Text editors and viewers  --->
+    [*] vim
 ```
 
 ### 编译
