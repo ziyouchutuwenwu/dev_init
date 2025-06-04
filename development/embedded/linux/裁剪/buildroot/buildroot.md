@@ -28,14 +28,17 @@ Bootloaders  --->
     [*] u-boot
 
 Target packages  --->
-  # sh 对标准的支持太差
-  Shell and utilities  --->
-    [*] bash
-
-  # 这个要选中，不然看不到 vim
+  # 这个要选中，不然 vim 和 bash 都看不到
   [*]   Show packages that are also provided by busybox
-  Text editors and viewers  --->
-    [*] vim
+    Development tools  --->
+    # gnu sed，自带的不标准，elixir 会报错
+    [*] sed
+
+    # sh 对标准的支持太差
+    Shell and utilities  --->
+      [*] bash
+    Text editors and viewers  --->
+      [*] vim
 ```
 
 ### 编译

@@ -2,13 +2,15 @@
 
 ## 说明
 
-buildroot 原生不支持
+用 buildroot 测试，理论上支持任何的 linux
 
-目前用 debtootstrap 生成 release, 加上获取动态库来实现
+用 debtootstrap 生成 release, 加上获取动态库来实现
 
 ## 注意
 
-指令集要一致，glibc 版本要注意
+指令集要一致，armhf 和 armel 不一样
+
+glibc 版本要注意
 
 ## 配置
 
