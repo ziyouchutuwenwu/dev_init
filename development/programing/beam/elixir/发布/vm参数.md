@@ -1,24 +1,12 @@
 # vm 参数
 
-## 用法
+## 参考
 
-生成模板
-
-```sh
-mix release.init
-```
-
-打包
-
-```sh
-mix release
-```
-
-## vm 参数
-
-vm.args.eex
+vm.args.eex 内配置
 
 [参数说明](https://www.erlang.org/doc/man/erl.html)
+
+## 参数
 
 默认已经启用多核支持
 

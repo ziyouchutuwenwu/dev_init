@@ -12,7 +12,7 @@ mix new demo1
 mix new demo2
 ```
 
-### 修改 mix.exs
+### mix.exs
 
 根目录下的 mix.exs
 
@@ -37,4 +37,4 @@ end
 
 ### 其它
 
-参考 [普通项目发布](./%E6%99%AE%E9%80%9A%E9%A1%B9%E7%9B%AE%E5%8F%91%E5%B8%83.md)
+参考普通项目发布
