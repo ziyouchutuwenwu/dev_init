@@ -57,10 +57,10 @@ System.get_env("HEART_BEAT_TIMEOUT")
 
 ### 杀掉
 
-杀掉 beam 的进程以后，会重启
+不可以用 pkill, 因为 heart 也是 erl 体系内的
 
 ```sh
-ps aux | grep beam
+ps aux | grep erl
 kill -9 xxx
 ```
 

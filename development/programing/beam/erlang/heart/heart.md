@@ -111,11 +111,11 @@ heart:get_cmd().
 :init.stop()
 ```
 
-### 强行杀死
+### 杀掉
 
-在某些时候，无法进入 shell, 可以参考下面的强行 kill
+不可以用 pkill, 因为 heart 也是 erl 体系内的
 
 ```sh
 ps aux | grep erl
-ps aux | grep beam
+kill -9 xxx
 ```
