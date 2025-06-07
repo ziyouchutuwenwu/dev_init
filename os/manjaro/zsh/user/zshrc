@@ -1,4 +1,5 @@
 source ~/.zinit/bin/zinit.zsh
+source ~/.local/etc/profile.d/*.sh
 source ~/.profile
 
 # 插件

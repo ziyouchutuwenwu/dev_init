@@ -31,7 +31,7 @@ $HOME/.local/state/mise/
 
 ```sh
 mise ls
-mise ls-remote
+mise ls-remote node
 
 mise install node@22.0.0
 mise install node@22
