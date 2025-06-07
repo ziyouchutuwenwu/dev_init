@@ -145,7 +145,6 @@ pkg install -y python
 pkg install -y erlang rebar3
 pkg install -y elixir inotify-tools
 
-chsh -s $(which zsh) $USER
 su $USER -c 'sh $CURRENT_DIR/zsh/user/config.sh'
 
 # 处理桌面图标的问题

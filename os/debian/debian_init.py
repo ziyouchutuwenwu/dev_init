@@ -306,12 +306,6 @@ def install_browser():
 
 
 def do_zsh_config(user):
-    os.system("apt install -y zsh")
-    cmd = "chsh -s $(which zsh) %s" % user
-    os.system(cmd)
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "sh %s/zsh/global/config.sh" % (current_dir)
-    os.system(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/zsh/user/config.sh" % (current_dir)
     proc.run_as_user(user, cmd)

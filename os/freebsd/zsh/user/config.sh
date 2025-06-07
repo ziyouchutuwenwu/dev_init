@@ -2,6 +2,8 @@
 
 CURRENT_DIR=$(cd "$(dirname "$0")";pwd)
 
+chsh -s $(which zsh) $USER
+
 git clone --depth 1 https://github.com/zdharma-continuum/zinit.git ~/.zinit/bin
 rm -rf ~/.zshrc
 cp -rf $CURRENT_DIR/zshrc ~/.zshrc

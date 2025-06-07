@@ -49,6 +49,8 @@ def set_fs_watches_config():
 def init_profile(user):
     proc.run_as_user(user, "rm -rf ~/.profile")
     proc.run_as_user(user, "touch ~/.profile")
+    os.system(user, "rm -rf ~/.profile")
+    os.system(user, "touch ~/.profile")
 
 
 def set_dev_rules():
@@ -183,10 +185,10 @@ def englishization_user_dir_name(user):
 
 def do_zsh_config(user):
     os.system("yes | pacman --noconfirm -S zsh")
-    cmd = "chsh -s $(which zsh) %s" % user
-    os.system(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/zsh/global/config.sh" % (current_dir)
+    os.system(cmd)
+    cmd = "sh %s/zsh/root/config.sh" % (current_dir)
     os.system(cmd)
     cmd = "sh %s/zsh/user/config.sh" % (current_dir)
     proc.run_as_user(user, cmd)

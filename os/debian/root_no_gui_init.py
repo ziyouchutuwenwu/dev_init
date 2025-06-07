@@ -60,6 +60,11 @@ def install_aptitude():
     os.system("apt install -y aptitude")
 
 
+def init_profile(user):
+    os.system(user, "rm -rf ~/.profile")
+    os.system(user, "touch ~/.profile")
+
+
 def install_apt_file():
     os.system("apt install -y apt-file")
 
@@ -195,6 +200,15 @@ def set_fs_watches_config():
     os.system(cmd)
 
 
+def do_zsh_config():
+    os.system("apt install -y zsh")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cmd = "sh %s/zsh/global/config.sh" % (current_dir)
+    os.system(cmd)
+    cmd = "sh %s/zsh/root/config.sh" % (current_dir)
+    os.system(cmd)
+
+
 def install_ssh_server():
     os.system("apt install -y openssh-server")
     os.system("sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config")
@@ -254,6 +268,7 @@ if __name__ == "__main__":
     add_usr_sbin_to_path_env()
     disable_sleep()
     disable_root_history()
+    init_profile()
     set_global_profiles()
     set_swapping_config()
     set_fs_watches_config()
@@ -284,4 +299,5 @@ if __name__ == "__main__":
     install_wifi_driver()
     install_ntfs_support()
     install_ssh_server()
+    do_zsh_config()
     install_docker()

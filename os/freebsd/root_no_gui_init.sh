@@ -7,6 +7,9 @@ fi
 
 CURRENT_DIR=$(cd "$(dirname "$0")";pwd)
 
+rm -rf ~/.profile
+touch ~/.profile
+
 # 加速启动
 sysrc -f /boot/loader.conf autoboot_delay="0"
 
@@ -89,8 +92,8 @@ cp -rf $CURRENT_DIR/profile.d/*.sh /usr/local/etc/profile.d/
 # bash 无法自动加载 /etc/profile, bash -l 也不行，必须要手动 source /etc/profile
 # 因此用 zsh
 pkg install -y zsh
-chsh -s $(which zsh) $(whoami)
 sh $CURRENT_DIR/zsh/global/config.sh
+sh $CURRENT_DIR/zsh/root/config.sh
 
 rm -rf ~/.history
 rm -rf ~/.cshrc
