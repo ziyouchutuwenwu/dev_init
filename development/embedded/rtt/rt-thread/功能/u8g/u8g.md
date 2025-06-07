@@ -1,6 +1,8 @@
 # u8g
 
-## menuconfig 配置
+## 配置
+
+### menuconfig
 
 ```sh
 RT-Thread online packages ->
@@ -9,7 +11,9 @@ RT-Thread online packages ->
       Version (c-latest)
 ```
 
-- 字体选用 `u8g2_font_wqy12_t_gb2312` 可以完整显示中文
+字体选用 `u8g2_font_wqy12_t_gb2312` 可以完整显示中文
+
+### 代码
 
 ```c
 u8g2_SetFont(&u8g2, u8g2_font_wqy12_t_gb2312);

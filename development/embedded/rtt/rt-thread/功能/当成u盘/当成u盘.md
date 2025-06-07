@@ -1,8 +1,12 @@
-# 单片机作为 u 盘
+# 当成 u 盘
 
-## 打开 usb device
+## 说明
 
-步骤
+单片机作为 u 盘
+
+## 步骤
+
+### 打开 usb
 
 ```sh
 打开 cubeMX，配置 USB_OTG, 使用 host_device 模式，nvic interrupt table 配置 usb on the go fs global interrupt, 生成代码，复制到项目
@@ -31,6 +35,8 @@ RT-Thread Components --->
       (自己改名字) msc class disk name
 ```
 
-## 参考 sdio 的配置，即可将 sd 卡插在 stm32 上，在电脑上显示出来
+### 其他配置
+
+参考 sdio 的配置，即可将 sd 卡插在 stm32 上，在电脑上显示出来
 
 sd 卡的文件系统用 fat 和 ntfs 都可以

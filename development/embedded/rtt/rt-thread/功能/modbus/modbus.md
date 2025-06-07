@@ -1,6 +1,6 @@
 # modbus
 
-## menuconfig 配置
+## 配置
 
 ### libmodbus
 

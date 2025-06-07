@@ -1,8 +1,12 @@
-# mqtt 的例子
+# mqtt
+
+## 说明
 
 目前使用的是 kawaii-mqtt
 
-## 服务器
+## 例子
+
+### 服务器
 
 ```sh
 docker run --rm -d --name emqx -p 1883:1883 -p 8083:8083 -p 8883:8883 -p 8084:8084 -p 18083:18083 emqx/emqx:v3.1.1
@@ -27,7 +31,7 @@ admin
 public
 ```
 
-## rt-thread 的配置
+## rtthread
 
 ```sh
 RT-Thread online packages >
@@ -40,11 +44,10 @@ RT-Thread Components >
     [*] Enable BSD socket operated by file system API
 ```
 
-## esp8266 可以连
+## 注意
 
-## LAN8720A 很稳定
+esp8266 可以连
 
-## 目前 w5500 各种连不上
+LAN8720A 很稳定
 
-错误信息如下：
-[E/wiz.socket] WIZnet socket(0) receive data failed(-7).
+目前 w5500 各种连不上

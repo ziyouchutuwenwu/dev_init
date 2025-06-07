@@ -1,10 +1,18 @@
-# 外挂 flash 上使用 lfs
+# lfs
 
-参考的[这里](https://www.rt-thread.org/document/site/application-note/components/dfs/an0027-littlefs/)
+## 说明
 
-## 先按照外挂 flash 的配置配置好
+外挂 flash 上使用 lfs
 
-## menuconfig
+参考的 [这里](https://www.rt-thread.org/document/site/application-note/components/dfs/an0027-littlefs/)
+
+## 配置
+
+### 准备
+
+先按照外挂 flash 的配置配置好
+
+### menuconfig
 
 ```sh
 RT-Thread Components ---> Device virtual file system

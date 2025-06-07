@@ -1,10 +1,14 @@
-# 使用 usb host 读写 u 盘
+# 读写 u 盘
 
-参考[这里](https://www.rt-thread.org/document/site/application-note/driver/usb/an0046-rtthread-driver-usbh/)
+## 说明
 
-## 打开 usb host
+使用 usb host 读写 u 盘
 
-步骤
+参考 [这里](https://www.rt-thread.org/document/site/application-note/driver/usb/an0046-rtthread-driver-usbh/)
+
+## 步骤
+
+### usb host
 
 ```sh
 打开 cubeMX，配置 USB_OTG, 使用 host_only 模式，nvic interrupt table 配置 usb on the go fs global interrupt, 生成代码，复制到项目
@@ -31,7 +35,7 @@ RT-Thread Components --->
       (/)   Udisk mount dir
 ```
 
-## 打开文件系统
+### 文件系统
 
 位置
 
@@ -44,7 +48,7 @@ RT-Thread Components --->
         (4096) Maximum sector size to be handled.
 ```
 
-## 打开 libc
+### libc
 
 ```sh
 RT-Thread Components --->
@@ -52,7 +56,7 @@ RT-Thread Components --->
     [*] Enable libc APIs from toolchain
 ```
 
-## 复制驱动
+### 复制驱动
 
 去 gitee 的 rt thread 的 master 分支里面找到 drv_usbh.c 和 drv_usbh.h， 放到项目的 libraries/HAL_Drivers 里面
 

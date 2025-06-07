@@ -1,6 +1,12 @@
-# 这里介绍 FAL 的用法
+# 片上 flash
 
-## FAL 准备工作
+## 说明
+
+片上 flash 读写，这里介绍 FAL 的用法
+
+## 准备工作
+
+### FAL 准备
 
 board/Kconfig 添加
 
@@ -40,7 +46,7 @@ fal read 0 10
 fal write xxx
 ```
 
-## lfs 准备工作
+### lfs 准备
 
 `scons --menuconfig` 选中
 
@@ -83,7 +89,7 @@ RT-Thread online packages --->
 这个结构体里面的blk_size为扇区大小，建议改成 `2048` 或者 `4096`
 ```
 
-## romfs 准备工作
+### romfs 准备
 
 使用场景：如果需要挂载多个 fs，可以使用 romfs 先创建几个文件夹，然后启动以后把几个 fs 分别挂载到不同的目录
 
@@ -104,4 +110,4 @@ python2 ./rt-thread/tools/mkromfs.py 你的文件目录 ./rt-thread/components/d
 
 已知的问题：**在某些板子上，fal 和 lfs 不兼容，同时启用以后，会导致 fal 的 erase 挂掉，当然 lfs 的格式化也会挂掉**
 
-## elm 貌似格式化会报错，不管了
+elm 貌似格式化会报错，不管了

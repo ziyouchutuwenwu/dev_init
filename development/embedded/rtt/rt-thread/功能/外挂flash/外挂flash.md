@@ -1,12 +1,17 @@
-# 外挂 flash 读写
+# 外挂 flash
 
+## 说明
+
+外挂 flash 读写
 参考[这里](https://www.rt-thread.org/document/site/application-note/components/sfud/an0048-sfud/)
 
-## cubeMX 里面配置 spi 口
+## 配置
+
+### cubeMX
 
 根据原理图，找到相应的 spi 脚，配置引脚
 
-## 修改 Kconfig
+### Kconfig
 
 ```sh
 menuconfig BSP_USING_SPI
@@ -42,7 +47,7 @@ config BSP_USING_QSPI_FLASH
     default n
 ```
 
-## menuconfig
+### menuconfig
 
 ```sh
 Hardware Drivers Config > Onboard Peripheral Drivers
@@ -97,4 +102,4 @@ msh />sf bench yes
 ## 注意
 
 Flash 先擦后写
-  写入之前请先擦除，这是 flash 特性决定的，因为 flash 的编程原理就是只能将 1 写为 0，而不能将 0 写为 1。擦除动作就是相应的页 / 块的所有位变为 1（所有字节均为 0xFF），所以不擦除直接写入会有问题。
+写入之前请先擦除，这是 flash 特性决定的，因为 flash 的编程原理就是只能将 1 写为 0，而不能将 0 写为 1。擦除动作就是相应的页 / 块的所有位变为 1（所有字节均为 0xFF），所以不擦除直接写入会有问题。
