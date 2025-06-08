@@ -2,15 +2,28 @@
 
 ## 说明
 
-uv 可以创建项目，增加依赖，运行，创建项目级虚拟环境
+项目级虚拟环境，推荐
 
-## 步骤
+## 用法
+
+创建
 
 ```sh
 uv init demo
+```
 
-cd demo
-source .venv/bin/activate
+激活 venv, 没有就会自动创建
+
+```sh
+# 一定要 uv xxx
+uv venv
+
+uv pip install requests
 uv add requests
+```
+
+运行
+
+```sh
 uv run main.py
 ```

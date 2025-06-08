@@ -1,8 +1,6 @@
 {
-  // VIRTUAL_ENV 需要在 cli 下打开才有，gui 下打开，没有这个环境变量，所以不放到全局配置里面
-  // "python.defaultInterpreterPath": "${env:VIRTUAL_ENV}/bin/python",
-
-  "python.defaultInterpreterPath": "${env:HOME}/dev/python/dev_env/bin/python",
+  // source venv 环境以后，就会有 VIRTUAL_ENV
+  "python.defaultInterpreterPath": "${env:VIRTUAL_ENV}/bin/python",
 
   // 设置比较大的深度，防止快速修复失败
   "python.analysis.packageIndexDepths": [{ "name": "", "depth": 10 }]
