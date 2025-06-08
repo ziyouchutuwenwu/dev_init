@@ -44,6 +44,9 @@ if __name__ == "__main__":
     cmd = "pip install nuitka --upgrade"
     os.system(cmd)
 
+    cmd = "pip install uv --upgrade"
+    os.system(cmd)
+
     # pip search目前有问题，需要使用下面这个, 命令是 pip_search
     cmd = "pip install pip-search --upgrade"
     os.system(cmd)
