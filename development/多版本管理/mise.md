@@ -30,8 +30,9 @@ $HOME/.local/state/mise/
 ### 基本用法
 
 ```sh
-mise ls
+mise search xxx
 mise ls-remote node
+mise ls
 
 mise install node@22.0.0
 mise install node@22
