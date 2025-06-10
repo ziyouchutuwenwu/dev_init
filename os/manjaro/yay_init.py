@@ -30,7 +30,6 @@ def remove_sudo_passwd_template():
 def init_yay(user):
     os.system("yes | pacman --noconfirm -S yay")
     sudo_ask_pass_info = "export SUDO_ASKPASS=/tmp/pass.sh"
-    # yay --sudoloop --aururl "https://aur.tuna.tsinghua.edu.cn" --save
     install_cmd = "yay --sudoloop --save"
     cmd = "%s; %s" % (sudo_ask_pass_info, install_cmd)
     proc.run_as_user(user, cmd)
@@ -76,13 +75,6 @@ def install_rinetd(user):
     proc.run_as_user(user, cmd)
 
 
-def install_modbus_tool(user):
-    sudo_ask_pass_info = "export SUDO_ASKPASS=/tmp/pass.sh"
-    install_cmd = "yes | yay --noconfirm -S --sudoflags -A mbpoll-git"
-    cmd = "%s; %s" % (sudo_ask_pass_info, install_cmd)
-    proc.run_as_user(user, cmd)
-
-
 def install_virt_manager_extra(user):
     sudo_ask_pass_info = "export SUDO_ASKPASS=/tmp/pass.sh"
     # virt-manager 的 win10 剪贴板驱动
@@ -124,7 +116,6 @@ if __name__ == "__main__":
     install_rinetd(login_user)
     install_themes(login_user)
     install_vscode(login_user)
-    install_modbus_tool(login_user)
     install_browser(login_user)
     install_pdf_viewer(login_user)
     install_wps(login_user)
