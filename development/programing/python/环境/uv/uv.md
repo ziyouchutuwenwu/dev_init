@@ -22,8 +22,9 @@ uv pip install requests
 uv add requests
 ```
 
-运行
+基于当前 venv 运行
 
 ```sh
-uv run main.py
+uv run xxx
+uv run python main.py
 ```
