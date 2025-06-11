@@ -12,12 +12,14 @@
 uv init demo
 ```
 
-激活 venv, 没有就会自动创建
+venv
 
 ```sh
-# 一定要 uv xxx
 uv venv
+uv venv --python 3.12.0
+```
 
+```sh
 uv pip install requests
 uv add requests
 ```
@@ -27,4 +29,11 @@ uv add requests
 ```sh
 uv run xxx
 uv run python main.py
+```
+
+依赖
+
+```sh
+uv sync
+uv pip sync ./requirements.txt
 ```

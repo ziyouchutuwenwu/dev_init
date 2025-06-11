@@ -47,6 +47,10 @@ mise install node@22
 mise uninstall node@22.0.0
 mise uninstall node@22
 
+# 写入到 toml
 mise use node@22
 mise use -g node@22
+
+# 从 toml 里面删除
+mise unuse node@22
 ```
