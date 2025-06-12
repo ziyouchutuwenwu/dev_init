@@ -2,8 +2,10 @@
 # -*- coding: UTF-8 -*-
 
 
-import os
 import sys
+sys.dont_write_bytecode = True
+
+import os
 
 
 pwd = os.path.dirname(os.path.abspath(__file__))

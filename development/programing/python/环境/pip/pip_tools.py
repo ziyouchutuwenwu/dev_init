@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+
+import sys
+sys.dont_write_bytecode = True
+
 import os
 
 if __name__ == "__main__":
