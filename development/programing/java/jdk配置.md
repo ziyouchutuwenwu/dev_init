@@ -16,6 +16,6 @@ sudo update-alternatives --config javac
 ```
 
 ```sh
-export JAVA_HOME=/usr/lib/jvm/jdk1.8.0_231
+export JAVA_HOME=/usr/local/lib/jvm/jdk1.8.0_231
 export PATH=$JAVA_HOME/bin:$PATH
 ```
