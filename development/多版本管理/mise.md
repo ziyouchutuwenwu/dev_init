@@ -4,9 +4,15 @@
 
 多版本管理工具，支持多种后端，自动选择，更好用
 
-## 用法
+## 安装
 
-### 安装
+手动
+
+```sh
+https://github.com/jdx/mise
+```
+
+自动
 
 ```sh
 curl https://mise.run | sh
@@ -34,7 +40,7 @@ $HOME/.local/share/mise/
 $HOME/.local/state/mise/
 ```
 
-### 基本用法
+## 用法
 
 ```sh
 mise search xxx
