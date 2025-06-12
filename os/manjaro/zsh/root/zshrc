@@ -1,2 +1,2 @@
-source ~/.local/etc/profile.d/*.sh
+source ~/.local/etc/profile
 source ~/.profile

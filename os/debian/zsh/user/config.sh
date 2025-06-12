@@ -10,8 +10,8 @@ cp -rf $CURRENT_DIR/zshrc ~/.zshrc
 chmod -w ~/.zshrc
 
 # 用户级环境变量
-mkdir -p ~/.local/etc/profile.d/
-cp -rf $CURRENT_DIR/env/* ~/.local/etc/profile.d/
+mkdir -p ~/.local/
+cp -rf $CURRENT_DIR/etc ~/.local/
 
 echo "sudo apt update; sudo apt-file update; sudo apt upgrade -y; sudo apt full-upgrade -y; sudo apt autopurge -y; sudo apt autoclean" > ~/.zsh_history
 echo "zinit self-update && (zinit update && zinit delete --clean -y)" >> ~/.zsh_history

@@ -9,8 +9,8 @@ cp -rf $CURRENT_DIR/zshrc ~/.zshrc
 chmod -w ~/.zshrc
 
 # 用户级环境变量
-mkdir -p ~/.local/etc/profile.d/
-cp -rf $CURRENT_DIR/env/* ~/.local/etc/profile.d/
+mkdir -p ~/.local/
+cp -rf $CURRENT_DIR/etc ~/.local/
 
 echo "pkg update -fq; pkg upgrade -y; pkg autoremove -y; pkg clean -ay" > ~/.zsh_history
 echo "freebsd-update fetch install" >> ~/.zsh_history
