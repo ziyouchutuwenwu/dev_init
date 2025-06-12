@@ -60,9 +60,9 @@ def install_aptitude():
     os.system("apt install -y aptitude")
 
 
-def init_profile(user):
-    os.system(user, "rm -rf ~/.profile")
-    os.system(user, "touch ~/.profile")
+def init_profile():
+    os.system("rm -rf ~/.profile")
+    os.system("touch ~/.profile")
 
 
 def install_apt_file():

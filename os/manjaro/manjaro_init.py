@@ -49,8 +49,8 @@ def set_fs_watches_config():
 def init_profile(user):
     proc.run_as_user(user, "rm -rf ~/.profile")
     proc.run_as_user(user, "touch ~/.profile")
-    os.system(user, "rm -rf ~/.profile")
-    os.system(user, "touch ~/.profile")
+    os.system("rm -rf ~/.profile")
+    os.system("touch ~/.profile")
 
 
 def set_dev_rules():
