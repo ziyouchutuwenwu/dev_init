@@ -60,3 +60,17 @@ uv pip sync ./requirements.txt
 uv run xxx
 uv run main.py
 ```
+
+### 版本错误
+
+创建 uv 项目的时候，指定的版本和系统 python 版本不一致，uv 会自己下载指定的版本并且缓存
+
+```sh
+uvx python --version
+```
+
+删除缓存目录即可
+
+```sh
+rm -rf $HOME/.local/share/uv/
+```
