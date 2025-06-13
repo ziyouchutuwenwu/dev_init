@@ -2,9 +2,11 @@
 
 ## 说明
 
-[官网地址](https://github.com/astral-sh/uv)
+虚拟环境
 
-项目级虚拟环境
+## 安装
+
+[手动下载](https://github.com/astral-sh/uv)
 
 ## 用法
 
