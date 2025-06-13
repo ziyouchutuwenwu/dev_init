@@ -1,13 +1,10 @@
 # readme
 
-## 说明
-
-启动的时候，会自动下载模型
-
 ## 运行
 
 ```sh
 uv sync
+ln -s ~/.paddlex ./data
 uv run main.py --port=8888
 ```
 
