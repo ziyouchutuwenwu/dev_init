@@ -60,3 +60,9 @@ mise use -g node@22
 # 从 toml 里面删除
 mise unuse node@22
 ```
+
+更新
+
+```sh
+mise self-update
+```
