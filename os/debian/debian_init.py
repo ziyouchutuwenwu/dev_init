@@ -124,10 +124,12 @@ def install_api_viewer():
     os.system("apt install -y zeal")
 
 
-def install_serial_tools():
+def install_serial_tools(user):
     os.system("apt install -y picocom lrzsz")
     os.system("apt install -y tio")
     os.system("apt install -y gtkterm cutecom")
+    cmd = "usermod -a -G dialout %s" % user
+    os.system(cmd)
 
 
 def install_net_capture_tools(user):
@@ -409,9 +411,9 @@ if __name__ == "__main__":
     install_remote_gui_client()
     install_audio_manager()
     install_clang_llvm_lldb()
-    install_serial_tools()
-    install_printer_essential()
     set_dev_rules()
+    install_serial_tools(login_user)
+    install_printer_essential()
     install_embedded_tools()
     install_key_tool()
     install_image_viewer()

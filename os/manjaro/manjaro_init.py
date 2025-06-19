@@ -159,8 +159,10 @@ def install_sync_tool():
     os.system("yes | pacman --noconfirm -S grsync rsync")
 
 
-def install_serial_tools():
+def install_serial_tools(user):
     os.system("yes | pacman --noconfirm -S picocom lrzsz")
+    cmd = "usermod -a -G uucp %s" % user
+    os.system(cmd)
 
 
 def install_chinese_input(user):
@@ -484,9 +486,9 @@ if __name__ == "__main__":
     install_ghostty(login_user)
     do_vim_config(login_user)
     install_chinese_input(login_user)
-    set_dev_rules()
 
-    install_serial_tools()
+    set_dev_rules()
+    install_serial_tools(login_user)
     install_android_tools()
     install_search_tools()
     install_encoding_tools()
