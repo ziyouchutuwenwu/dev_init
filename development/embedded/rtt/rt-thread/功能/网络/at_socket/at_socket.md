@@ -1,12 +1,16 @@
-# at socket 配置
+# at socket
+
+## 说明
 
 参考[链接](https://www.rt-thread.org/document/site/application-note/components/at/an0014-at-client/#at-socket)
 
-## 先启用 uart2
+## 配置
 
-## 开启 at device 软件包的支持
+先启用 uart2
 
-位置
+### 软件包
+
+开启 at device 的支持
 
 ```sh
 RT-Thread online packages >
@@ -22,9 +26,7 @@ RT-Thread online packages >
 配置使用 laster 版本软件包；
 ```
 
-## 开启驱动部分的支持
-
-位置
+### 驱动部分
 
 ```sh
 RT-Thread Components
@@ -36,16 +38,24 @@ RT-Thread Components
     Enable AT commands
       -*-   Enable AT commands client
       -*-     Enable BSD Socket API support by AT commnads
-      // 这里是选择显示at命令日志
+      # 这里是选择显示at命令日志
       [ ]     Enable print RAW format AT command communication data
      (128)   The maximum lenght of AT Commonds buffer
 ```
 
-## 调试
+### 调试
 
-可以输入`at client uart2`进行 at 命令调试
+使用 cutecom 连接，回车模式选择 CR/LF
 
-## 注意
+```sh
+AT+CWMODE=1
+AT+CWJAP="ssid","password"
+AT+CIFSR
+
+AT+RST
+```
+
+### 注意
 
 - 模块串口和开发板的串口反接
 - 注意供电, wifi 芯片功耗很大，vcc 要接 5v，如果提示 `wait AT client(uart2) connect timeout(5000 tick)`，可能是 vcc 供电不足，可以`换一个 5v 的供电口解决`
@@ -58,15 +68,3 @@ RT-Thread Components
 ```
 
 如果还有解决不了的问题，看[这里](https://www.rt-thread.org/qa/forum.php?mod=viewthread&tid=11919&extra=page%3D1%26filter%3Dtypeid%26typeid%3D5)
-
-## esp8266 的 at 调试
-
-使用 cutecom 连接，测试 wifi 指令，回车模式选择 CR/LF
-
-```sh
-AT+CWMODE=1
-AT+CWJAP="ssid","password"
-AT+CIFSR
-
-AT+RST
-```
