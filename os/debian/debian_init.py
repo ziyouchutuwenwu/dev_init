@@ -127,7 +127,6 @@ def install_api_viewer():
 def install_serial_tools(user):
     os.system("apt install -y picocom lrzsz")
     os.system("apt install -y tio")
-    os.system("apt install -y gtkterm cutecom")
     cmd = "usermod -a -G dialout %s" % user
     os.system(cmd)
 
