@@ -30,6 +30,7 @@ uv venv --python 3.10
 增加依赖
 
 ```sh
+# 这个 pip 是 uv 模拟的
 uv pip install requests
 
 # 这个会更新 pyproject.toml，推荐
