@@ -2,7 +2,7 @@
 
 ## 说明
 
-建议用 clang64 的 shell, 不要用默认的，$PATH 不一样
+建议用 mingw64 的 shell, 编译出来的依赖库最少
 
 ## 配置
 
@@ -16,16 +16,15 @@ sed -i "s#mirror.msys2.org/#mirrors.ustc.edu.cn/msys2/#g" /etc/pacman.d/mirrorli
 
 ```sh
 pacman -Syyu --noconfirm
-pacman -S --noconfirm base-devel curl axel git
+pacman -S --noconfirm base-devel vim curl axel git
 ```
 
-clang 版
+mingw
 
 ```sh
-pacman -S mingw-w64-clang-x86_64-neovim
-pacman -S mingw-w64-clang-x86_64-python-uv
-pacman -S mingw-w64-clang-x86_64-fd
-pacman -S mingw-w64-clang-x86_64-ag
+pacman -S mingw-w64-x86_64-python-uv
+pacman -S mingw-w64-x86_64-fd
+pacman -S mingw-w64-x86_64-ag
 ```
 
 ### profile
