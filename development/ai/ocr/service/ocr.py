@@ -16,4 +16,4 @@ class OCRService:
         # 将二进制图片转为 numpy.ndarray
         img_array = np.frombuffer(img_bin, np.uint8)
         img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
-        return self.engine.ocr(img)
+        return self.engine.predict(img)
