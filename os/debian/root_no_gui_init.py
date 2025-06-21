@@ -92,7 +92,7 @@ def install_ansible_essential():
 
 
 def install_netcat():
-    os.system("apt install -y ncat")
+    os.system("apt install -y nmap ncat")
     os.system("update-alternatives --set nc /usr/bin/ncat")
 
 
@@ -100,7 +100,6 @@ def install_net_tools():
     tool_list = [
         "cifs-utils"
         "sshfs",
-        "nmap",
         "uml-utilities",
         "bridge-utils",
         "net-tools",

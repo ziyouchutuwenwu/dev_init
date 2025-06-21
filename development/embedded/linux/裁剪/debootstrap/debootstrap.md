@@ -6,7 +6,7 @@
 
 ## 步骤
 
-### 安装工具
+### 准备工作
 
 debian
 
@@ -20,9 +20,7 @@ manjaro
 sudo pacman -S qemu-user-static debootstrap qemu-user-static-binfmt
 ```
 
-### 下载
-
-在 deb_fs 目录下创建
+### 创建虚拟机
 
 ```sh
 # 用 https 的源
@@ -39,10 +37,38 @@ sudo systemd-nspawn -D ./deb_fs
 /debootstrap/debootstrap --second-stage
 ```
 
-/etc/profile.d/sys_env.sh
+```sh
+apt install -y neovim
+```
+
+### profile
+
+/etc/profile.d/path.sh
 
 ```sh
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+```
+
+/etc/profile.d/ls.sh
+
+```sh
+alias ll='ls -la --color=auto' 2>/dev/null
+alias l.='ls --color=auto -d .*' 2>/dev/null
+alias ls='ls --color=auto' 2>/dev/null
+```
+
+/etc/profile.d/proxy.sh
+
+```sh
+alias pon="export HTTP_PROXY=http://127.0.0.1:8118 HTTPS_PROXY=http://127.0.0.1:8118 ALL_PROXY=socks5://127.0.0.1:1080 NO_PROXY=localhost,127.0.0.1,10.0.2.1"
+alias poff="unset HTTP_PROXY HTTPS_PROXY ALL_PROXY NO_PROXY"
+```
+
+/etc/profile.d/python.sh
+
+```sh
+export PYTHONPYCACHEPREFIX=/dev/null
+export UV_INDEX="https://mirrors.aliyun.com/pypi/simple"
 ```
 
 ~/.bashrc
@@ -51,11 +77,11 @@ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 [[ -f /etc/profile ]] && source /etc/profile
 ```
 
-### 安装必备工具
+### 必备工具
 
 ```sh
 source /etc/profile
-apt install -y iputils-ping net-tools neovim file
+apt install -y iputils-ping net-tools ncat file
 ```
 
 ## 测试

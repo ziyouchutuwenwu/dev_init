@@ -81,9 +81,11 @@ pkg install -y duf
 pkg install -y socat
 pkg install -y htop
 pkg install -y expect
-pkg install -y nmap
 pkg install -y rinetd
 pkg install -y binaryen
+
+# 自动安装 nmap 的 ncat
+pkg install -y nmap
 
 # 启动加载
 mkdir -p /usr/local/etc/profile.d/
