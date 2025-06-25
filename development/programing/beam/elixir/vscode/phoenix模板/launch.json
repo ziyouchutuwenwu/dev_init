@@ -1,0 +1,70 @@
+{
+  "configurations": [
+    {
+      "type": "mix_task",
+      "request": "launch",
+      "name": "debug",
+      "task": "phx.server",
+      "taskArgs": ["-e", "Demo.demo()"],
+      "exitAfterTaskReturns": false,
+      "env": {
+        "ELIXIR_ERL_OPTIONS": "-sname iex-dbg@localhost -cookie 123456"
+      },
+      "projectDir": "${workspaceRoot}",
+      // 一般情况下，这里是包装 nif 的那个模块
+      "excludeModules": [":demo_nif", "SlowModule"]
+    },
+    {
+      "type": "mix_task",
+      "name": "test",
+      "request": "launch",
+      "task": "test",
+      "startApps": true,
+      "env": {
+        "ELIXIR_ERL_OPTIONS": "-sname iex-dbg@localhost -cookie 123456"
+      },
+      "projectDir": "${workspaceRoot}",
+      // 一般情况下，这里是包装 nif 的那个模块
+      "excludeModules": [":demo_nif", "SlowModule"],
+      "requireFiles": [
+        "test/test_helper.exs",
+
+        // 需要测试的文件
+        "test/web_demo_web/controllers/page_controller_test.exs"
+      ]
+    },
+    {
+      "type": "mix_task",
+      "name": "test_one",
+      "request": "launch",
+      "task": "test",
+      // 单个文件测试
+      "taskArgs": ["test/web_demo_web/controllers/error_json_test.exs"],
+      // interpret exs 文件，使得 exs 文件里面支持断点
+      // 这里的文件都会跑单元测试，所以只写需要测试的文件
+      "requireFiles": ["test/web_demo_web/controllers/error_json_test.exs"],
+      "startApps": true,
+      "env": {
+        "ELIXIR_ERL_OPTIONS": "-sname iex-dbg@localhost -cookie 123456"
+      },
+      "projectDir": "${workspaceRoot}",
+      // 一般情况下，这里是包装 nif 的那个模块
+      "excludeModules": [":demo_nif", "SlowModule"]
+    },
+    {
+      "type": "mix_task",
+      "name": "test_all",
+      "request": "launch",
+      "task": "test",
+      "startApps": true,
+      "env": {
+        "ELIXIR_ERL_OPTIONS": "-sname iex-dbg@localhost -cookie 123456"
+      },
+      "projectDir": "${workspaceRoot}",
+      // 一般情况下，这里是包装 nif 的那个模块
+      "excludeModules": [":demo_nif", "SlowModule"]
+      // interpret exs 文件，使得 exs 文件里面支持断点
+      // "requireFiles": ["test/**/*.exs"]
+    }
+  ]
+}

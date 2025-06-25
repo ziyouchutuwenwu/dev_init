@@ -1,0 +1,7 @@
+{
+  // source venv 环境以后，就会有 VIRTUAL_ENV
+  "python.defaultInterpreterPath": "${env:VIRTUAL_ENV}/bin/python",
+
+  // 设置比较大的深度，防止快速修复失败
+  "python.analysis.packageIndexDepths": [{ "name": "", "depth": 10 }]
+}
