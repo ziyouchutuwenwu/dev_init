@@ -73,7 +73,7 @@ pkg install -y fusefs-sshfs
 pkg install -y autossh sshpass
 pkg install -y screen
 pkg install -y zellij
-pkg install -y the_silver_searcher fd-find
+pkg install -y fd-find ripgrep
 pkg install -y enca
 pkg install -y tree
 pkg install -y lscpu

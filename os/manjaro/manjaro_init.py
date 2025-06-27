@@ -231,7 +231,7 @@ def install_zip_essential():
 
 
 def install_search_tools():
-    os.system("yes | pacman --noconfirm -S fd the_silver_searcher")
+    os.system("yes | pacman --noconfirm -S fd ripgrep")
 
 
 def install_encoding_tools():

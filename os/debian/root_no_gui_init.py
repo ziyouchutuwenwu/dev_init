@@ -117,7 +117,7 @@ def install_toys():
 
 
 def install_search_tools():
-    os.system("apt install -y fd-find silversearcher-ag")
+    os.system("apt install -y fd-find ripgrep")
     os.system("ln -s /usr/bin/fdfind /usr/bin/fd")
 
 
