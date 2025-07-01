@@ -1,9 +1,5 @@
 # css
 
-## 说明
-
-凡是全局启用的，编译以后会注入到 index.html 的 style 指令里面, chrome 插件不支持
-
 ## 用法
 
 ### 全局
@@ -11,10 +7,19 @@
 angular.json
 
 ```json
+// 配置这个以后，index.html 里面，直接的 style 指令会变为 link 的 css 文件
+"optimization": {
+  "styles": {
+    "inlineCritical": false
+  }
+},
+
+// 配置以后可以直接 import
+// css 不支持，sass scss less 支持
 "stylePreprocessorOptions": {
-  // 配置以后可以直接 import
   "includePaths": ["src", "mycss"]
 },
+
 // 自动全局加载
 "styles": [
   "src/styles.scss",

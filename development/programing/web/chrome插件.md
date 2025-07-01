@@ -130,16 +130,15 @@ export const appConfig: ApplicationConfig = {
 
 src/app/app.routes.ts
 
-```css
+```ts
 import { Routes } from '@angular/router';
-import { Options } from './options/options';
-import { Popup } from './popup/popup';
-
+import { Main as PopupMain } from './popup/main/main';
+import { Main as OptionsMain } from './options/main/main';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'popup', pathMatch: 'full' },
-  { path: 'popup', component: Popup },
-  { path: 'options', component: Options },
+  { path: 'popup', component: PopupMain },
+  { path: 'options', component: OptionsMain },
 ];
 ```
 
@@ -173,10 +172,10 @@ src/app/app.html
 ### popup
 
 ```sh
-ng g c popup
+ng g c popup/main
 ```
 
-src/app/popup/popup.html
+src/app/popup/main/main.html
 
 ```html
 <div class="fixed-sizer">
@@ -184,7 +183,7 @@ src/app/popup/popup.html
 </div>
 ```
 
-src/app/popup/popup.css
+src/app/popup/main/main.css
 
 ```css
 @import "tailwindcss";
@@ -204,10 +203,10 @@ src/app/popup/popup.css
 ### options
 
 ```sh
-ng g c options
+ng g c options/main
 ```
 
-src/app/options/options.html
+src/app/options/main/main.html
 
 ```html
 <p>这是 options 组件</p>
