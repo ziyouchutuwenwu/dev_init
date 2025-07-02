@@ -35,6 +35,11 @@ ng build
 server 和 browser 都需要
 
 ```sh
+server 存 ssr 相关
+browser 存 assets 等
+```
+
+```sh
 # 对于在哪里运行，没有要求，都可以
 PORT=1234 node server/server.mjs
 ```
