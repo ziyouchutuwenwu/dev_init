@@ -1,53 +1,31 @@
 # liveview
 
+## 说明
+
+ex 自动在当前目录下加载 heex
+
 ## 步骤
 
-### 创建项目
+### 准备
 
 ```sh
 mix phx.new web_demo --no-ecto --no-gettext
 ```
 
-### 配置路由
+### 路由
 
 ```elixir
+# 和普通路由没有区别
 live "/live", PageLive
 ```
 
 ### 代码
-
-live_component.ex
-
-```elixir
-defmodule WebDemoWeb.Views.Shared.Live do
-  use Phoenix.Component
-
-  def demo(assigns) do
-    ~H"""
-    <div>{@number}</div>
-
-    <button phx-click="inc">+</button>
-
-    <button phx-click="dec">-</button>
-
-    <button phx-click="clear">clear</button>
-    """
-  end
-end
-```
 
 page_live.ex
 
 ```elixir
 defmodule WebDemoWeb.PageLive do
   use WebDemoWeb, :live_view
-  alias WebDemoWeb.Views.Shared.Live
-
-  def render(assigns) do
-    ~H"""
-    <Live.demo number={@number} />
-    """
-  end
 
   def mount(_params, _session, socket) do
     {:ok, socket |> assign(number: 0)}
@@ -71,6 +49,34 @@ defmodule WebDemoWeb.PageLive do
 
   defp decrement(number) do
     number - 1
+  end
+end
+```
+
+page_live.html.heex
+
+```html
+<div>开始</div>
+<WebDemoWeb.Views.Shared.Live.demo number="{@number}" />
+<div>结束</div>
+```
+
+live_component.ex
+
+```elixir
+defmodule WebDemoWeb.Views.Shared.Live do
+  use Phoenix.Component
+
+  def demo(assigns) do
+    ~H"""
+    <div>{@number}</div>
+
+    <button phx-click="inc">+</button>
+
+    <button phx-click="dec">-</button>
+
+    <button phx-click="clear">clear</button>
+    """
   end
 end
 ```
