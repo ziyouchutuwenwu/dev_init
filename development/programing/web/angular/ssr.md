@@ -32,11 +32,9 @@ ng build
 
 ### 运行
 
-具体见 package.json
-
-必须在 dist 目录外运行, 默认端口 4000
+server 和 browser 都需要
 
 ```sh
-# 发布的时候，这里的 node 可以用 bun 替换
-PORT=1234 node dist/demo/server/server.mjs
+# 对于在哪里运行，没有要求，都可以
+PORT=1234 node server/server.mjs
 ```
