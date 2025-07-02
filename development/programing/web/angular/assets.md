@@ -2,7 +2,7 @@
 
 ## 位置
 
-angular.json 搜索 assets 字段
+angular.json
 
 ```json
 "assets": [
