@@ -2,13 +2,15 @@
 
 ## 说明
 
-虚拟环境
+uv 为项目创建隔离的虚拟环境
+
+uvx 用于在临时环境中运行
 
 ## 安装
 
 [手动下载](https://github.com/astral-sh/uv)
 
-## 用法
+## 项目内
 
 ### 创建
 
@@ -62,16 +64,18 @@ uv run xxx
 uv run main.py
 ```
 
-### 版本错误
+## 全局
 
-创建 uv 项目的时候，指定的版本和系统 python 版本不一致，uv 会自己下载指定的版本并且缓存
+### pip
 
 ```sh
-uvx python --version
+uv pip install --system -U xxx
 ```
 
-删除缓存目录即可
+### uvx
+
+在临时目录中下载，全局运行
 
 ```sh
-rm -rf $HOME/.local/share/uv/
+uvx xxx
 ```
