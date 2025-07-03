@@ -27,5 +27,5 @@ cansend vcan0 '123#abcdabcd'
 
 ```sh
 pip install canard
-pip3 install canopen
+pip install canopen
 ```
