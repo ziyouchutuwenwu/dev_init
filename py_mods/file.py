@@ -8,7 +8,7 @@ sys.dont_write_bytecode = True
 import os
 
 
-def is_in_file(file, content):
+def _is_in_file(file, content):
     reader = open(file)
     line = reader.readline()
 
@@ -23,7 +23,7 @@ def is_in_file(file, content):
 
 
 def set_to_file(file, content, need_new_blank_line=False):
-    is_existed = is_in_file(file, content)
+    is_existed = _is_in_file(file, content)
     if False == is_existed:
         if need_new_blank_line == True:
             profile_cmd = "echo '' >> %s" % file

@@ -320,6 +320,16 @@ def remove_useless_applications():
         os.system(cmd)
 
 
+def remove_catfish(user):
+    os.system("yes | pacman --noconfirm -Rcns catfish")
+    cmd = (
+        r"sed -i '/<action>/,/<\/action>/ { "
+        r"/<icon>system-search<\/icon>/,/<\/action>/d "
+        r"}' ~/.config/Thunar/uca.xml"
+    )
+    proc.run_as_user(user, cmd)
+
+
 def install_ansible_essential():
     os.system("yes | pacman --noconfirm -S sshpass")
 
@@ -453,6 +463,7 @@ if __name__ == "__main__":
     do_upgrade()
 
     remove_useless_applications()
+    remove_catfish(login_user)
 
     disable_pc_beep()
     englishization_user_dir_name(login_user)

@@ -249,6 +249,7 @@ def install_video_recorder():
 
 def do_clean_after_install():
     app_list = [
+        "catfish",
         "imagemagic*",
         "libproxy-tools",
         # virt-manager 会自动装这个
