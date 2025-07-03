@@ -138,7 +138,6 @@ def install_useful_tools():
         "rename",
         "duf",
         "autossh",
-        "catfish",
         "expect",
         "htop",
         "socat",
