@@ -1,7 +1,5 @@
 #! /usr/bin/env sh
 
-chsh -s $(which zsh) $USER
-
 CURRENT_DIR=$(cd "$(dirname "$0")";pwd)
 
 mkdir -p /usr/local/etc/zsh/

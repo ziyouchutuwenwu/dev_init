@@ -203,6 +203,7 @@ def set_fs_watches_config():
 
 def do_zsh_config():
     os.system("apt install -y zsh")
+    os.system("usermod -s $(which zsh) root")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/zsh/global/config.sh" % (current_dir)
     os.system(cmd)

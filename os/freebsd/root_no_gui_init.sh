@@ -94,6 +94,7 @@ cp -rf $CURRENT_DIR/profile.d/*.sh /usr/local/etc/profile.d/
 # bash 无法自动加载 /etc/profile, bash -l 也不行，必须要手动 source /etc/profile
 # 因此用 zsh
 pkg install -y zsh
+chsh -s $(which zsh) root
 sh $CURRENT_DIR/zsh/global/config.sh
 sh $CURRENT_DIR/zsh/root/config.sh
 

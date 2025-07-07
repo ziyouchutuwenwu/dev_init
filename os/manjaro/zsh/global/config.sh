@@ -2,8 +2,6 @@
 
 CURRENT_DIR=$(cd "$(dirname "$0")";pwd)
 
-chsh -s $(which zsh) $USER
-
 # 禁止生成 zprofile, 否则会导致菜单全部便英文
 rm -rf /etc/zsh/zprofile; mkdir -p /etc/zsh/zprofile
 

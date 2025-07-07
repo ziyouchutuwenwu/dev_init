@@ -20,20 +20,6 @@ def add_usr_sbin_to_path_env():
     os.environ["PATH"] += ":/usr/sbin/"
 
 
-def update_sudo_passwd_template(pwd):
-    sudo_passwd_template = "/tmp/pass.sh"
-    os.system("rm -rf %s" % sudo_passwd_template)
-    os.system("touch %s" % sudo_passwd_template)
-    os.system("chmod a+x %s" % sudo_passwd_template)
-    file.set_to_file(sudo_passwd_template, "'#! /bin/bash'")
-    file.set_to_file(sudo_passwd_template, "echo %s" % pwd)
-
-
-def remove_sudo_passwd_template():
-    sudo_passwd_template = "/tmp/pass.sh"
-    os.system("rm -rf %s" % sudo_passwd_template)
-
-
 def enable_sleep():
     # 自定义的配置文件内禁用了 sleep
     cmd = "rm -rf /etc/systemd/sleep.conf.d"
@@ -309,6 +295,8 @@ def install_browser():
 
 
 def do_zsh_config(user):
+    cmd = "usermod -s $(which zsh) %s" % (user)
+    os.system(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/zsh/user/config.sh" % (current_dir)
     proc.run_as_user(user, cmd)
@@ -366,16 +354,14 @@ if __name__ == "__main__":
 
     script_name = str(sys.argv[0])
     login_user = os.getlogin()
-    if len(sys.argv) < 3:
-        print("用法: %s aliyun/ustc %s的密码" % (script_name, login_user))
+    if len(sys.argv) < 2:
+        print("用法: %s aliyun/ustc" % (script_name, login_user))
         exit(-1)
 
     mirror_name = str(sys.argv[1])
-    login_pwd = str(sys.argv[2])
 
     add_usr_sbin_to_path_env()
 
-    update_sudo_passwd_template(login_pwd)
     disable_pc_beep()
     englishization_user_dir_name(login_user)
 
@@ -441,4 +427,3 @@ if __name__ == "__main__":
 
     rm_unused_menu(login_user)
     fix_translation_bug(login_user)
-    remove_sudo_passwd_template()

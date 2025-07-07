@@ -2,8 +2,6 @@
 
 CURRENT_DIR=$(cd "$(dirname "$0")";pwd)
 
-chsh -s $(which zsh) $USER
-
 rm -rf ~/.zshrc
 cp -rf $CURRENT_DIR/zshrc ~/.zshrc
 chmod -w ~/.zshrc

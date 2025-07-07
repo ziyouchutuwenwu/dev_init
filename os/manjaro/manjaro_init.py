@@ -143,6 +143,10 @@ def install_nvidia_drivers():
     os.system("yes | pacman --noconfirm -S mesa-utils nvidia-prime")
 
 
+def install_python_tools():
+    os.system("yes | pacman --noconfirm -S uv")
+
+
 def install_disk_tools():
     os.system("yes | pacman --noconfirm -S gparted ventoy")
 
@@ -189,6 +193,9 @@ def englishization_user_dir_name(user):
 
 def do_zsh_config(user):
     os.system("yes | pacman --noconfirm -S zsh")
+    os.system("usermod -s $(which zsh) root")
+    cmd = "usermod -s $(which zsh) %s" % (user)
+    os.system(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/zsh/global/config.sh" % (current_dir)
     os.system(cmd)
@@ -368,7 +375,7 @@ def install_privoxy():
 
 
 def do_vim_config(user):
-    os.system("yes | pacman --noconfirm -S ripgrep xclip neovim")
+    os.system("yes | pacman --noconfirm -S xclip neovim")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/../../development/editor/nvim/install.sh" % (current_dir)
     proc.run_as_user(user, cmd)
@@ -470,6 +477,7 @@ if __name__ == "__main__":
     install_build_essential()
     make_git_default_config(login_user)
     install_zip_essential()
+    install_python_tools()
     install_toys()
     install_nvidia_drivers()
     install_color_picker()
