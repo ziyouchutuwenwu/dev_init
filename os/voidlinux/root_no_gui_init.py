@@ -72,7 +72,10 @@ def install_useful_tools():
         "zellij",
         "git",
         "axel",
-        "curl"
+        "curl",
+        "aria2",
+        "htop",
+        "autossh",
     ]
     for tool in tools:
         cmd = "xbps-install -y %s" % tool

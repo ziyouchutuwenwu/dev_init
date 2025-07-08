@@ -81,6 +81,11 @@ def install_pdf_reader():
     os.system("xbps-install -y qpdfview")
 
 
+def disable_file_history(user):
+    proc.run_as_user(user, "rm -rf ~/.local/share/recently-used.xbel")
+    proc.run_as_user(user, "mkdir -p ~/.local/share/recently-used.xbel/")
+
+
 def install_themes(user):
     os.system("xbps-install -y faenza-icon-theme")
     proc.run_as_user(user, "mkdir -p ~/.themes")
@@ -157,6 +162,7 @@ if __name__ == "__main__":
     install_privoxy()
     install_sniffer(login_user)
     install_media_player()
+    disable_file_history(login_user)
     install_pdf_reader()
     install_unzipper()
     install_image_viewer()
