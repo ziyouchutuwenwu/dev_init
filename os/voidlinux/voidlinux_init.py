@@ -44,6 +44,25 @@ def install_fcitx(user):
     proc.run_as_user(user, cmd)
 
 
+def install_proxychains():
+    os.system("xbps-install -y proxychains-ng")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cmd = "cp -rf %s/../../development/proxy/proxychains/proxychains.conf /etc/proxychains.conf" % (current_dir)
+    os.system(cmd)
+
+
+def install_privoxy():
+    os.system("xbps-install -y privoxy")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cmd = "cp -rf %s/../../development/proxy/privoxy/config /etc/privoxy/config" % (current_dir)
+    os.system(cmd)
+    os.system("ln -s /etc/sv/privoxy /var/service/")
+
+
+def install_chrome():
+    os.system("xbps-install -y chromium")
+
+
 def install_terminator(user):
     os.system("xbps-install -y terminator")
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -78,10 +97,39 @@ def do_vim_config(user):
 
 
 def do_zsh_config(user):
-    cmd = "usermod -s $(which zsh) %s" % (user)
+    cmd = "usermod -s /usr/bin/zsh %s" % (user)
     os.system(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/zsh/user/config.sh" % (current_dir)
+    proc.run_as_user(user, cmd)
+
+
+def install_media_player():
+    os.system("xbps-install -y ffmpeg vlc smplayer audacious")
+
+
+def install_unzipper():
+    os.system("xbps-install -y xarchiver thunar-archive-plugin")
+
+
+def install_sniffer(user):
+    os.system("xbps-install -y wireshark-qt")
+    cmd = "usermod -a -G wireshark %s" % user
+    os.system(cmd)
+    os.system("xbps-install -y tcpdump")
+
+
+def install_image_viewer():
+    os.system("xbps-install -y gpicview")
+
+
+def fix_translation_bug(user):
+    cmd = "mkdir -p ~/.local/share/applications/"
+    proc.run_as_user(user, cmd)
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cmd = "cp -rf %s/translations/* ~/.local/share/applications/" % (current_dir)
+    proc.run_as_user(user, cmd)
+    cmd = "update-desktop-database ~/.local/share/applications"
     proc.run_as_user(user, cmd)
 
 
@@ -101,9 +149,17 @@ if __name__ == "__main__":
     englishization_user_dir_name(login_user)
     run_root_no_gui_init_script(mirror_name)
     install_themes(login_user)
+    install_chrome()
     install_fcitx(login_user)
     install_terminator(login_user)
     install_ghostty(login_user)
+    install_proxychains()
+    install_privoxy()
+    install_sniffer(login_user)
+    install_media_player()
     install_pdf_reader()
+    install_unzipper()
+    install_image_viewer()
     do_vim_config(login_user)
     do_zsh_config(login_user)
+    fix_translation_bug(login_user)

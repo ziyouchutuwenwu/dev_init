@@ -117,11 +117,12 @@ def install_serial_tools(user):
     os.system(cmd)
 
 
-def install_net_capture_tools(user):
+def install_sniffer(user):
     os.system('echo "wireshark-common wireshark-common/install-setuid boolean true" | debconf-set-selections')
     os.system("apt install -y wireshark")
     cmd = "usermod -a -G wireshark %s" % user
     os.system(cmd)
+    os.system("apt install -y tcpdump")
 
 
 def install_virt_manager(user):
@@ -388,7 +389,7 @@ if __name__ == "__main__":
 
     install_color_picker()
     install_api_viewer()
-    install_net_capture_tools(login_user)
+    install_sniffer(login_user)
     install_virt_manager(login_user)
     install_pg_essential()
     install_ios_tools()

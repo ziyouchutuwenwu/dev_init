@@ -16,7 +16,7 @@ from py_mods import proc
 
 def remove_useless():
     tools = [
-        "firefox"
+        "firefox",
     ]
     for tool in tools:
         cmd = "xbps-remove -Ry %s" % tool
@@ -57,11 +57,21 @@ def install_python_uv():
     os.system("xbps-install -y uv")
 
 
+# nmap 自带的 nc 最强大
+def install_nmap():
+    os.system("xbps-install -y nmap")
+
+
+def install_lts_kernel():
+    os.system("xbps-install -y linux-lts")
+
+
 def install_useful_tools():
     tools = [
         "neovim",
+        "zellij",
         "git",
-        "axel"
+        "axel",
         "curl"
     ]
     for tool in tools:
@@ -81,7 +91,7 @@ def set_global_profiles():
 
 def do_zsh_config():
     os.system("xbps-install -y zsh")
-    os.system("usermod -s $(which zsh) root")
+    os.system("usermod -s /usr/bin/zsh root")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/zsh/global/config.sh" % (current_dir)
     os.system(cmd)
@@ -104,8 +114,10 @@ if __name__ == "__main__":
     set_mirror(mirror_name)
     set_global_profiles()
     do_full_upgrade()
+    install_lts_kernel()
     install_fonts()
     install_search_tools()
     install_useful_tools()
+    install_nmap()
     install_python_uv()
     do_zsh_config()

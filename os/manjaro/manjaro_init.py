@@ -99,10 +99,11 @@ def install_toys():
     os.system("yes | pacman --noconfirm -S cmatrix cowsay")
 
 
-def install_net_capture_tools(user):
+def install_sniffer(user):
     os.system("yes | pacman --noconfirm -S wireshark-qt")
     cmd = "usermod -a -G wireshark %s" % user
     os.system(cmd)
+    os.system("yes | pacman --noconfirm -S tcpdump")
 
 
 def install_virt_manager(user):
@@ -496,7 +497,7 @@ if __name__ == "__main__":
     install_qt5ct()
     set_global_profiles()
     install_beam()
-    install_net_capture_tools(login_user)
+    install_sniffer(login_user)
     install_virt_manager(login_user)
     install_proxychains()
     install_privoxy()
