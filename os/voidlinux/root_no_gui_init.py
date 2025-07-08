@@ -103,16 +103,6 @@ def do_zsh_config():
     os.system(cmd)
 
 
-def install_docker():
-    os.system("xbps-install -y docker")
-    os.system("ln -s /etc/sv/docker /var/service/")
-    os.system("sv start docker")
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    os.system("mkdir -p /etc/docker")
-    cmd = "cp -rf %s/docker/daemon.json /etc/docker/" % (current_dir)
-    os.system(cmd)
-
-
 if __name__ == "__main__":
     if False == proc.is_root():
         print("This program must be run as root. Aborting.")
@@ -134,5 +124,4 @@ if __name__ == "__main__":
     install_useful_tools()
     install_nmap()
     install_python_uv()
-    install_docker()
     do_zsh_config()
