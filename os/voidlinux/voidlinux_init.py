@@ -63,11 +63,20 @@ def install_chrome():
     os.system("xbps-install -y chromium")
 
 
+def install_login_setting():
+    os.system("xbps-install -y lightdm-gtk-greeter-settings")
+
+
 def install_terminator(user):
     os.system("xbps-install -y terminator")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/../../development/terminal/terminator/install.sh" % (current_dir)
     proc.run_as_user(user, cmd)
+
+
+def do_docker_config(user):
+    cmd = "usermod -aG docker %s" % user
+    os.system(cmd)
 
 
 def install_ghostty(user):
@@ -165,7 +174,9 @@ if __name__ == "__main__":
     disable_file_history(login_user)
     install_pdf_reader()
     install_unzipper()
+    install_login_setting()
     install_image_viewer()
+    do_docker_config(login_user)
     do_vim_config(login_user)
     do_zsh_config(login_user)
     fix_translation_bug(login_user)

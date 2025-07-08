@@ -327,7 +327,7 @@ def do_vim_config(user):
     proc.run_as_user(user, cmd)
 
 
-def grant_user_docker_permission(user):
+def do_docker_config(user):
     cmd = "usermod -a -G docker %s" % user
     os.system(cmd)
 
@@ -379,7 +379,7 @@ if __name__ == "__main__":
 
     install_sudo(login_user)
     install_ui_useful_tools()
-    grant_user_docker_permission(login_user)
+    do_docker_config(login_user)
 
     # 中文和主题美化
     install_chinese_fonts()

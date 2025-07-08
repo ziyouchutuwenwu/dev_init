@@ -1,6 +1,12 @@
 # docker
 
-## pull 代理
+## 说明
+
+pull 模式下，sv 和 system 略有不同
+
+## pull
+
+### systemd
 
 创建代理配置文件
 
@@ -31,7 +37,17 @@ sudo systemctl restart docker
 systemctl show --property=Environment docker
 ```
 
-## 容器实例代理
+### sv
+
+```sh
+echo "$HTTP_PROXY"   | tee /etc/sv/docker/env/HTTP_PROXY
+echo "$HTTPS_PROXY"  | tee /etc/sv/docker/env/HTTPS_PROXY
+echo "$NO_PROXY"     | tee /etc/sv/docker/env/NO_PROXY
+
+sv restart docker
+```
+
+## 容器实例
 
 注意，实例不能用 `127.0.0.1` 这个 ip, 得用主机的真实 ip
 
@@ -59,7 +75,7 @@ docker exec -it xxx /bin/sh
 curl --head xxx.com
 ```
 
-## build 设置代理
+## build
 
 ```sh
 docker build . \
