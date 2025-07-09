@@ -67,6 +67,17 @@ def install_browser():
     os.system("xbps-install -y firefox")
 
 
+def install_tools():
+    tool_list = [
+        "qalculate-gtk",
+        "xfce4-screenshooter",
+        "menulibre",
+    ]
+    for tool in tool_list:
+        cmd = "xbps-install -y %s" % tool
+        os.system(cmd)
+
+
 def install_login_setting():
     os.system("xbps-install -y lightdm-gtk-greeter-settings")
 
@@ -131,6 +142,20 @@ def install_vm_essential():
     os.system("ln -s /etc/sv/spice-vdagentd /var/service/")
 
 
+def install_virt_manager(user):
+    os.system("xbps-install -y virt-manager qemu")
+    os.system("ln -s /etc/sv/libvirtd /var/service/")
+    os.system("ln -s /etc/sv/virtlogd /var/service/")
+    os.system("sv start libvirtd")
+    groups = [
+        "libvirt",
+        "kvm",
+    ]
+    for group in groups:
+        cmd = "usermod -aG %s %s" % (group, user)
+        os.system(cmd)
+
+
 def install_sniffer(user):
     os.system("xbps-install -y wireshark-qt")
     cmd = "usermod -a -G wireshark %s" % user
@@ -183,6 +208,8 @@ if __name__ == "__main__":
     install_login_setting()
     install_image_viewer()
     install_vm_essential()
+    install_virt_manager(login_user)
+    install_tools()
     do_vim_config(login_user)
     do_zsh_config(login_user)
     fix_translation_bug(login_user)

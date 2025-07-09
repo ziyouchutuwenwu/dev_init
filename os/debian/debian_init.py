@@ -276,13 +276,13 @@ def init_profile(user):
     proc.run_as_user(user, "touch ~/.profile")
 
 
-def install_ui_useful_tools():
+def install_tools():
     tool_list = [
         "qalculate-gtk",
         "grsync",
         "xfce4-screenshooter",
         "xinput",
-        "screenfetch",
+        "neofetch",
         "gufw",
         "menulibre",
         "xfce4-taskmanager",
@@ -387,7 +387,7 @@ if __name__ == "__main__":
     make_git_default_config(login_user)
 
     install_sudo(login_user)
-    install_ui_useful_tools()
+    install_tools()
     do_docker_config(login_user)
 
     # 中文和主题美化

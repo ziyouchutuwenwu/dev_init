@@ -69,6 +69,7 @@ def install_kernel():
 def install_useful_tools():
     tools = [
         "neovim",
+        "neofetch",
         "tree",
         "zellij",
         "git",
