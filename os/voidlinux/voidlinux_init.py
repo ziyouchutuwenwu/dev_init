@@ -63,8 +63,8 @@ def install_privoxy():
     os.system("ln -s /etc/sv/privoxy /var/service/")
 
 
-def install_chrome():
-    os.system("xbps-install -y chromium")
+def install_browser():
+    os.system("xbps-install -y firefox")
 
 
 def install_login_setting():
@@ -169,7 +169,7 @@ if __name__ == "__main__":
     run_root_no_gui_init_script(mirror_name)
     install_firmware()
     install_themes(login_user)
-    install_chrome()
+    install_browser()
     install_fcitx(login_user)
     install_terminator(login_user)
     install_ghostty(login_user)
