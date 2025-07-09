@@ -30,6 +30,10 @@ def run_root_no_gui_init_script(mirror_name):
     os.system(cmd)
 
 
+def install_firmware():
+    os.system("xbps-install -y linux-firmware")
+
+
 def install_fcitx(user):
     # 环境变量在 /usr/local/etc/profile.d/fcitx.sh 里面
     os.system("xbps-install -y fcitx5 fcitx5-configtool fcitx5-chinese-addons")
@@ -163,6 +167,7 @@ if __name__ == "__main__":
 
     englishization_user_dir_name(login_user)
     run_root_no_gui_init_script(mirror_name)
+    install_firmware()
     install_themes(login_user)
     install_chrome()
     install_fcitx(login_user)

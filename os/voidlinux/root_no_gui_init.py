@@ -62,7 +62,7 @@ def install_nmap():
     os.system("xbps-install -y nmap")
 
 
-def install_lts_kernel():
+def install_kernel():
     os.system("xbps-install -y linux-lts")
 
 
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     set_mirror(mirror_name)
     set_global_profiles()
     do_full_upgrade()
-    install_lts_kernel()
+    install_kernel()
     install_fonts()
     install_search_tools()
     install_useful_tools()
