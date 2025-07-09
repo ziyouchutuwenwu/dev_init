@@ -6,7 +6,7 @@
 
 ## 步骤
 
-### 准备工作
+### 准备
 
 debian
 
@@ -20,7 +20,7 @@ manjaro
 sudo pacman -S qemu-user-static debootstrap qemu-user-static-binfmt
 ```
 
-### 创建虚拟机
+### 创建
 
 ```sh
 # 用 https 的源
@@ -32,8 +32,30 @@ sudo debootstrap --arch armhf --foreign --no-check-gpg bookworm deb_fs https://m
 ```sh
 sudo cp /usr/bin/qemu-arm-static ./deb_fs/usr/bin/
 
-# sudo chroot ./deb_fs
+# chroot 需要手动 mount 一大堆
 sudo systemd-nspawn -D ./deb_fs
+```
+
+或者
+
+```sh
+sudo bwrap \
+  --bind ./deb_fs / \
+  --dev /dev \
+  --dev-bind /dev/pts /dev/pts \
+  --dev-bind /dev/null /dev/null \
+  --dev-bind /dev/zero /dev/zero \
+  --dev-bind /dev/random /dev/random \
+  --dev-bind /dev/urandom /dev/urandom \
+  --proc /proc \
+  --ro-bind /sys /sys \
+  --tmpfs /tmp \
+  --setenv HOME /root \
+  --setenv PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+  /bin/bash
+```
+
+```sh
 /debootstrap/debootstrap --second-stage
 ```
 

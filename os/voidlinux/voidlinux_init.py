@@ -74,11 +74,6 @@ def install_terminator(user):
     proc.run_as_user(user, cmd)
 
 
-def do_docker_config(user):
-    cmd = "usermod -aG docker %s" % user
-    os.system(cmd)
-
-
 def install_ghostty(user):
     os.system("xbps-install -y ghostty")
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -124,6 +119,12 @@ def install_media_player():
 
 def install_unzipper():
     os.system("xbps-install -y xarchiver thunar-archive-plugin")
+
+
+def install_vm_essential():
+    # 虚拟机装，剪贴板共享程序
+    os.system("xbps-install -y spice-vdagent")
+    os.system("ln -s /etc/sv/spice-vdagentd /var/service/")
 
 
 def install_sniffer(user):
@@ -176,7 +177,7 @@ if __name__ == "__main__":
     install_unzipper()
     install_login_setting()
     install_image_viewer()
-    do_docker_config(login_user)
+    install_vm_essential()
     do_vim_config(login_user)
     do_zsh_config(login_user)
     fix_translation_bug(login_user)

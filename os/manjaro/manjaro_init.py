@@ -106,15 +106,24 @@ def install_sniffer(user):
     os.system("yes | pacman --noconfirm -S tcpdump")
 
 
+def install_vm_essential():
+    # 虚拟机装，剪贴板共享程序
+    os.system("yes | pacman --noconfirm -S spice-vdagent")
+
+
 def install_virt_manager(user):
     os.system("yes | pacman --noconfirm -S virt-manager qemu-full dnsmasq")
     os.system("yes | pacman --noconfirm -S qemu-guest-agent")
-    # 虚拟机装，剪贴板共享程序
-    os.system("yes | pacman --noconfirm -S spice-vdagent")
+    groups = [
+        "libvirt",
+        "libvirt-qemu",
+        "kvm",
+    ]
+    for group in groups:
+        cmd = "usermod -aG %s %s" % (group, user)
+        os.system(cmd)
     os.system("systemctl enable libvirtd")
     os.system("systemctl start libvirtd")
-    cmd = "usermod -a -G libvirt %s" % user
-    os.system(cmd)
 
 
 def install_qt5ct():
@@ -498,6 +507,7 @@ if __name__ == "__main__":
     set_global_profiles()
     install_beam()
     install_sniffer(login_user)
+    install_vm_essential()
     install_virt_manager(login_user)
     install_proxychains()
     install_privoxy()

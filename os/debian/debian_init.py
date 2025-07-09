@@ -125,6 +125,11 @@ def install_sniffer(user):
     os.system("apt install -y tcpdump")
 
 
+def install_vm_essential():
+    # 虚拟机装，剪贴板共享程序
+    os.system("apt install -y spice-vdagent")
+
+
 def install_virt_manager(user):
     os.system("apt install -y virt-manager")
     os.system("apt purge -y virt-viewer")
@@ -140,10 +145,14 @@ def install_virt_manager(user):
         os.system(cmd)
     # 物理机装，剪贴板共享程序
     os.system("apt install -y qemu-guest-agent")
-    # 虚拟机装，剪贴板共享程序
-    os.system("apt install -y spice-vdagent")
-    cmd = "usermod -a -G libvirt %s" % user
-    os.system(cmd)
+    groups = [
+        "libvirt",
+        "libvirt-qemu",
+        "kvm",
+    ]
+    for group in groups:
+        cmd = "usermod -aG %s %s" % (group, user)
+        os.system(cmd)
     os.system("systemctl enable libvirtd")
     os.system("systemctl start libvirtd")
 
@@ -390,6 +399,7 @@ if __name__ == "__main__":
     install_color_picker()
     install_api_viewer()
     install_sniffer(login_user)
+    install_vm_essential()
     install_virt_manager(login_user)
     install_pg_essential()
     install_ios_tools()
