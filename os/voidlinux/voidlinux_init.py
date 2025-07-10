@@ -71,6 +71,7 @@ def install_browser():
 def install_tools():
     tool_list = [
         "xfce4-screenshooter",
+        "gparted",
         "menulibre",
     ]
     for tool in tool_list:

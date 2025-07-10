@@ -71,9 +71,13 @@ def install_kernel():
     os.system("xbps-install -y linux-lts")
 
 
+def install_vim():
+    os.system("xbps-install -y neovim")
+
+
 def install_useful_tools():
     tools = [
-        "neovim",
+        "rsync",
         "neofetch",
         "tree",
         "zellij",
@@ -126,6 +130,7 @@ if __name__ == "__main__":
     do_full_upgrade()
     install_kernel()
     install_fonts()
+    install_vim()
     install_search_tools()
     install_useful_tools()
     install_nmap()
