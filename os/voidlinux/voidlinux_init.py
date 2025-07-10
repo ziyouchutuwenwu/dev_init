@@ -35,6 +35,12 @@ def install_firmware():
     os.system("xbps-install -y linux-firmware")
 
 
+def disable_pc_beep():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cmd = "cp -rf %s/mod_blacklist/blacklist.conf /etc/modprobe.d/" % (current_dir)
+    os.system(cmd)
+
+
 def install_fcitx(user):
     # 环境变量在 /usr/local/etc/profile.d/fcitx.sh 里面
     os.system("xbps-install -y fcitx5 fcitx5-configtool fcitx5-chinese-addons")
@@ -209,6 +215,7 @@ if __name__ == "__main__":
     mirror_name = str(sys.argv[1])
 
     run_root_no_gui_init_script(mirror_name)
+    disable_pc_beep()
     make_user_dir_en(login_user)
     install_firmware()
     install_themes(login_user)
