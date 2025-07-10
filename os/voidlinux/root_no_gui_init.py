@@ -86,6 +86,8 @@ def install_useful_tools():
         "curl",
         "aria2",
         "htop",
+        "net-tools",
+        "bind-utils",
         "autossh",
     ]
     for tool in tools:
