@@ -358,6 +358,10 @@ def fix_translation_bug(user):
     proc.run_as_user(user, cmd)
 
 
+def do_clean():
+    os.system("apt autoremove -y; apt autoclean")
+
+
 if __name__ == "__main__":
     if False == proc.is_root():
         print("This program must be run as root. Aborting.")
@@ -439,3 +443,4 @@ if __name__ == "__main__":
 
     rm_unused_menu(login_user)
     fix_translation_bug(login_user)
+    do_clean()

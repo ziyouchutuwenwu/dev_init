@@ -44,6 +44,10 @@ def do_apt_update():
     os.system("apt update; apt upgrade -y; apt autoremove -y; apt autoclean")
 
 
+def do_clean():
+    os.system("apt autoremove -y; apt autoclean")
+
+
 def add_apt_https_support():
     os.system("apt install -y apt-transport-https")
 
@@ -303,3 +307,4 @@ if __name__ == "__main__":
     install_ssh_server()
     do_zsh_config()
     install_docker()
+    do_clean()

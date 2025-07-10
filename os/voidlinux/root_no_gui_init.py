@@ -40,6 +40,10 @@ def do_full_upgrade():
     os.system("sv restart sshd")
 
 
+def do_clean():
+    os.system("xbps-remove -Ooy")
+
+
 def install_fonts():
     cmd = "xbps-install -y wqy-microhei"
     os.system(cmd)
@@ -127,3 +131,4 @@ if __name__ == "__main__":
     install_nmap()
     install_python_uv()
     do_zsh_config()
+    do_clean()
