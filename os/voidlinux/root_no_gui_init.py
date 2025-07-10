@@ -37,6 +37,7 @@ def set_mirror(mirror_name):
 def do_full_upgrade():
     os.system("xbps-install -Suy xbps")
     os.system("xbps-install -Suy")
+    os.system("sv restart sshd")
 
 
 def install_fonts():

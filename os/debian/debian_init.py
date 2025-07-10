@@ -84,9 +84,10 @@ def disable_pc_beep():
     os.system(cmd)
 
 
-def englishization_user_dir_name(user):
+def make_user_dir_en(user):
     proc.run_as_user(user, "mkdir -p ~/desktop")
-    proc.run_as_user(user, "mv ~/桌面 ~/desktop > /dev/null 2>&1")
+    proc.run_as_user(user, "mv ~/桌面 ~/desktop")
+    proc.run_as_user(user, "mkdir -p ~/.config")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/englih_user_dir/user-dirs.dirs ~/.config/" % (current_dir)
     proc.run_as_user(user, cmd)
@@ -373,7 +374,7 @@ if __name__ == "__main__":
     add_usr_sbin_to_path_env()
 
     disable_pc_beep()
-    englishization_user_dir_name(login_user)
+    make_user_dir_en(login_user)
 
     run_root_no_gui_init_script(mirror_name)
 

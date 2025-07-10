@@ -192,9 +192,10 @@ def install_chinese_input(user):
     proc.run_as_user(user, cmd)
 
 
-def englishization_user_dir_name(user):
+def make_user_dir_en(user):
     proc.run_as_user(user, "mkdir -p ~/desktop")
-    proc.run_as_user(user, "mv ~/桌面 ~/desktop > /dev/null 2>&1")
+    proc.run_as_user(user, "mv ~/桌面 ~/desktop")
+    proc.run_as_user(user, "mkdir -p ~/.config")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/englih_user_dir/user-dirs.dirs ~/.config/" % (current_dir)
     proc.run_as_user(user, cmd)
@@ -483,7 +484,7 @@ if __name__ == "__main__":
     remove_catfish(login_user)
 
     disable_pc_beep()
-    englishization_user_dir_name(login_user)
+    make_user_dir_en(login_user)
     install_build_essential()
     make_git_default_config(login_user)
     install_zip_essential()

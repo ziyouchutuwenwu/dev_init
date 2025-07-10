@@ -15,9 +15,10 @@ from py_mods import proc
 from py_mods import file
 
 
-def englishization_user_dir_name(user):
+def make_user_dir_en(user):
     proc.run_as_user(user, "mkdir -p ~/desktop")
-    proc.run_as_user(user, "mv ~/桌面 ~/desktop > /dev/null 2>&1")
+    proc.run_as_user(user, "mv ~/桌面 ~/desktop")
+    proc.run_as_user(user, "mkdir -p ~/.config")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/englih_user_dir/user-dirs.dirs ~/.config/" % (current_dir)
     proc.run_as_user(user, cmd)
@@ -69,7 +70,6 @@ def install_browser():
 
 def install_tools():
     tool_list = [
-        "qalculate-gtk",
         "xfce4-screenshooter",
         "menulibre",
     ]
@@ -163,6 +163,10 @@ def install_sniffer(user):
     os.system("xbps-install -y tcpdump")
 
 
+def install_qtct():
+    os.system("xbps-install -y qt5ct")
+
+
 def install_image_viewer():
     os.system("xbps-install -y gpicview")
 
@@ -190,8 +194,8 @@ if __name__ == "__main__":
 
     mirror_name = str(sys.argv[1])
 
-    englishization_user_dir_name(login_user)
     run_root_no_gui_init_script(mirror_name)
+    make_user_dir_en(login_user)
     install_firmware()
     install_themes(login_user)
     install_browser()
@@ -201,6 +205,7 @@ if __name__ == "__main__":
     install_proxychains()
     install_privoxy()
     install_sniffer(login_user)
+    install_qtct()
     install_media_player()
     disable_file_history(login_user)
     install_pdf_reader()
