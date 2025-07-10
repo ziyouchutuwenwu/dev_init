@@ -182,6 +182,15 @@ def fix_translation_bug(user):
     proc.run_as_user(user, cmd)
 
 
+def set_brightness():
+    os.system("xbps-install -y brightnessctl")
+    os.system("mkdir -p /etc/sv/brightness")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cmd = "cp -rf %s/brightness/* /etc/sv/brightness/" % (current_dir)
+    os.system("chmod a+x /etc/sv/brightness/run")
+    os.system("ln -s /etc/sv/brightness /var/service/")
+
+
 def do_clean():
     os.system("xbps-remove -Ooy")
 
@@ -223,4 +232,5 @@ if __name__ == "__main__":
     do_vim_config(login_user)
     do_zsh_config(login_user)
     fix_translation_bug(login_user)
+    set_brightness()
     do_clean()
