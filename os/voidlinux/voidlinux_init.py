@@ -71,7 +71,7 @@ def install_privoxy():
 
 
 def install_browser():
-    os.system("xbps-install -y chromium")
+    os.system("xbps-install -y firefox")
 
 
 def install_tools():
