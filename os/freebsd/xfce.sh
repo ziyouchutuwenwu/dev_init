@@ -22,7 +22,7 @@ else
 fi
 
 # 不需要 gui 的服务器初始化脚本
-sh $CURRENT_DIR/root_no_gui_init.sh
+sh $CURRENT_DIR/console.sh
 
 # 显卡
 pkg install -y drm-kmod

@@ -342,9 +342,9 @@ def do_docker_config(user):
     os.system(cmd)
 
 
-def run_root_no_gui_init_script(mirror_name):
+def run_root_console_script(mirror_name):
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "python %s/root_no_gui_init.py %s" % (current_dir, mirror_name)
+    cmd = "python %s/console.py %s" % (current_dir, mirror_name)
     os.system(cmd)
 
 
@@ -380,7 +380,7 @@ if __name__ == "__main__":
     disable_pc_beep()
     make_user_dir_en(login_user)
 
-    run_root_no_gui_init_script(mirror_name)
+    run_root_console_script(mirror_name)
 
     # gui 界面需要开启休眠支持
     enable_sleep()

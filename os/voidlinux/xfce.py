@@ -25,9 +25,9 @@ def make_user_dir_en(user):
     proc.run_as_user(user, "mkdir -p ~/.templates")
 
 
-def run_root_no_gui_init_script(mirror_name):
+def run_root_console_script(mirror_name):
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "python %s/root_no_gui_init.py %s" % (current_dir, mirror_name)
+    cmd = "python %s/console.py %s" % (current_dir, mirror_name)
     os.system(cmd)
 
 
@@ -214,7 +214,7 @@ if __name__ == "__main__":
 
     mirror_name = str(sys.argv[1])
 
-    run_root_no_gui_init_script(mirror_name)
+    run_root_console_script(mirror_name)
     disable_pc_beep()
     make_user_dir_en(login_user)
     install_firmware()
