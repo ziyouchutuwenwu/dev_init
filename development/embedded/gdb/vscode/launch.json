@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "remote_dbg",
+      "type": "cppdbg",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "program": "${workspaceFolder}/output/main",
+      "miDebuggerServerAddress": "xx.xx.xx.xx:12345",
+      "miDebuggerPath": "/usr/bin/gdb",
+      // "miDebuggerPath": "/usr/bin/gdb-multiarch",
+      "stopAtEntry": false,
+      "externalConsole": false
+    }
+  ]
+}
