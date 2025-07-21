@@ -78,7 +78,7 @@ def install_vim():
 def install_useful_tools():
     tools = [
         "rsync",
-        "neofetch",
+        "fastfetch",
         "tree",
         "zellij",
         "git",
