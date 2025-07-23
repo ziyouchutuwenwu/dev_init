@@ -72,6 +72,7 @@ pkg install -y cmatrix cowsay
 pkg install -y fusefs-sshfs
 pkg install -y autossh sshpass
 pkg install -y screen
+pkg install -y fastfetch
 pkg install -y zellij
 pkg install -y fd-find ripgrep
 pkg install -y enca

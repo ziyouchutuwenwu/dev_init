@@ -134,6 +134,7 @@ def install_useful_tools():
         "binaryen",
         "virt-what",
         "git",
+        "fastfetch",
         "screen",
         "dstat",
         "strace",

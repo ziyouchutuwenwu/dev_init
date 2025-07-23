@@ -282,7 +282,6 @@ def install_tools():
         "grsync",
         "xfce4-screenshooter",
         "xinput",
-        "neofetch",
         "gufw",
         "menulibre",
         "xfce4-taskmanager",
