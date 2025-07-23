@@ -277,7 +277,7 @@ def install_useful_tools():
         "curl",
         "wget",
         "tree",
-        "screenfetch",
+        "fastfetch",
     ]
     for tool in tool_list:
         cmd = "yes | pacman --noconfirm -S %s" % tool
