@@ -10,5 +10,5 @@ chmod -w ~/.zshrc
 mkdir -p ~/.local/
 cp -rf $CURRENT_DIR/etc ~/.local/
 
-echo "xbps-install -Suy; xbps-remove -Ooy" > ~/.zsh_history
+echo "xbps-install -Suy xbps; xbps-install -Suy; xbps-remove -Ooy" > ~/.zsh_history
 chmod -w ~/.zsh_history
