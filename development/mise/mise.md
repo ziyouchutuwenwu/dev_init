@@ -42,23 +42,31 @@ $HOME/.local/state/mise/
 
 ## 用法
 
+搜索
+
 ```sh
 mise search xxx
-mise ls-remote node
 mise ls
 
-mise install node@22.0.0
-mise install node@22
+# 可以看 tag
+mise ls-remote node
+```
 
-mise uninstall node@22.0.0
-mise uninstall node@22
+安装并且写入 toml
 
-# 写入到 toml
+```sh
 mise use node@22
-mise use -g node@22
+mise use -g node@lts
 
 # 从 toml 里面删除
 mise unuse node@22
+```
+
+安装卸载
+
+```sh
+mise install node@22
+mise uninstall node@22
 ```
 
 更新
