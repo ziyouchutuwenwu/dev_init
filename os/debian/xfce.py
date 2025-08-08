@@ -276,10 +276,13 @@ def init_profile(user):
     proc.run_as_user(user, "touch ~/.profile")
 
 
+def install_filemon_tool():
+    os.system("apt install -y inotify-tools watchman")
+
+
 def install_tools():
     tool_list = [
         "qalculate-gtk",
-        "inotify-tools",
         "grsync",
         "xfce4-screenshooter",
         "xinput",
@@ -392,6 +395,7 @@ if __name__ == "__main__":
 
     install_sudo(login_user)
     install_tools()
+    install_filemon_tool()
     do_docker_config(login_user)
 
     # 中文和主题美化

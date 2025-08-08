@@ -76,11 +76,14 @@ def install_browser():
     os.system("xbps-install -y chromium")
 
 
+def install_filemon_tool():
+    os.system("xbps-install -y inotify-tools watchman")
+
+
 def install_tools():
     tool_list = [
         "xfce4-screenshooter",
         "gparted",
-        "inotify-tools",
         "menulibre",
     ]
     for tool in tool_list:
@@ -240,6 +243,7 @@ if __name__ == "__main__":
     install_vm_essential()
     install_virt_manager(login_user)
     install_tools()
+    install_filemon_tool()
     do_vim_config(login_user)
     do_zsh_config(login_user)
     fix_translation_bug(login_user)
