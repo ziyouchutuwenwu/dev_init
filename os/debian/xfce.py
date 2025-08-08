@@ -279,6 +279,7 @@ def init_profile(user):
 def install_tools():
     tool_list = [
         "qalculate-gtk",
+        "inotify-tools",
         "grsync",
         "xfce4-screenshooter",
         "xinput",

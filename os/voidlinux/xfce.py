@@ -80,6 +80,7 @@ def install_tools():
     tool_list = [
         "xfce4-screenshooter",
         "gparted",
+        "inotify-tools",
         "menulibre",
     ]
     for tool in tool_list:
