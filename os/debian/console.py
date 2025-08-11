@@ -24,8 +24,10 @@ def add_usr_sbin_to_path_env():
 
 
 def set_apt_mirror(mirror_name):
+    cmd = "echo "" > /etc/apt/sources.list"
+    os.system(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/apt/%s.list /etc/apt/sources.list" % (current_dir, mirror_name)
+    cmd = "cp -rf %s/apt/%s.sources /etc/apt/sources.list.d/mirror.sources" % (current_dir, mirror_name)
     os.system(cmd)
 
 
@@ -237,17 +239,13 @@ def remove_useless_applications():
     app_list = [
         "xterm",
         "firefox*",
-        "hv3",
         "imagemagic*",
-        "epiphany-browser",
         "libreoffice*",
         "quodlibet",
         "netcat-traditional",
-        "goldendict",
         "exfalso",
         "xfburn",
-        "xarchiver",
-        "evince",
+        "nautilus",
         "xsane*",
         "mousepad",
         "vim-common",

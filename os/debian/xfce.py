@@ -93,10 +93,6 @@ def make_user_dir_en(user):
     proc.run_as_user(user, "mkdir -p ~/.templates")
 
 
-def rm_unused_menu(user):
-    proc.run_as_user(user, "rm -rf '~/.local/share/applications/*.wine'")
-
-
 def make_git_default_config(user):
     proc.run_as_user(user, "git config --global core.autocrlf false")
     proc.run_as_user(user, "git config --global core.quotepath off")
@@ -132,7 +128,6 @@ def install_vm_essential():
 
 def install_virt_manager(user):
     os.system("apt install -y virt-manager")
-    os.system("apt purge -y virt-viewer")
     install_list = [
         "qemu-system",
         "qemu-system-arm",
@@ -245,7 +240,6 @@ def install_video_recorder():
 
 def do_clean_after_install():
     app_list = [
-        "imagemagic*",
         "libproxy-tools",
         # virt-manager 会自动装这个
         "netcat-openbsd",
@@ -372,7 +366,7 @@ if __name__ == "__main__":
     script_name = str(sys.argv[0])
     login_user = os.getlogin()
     if len(sys.argv) < 2:
-        print("用法: %s aliyun/ustc" % (script_name, login_user))
+        print("用法: %s aliyun/ustc" % script_name)
         exit(-1)
 
     mirror_name = str(sys.argv[1])
@@ -443,7 +437,5 @@ if __name__ == "__main__":
     do_zsh_config(login_user)
 
     do_clean_after_install()
-
-    rm_unused_menu(login_user)
     fix_translation_bug(login_user)
     do_clean()

@@ -1,0 +1,47 @@
+Types: deb
+URIs: https://mirrors.aliyun.com/debian/
+Suites: trixie
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb-src
+URIs: https://mirrors.aliyun.com/debian/
+Suites: trixie
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: https://mirrors.aliyun.com/debian/
+Suites: trixie-updates
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb-src
+URIs: https://mirrors.aliyun.com/debian/
+Suites: trixie-updates
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: https://mirrors.aliyun.com/debian/
+Suites: trixie-backports
+Components: main contrib non-free
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb-src
+URIs: https://mirrors.aliyun.com/debian/
+Suites: trixie-backports
+Components: main contrib non-free
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: https://mirrors.aliyun.com/debian-security/
+Suites: trixie-security
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb-src
+URIs: https://mirrors.aliyun.com/debian-security/
+Suites: trixie-security
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
