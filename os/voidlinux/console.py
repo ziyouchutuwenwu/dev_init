@@ -95,6 +95,10 @@ def install_useful_tools():
         os.system(cmd)
 
 
+def install_zip_essential():
+    os.system("xbps-install -y unzip unrar")
+
+
 def set_global_profiles():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/profile/*.sh /etc/profile.d/" % (current_dir)
@@ -135,6 +139,7 @@ if __name__ == "__main__":
     install_vim()
     install_search_tools()
     install_useful_tools()
+    install_zip_essential()
     install_nmap()
     install_python_uv()
     do_zsh_config()
