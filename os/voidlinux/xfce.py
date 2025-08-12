@@ -95,6 +95,15 @@ def install_login_setting():
     os.system("xbps-install -y lightdm-gtk-greeter-settings")
 
 
+def install_embedded_tools():
+    os.system("xbps-install -y openocd")
+    os.system("xbps-install -y gdb-multiarch")
+    os.system("xbps-install -y qemu-user-static")
+    os.system("xbps-install -y u-boot-tools")
+    os.system("xbps-install -y i2c-tools can-utils")
+    os.system("xbps-install -y mtd-utils squashfs-tools")
+
+
 def install_terminator(user):
     os.system("xbps-install -y terminator")
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -232,6 +241,7 @@ if __name__ == "__main__":
     install_ghostty(login_user)
     install_proxychains()
     install_privoxy()
+    install_embedded_tools()
     install_sniffer(login_user)
     install_qtct()
     install_media_player()
