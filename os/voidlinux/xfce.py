@@ -151,7 +151,7 @@ def do_zsh_config(user):
 
 
 def install_media_player():
-    os.system("xbps-install -y ffmpeg vlc smplayer audacious")
+    os.system("xbps-install -y ffmpeg vlc smplayer mplayer audacious")
 
 
 def install_unzipper():
