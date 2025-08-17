@@ -333,11 +333,6 @@ def do_vim_config(user):
     proc.run_as_user(user, cmd)
 
 
-def do_docker_config(user):
-    cmd = "usermod -a -G docker %s" % user
-    os.system(cmd)
-
-
 def run_root_console_script(mirror_name):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "python %s/console.py %s" % (current_dir, mirror_name)
@@ -390,7 +385,6 @@ if __name__ == "__main__":
     install_sudo(login_user)
     install_tools()
     install_filemon_tool()
-    do_docker_config(login_user)
 
     # 中文和主题美化
     install_chinese_fonts()

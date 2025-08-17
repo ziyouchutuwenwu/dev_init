@@ -224,16 +224,6 @@ def install_ssh_server():
     os.system("systemctl restart ssh; systemctl enable ssh")
 
 
-def install_docker():
-    os.system("mkdir -p /etc/apt/keyrings")
-    os.system("curl -fsSL https://mirrors.ustc.edu.cn/docker-ce/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg")
-    os.system('echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.ustc.edu.cn/docker-ce/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null')
-    os.system("apt update; apt install -y docker-ce")
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/docker/daemon.json /etc/docker/" % (current_dir)
-    os.system(cmd)
-
-
 def remove_useless_applications():
     os.system("apt update")
     app_list = [
@@ -304,5 +294,4 @@ if __name__ == "__main__":
     install_ntfs_support()
     install_ssh_server()
     do_zsh_config()
-    install_docker()
     do_clean()
