@@ -127,7 +127,7 @@ pkg install -y xfce4-terminal ripgrep xclip wget
 # neovim
 su $USER -c 'sh $CURRENT_DIR/../../development/editor/nvim/install.sh'
 
-pkg install -y proxychains
+pkg install -y proxychains-ng
 cp -rf $CURRENT_DIR/../../development/proxy/proxychains/proxychains.conf /usr/local/etc/proxychains.conf
 
 # 代理转发
