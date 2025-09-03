@@ -216,7 +216,7 @@ def do_zsh_config(user):
 
 
 def install_beam():
-    os.system("yes | pacman --noconfirm -S jre-openjdk erlang")
+    os.system("yes | pacman --noconfirm -S jre-openjdk erlang rebar3")
     os.system("yes | pacman --noconfirm -S elixir")
     os.system("yes | pacman --noconfirm -S inotify-tools")
 

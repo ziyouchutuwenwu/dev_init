@@ -76,6 +76,11 @@ def install_browser():
     os.system("xbps-install -y chromium")
 
 
+def install_beam():
+    os.system("xbps-install -y erlang rebar3")
+    os.system("xbps-install -y elixir")
+
+
 def install_filemon_tool():
     os.system("xbps-install -y inotify-tools watchman")
 
@@ -237,6 +242,7 @@ if __name__ == "__main__":
     install_themes(login_user)
     install_browser()
     install_fcitx(login_user)
+    install_beam()
     install_terminator(login_user)
     install_ghostty(login_user)
     install_proxychains()

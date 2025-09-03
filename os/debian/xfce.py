@@ -27,8 +27,9 @@ def enable_sleep():
 
 
 def install_beam():
-    os.system("apt install -y erlang rebar3 elixir")
-    os.system("apt pyrge -y erlang-jinterface")
+    os.system("apt install -y erlang rebar3")
+    os.system("apt install -y elixir")
+    os.system("apt purge -y erlang-jinterface")
 
 
 def install_sudo(user):
