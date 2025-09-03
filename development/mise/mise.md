@@ -6,13 +6,13 @@
 
 ## 安装
 
-手动
+官网
 
 ```sh
 https://github.com/jdx/mise
 ```
 
-自动
+安装命令
 
 ```sh
 curl https://mise.run | sh
@@ -21,14 +21,7 @@ curl https://mise.run | sh
 ~/.profile
 
 ```sh
-if [[ "$TERM_PROGRAM" == "vscode" && "$CHROME_DESKTOP" == "cursor.desktop" && -z "$CURSOR_INITED" ]]; then
-    # echo "cursor shell"
-    export CURSOR_INITED=1
-    sh -c $SHELL
-else
-    # 系统 shell
-    eval "$(mise activate zsh)"
-fi
+eval "$(mise activate zsh)"
 ```
 
 所在路径
