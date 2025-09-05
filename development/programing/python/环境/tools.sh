@@ -3,9 +3,7 @@
 set -e
 
 tools=(
-  pip
-  ansible
-  stegoveritas-binwalk
+  ansible-core
   litecli
   mycli
   pgcli
@@ -13,13 +11,12 @@ tools=(
   scons
   you-get
   yt-dlp
-  prettytable
   cython
   nuitka
 )
 
 for tool in "${tools[@]}"; do
-  uv pip install --system -U "$tool" || true
+  uv tool install -U "$tool" || true
 done
 
 echo "done!"

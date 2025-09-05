@@ -6,19 +6,15 @@ uv 为项目创建隔离的虚拟环境
 
 uvx 用于在临时环境中运行
 
-## 安装
+## 用法
 
-[手动下载](https://github.com/astral-sh/uv)
-
-## 项目内
-
-### 创建
+### 创建项目
 
 ```sh
 uv init demo
 ```
 
-### venv
+### 环境隔离
 
 ```sh
 uv venv
@@ -27,16 +23,16 @@ uv venv
 uv venv --python 3.10
 ```
 
-### 依赖
+### 依赖相关
 
 增加依赖
 
 ```sh
-# 这个 pip 是 uv 模拟的
-uv pip install requests
-
 # 这个会更新 pyproject.toml，推荐
 uv add requests
+
+# 这个 pip 是 uv 模拟的
+uv pip install requests
 ```
 
 生成依赖文件
@@ -64,17 +60,15 @@ uv run xxx
 uv run main.py
 ```
 
-## 全局
+## 全局工具
 
-### pip
+安装到 `$HOME/.local/bin`
 
 ```sh
-uv pip install --system -U xxx
+uv tool install -U xxx
 ```
 
-### uvx
-
-在临时目录中下载，全局运行
+一次性运行工具，不需要提前安装，也不污染全局环境
 
 ```sh
 uvx xxx
