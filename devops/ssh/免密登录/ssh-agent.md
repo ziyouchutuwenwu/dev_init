@@ -13,13 +13,10 @@
 ### 启动 agent
 
 ```sh
-eval "$(ssh-agent -s)"
-```
-
-### 增加私钥
-
-```sh
-ssh-add ~/.ssh/id_rsa
+# eval "$(ssh-agent -s)"
+eval "$(ssh-agent -s 2>/dev/null | grep -v 'Agent pid')"
+# ssh-add ~/.ssh/id_rsa
+ssh-add ~/downloads/key &>/dev/null
 ```
 
 ### 连接
