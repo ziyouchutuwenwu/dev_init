@@ -22,13 +22,9 @@ ssh-add ~/.ssh/id_rsa
 ~/.profile
 
 ```sh
-if [ -z "$SSH_AGENT_PID" ] || ! kill -0 "$SSH_AGENT_PID" 2>/dev/null; then
-    eval "$(ssh-agent -s 2>/dev/null | grep -v 'Agent pid')" >/dev/null
-    # ssh-add ~/downloads/keys/key >/dev/null 2>&1
-    if ! trap -p | grep -q "ssh-agent -k"; then
-        trap 'ssh-agent -k >/dev/null 2>&1' EXIT
-    fi
-fi
+eval "$(ssh-agent -s 2> /dev/null | grep -v 'Agent pid')" > /dev/null
+trap 'ssh-agent -k > /dev/null 2>&1' EXIT
+# ssh-add ~/downloads/keys/key > /dev/null 2>&1
 ```
 
 ### 连接
