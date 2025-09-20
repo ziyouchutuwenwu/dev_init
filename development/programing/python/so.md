@@ -1,6 +1,14 @@
-# 调用 so
+# so
+
+## 说明
+
+调用 so
 
 ## 例子
+
+### ctypes
+
+python 自带，不需要三方库
 
 ```python
 import ctypes
@@ -16,11 +24,9 @@ result = demo_lib.add(3, 5)
 print(result)
 ```
 
-ffi
+### cffi
 
-```sh
-pip install cffi
-```
+需要 cffi
 
 ```python
 import cffi
