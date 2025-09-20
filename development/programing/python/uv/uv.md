@@ -14,12 +14,21 @@ uvx 用于在临时环境中运行
 uv init demo
 ```
 
-### 环境隔离
+指定版本
+
+```sh
+uv init demo --python 3.10
+```
+
+### 虚拟环境
 
 ```sh
 uv venv
+```
 
-# 指定版本
+指定版本
+
+```sh
 uv venv --python 3.10
 ```
 
@@ -60,16 +69,10 @@ uv run xxx
 uv run main.py
 ```
 
-## 全局工具
+## 版本缓存
 
-安装到 `$HOME/.local/bin`
-
-```sh
-uv tool install -U xxx
-```
-
-一次性运行工具，不需要提前安装，也不污染全局环境
+版本缓存目录，如果有问题，删除即可
 
 ```sh
-uvx xxx
+rm -rf $HOME/.local/share/uv/
 ```
