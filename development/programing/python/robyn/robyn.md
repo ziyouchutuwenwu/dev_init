@@ -9,8 +9,7 @@
 ctllers.py
 
 ```python
-# 异步
-async def demo(request):
+def demo(request):
     return "aaaaaaaaaaaa"
 ```
 
