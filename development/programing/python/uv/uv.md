@@ -69,7 +69,20 @@ uv run xxx
 uv run main.py
 ```
 
-## 版本缓存
+## 指定版本
+
+查看
+
+```sh
+uv python list
+```
+
+用法
+
+```sh
+uv python install 3.10
+uv python uninstall 3.10
+```
 
 版本缓存目录，如果有问题，删除即可
 
