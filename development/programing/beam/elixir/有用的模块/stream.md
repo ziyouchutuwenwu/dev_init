@@ -178,7 +178,7 @@ end
 # range 的用法
 data_stream = 1..100_000_000//1
 # data_stream = File.stream!("/xxx/big_file")
-stream = Task.async_stream(data_stream, &Demo.demo/1, [max_concurrency: 100])
+stream = data_stream |> Task.async_stream(&Demo.demo/1, [max_concurrency: 100])
 stream |> Stream.run
 ```
 
