@@ -44,15 +44,19 @@ pip install cython
 demo1.py
 
 ```python
+from loguru import logger
+
 def show(msg):
-    print(msg)
+    logger.debug(msg)
 ```
 
 demo2.py
 
 ```python
+from loguru import logger
+
 def show(msg):
-    print(msg)
+    logger.debug(msg)
 ```
 
 main.py
