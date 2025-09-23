@@ -23,7 +23,7 @@ rsync -azvh --partial --progress --delete $REMOTE_USER@$REMOTE_IP:$REMOTE_DIR $L
 ### 跳板机
 
 ```sh
-rsync -azvh -e "ssh -J user1@xx.xx.xx.xx,user2@yy.yy.yy.yy" --partial --progress --delete $SRC $DEST
+rsync -azvh -e "ssh -J user1@jump1,user2@jump2" --partial --progress --delete $SRC $DEST
 ```
 
 ### 只显示不传输
