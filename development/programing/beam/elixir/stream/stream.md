@@ -1,6 +1,12 @@
 # stream
 
-惰性 Enumerable 类型，用于避免在数据量大的时候爆内存
+## 场景
+
+类似于惰性的内存队列
+
+有一堆独立任务要处理，任务数量可能非常大，无法一次性放到内存里
+
+想控制并发数，防止任务过多压垮系统
 
 ## 调试
 
@@ -164,13 +170,14 @@ File.stream!("/path/to/file")
 |> Stream.run()
 ```
 
-### 流式执行函数
+### 万能包装器 1
 
 ```elixir
 defmodule Demo do
   require Logger
 
   def demo(data)do
+    Process.sleep(1000)
     Logger.debug("aaaa #{inspect(data)}")
   end
 end
@@ -178,11 +185,11 @@ end
 # range 的用法
 data_stream = 1..100_000_000//1
 # data_stream = File.stream!("/xxx/big_file")
-stream = data_stream |> Task.async_stream(&Demo.demo/1, [max_concurrency: 100])
+stream = data_stream |> Task.async_stream(&Demo.demo/1, [max_concurrency: 2])
 stream |> Stream.run
 ```
 
-### 万能包装器
+### 万能包装器 2
 
 第一个回调函数，需要返回一个值
 第二个回调函数的参数为第一个的返回值，如果是 {:halt, xxx} 则跳转到第三个函数
