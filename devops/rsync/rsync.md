@@ -20,6 +20,12 @@ rsync -azvh --partial --progress --delete $LOCAL_DIR $REMOTE_USER@$REMOTE_IP:$RE
 rsync -azvh --partial --progress --delete $REMOTE_USER@$REMOTE_IP:$REMOTE_DIR $LOCAL_DIR
 ```
 
+### 跳板机
+
+```sh
+rsync -azvh -e "ssh -J user1@xx.xx.xx.xx,user2@yy.yy.yy.yy" --partial --progress --delete $SRC $DEST
+```
+
 ### 只显示不传输
 
 类似下面
