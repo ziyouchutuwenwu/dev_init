@@ -176,17 +176,18 @@ File.stream!("/path/to/file")
 defmodule Demo do
   require Logger
 
-  def demo(data)do
+  def demo() do
+    data_stream = 1..100_000_000//1
+    # data_stream = File.stream!("/xxx/big_file")
+    stream = data_stream |> Task.async_stream(&on_data/1, max_concurrency: 2)
+    stream |> Stream.run()
+  end
+
+  def on_data(data) do
     Process.sleep(1000)
     Logger.debug("aaaa #{inspect(data)}")
   end
 end
-
-# range 的用法
-data_stream = 1..100_000_000//1
-# data_stream = File.stream!("/xxx/big_file")
-stream = data_stream |> Task.async_stream(&Demo.demo/1, [max_concurrency: 2])
-stream |> Stream.run
 ```
 
 ### 万能包装器 2
@@ -204,10 +205,10 @@ defmodule DemoStream do
       fn ->
         _on_start(file_name)
       end,
-      fn(file) ->
+      fn file ->
         _on_read(file)
       end,
-      fn(file) ->
+      fn file ->
         _on_finish(file)
       end
     )
@@ -220,6 +221,7 @@ defmodule DemoStream do
   def _on_read(file) do
     case IO.binread(file, :line) do
       data when is_binary(data) ->
+        Process.sleep(1000)
         {[data], file}
 
       _ ->
@@ -230,17 +232,25 @@ defmodule DemoStream do
   def _on_finish(file) do
     File.close(file)
   end
+end
 
-  def on_data(data)do
+
+defmodule Demo do
+  require Logger
+
+  def demo do
+    file = "readme.md"
+
+    stream =
+      file
+      |> DemoStream.open()
+      |> Task.async_stream(&on_data/1, max_concurrency: 2)
+
+    stream |> Stream.run()
+  end
+
+  def on_data(data) do
     Logger.debug("on_data #{inspect(data)}")
   end
 end
-```
-
-用法
-
-```elixir
-file = "readme.md"
-stream = file |> DemoStream.open() |> Task.async_stream(&DemoStream.on_data/1, [max_concurrency: 100])
-stream |> Stream.run
 ```
