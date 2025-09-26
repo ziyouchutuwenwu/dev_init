@@ -37,13 +37,6 @@ def init_yay(user):
     proc.run_as_user(user, cmd)
 
 
-def install_vscode(user):
-    sudo_ask_pass_info = "export SUDO_ASKPASS=/tmp/pass.sh"
-    install_cmd = "yes | yay --noconfirm -S --sudoflags -A visual-studio-code-bin"
-    cmd = "%s; %s" % (sudo_ask_pass_info, install_cmd)
-    proc.run_as_user(user, cmd)
-
-
 def install_themes(user):
     sudo_ask_pass_info = "export SUDO_ASKPASS=/tmp/pass.sh"
     install_cmd = "yes | yay --noconfirm -S --sudoflags -A faenza-icon-theme"
@@ -109,7 +102,6 @@ if __name__ == "__main__":
 
     init_yay(login_user)
     install_themes(login_user)
-    install_vscode(login_user)
     install_browser(login_user)
     install_pdf_viewer(login_user)
     install_wps(login_user)
