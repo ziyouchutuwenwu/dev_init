@@ -84,6 +84,7 @@ defmodule FinchHTTPStream do
   def _start_stream_request(url) do
     Logger.debug("on stream start")
 
+    # 主进程收消息，task 用来干活
     parent_pid = self()
 
     Task.start_link(fn ->
@@ -91,11 +92,11 @@ defmodule FinchHTTPStream do
 
       Finch.stream(request, ConfigedFinch, nil, fn
         {:status, status}, _acc ->
-          Logger.debug("{:status, status} #{status}")
+          Logger.debug("{:status, #{status}}")
           {:cont, nil}
 
-        {:headers, _headers}, _acc ->
-          Logger.debug("{:headers, headers}")
+        {:headers, headers}, _acc ->
+          Logger.debug("{:headers, #{inspect(headers)}}")
           {:cont, nil}
 
         {:data, chunk}, _acc ->
@@ -115,7 +116,7 @@ defmodule FinchHTTPStream do
           {:halt, nil}
       end)
 
-      # 手动 send finish 消息
+      # 因为 :done 无法触发，所以手动 send finish 消息
       send(parent_pid, {:sse_finished, :done})
     end)
 
@@ -165,6 +166,7 @@ defmodule ReqHTTPStream do
   def _start_stream_request(url) do
     Logger.debug("on stream start")
 
+    # 主进程收消息，task 用来干活
     parent_pid = self()
 
     Task.start(fn ->
