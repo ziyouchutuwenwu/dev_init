@@ -7,6 +7,8 @@ title = 终端
 
 gtk-wide-tabs = false
 
+window-width = 90
+window-height = 24
 font-family = monaco
 font-size = 11
 
