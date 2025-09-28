@@ -69,7 +69,7 @@ Name[tr]=Uçbirim
 Name[uk]=Terminator
 Name[ur]=Terminator
 Name[vi]=Terminator
-Name[zh_CN]=terminator
+Name[zh_CN]=终端
 Name[zh_TW]=Terminator
 Comment=Multiple terminals in one window
 Comment[af]=Veelvuldige terminale in een venster
@@ -149,6 +149,8 @@ StartupNotify=true
 X-Ubuntu-Gettext-Domain=terminator
 X-Ayatana-Desktop-Shortcuts=NewWindow;
 Keywords=terminal;shell;prompt;command;commandline;
+Path=
+Terminal=false
 [NewWindow Shortcut Group]
 Name=Open a New Window
 Exec=terminator
