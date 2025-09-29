@@ -9,14 +9,14 @@ gtk-wide-tabs = false
 
 window-width = 92
 window-height = 24
-font-family = monaco
+font-family = Monaco
 font-size = 11
 
 # 退出不提示
 confirm-close-surface = false
 
 keybind = ctrl+shift+t=new_tab
-keybind = ctrl+shift+w=close_surface
+keybind = alt+ctrl+w=prompt_surface_title
 keybind = alt+left=previous_tab
 keybind = alt+right=next_tab
 keybind = f11=toggle_fullscreen
