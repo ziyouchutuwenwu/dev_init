@@ -17,29 +17,20 @@ npm install
 hexo server
 ```
 
-### 文章
+### 页面
+
+文章页
 
 ```sh
-hexo new xxx/aaa.md
+hexo new xxx/aaa
 ```
 
-### 主题
+### 测试
+
+本地测试
 
 ```sh
-cd themes
-git clone https://github.com/CodeDaraW/Hacker
-```
-
-```sh
-cp -rf themes/Hacker/_config.example.yml _config.Hacker.yml
-```
-
-\_config.yml
-
-```yaml
-title: 博客
-
-theme: Hacker
+hexo s
 ```
 
 ### 发布
@@ -53,6 +44,9 @@ npm install hexo-deployer-git --save
 \_config.yml
 
 ```yaml
+title: 博客
+language: zh-CN
+
 url: https://xxx.github.io
 root: /aaa/
 
