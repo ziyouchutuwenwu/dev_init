@@ -30,18 +30,16 @@ cd themes
 git clone https://github.com/CodeDaraW/Hacker
 ```
 
+```sh
+cp -rf themes/Hacker/_config.example.yml _config.Hacker.yml
+```
+
 \_config.yml
 
 ```yaml
 title: 博客
 
 theme: Hacker
-```
-
-主题配置
-
-```sh
-cp -rf themes/Hacker/_config.example.yml _config.Hacker.yml
 ```
 
 ### 发布
