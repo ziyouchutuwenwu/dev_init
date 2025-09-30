@@ -19,6 +19,12 @@ hexo server
 
 ### 页面
 
+分类页
+
+```sh
+hexo new page about
+```
+
 文章页
 
 ```sh
