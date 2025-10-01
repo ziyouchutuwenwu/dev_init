@@ -53,12 +53,12 @@ npm install hexo-deployer-git --save
 title: 博客
 language: zh-CN
 
-url: https://xxx.github.io
+url: https://xxx.github.io/aaa/
 root: /aaa/
 
 deploy:
   type: git
-  repository: https://github.com/xxx/repo.git
+  repo: https://github.com/xxx/repo.git
   branch: gh-pages
 ```
 
