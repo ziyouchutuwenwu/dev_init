@@ -23,6 +23,7 @@ uv init demo --python 3.10
 ### 虚拟环境
 
 ```sh
+# 在当前目录创建虚拟环境 .venv
 uv venv
 ```
 
