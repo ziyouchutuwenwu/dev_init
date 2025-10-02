@@ -39,3 +39,23 @@
   <div class="bg-red-500 text-white">C</div>
 </div>
 ```
+
+交叉轴上单独控制子元素
+
+```html
+<div class="flex items-center bg-gray-100 h-64">
+  <div class="bg-blue-500 text-white">A</div>
+  <div class="bg-green-500 text-white self-start">B</div>
+  <div class="bg-red-500 text-white">C</div>
+</div>
+```
+
+主轴上单独控制子元素
+
+```html
+<div class="flex items-center bg-gray-100 h-64 w-full px-4">
+  <div class="bg-blue-500 text-white mr-20">A</div>
+  <div class="bg-green-500 text-white">B</div>
+  <div class="bg-red-500 text-white">C</div>
+</div>
+```

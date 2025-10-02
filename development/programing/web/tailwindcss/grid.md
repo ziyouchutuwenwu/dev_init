@@ -50,3 +50,41 @@
   <div class="bg-red-500 text-white w-20 h-10">CC</div>
 </div>
 ```
+
+单独控制子元素
+
+```html
+<div class="grid grid-cols-4 gap-4 bg-gray-100 p-4 h-32 text-white text-center justify-items-center items-center">
+  <div class="bg-blue-500 col-span-2 w-full h-16">跨 n 列</div>
+  <div class="bg-green-500 w-16 h-16">Box 2</div>
+  <div class="bg-red-500 w-16 h-16">Box 3</div>
+</div>
+```
+
+```html
+<div
+  class="grid grid-cols-3 grid-rows-3 gap-4 bg-gray-100 p-4 h-48 text-white text-center justify-items-center items-center">
+  <div class="bg-blue-500 row-span-2 w-16 h-full">跨 n 行</div>
+  <div class="bg-green-500 w-16 h-16">Box 2</div>
+  <div class="bg-red-500 w-16 h-16">Box 3</div>
+  <div class="bg-yellow-500 w-16 h-16">Box 4</div>
+</div>
+```
+
+```html
+<div class="grid grid-cols-4 gap-4 bg-gray-100 p-4 h-32 text-white text-center justify-items-center items-center">
+  <div class="bg-blue-500 col-start-2 col-end-4 w-full h-16">指定列起止</div>
+  <div class="bg-green-500 w-16 h-16">Box 2</div>
+  <div class="bg-red-500 w-16 h-16">Box 3</div>
+</div>
+```
+
+```html
+<div
+  class="grid grid-cols-3 grid-rows-4 gap-4 bg-gray-100 p-4 h-48 text-white text-center justify-items-center items-center">
+  <div class="bg-blue-500 row-start-2 row-end-4 w-16 h-full">指定行起止</div>
+  <div class="bg-green-500 w-16 h-16">Box 2</div>
+  <div class="bg-red-500 w-16 h-16">Box 3</div>
+  <div class="bg-yellow-500 w-16 h-16">Box 4</div>
+</div>
+```
