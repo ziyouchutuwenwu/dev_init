@@ -88,3 +88,27 @@
   <div class="bg-yellow-500 w-16 h-16">Box 4</div>
 </div>
 ```
+
+后台布局
+
+```html
+<div class="h-screen grid grid-rows-[50px_1fr_50px]">
+  <header class="bg-blue-500 text-white p-4">Header</header>
+  <main class="grid grid-cols-[200px_1fr] min-h-0">
+    <aside class="bg-gray-200 p-4">Sidebar</aside>
+    <section class="bg-white p-4">Content</section>
+  </main>
+  <footer class="bg-blue-500 text-white p-4">Footer</footer>
+</div>
+```
+
+```html
+<div class="h-screen grid grid-cols-[200px_1fr]">
+  <aside class="bg-gray-200 p-4">Sidebar</aside>
+  <div class="grid grid-rows-[50px_1fr_50px] min-h-0">
+    <header class="bg-blue-500 text-white p-2">Header</header>
+    <main class="bg-white p-4 overflow-auto">Content</main>
+    <footer class="bg-blue-500 text-white p-2">Footer</footer>
+  </div>
+</div>
+```
