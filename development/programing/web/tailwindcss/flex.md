@@ -14,29 +14,39 @@
 
 ```html
 <div class="flex space-x-4 bg-gray-100">
-  <div class="bg-blue-500 text-white">A</div>
-  <div class="bg-green-500 text-white">B</div>
-  <div class="bg-red-500 text-white">C</div>
+  <div class="bg-red-300">子元素 1</div>
+  <div class="bg-green-300">子元素 2</div>
+  <div class="bg-blue-300">子元素 3</div>
 </div>
 ```
 
 水平居中
 
 ```html
-<div class="flex justify-center space-x-4 bg-gray-100 h-64">
-  <div class="bg-blue-500 text-white">A</div>
-  <div class="bg-green-500 text-white">B</div>
-  <div class="bg-red-500 text-white">C</div>
+<div class="flex justify-center bg-gray-100 h-64">
+  <div class="bg-red-300">子元素 1</div>
+  <div class="bg-green-300">子元素 2</div>
+  <div class="bg-blue-300">子元素 3</div>
 </div>
 ```
 
 垂直居中
 
 ```html
-<div class="flex items-center space-y-4 bg-gray-100 h-64">
-  <div class="bg-blue-500 text-white">A</div>
-  <div class="bg-green-500 text-white">B</div>
-  <div class="bg-red-500 text-white">C</div>
+<div class="flex items-center bg-gray-100 h-64">
+  <div class="bg-red-300">子元素 1</div>
+  <div class="bg-green-300">子元素 2</div>
+  <div class="bg-blue-300">子元素 3</div>
+</div>
+```
+
+主轴上单独控制子元素
+
+```html
+<div class="flex items-center bg-gray-100">
+  <div class="bg-red-300 text-white mr-20">子元素 1</div>
+  <div class="bg-green-500 text-white">子元素 2</div>
+  <div class="bg-blue-300">子元素 3</div>
 </div>
 ```
 
@@ -44,19 +54,9 @@
 
 ```html
 <div class="flex items-center bg-gray-100 h-64">
-  <div class="bg-blue-500 text-white">A</div>
-  <div class="bg-green-500 text-white self-start">B</div>
-  <div class="bg-red-500 text-white">C</div>
-</div>
-```
-
-主轴上单独控制子元素
-
-```html
-<div class="flex items-center bg-gray-100 h-64 w-full px-4">
-  <div class="bg-blue-500 text-white mr-20">A</div>
-  <div class="bg-green-500 text-white">B</div>
-  <div class="bg-red-500 text-white">C</div>
+  <div class="bg-red-300">子元素 1</div>
+  <div class="bg-green-500 text-white self-start">子元素 2</div>
+  <div class="bg-blue-300">子元素 3</div>
 </div>
 ```
 
