@@ -112,3 +112,18 @@
   </div>
 </div>
 ```
+
+仪表盘效果
+
+```html
+<div class="grid grid-cols-3 gap-4 p-4">
+  <div class="col-span-3 bg-gray-300 h-24"></div>
+
+  <!-- 通过父容器的 grid-cols- 和子容器的 col-span 共同决定 -->
+  <div class="col-span-1 bg-blue-400 h-40"></div>
+  <div class="col-span-2 bg-green-500 h-40"></div>
+
+  <div class="col-span-3 bg-gray-300 h-28"></div>
+  <div class="col-span-3 bg-gray-300 h-28"></div>
+</div>
+```
