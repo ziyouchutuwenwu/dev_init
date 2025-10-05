@@ -15,5 +15,5 @@ assets/css/demo/aaa.css
 app.css
 
 ```css
-@import "demo/aaa.css";
+@import "./demo/aaa.css";
 ```
