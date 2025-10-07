@@ -2,7 +2,28 @@
 
 ## 用法
 
+基本用法
+
 ```sh
-export PGPASSWORD='postgres'; pgcli -h 127.0.0.1 -p 6543 -u postgres -d demo_db
-pgcli postgres://postgres:postgres@127.0.0.1:6543/demo_db
+# 提示输入密码
+pgcli -h 127.0.0.1 -p 5432 -U demo_user -d demo_db -W
+
+# 通过环境变量
+export PGPASSWORD='123456'
+pgcli -h 127.0.0.1 -p 5432 -U demo_user -d demo_db
+
+# 这个不需要环境变量
+pgcli postgres://postgres:pg123456@127.0.0.1:5432/demo_db
+```
+
+用于自动化
+
+```sh
+# ~/.pgpass
+127.0.0.1:5432:demo_db:demo_user:123456
+```
+
+```sh
+chmod 600 ~/.pgpass
+pgcli -h 127.0.0.1 -U demo_user -d demo_db
 ```

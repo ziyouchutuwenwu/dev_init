@@ -85,6 +85,10 @@ def install_filemon_tool():
     os.system("xbps-install -y inotify-tools watchman")
 
 
+def install_pg_essential():
+    os.system("xbps-install -y postgresql-libs")
+
+
 def install_tools():
     tool_list = [
         "xfce4-screenshooter",
@@ -251,6 +255,7 @@ if __name__ == "__main__":
     install_sniffer(login_user)
     install_qtct()
     install_media_player()
+    install_pg_essential()
     disable_file_history(login_user)
     install_pdf_reader()
     install_unzipper()
