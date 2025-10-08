@@ -12,7 +12,7 @@ pull 模式下，sv 和 system 略有不同
 
 ```sh
 sudo mkdir -p /etc/systemd/system/docker.service.d
-sudo nvim /etc/systemd/system/docker.service.d/proxy.conf
+sudo vim /etc/systemd/system/docker.service.d/proxy.conf
 ```
 
 不支持 socks5, 必须用 http 代理
@@ -53,7 +53,7 @@ sv restart docker
 
 ```sh
 mkdir -p ~/.docker
-nvim ~/.docker/config.json
+vim ~/.docker/config.json
 ```
 
 ```json
