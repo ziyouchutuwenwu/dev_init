@@ -46,65 +46,63 @@ export class NotifyService {
 }
 ```
 
-c1.component.ts
+c1.ts
 
 ```typescript
-import { Component, OnInit } from "@angular/core";
-import { NotifyService } from "../notify.service";
+import { Component, OnInit } from '@angular/core';
+import { NotifyService } from '../notify.service';
 
 @Component({
-  selector: "app-c1",
-  standalone: true,
+  selector: 'app-c1',
   imports: [],
-  templateUrl: "./c1.component.html",
-  styleUrl: "./c1.component.css",
+  templateUrl: './c1.html',
+  styleUrl: './c1.scss',
 })
-export class C1Component implements OnInit {
+export class C1 implements OnInit {
   constructor(private notifyService: NotifyService) {}
 
   ngOnInit() {
     this.notifyService.onMsg().subscribe((msg) => {
-      console.log("c1 got data %s", msg);
+      console.log('c1 got data %s', msg);
     });
   }
 
   send() {
-    this.notifyService.send("data from c1");
+    this.notifyService.send('data from c1');
   }
 }
 ```
 
-c1.component.html
+c1.html
 
 ```html
 <button (click)="send()">发送</button>
 ```
 
-c2.component.ts
+c2.ts
 
 ```typescript
-import { Component, OnInit } from "@angular/core";
-import { NotifyService } from "../notify.service";
+import { Component, OnInit } from '@angular/core';
+import { NotifyService } from '../notify.service';
 
 @Component({
-  selector: "app-c2",
-  standalone: true,
+  selector: 'app-c2',
   imports: [],
-  templateUrl: "./c2.component.html",
-  styleUrl: "./c2.component.css",
+  templateUrl: './c2.html',
+  styleUrl: './c2.scss',
 })
-export class C2Component implements OnInit {
+export class C2 implements OnInit {
   constructor(private notifyService: NotifyService) {}
 
   ngOnInit() {
     this.notifyService.onMsg().subscribe((msg) => {
-      console.log("c2 got data %s", msg);
+      console.log('c2 got data %s', msg);
     });
   }
 }
 ```
 
-app.component.html
+app.html
 
 ```html
 <app-c1></app-c1>
@@ -112,23 +110,21 @@ app.component.html
 <app-c2></app-c2>
 ```
 
-app.component.ts
+app.ts
 
 ```typescript
-import { Component } from "@angular/core";
-import { RouterOutlet } from "@angular/router";
-import { C1Component } from "./c1/c1.component";
-import { C2Component } from "./c2/c2.component";
+import { Component, signal } from '@angular/core';
+import { C1 } from "./c1/c1";
+import { C2 } from "./c2/c2";
 
 @Component({
-  selector: "app-root",
-  standalone: true,
-  imports: [RouterOutlet, C1Component, C2Component],
-  templateUrl: "./app.component.html",
-  styleUrl: "./app.component.css",
+  selector: 'app-root',
+  imports: [C1, C2],
+  templateUrl: './app.html',
+  styleUrl: './app.scss'
 })
-export class AppComponent {
-  title = "demo";
+export class App {
+  protected readonly title = signal('demo');
 }
 ```
 
