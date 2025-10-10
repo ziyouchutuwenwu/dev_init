@@ -77,34 +77,33 @@ get-demo.html
 get-demo.ts
 
 ```typescript
-import { Component } from '@angular/core';
-import { axioShareInstance } from '../../axios/wrapper';
+import { Component } from "@angular/core";
+import { axioShareInstance } from "../../axios/wrapper";
 
 @Component({
-  selector: 'app-get-demo',
+  selector: "app-get-demo",
   imports: [],
-  templateUrl: './get-demo.html',
-  styleUrl: './get-demo.scss'
+  templateUrl: "./get-demo.html",
+  styleUrl: "./get-demo.css",
 })
-
 export class GetDemo {
   ngOnInit(): void {
-    console.log('/api/get-demo init');
+    console.log("/api/get-demo init");
   }
 
   demo() {
     const dataMap = {
-      username: 'mmc',
-      password: '123456',
+      username: "mmc",
+      password: "123456",
     };
     const request = axioShareInstance;
     request
-      .get('/api/get-demo', { params: dataMap })
+      .get("/api/get-demo", { params: dataMap })
       .then((response) => {
-        console.log('正确返回', response.data);
+        console.log("正确返回", response.data);
       })
       .catch((error) => {
-        console.log('错误', error);
+        console.log("错误", error);
       });
   }
 }
@@ -121,36 +120,35 @@ form-post-demo.html
 form-post-demo.ts
 
 ```typescript
-import { Component } from '@angular/core';
-import { axioShareInstance } from '../../axios/wrapper';
+import { Component } from "@angular/core";
+import { axioShareInstance } from "../../axios/wrapper";
 
 @Component({
-  selector: 'app-form-post-demo',
+  selector: "app-form-post-demo",
   imports: [],
-  templateUrl: './form-post-demo.html',
-  styleUrl: './form-post-demo.scss'
+  templateUrl: "./form-post-demo.html",
+  styleUrl: "./form-post-demo.css",
 })
-
 export class FormPostDemo {
   ngOnInit(): void {
-    console.log('/api/form-post-demo init');
+    console.log("/api/form-post-demo init");
   }
 
   demo() {
     const dataMap = {
-      username: 'mmc',
-      password: '123456',
+      username: "mmc",
+      password: "123456",
     };
 
     const request = axioShareInstance;
-    request.defaults.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    request.defaults.headers["Content-Type"] = "application/x-www-form-urlencoded";
     request
-      .post('/api/form-post-demo', { params: dataMap })
+      .post("/api/form-post-demo", { params: dataMap })
       .then((response) => {
-        console.log('正确返回', response.data);
+        console.log("正确返回", response.data);
       })
       .catch((error) => {
-        console.log('错误', error);
+        console.log("错误", error);
       });
   }
 }
@@ -167,35 +165,35 @@ json-post-demo.html
 json-post-demo.ts
 
 ```typescript
-import { Component } from '@angular/core';
-import { axioShareInstance } from '../../axios/wrapper';
+import { Component } from "@angular/core";
+import { axioShareInstance } from "../../axios/wrapper";
 
 @Component({
-  selector: 'app-json-post-demo',
+  selector: "app-json-post-demo",
   imports: [],
-  templateUrl: './json-post-demo.html',
-  styleUrl: './json-post-demo.scss',
+  templateUrl: "./json-post-demo.html",
+  styleUrl: "./json-post-demo.css",
 })
 export class JsonPostDemo {
   ngOnInit(): void {
-    console.log('/api/json-post-demo init');
+    console.log("/api/json-post-demo init");
   }
 
   demo() {
     const dataMap = {
-      username: 'mmc',
-      password: '123456',
+      username: "mmc",
+      password: "123456",
     };
 
     const request = axioShareInstance;
-    request.defaults.headers['Content-Type'] = 'application/json';
+    request.defaults.headers["Content-Type"] = "application/json";
     request
-      .post('/api/json-post-demo', { params: dataMap })
+      .post("/api/json-post-demo", { params: dataMap })
       .then((response) => {
-        console.log('正确返回', response.data);
+        console.log("正确返回", response.data);
       })
       .catch((error) => {
-        console.log('错误', error);
+        console.log("错误", error);
       });
   }
 }
@@ -212,40 +210,40 @@ download-demo.html
 download-demo.ts
 
 ```typescript
-import { Component } from '@angular/core';
-import { axioShareInstance } from '../../axios/wrapper';
+import { Component } from "@angular/core";
+import { axioShareInstance } from "../../axios/wrapper";
 
 @Component({
-  selector: 'app-download-demo',
+  selector: "app-download-demo",
   imports: [],
-  templateUrl: './download-demo.html',
-  styleUrl: './download-demo.scss',
+  templateUrl: "./download-demo.html",
+  styleUrl: "./download-demo.css",
 })
 export class DownloadDemo {
   ngOnInit(): void {
-    console.log('/api/download-demo init');
+    console.log("/api/download-demo init");
   }
 
   demo() {
     const dataMap = {};
     const request = axioShareInstance;
     request
-      .get('/api/download-demo', { params: dataMap, responseType: 'blob' })
+      .get("/api/download-demo", { params: dataMap, responseType: "blob" })
       .then((response) => {
         const blob = new Blob([response.data], {
           // 任意的二进制数据
-          type: 'application/octet-stream',
+          type: "application/octet-stream",
         });
         const fileURL = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = fileURL;
-        link.download = 'file.zip';
+        link.download = "file.zip";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
       })
       .catch((error) => {
-        console.log('错误', error);
+        console.log("错误", error);
       });
   }
 }
