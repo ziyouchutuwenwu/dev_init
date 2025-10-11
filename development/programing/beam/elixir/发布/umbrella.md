@@ -23,20 +23,19 @@ mix new demo2
 ```elixir
 def project do
   [
-    releases: [
-      # 配置一处就可以
-      aaa: [
-        applications: [
-          demo1: :permanent,
-          demo2: :permanent
-        ]
-      ],
-      # 配置一处就可以
-      bbb: [
-        applications: [demo2: :permanent]
+    .........
+    releases: releases()
+  ]
+end
+
+defp releases do
+  [
+    aaa: [
+      applications: [
+        demo1: :permanent,
+        demo2: :permanent
       ]
-    ],
-    ....
+    ]
   ]
 end
 ```
