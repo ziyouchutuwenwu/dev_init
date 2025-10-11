@@ -1,4 +1,8 @@
-# umbrella 项目
+# umbrella
+
+## 说明
+
+umbrella 在发布的时候，需要明确指定子项目名称
 
 ## 步骤
 
@@ -20,12 +24,14 @@ mix new demo2
 def project do
   [
     releases: [
+      # 配置一处就可以
       aaa: [
         applications: [
           demo1: :permanent,
           demo2: :permanent
         ]
       ],
+      # 配置一处就可以
       bbb: [
         applications: [demo2: :permanent]
       ]
@@ -33,6 +39,14 @@ def project do
     ....
   ]
 end
+```
+
+### 发布
+
+最终需要的目录
+
+```sh
+_build/prod/rel/$RELEASE_NAME/
 ```
 
 ### 其它
