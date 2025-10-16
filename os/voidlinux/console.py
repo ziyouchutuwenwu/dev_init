@@ -100,7 +100,7 @@ def install_zip_essential():
 
 
 def set_sudo_timeout():
-    os.system("echo 'Defaults timestamp_timeout=10' | tee /etc/sudoers.d/global-timeout > /dev/null")
+    os.system("echo 'Defaults timestamp_timeout=30' | tee /etc/sudoers.d/global-timeout > /dev/null")
 
 
 def set_global_profiles():
