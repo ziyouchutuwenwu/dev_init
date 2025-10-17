@@ -28,6 +28,6 @@ PermitRootLogin yes
 如果创建时没自启动ssh服务
 
 ```sh
-sysrc sshd_enable="YES"
+sysrc -f /etc/rc.conf.local sshd_enable="YES"
 service sshd restart
 ```
