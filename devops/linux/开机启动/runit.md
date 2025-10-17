@@ -1,8 +1,8 @@
-# sv
+# runit
 
 ## 说明
 
-sv 是 voidlinux 自带的
+voidlinux 自带
 
 ## 例子
 

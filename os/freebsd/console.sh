@@ -11,10 +11,10 @@ rm -rf ~/.profile
 touch ~/.profile
 
 # 加速启动
-sysrc -f /boot/loader.conf autoboot_delay="0"
+sysrc -f /boot/loader.conf.local autoboot_delay="0"
 
 # 启用 carp
-sysrc -f /boot/loader.conf carp_load="YES"
+sysrc -f /boot/loader.conf.local carp_load="YES"
 
 # 中科大的镜像似乎会有校验码错误，目前用官方加代理
 # mkdir -p /usr/local/etc/pkg/repos/

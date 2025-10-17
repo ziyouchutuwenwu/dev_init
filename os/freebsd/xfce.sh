@@ -26,7 +26,7 @@ sh $CURRENT_DIR/console.sh
 
 # 显卡
 pkg install -y drm-kmod
-sysrc -f /etc/rc.conf kld_list="i915kms"
+sysrc -f /etc/rc.conf.local kld_list="i915kms"
 
 # 自带 modesetting 驱动，更加现代
 # 这个用来硬解码
@@ -40,11 +40,11 @@ pkg install -y xfce
 pkg install -y xfce4-session
 
 # cli 下禁用鼠标
-sysrc -f /etc/rc.conf moused_enable="NO"
-sysrc -f /etc/rc.conf moused_nondefault_enable="NO"
+sysrc -f /etc/rc.conf.local moused_enable="NO"
+sysrc -f /etc/rc.conf.local moused_nondefault_enable="NO"
 
-sysrc -f /etc/rc.conf dbus_enable="YES"
-sysrc -f /etc/rc.conf slim_enable="YES"
+sysrc -f /etc/rc.conf.local dbus_enable="YES"
+sysrc -f /etc/rc.conf.local slim_enable="YES"
 
 # ~/.xinitrc
 USER_HOME=$(su $USER -c 'echo $HOME')
@@ -133,11 +133,11 @@ cp -rf $CURRENT_DIR/../../development/proxy/proxychains/proxychains.conf /usr/lo
 # 代理转发
 pkg install -y privoxy
 cp -rf $CURRENT_DIR/../../development/proxy/privoxy/config /usr/local/etc/privoxy/config
-sysrc -f /etc/rc.conf privoxy_enable="YES"
+sysrc -f /etc/rc.conf.local privoxy_enable="YES"
 
 # qemu 下鼠标支持
 pkg install -y utouch-kmod
-sysrc -f /boot/loader.conf utouch_load="YES"
+sysrc -f /boot/loader.conf.local utouch_load="YES"
 
 pkg install -y python
 
