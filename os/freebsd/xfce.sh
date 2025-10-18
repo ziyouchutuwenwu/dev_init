@@ -150,5 +150,9 @@ su $USER -c 'sh $CURRENT_DIR/zsh/user/config.sh'
 
 # 处理桌面图标的问题
 su $USER -c 'mkdir -p ~/.local/share/applications/'
+
 su $USER -c 'cp -rf $CURRENT_DIR/translations/* ~/.local/share/applications/'
+# ~/.local/share/applications 下，把 hidden 目录里面的每个文件，在 ~/.local/share/applications 下创建一个快捷方式
+su $USER -c 'cd ~/.local/share/applications && for f in hidden/*; do ln -s "$f" .; done'
+
 su $USER -c 'update-desktop-database ~/.local/share/applications'
