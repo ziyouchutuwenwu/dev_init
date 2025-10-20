@@ -18,7 +18,7 @@
 
 ## 同步
 
-设置相关的 json
+复制相关的 json
 
 ```sh
 ~/.config/Code/User/settings.json
@@ -30,6 +30,7 @@
 ```sh
 # 备份
 code --list-extensions > extensions.txt
-# 安装
+
 cat extensions.txt | xargs -L 1 code --install-extension
+cat extensions.txt | xargs -L 1 code --uninstall-extension
 ```
