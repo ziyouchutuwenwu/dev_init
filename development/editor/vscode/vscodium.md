@@ -18,13 +18,18 @@
 
 ## 同步
 
-要先指定要 json 的路径
+设置相关的 json
 
 ```sh
-touch ~/.config/VSCodium/User/settings.json
-touch ~/.config/VSCodium/User/keybindings.json
+~/.config/Code/User/settings.json
+~/.config/Code/User/keybindings.json
 ```
 
+插件
+
 ```sh
-ext install DunderDev.sync-everything
+# 备份
+code --list-extensions > extensions.txt
+# 安装
+cat extensions.txt | xargs -L 1 code --install-extension
 ```
