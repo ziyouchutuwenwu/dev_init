@@ -33,7 +33,7 @@ resources/app/product.json
 测试
 
 ```sh
-code --install-extension bwildeman.tabulous
+code --install-extension bwildeman.tabulous --verbose
 ```
 
 ## 插件同步
