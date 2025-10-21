@@ -3,14 +3,10 @@
   "configurations": [
     {
       "name": "debug",
-      "type": "cppdbg",
+      "type": "gdb",
       "request": "launch",
-      "program": "${workspaceRoot}/target/debug/${workspaceFolderBasename}",
-      "args": [],
-      "stopAtEntry": false,
-      "cwd": "${workspaceRoot}",
-      "environment": [],
-      "preLaunchTask": "build"
+      "target": "${workspaceFolder}/target/debug/${workspaceFolderBasename}",
+      "cwd": "${workspaceRoot}"
     }
   ]
 }
