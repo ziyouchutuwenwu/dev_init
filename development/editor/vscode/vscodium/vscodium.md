@@ -52,7 +52,7 @@ code --install-extension bwildeman.tabulous --verbose
 code --list-extensions > extensions.txt
 
 cat extensions.txt | xargs -L 1 code --install-extension
-cat extensions.txt | xargs -L 1 code --uninstall-extension
+code --list-extensions | xargs -r -L 1 code --uninstall-extension
 ```
 
 中文

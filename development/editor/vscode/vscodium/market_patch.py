@@ -34,7 +34,7 @@ data["extensionsGallery"] = new_gallery
 try:
     with open(product_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    print(f"[{prog}] 已更新 {product_path}，extensionsGallery 仅包含 serviceUrl 与 itemUrl。")
+    print(f"已更新 {product_path}")
 except Exception as e:
-    print(f"[{prog}] 写入失败: {e}", file=sys.stderr)
+    print(f"写入失败: {e}", file=sys.stderr)
     sys.exit(4)
