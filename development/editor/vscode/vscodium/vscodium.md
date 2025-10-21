@@ -41,8 +41,8 @@ code --install-extension bwildeman.tabulous --verbose
 复制相关的 json
 
 ```sh
-~/.config/Code/User/settings.json
-~/.config/Code/User/keybindings.json
+~/.config/VSCodium/User/settings.json
+~/.config/VSCodium/User/keybindings.json
 ```
 
 插件
