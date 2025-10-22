@@ -1,4 +1,4 @@
-# 内存分配器
+# allocator
 
 ## 说明
 
@@ -85,8 +85,7 @@ const std = @import("std");
 const expect = std.testing.expect;
 
 test "gpa" {
-    const config = .{};
-    var gpa = std.heap.GeneralPurposeAllocator(config){};
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer {
         if (gpa.deinit() != .ok) {
             @panic("发现内存泄漏");

@@ -1,5 +1,12 @@
 # log
 
+## 说明
+
+| 输出方式        | 输出位置            |
+| --------------- | ------------------- |
+| std.debug.print | 测试模式，到 stderr |
+| std.log.debug   | run 模式            |
+
 ## 例子
 
 run 模式
@@ -13,8 +20,6 @@ pub fn main() void {
     std.log.debug("info {s} data_list {any}", .{ info, data_list });
 }
 ```
-
-test 不支持 log
 
 ```zig
 const std = @import("std");
