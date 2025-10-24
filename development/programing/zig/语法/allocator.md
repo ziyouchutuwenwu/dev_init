@@ -182,26 +182,57 @@ pub fn init() Gpa {
 }
 ```
 
+tsa.zig
+
+```zig
+const std = @import("std");
+
+var _tsa: ?std.heap.ThreadSafeAllocator = null;
+
+pub fn ts_allocator(allocator: std.mem.Allocator) std.mem.Allocator {
+    _tsa = std.heap.ThreadSafeAllocator{ .child_allocator = allocator };
+    return _tsa.?.allocator();
+}
+```
+
+arena.zig
+
+```zig
+const std = @import("std");
+
+var _arena: ?std.heap.ArenaAllocator = null;
+
+pub fn arena_allocator(allocator: std.mem.Allocator) std.mem.Allocator {
+    _arena = std.heap.ArenaAllocator.init(allocator);
+    return _arena.?.allocator();
+}
+
+pub fn deinit() void {
+    if (_arena != null) {
+        _arena.?.deinit();
+        _arena = null;
+    }
+}
+```
+
 main.zig
 
 ```zig
 const std = @import("std");
 const safe_gpa = @import("safe_gpa.zig");
+const tsa = @import("tsa.zig");
+const arena = @import("arena.zig");
 
 pub fn main() !void {
     var gpa = safe_gpa.init();
     defer gpa.deinit();
 
     const gpa_allocator = gpa.allocator();
-
-    // 外面包一层线程安全的 allocator
-    var thread_safe_fba = std.heap.ThreadSafeAllocator{ .child_allocator = gpa_allocator };
-    const thread_safe_allocator = thread_safe_fba.allocator();
+    const tsa_allocator = tsa.ts_allocator(gpa_allocator);
 
     // 外面包一层 arena 分配器
-    var arena = std.heap.ArenaAllocator.init(thread_safe_allocator);
+    const allocator = arena.arena_allocator(tsa_allocator);
     defer arena.deinit();
-    const allocator = arena.allocator();
 
     const formatted_str = try std.fmt.allocPrint(allocator, "测试 {}", .{42});
     // defer allocator.free(formatted_str);
