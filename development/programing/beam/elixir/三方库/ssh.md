@@ -6,49 +6,56 @@
 
 ## 用法
 
-ssher.ex
-
 ```elixir
-defmodule SSHer do
+defmodule SSH do
   require Logger
 
-  @default_pubkey_path "~/.ssh/id_rsa.pub"
+  @default_pubkey "~/.ssh/id_rsa.pub"
 
-  def upload_pubkey(host, user, opts \\ []) do
-    pubkey_path = Keyword.get(opts, :pubkey_path, @default_pubkey_path) |> Path.expand()
+  def upload_pubkey(host, opts) when is_list(opts) do
+    upload_pubkey(host, nil, nil, nil, opts)
+  end
+
+  def upload_pubkey(host, user \\ nil, password \\ nil, pubkey \\ nil, opts \\ []) do
+    # 从参数取，不传则从 opts 取
+    user = user || Keyword.get(opts, :user, nil)
+    pubkey = pubkey || Keyword.get(opts, :pubkey, @default_pubkey) |> Path.expand()
+    password = password || Keyword.get(opts, :password, nil)
+
     port = Keyword.get(opts, :port, 22)
-    password = Keyword.get(opts, :password, nil)
 
-    with {:ok, pubkey} <- File.read(pubkey_path),
+    options =
+      if password do
+        [
+          user: user,
+          password: password,
+          silently_accept_hosts: true,
+          port: port
+        ]
+      else
+        [
+          user: user,
+          key_cb: {:ssh_agent, []},
+          silently_accept_hosts: true,
+          port: port
+        ]
+      end
+
+    with {:ok, pubkey} <- File.read(pubkey),
          pubkey_trimmed = String.trim(pubkey),
          encoded = Base.encode64(pubkey_trimmed),
-         context <-
-           SSHKit.context(
-             to_string(host),
-             if(password,
-               do: [user: user, password: password, silently_accept_hosts: true, port: port],
-               else: [
-                 user: user,
-                 key_cb: {:ssh_agent, []},
-                 silently_accept_hosts: true,
-                 port: port
-               ]
-             )
-           ),
-         {:ok, out} <- insert_pubkey_to_keyfile(context, encoded) do
+         context <- SSHKit.context(to_string(host), options),
+         {:ok, out} <- _insert_pubkey_to_keyfile(context, encoded) do
       Logger.info("公钥上传成功: #{host}")
       {:ok, out}
     else
       {:error, reason} = err ->
         Logger.error("上传公钥失败: #{inspect(reason)}")
         err
-
-      :error ->
-        {:error, :cannot_read_pubkey}
     end
   end
 
-  defp insert_pubkey_to_keyfile(context, encoded_pubkey) do
+  defp _insert_pubkey_to_keyfile(context, encoded_pubkey) do
     cmd = """
     mkdir -p ~/.ssh && chmod 700 ~/.ssh && \
     touch ~/.ssh/authorized_keys && \
@@ -80,8 +87,8 @@ end
 defmodule Demo do
   require Logger
 
-  def demo1 do
-    host = "10.0.2.199"
+  def pwd_demo do
+    host = "10.0.2.181"
     user = "root"
     password = "123456"
 
@@ -97,8 +104,8 @@ defmodule Demo do
     conn |> SSHKit.SSH.run("ifconfig")
   end
 
-  def demo2 do
-    host = "10.0.2.199"
+  def ssh_agent_demo do
+    host = "10.0.2.181"
     user = "root"
 
     context =
@@ -111,17 +118,28 @@ defmodule Demo do
     context |> SSHKit.run("ifconfig")
   end
 
-  def demo3 do
-    host = "10.0.2.199"
+  def pubkey_demo1 do
+    host = "10.0.2.181"
     user = "root"
-    password = "root123456"
+    password = "123456"
+    pubkey = System.get_env("HOME") |> Path.join("downloads/key.pub")
+
+    SSH.upload_pubkey(host, user, password, pubkey)
+  end
+
+  def pubkey_demo2 do
+    host = "10.0.2.181"
+    user = "root"
+    password = "123456"
+    pubkey = System.get_env("HOME") |> Path.join("downloads/key.pub")
 
     opts = [
+      user: user,
       password: password,
-      pubkey_path: System.get_env("HOME") |> Path.join("downloads/key.pub")
+      pubkey: pubkey
     ]
 
-    SSHer.upload_pubkey(host, user, opts)
+    SSH.upload_pubkey(host, opts)
   end
 end
 ```
