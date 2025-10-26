@@ -1,18 +1,14 @@
-# 远程盘
+# smb
 
-## 说明
+## 用法
 
-挂载远程盘
-
-### smb
-
-#### linux
+### linux
 
 ```sh
 mount.cifs -o username=xxx,password=xxx,iocharset=utf8 //192.168.1.11/smb /mnt/smb
 ```
 
-#### freebsd
+### freebsd
 
 ```sh
 /etc/hosts
@@ -27,12 +23,4 @@ mount.cifs -o username=xxx,password=xxx,iocharset=utf8 //192.168.1.11/smb /mnt/s
 
 ```sh
 mount_smbfs //mmc@win10/smb /opt/smb
-```
-
-或者
-
-### ssh
-
-```sh
-sshfs root@192.168.1.11:/opt/crawler_data ~/downloads/aaa/
 ```

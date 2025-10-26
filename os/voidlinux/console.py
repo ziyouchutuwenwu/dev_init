@@ -95,6 +95,10 @@ def install_useful_tools():
         os.system(cmd)
 
 
+def install_ssh_esential():
+    os.system("xbps-install -y autossh fuse-sshfs")
+
+
 def install_zip_essential():
     os.system("xbps-install -y unzip unrar")
 
@@ -140,6 +144,7 @@ if __name__ == "__main__":
     do_full_upgrade()
     install_kernel()
     install_fonts()
+    install_ssh_esential()
     install_vim()
     set_sudo_timeout()
     install_search_tools()
