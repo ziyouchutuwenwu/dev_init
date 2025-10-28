@@ -1,5 +1,7 @@
 # sensor 设备
 
+## 说明
+
 以 aht10 为例
 
 用法见 [这里](https://github.com/RT-Thread-packages/aht10#readme)

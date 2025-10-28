@@ -1,4 +1,6 @@
-# pin 设备
+# pin
+
+## 说明
 
 input 和 output 模式是针对外设而言
 
