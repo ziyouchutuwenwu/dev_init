@@ -17,8 +17,7 @@
       stdlib
     ]},
 
-    % 注册 application
-    % app 和 release 都会自动创建，[]为参数
+    % 启动模块，app 类型需要，[]为参数
     {mod,
       {test_app,[]}
     },
