@@ -3,7 +3,6 @@
 ## 注意
 
 ```sh
-
 mode 选择`Full-Duplex Master`全双工主模式，NSS Signal 选`Disable`即可
 接线的时候，MOSI 和 MISO 不需要反接
 ```
