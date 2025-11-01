@@ -109,7 +109,10 @@ pkg install -y chromium
 pkg install -y qalculate-gtk
 pkg install -y xarchiver
 pkg install -y thunar-archive-plugin
-pkg install -y qt5ct
+
+# vlc 用 qt5ct
+# vlc 用 qt6ct
+pkg install -y qt5ct qt6ct
 pkg install -y vlc smplayer
 pkg install -y audacious-plugins pavucontrol
 pkg install -y xfce4-screenshooter-plugin
