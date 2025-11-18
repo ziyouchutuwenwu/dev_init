@@ -1,0 +1,44 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "reproject",
+      "type": "shell",
+      "command": "scons --target=vsc; ./.vscode/fix_ausolute_path"
+    },
+    {
+      "label": "pkgs-update",
+      "type": "shell",
+      "command": "pkgs --upgrade; pkgs --force-update"
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "scons -c; scons"
+    },
+    {
+      "label": "thunar",
+      "type": "process",
+      "command": "thunar"
+    },
+    {
+      "label": "burn",
+      "type": "shell",
+      //  请注意修改这里具体的板子配置文件
+      "command": "~/dev/dev_init/development/embedded/openocd/burn.py stm32f4x rtthread.bin"
+    },
+    {
+      "label": "erase",
+      "type": "shell",
+      //  请注意修改这里具体的板子配置文件
+      "command": "~/dev/dev_init/development/embedded/openocd/erase.py stm32f4x"
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "rm -rf *.elf; rm -rf *.map; rm -rf *.bin; rm -rf ./build; rm -rf ./__pycache__;"
+    }
+  ]
+}

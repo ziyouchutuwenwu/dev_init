@@ -1,0 +1,23 @@
+theme = wombat_custom
+
+# 关闭自带的标题栏
+#gtk-titlebar = false
+window-theme=light
+title = 终端
+
+gtk-wide-tabs = false
+
+window-width = 92
+window-height = 24
+font-family = Monaco
+font-size = 11
+
+# 退出不提示
+confirm-close-surface = false
+
+keybind = ctrl+shift+t=new_tab
+keybind = alt+ctrl+w=prompt_surface_title
+keybind = alt+left=previous_tab
+keybind = alt+right=next_tab
+keybind = f11=toggle_fullscreen
+

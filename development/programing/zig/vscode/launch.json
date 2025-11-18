@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "debug",
+      "type": "gdb",
+      "request": "launch",
+      "target": "${workspaceFolder}/zig-out/bin/${workspaceFolderBasename}",
+      "cwd": "${workspaceRoot}"
+    }
+  ]
+}
