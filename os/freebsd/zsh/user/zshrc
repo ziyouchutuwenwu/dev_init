@@ -7,11 +7,7 @@ zinit light zsh-users/zsh-autosuggestions
 zinit light zdharma-continuum/fast-syntax-highlighting
 zinit light zsh-users/zsh-completions
 
-# oh-my-zsh 的插件
-zinit snippet OMZ::lib/history.zsh
-zinit snippet OMZ::lib/git.zsh
-
-# 最后设置补全
+# 设置补全
 autoload -U compinit && compinit
 
 # 主题
