@@ -12,5 +12,5 @@ mkdir -p ~/.local/
 cp -rf $CURRENT_DIR/etc ~/.local/
 
 echo "sudo pkg update -fq; sudo pkg upgrade -y; sudo pkg autoremove -y; sudo pkg clean -ay; sudo freebsd-update fetch install" > ~/.zsh_history
-echo "zinit self-update && (zinit update && zinit delete --clean -y)" >> ~/.zsh_history
+echo "zinit self-update; zinit update; zinit delete --clean -y" >> ~/.zsh_history
 chmod -w ~/.zsh_history
