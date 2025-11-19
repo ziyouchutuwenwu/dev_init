@@ -37,6 +37,8 @@ make -j$(nproc) CONFIG_PREFIX=$(pwd)/../rootfs/ install
 
 ### 自定义脚本
 
+用于打包 rootfs 目录
+
 ### 测试
 
 append 后面的 root 不能缺
