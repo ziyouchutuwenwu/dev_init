@@ -4,8 +4,11 @@ source ~/.profile
 
 # 插件
 zinit light zsh-users/zsh-autosuggestions
-zinit light zdharma-continuum/fast-syntax-highlighting
+zinit light zsh-users/zsh-syntax-highlighting
 zinit light zsh-users/zsh-completions
+
+# 命令行输出彩色
+zinit snippet OMZ::lib/history.zsh
 
 # 设置补全
 autoload -U compinit && compinit
