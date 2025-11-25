@@ -2,9 +2,9 @@
 
 ## 说明
 
-用 buildroot 测试，理论上支持任何的 linux
+用 debtootstrap 生成 release, 复制对应的动态库
 
-用 debtootstrap 生成 release, 加上获取动态库来实现
+测试用 buildroot，理论上支持任何的 linux
 
 ## 注意
 
