@@ -1,12 +1,10 @@
 # behavior
 
+## 说明
+
 类似面向对象的接口
 
 ## 例子
-
-`@impl` 关键字，具体看代码
-
-### 代码部分
 
 ```elixir
 defmodule Demo do

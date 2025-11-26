@@ -1,15 +1,16 @@
 # protocol
 
-用于数据多态，不同数据类型对应同一种方法
+## 说明
 
-## 例子
+为不同的数据类型定义通用的行为
+
+## 场景
+
+给一些类型增加功能，而不修改原有模块
+
+## 用法
 
 ```elixir
-defprotocol DemoProtocol do
-  @fallback_to_any true
-  def xxx(struct_obj, source, dest)
-end
-
 defmodule DemoStruct1 do
   defstruct [:aaa, :bbb]
 
@@ -24,6 +25,13 @@ defmodule DemoStruct2 do
   def new(ccc, ddd) do
     %DemoStruct2{ccc: ccc, ddd: ddd}
   end
+end
+```
+
+```elixir
+defprotocol DemoProtocol do
+  @fallback_to_any true
+  def xxx(struct_obj, source, dest)
 end
 
 defimpl DemoProtocol, for: DemoStruct1 do
@@ -52,7 +60,9 @@ defimpl DemoProtocol, for: Any do
     Logger.debug(info)
   end
 end
+```
 
+```elixir
 defmodule Demo do
   def demo do
     obj1 = DemoStruct1.new(111, 222)
