@@ -120,13 +120,6 @@ def install_terminator(user):
     proc.run_as_user(user, cmd)
 
 
-def install_ghostty(user):
-    os.system("xbps-install -y ghostty")
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "sh %s/../../development/terminal/ghostty/install.sh" % (current_dir)
-    proc.run_as_user(user, cmd)
-
-
 def install_pdf_reader():
     os.system("xbps-install -y qpdfview")
 
@@ -248,7 +241,6 @@ if __name__ == "__main__":
     install_fcitx(login_user)
     install_beam()
     install_terminator(login_user)
-    install_ghostty(login_user)
     install_proxychains()
     install_privoxy()
     install_embedded_tools()
