@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
-
 tools=(
   ansible-core
   litecli
@@ -16,7 +14,7 @@ tools=(
 )
 
 for tool in "${tools[@]}"; do
-  uv tool install -U "$tool" || true
+  uv tool install -U "$tool"
 done
 
 echo "done!"
