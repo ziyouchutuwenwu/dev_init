@@ -3,10 +3,11 @@
 
 
 import sys
+
 sys.dont_write_bytecode = True
 
-import os
 import glob
+import os
 
 pwd = os.path.dirname(os.path.abspath(__file__))
 module_path = "%s/../../" % pwd
@@ -104,7 +105,9 @@ def install_zip_essential():
 
 
 def set_sudo_timeout():
-    os.system("echo 'Defaults timestamp_timeout=30' | tee /etc/sudoers.d/global-timeout > /dev/null")
+    os.system(
+        "echo 'Defaults timestamp_timeout=30' | tee /etc/sudoers.d/global-timeout > /dev/null"
+    )
 
 
 def set_global_profiles():

@@ -3,16 +3,15 @@
 
 
 import sys
+
 sys.dont_write_bytecode = True
 
 import os
-
 
 pwd = os.path.dirname(os.path.abspath(__file__))
 module_path = "%s/../../" % pwd
 sys.path.append(module_path)
 from py_mods import proc
-from py_mods import file
 
 
 def make_user_dir_en(user):
@@ -60,14 +59,19 @@ def install_fcitx(user):
 def install_proxychains():
     os.system("xbps-install -y proxychains-ng")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/../../development/proxy/proxychains/proxychains.conf /etc/proxychains.conf" % (current_dir)
+    cmd = (
+        "cp -rf %s/../../development/proxy/proxychains/proxychains.conf /etc/proxychains.conf"
+        % (current_dir)
+    )
     os.system(cmd)
 
 
 def install_privoxy():
     os.system("xbps-install -y privoxy")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/../../development/proxy/privoxy/config /etc/privoxy/config" % (current_dir)
+    cmd = "cp -rf %s/../../development/proxy/privoxy/config /etc/privoxy/config" % (
+        current_dir
+    )
     os.system(cmd)
     os.system("ln -s /etc/sv/privoxy /var/service/")
 

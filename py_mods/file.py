@@ -3,6 +3,7 @@
 
 
 import sys
+
 sys.dont_write_bytecode = True
 
 import os
@@ -24,8 +25,8 @@ def _is_in_file(file, content):
 
 def set_to_file(file, content, need_new_blank_line=False):
     is_existed = _is_in_file(file, content)
-    if False == is_existed:
-        if need_new_blank_line == True:
+    if not is_existed:
+        if need_new_blank_line:
             profile_cmd = "echo '' >> %s" % file
             os.system(profile_cmd)
         profile_cmd = "echo '%s' >> %s" % (content, file)

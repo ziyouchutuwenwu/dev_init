@@ -3,10 +3,10 @@
 
 
 import sys
+
 sys.dont_write_bytecode = True
 
 import os
-
 
 pwd = os.path.dirname(os.path.abspath(__file__))
 module_path = "%s/../../" % pwd
@@ -15,7 +15,9 @@ from py_mods import proc
 
 
 def disable_root_history():
-    os.system("echo 'yes | pacman --noconfirm -Syyu; yes | pacman --noconfirm -Scc' > ~/.bash_history")
+    os.system(
+        "echo 'yes | pacman --noconfirm -Syyu; yes | pacman --noconfirm -Scc' > ~/.bash_history"
+    )
     os.system("chattr +i ~/.bash_history")
     os.system("bash -cl 'history -c'")
 
@@ -135,7 +137,9 @@ def install_docker(user):
     cmd = "usermod -a -G docker %s" % user
     os.system(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "mkdir -p /etc/docker/; cp -rf %s/docker/daemon.json /etc/docker/" % (current_dir)
+    cmd = "mkdir -p /etc/docker/; cp -rf %s/docker/daemon.json /etc/docker/" % (
+        current_dir
+    )
     os.system(cmd)
     os.system("systemctl enable docker.service")
 
@@ -162,7 +166,9 @@ def install_disk_tools():
 
 
 def install_essential_fonts():
-    os.system("yes | pacman --noconfirm -S wqy-bitmapfont wqy-microhei wqy-microhei-lite wqy-zenhei")
+    os.system(
+        "yes | pacman --noconfirm -S wqy-bitmapfont wqy-microhei wqy-microhei-lite wqy-zenhei"
+    )
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/fonts/* /usr/share/fonts/" % (current_dir)
     os.system(cmd)
@@ -180,7 +186,9 @@ def install_serial_tools(user):
 
 
 def install_chinese_input(user):
-    os.system("yes | pacman --noconfirm -S manjaro-asian-input-support-fcitx5 fcitx5-chinese-addons")
+    os.system(
+        "yes | pacman --noconfirm -S manjaro-asian-input-support-fcitx5 fcitx5-chinese-addons"
+    )
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "mkdir -p ~/.config/fcitx5/"
     proc.run_as_user(user, cmd)
@@ -303,7 +311,7 @@ def remove_useless_files():
         "kcm_fcitx5.desktop",
         "kcm_kaccounts.desktop",
         "kcm_trash.desktop",
-        "org.kde.kiod6.desktop"
+        "org.kde.kiod6.desktop",
     ]
     for link in links:
         cmd = "rm -rf /usr/share/applications/%s" % link
@@ -372,14 +380,19 @@ def install_color_picker():
 def install_proxychains():
     os.system("yes | pacman --noconfirm -S proxychains-ng")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/../../development/proxy/proxychains/proxychains.conf /etc/proxychains.conf" % (current_dir)
+    cmd = (
+        "cp -rf %s/../../development/proxy/proxychains/proxychains.conf /etc/proxychains.conf"
+        % (current_dir)
+    )
     os.system(cmd)
 
 
 def install_privoxy():
     os.system("yes | pacman --noconfirm -S privoxy")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/../../development/proxy/privoxy/config /etc/privoxy/config" % (current_dir)
+    cmd = "cp -rf %s/../../development/proxy/privoxy/config /etc/privoxy/config" % (
+        current_dir
+    )
     os.system(cmd)
     os.system("systemctl daemon-reload; systemctl enable privoxy --now")
 

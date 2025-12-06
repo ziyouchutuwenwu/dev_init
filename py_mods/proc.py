@@ -2,11 +2,12 @@
 # -*- coding: UTF-8 -*-
 
 
-import sys
-sys.dont_write_bytecode = True
-
 import os
 import subprocess
+import sys
+
+sys.dont_write_bytecode = True
+
 
 def run_as_user(user, cmd):
     subprocess.call(["su", user, "-c", cmd])

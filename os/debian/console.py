@@ -3,10 +3,10 @@
 
 
 import sys
+
 sys.dont_write_bytecode = True
 
 import os
-
 
 pwd = os.path.dirname(os.path.abspath(__file__))
 module_path = "%s/../../" % pwd
@@ -15,7 +15,9 @@ from py_mods import proc
 
 
 def disable_root_history():
-    os.system("echo 'apt update; apt-file update; apt upgrade -y; apt full-upgrade -y; apt autopurge -y; apt autoclean' > ~/.bash_history")
+    os.system(
+        "echo 'apt update; apt-file update; apt upgrade -y; apt full-upgrade -y; apt autopurge -y; apt autoclean' > ~/.bash_history"
+    )
     os.system("chattr +i ~/.bash_history")
 
 
@@ -24,10 +26,13 @@ def add_usr_sbin_to_path_env():
 
 
 def set_apt_mirror(mirror_name):
-    cmd = "echo "" > /etc/apt/sources.list"
+    cmd = "echo  > /etc/apt/sources.list"
     os.system(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/apt/%s.sources /etc/apt/sources.list.d/mirror.sources" % (current_dir, mirror_name)
+    cmd = "cp -rf %s/apt/%s.sources /etc/apt/sources.list.d/mirror.sources" % (
+        current_dir,
+        mirror_name,
+    )
     os.system(cmd)
 
 
@@ -55,10 +60,7 @@ def add_apt_https_support():
 
 
 def install_build_tools():
-    tool_list = [
-        "build-essential",
-        "autoconf"
-    ]
+    tool_list = ["build-essential", "autoconf"]
     for tool in tool_list:
         cmd = "apt install -y %s" % tool
         os.system(cmd)
@@ -105,13 +107,12 @@ def install_netcat():
 def install_net_tools():
     tool_list = [
         "whois",
-        "cifs-utils"
-        "sshfs",
+        "cifs-utilssshfs",
         "uml-utilities",
         "bridge-utils",
         "net-tools",
         "dnsutils",
-        "tcptraceroute"
+        "tcptraceroute",
     ]
     for tool in tool_list:
         cmd = "apt install -y %s" % tool
@@ -219,7 +220,9 @@ def do_zsh_config():
 
 def install_ssh_server():
     os.system("apt install -y openssh-server")
-    os.system("sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config")
+    os.system(
+        "sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config"
+    )
     os.system("sed -i 's/^#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config")
     os.system("systemctl restart ssh; systemctl enable ssh")
 

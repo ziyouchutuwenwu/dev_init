@@ -3,16 +3,15 @@
 
 
 import sys
+
 sys.dont_write_bytecode = True
 
 import os
 
-
 pwd = os.path.dirname(os.path.abspath(__file__))
 module_path = "%s/../../" % pwd
 sys.path.append(module_path)
-from py_mods import proc
-from py_mods import file
+from py_mods import file, proc
 
 
 def update_sudo_passwd_template(pwd):

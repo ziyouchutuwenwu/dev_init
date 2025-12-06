@@ -3,16 +3,15 @@
 
 
 import sys
+
 sys.dont_write_bytecode = True
 
 import os
-
 
 pwd = os.path.dirname(os.path.abspath(__file__))
 module_path = "%s/../../" % pwd
 sys.path.append(module_path)
 from py_mods import proc
-from py_mods import file
 
 
 # 不同的脚本都需要定义，否则会出现错误
@@ -45,7 +44,9 @@ def install_rt_test_tools():
 def install_embedded_tools():
     os.system("apt install -y openocd")
     os.system("apt install -y gdbserver gdb-multiarch")
-    os.system("apt install -y gcc-arm-linux-gnueabi gcc-arm-none-eabi gcc-arm-linux-gnueabihf")
+    os.system(
+        "apt install -y gcc-arm-linux-gnueabi gcc-arm-none-eabi gcc-arm-linux-gnueabihf"
+    )
     os.system("apt install -y qemu-user-static")
     os.system("apt install -y u-boot-tools")
     os.system("apt install -y i2c-tools spi-tools can-utils")
@@ -67,14 +68,19 @@ def install_login_setting():
 def install_proxychains():
     os.system("apt install -y proxychains4")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/../../development/proxy/proxychains/proxychains.conf /etc/proxychains4.conf" % (current_dir)
+    cmd = (
+        "cp -rf %s/../../development/proxy/proxychains/proxychains.conf /etc/proxychains4.conf"
+        % (current_dir)
+    )
     os.system(cmd)
 
 
 def install_privoxy():
     os.system("apt install -y privoxy")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/../../development/proxy/privoxy/config /etc/privoxy/config" % (current_dir)
+    cmd = "cp -rf %s/../../development/proxy/privoxy/config /etc/privoxy/config" % (
+        current_dir
+    )
     os.system(cmd)
     os.system("systemctl daemon-reload; systemctl enable privoxy")
 
@@ -115,7 +121,9 @@ def install_serial_tools(user):
 
 
 def install_sniffer(user):
-    os.system('echo "wireshark-common wireshark-common/install-setuid boolean true" | debconf-set-selections')
+    os.system(
+        'echo "wireshark-common wireshark-common/install-setuid boolean true" | debconf-set-selections'
+    )
     os.system("apt install -y wireshark")
     cmd = "usermod -a -G wireshark %s" % user
     os.system(cmd)
@@ -178,7 +186,9 @@ def set_dev_rules():
 
 
 def install_chinese_fonts():
-    os.system("apt install -y xfonts-intl-chinese fonts-wqy-microhei fonts-wqy-zenhei xfonts-wqy")
+    os.system(
+        "apt install -y xfonts-intl-chinese fonts-wqy-microhei fonts-wqy-zenhei xfonts-wqy"
+    )
 
 
 def install_fcitx(user):
