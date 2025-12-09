@@ -1,4 +1,4 @@
-#! /usr/bin/env sh
+#!/usr/bin/env sh
 
 if [ "$(id -u)" -ne 0 ] ; then
     echo "need run as root" $0

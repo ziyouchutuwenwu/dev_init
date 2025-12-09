@@ -1,4 +1,4 @@
-#! /usr/bin/env sh
+#!/usr/bin/env sh
 
 if [ "$#" -ne 1 ]; then
   echo "$0 non_root_user_name"
