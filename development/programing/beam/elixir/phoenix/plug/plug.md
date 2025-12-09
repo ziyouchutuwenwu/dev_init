@@ -4,17 +4,18 @@
 
 类似其他语言里面的 middleware
 
-## 种类
+## 例子
 
-### 方法级
+### 控制器方法
 
-访问 index 页面的时候，会触发 plug
+不同的控制器，处理的方式不同
 
 ```elixir
 defmodule WebDemoWeb.PageController do
   use WebDemoWeb, :controller
   require Logger
 
+  # 注意写法
   plug :aaa
   plug :bbb
   plug :ccc
@@ -40,7 +41,7 @@ defmodule WebDemoWeb.PageController do
 end
 ```
 
-### 模块级
+### 独立模块
 
 ```elixir
 defmodule WebDemoWeb.Plugs.Locale do
@@ -101,41 +102,12 @@ controller 里面获取自定义变量
 conn.assigns.demo_locale
 ```
 
-## 注册位置
+### 全局
 
-### router 注册
-
-把 Plug 放在 Pipeline 里面， Pipeline 是一系列 Plug 的组合，执行顺序为**从上到下**
+endpoint.ex
 
 ```elixir
-pipeline :browser do
-  plug :aaa
-  plug :bbb
-  plug WebDemoWeb.Plugs.Locale, "en"
-end
-
-scope "/", WebDemoWeb do
-  pipe_through :browser
-
-end
-```
-
-### controller 注册
-
-一般在 controller 里面注册，用于响应某些 action
-
-```elixir
-defmodule WebDemoWeb.HelloController do
-  use WebDemoWeb, :controller
-
-  plug WebDemoWeb.Plugs.Locale, "zzz" when action in [:index]
-```
-
-### 在 endpoint 注册
-
-为全局效果
-
-```elixir
+# 就在 endpoint 里面添加这个
 def introspect(conn, _opts) do
   Logger.debug("""
   Verb: #{inspect(conn.method)}
@@ -147,7 +119,10 @@ def introspect(conn, _opts) do
 end
 
 
-# 所有的请求都会打印出来
+plug Plug.MethodOverride
+plug Plug.Head
+plug Plug.Session, @session_options
+# 在这里注册
 plug :introspect
-plug WebDemoWeb.Router
+plug WebdemoWeb.Router
 ```

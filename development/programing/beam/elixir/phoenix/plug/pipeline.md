@@ -2,7 +2,7 @@
 
 ## 说明
 
-pipeline 是一系列 plug 的组合
+Pipeline 是一系列 Plug 的组合，执行顺序为**从上到下**
 
 pipeline 也可以作为 plug
 
