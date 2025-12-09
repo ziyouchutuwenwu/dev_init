@@ -8,7 +8,7 @@
 
 ### 控制器方法
 
-不同的控制器，处理的方式不同
+不同的控制器，需要以不同的逻辑处理
 
 ```elixir
 defmodule WebDemoWeb.PageController do
@@ -42,6 +42,8 @@ end
 ```
 
 ### 独立模块
+
+统一处理的逻辑
 
 ```elixir
 defmodule WebDemoWeb.Plugs.Locale do
@@ -90,15 +92,13 @@ pipeline :browser do
 end
 ```
 
-页面里面获取自定义变量
-
 ```html
+<!-- 页面里面获取 -->
 <p>Locale: <%= @demo_locale %></p>
 ```
 
-controller 里面获取自定义变量
-
 ```elixir
+# plug 里面获取
 conn.assigns.demo_locale
 ```
 
@@ -107,22 +107,27 @@ conn.assigns.demo_locale
 endpoint.ex
 
 ```elixir
-# 就在 endpoint 里面添加这个
-def introspect(conn, _opts) do
-  Logger.debug("""
-  Verb: #{inspect(conn.method)}
-  Host: #{inspect(conn.host)}
-  Headers: #{inspect(conn.req_headers)}
-  """)
+defmodule WebdemoWeb.Endpoint do
+  ......
 
-  conn
+  # 定义
+  def introspect(conn, _opts) do
+    Logger.debug("""
+    Verb: #{inspect(conn.method)}
+    Host: #{inspect(conn.host)}
+    Headers: #{inspect(conn.req_headers)}
+    """)
+
+    conn
+  end
+
+  ......
+
+  plug Plug.MethodOverride
+  plug Plug.Head
+  plug Plug.Session, @session_options
+  # 这里注册
+  plug :introspect
+  plug WebdemoWeb.Router
 end
-
-
-plug Plug.MethodOverride
-plug Plug.Head
-plug Plug.Session, @session_options
-# 在这里注册
-plug :introspect
-plug WebdemoWeb.Router
 ```
