@@ -12,7 +12,7 @@ mkdir -p ~/.local/
 cp -rf $CURRENT_DIR/etc ~/.local/
 
 echo "sudo apt update; sudo apt-file update; sudo apt upgrade -y; sudo apt full-upgrade -y; sudo apt autopurge -y; sudo apt autoclean" > ~/.zsh_history
-echo "zinit self-update; zinit update; zinit delete --clean -y" >> ~/.zsh_history
+echo "zinit self-update; zinit update -p -q; zinit delete --clean -y" >> ~/.zsh_history
 chmod -w ~/.zsh_history
 
 rm -rf ~/.bashrc

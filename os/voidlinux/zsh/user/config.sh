@@ -12,5 +12,5 @@ mkdir -p ~/.local/
 cp -rf $CURRENT_DIR/etc ~/.local/
 
 echo "sudo xbps-install -Sy; sudo xbps-install -uy xbps; sudo xbps-install -uy; sudo xbps-remove -Ooy" > ~/.zsh_history
-echo "zinit self-update; zinit update; zinit delete --clean -y" >> ~/.zsh_history
+echo "zinit self-update; zinit update -p -q; zinit delete --clean -y" >> ~/.zsh_history
 chmod -w ~/.zsh_history
