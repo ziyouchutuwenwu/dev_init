@@ -1,5 +1,4 @@
-export PYTHON_BUILD_MIRROR_URL_SKIP_CHECKSUM=1
-export PYTHON_BUILD_MIRROR_URL="https://registry.npmmirror.com/-/binary/python"
-
 export PYTHONPYCACHEPREFIX=/dev/null
+
+export UV_PYTHON_INSTALL_MIRROR="https://registry.npmmirror.com/-/binary/python-build-standalone/"
 export UV_INDEX="https://mirrors.aliyun.com/pypi/simple"
