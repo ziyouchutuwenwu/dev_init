@@ -1,29 +1,48 @@
 # autossh
 
+## 说明
+
+需要用 ssh-add 先添加 key
+
 ## 用法
 
 ### 本地隧道
 
-原来需要远程访问的服务，变为本地访问的服务
+把远程服务，变为本机服务
 
-TARGET_IP 和 VPS_IP 可以不相同
+必须要在 LOCAL_IP 的机器上执行
+
+本机访问 VPS 做免密
 
 ```sh
-autossh -M 0 -i ./keys/id_rsa \
+ssh -NL $LOCAL_IP:$LOCAL_PORT:$REMOTE_IP:$REMOTE_PORT root@VPS
+```
+
+```sh
+autossh -M 0 \
   -o "StrictHostKeyChecking no" \
   -o "ServerAliveInterval 30" \
-  -CfNg -L $LOCAL_IP:$LOCAL_PORT:$TARGET_IP:$TARGET_PORT \
+  -CfNg -L $LOCAL_IP:$LOCAL_PORT:$REMOTE_IP:$REMOTE_PORT \
   root@$VPS
 ```
 
 ### 远程隧道
 
-把服务转发给其它机器
+把本地局域网的服务，变为远程服务器的服务
+
+执行的机器访问 VPS 做免密
 
 ```sh
-autossh -M 0 -i ./keys/id_rsa \
+# VPS 的 /etc/ssh/sshd_config
+# GatewayPorts yes
+# 0.0.0.0 为远程服务器的监听端口
+ssh -NR 0.0.0.0:$REMOTE_PORT:$LAN_SERVER_IP:$LAN_SERVER_PORT root@REMOTE_IP
+```
+
+```sh
+autossh -M 0 \
   -o "StrictHostKeyChecking no" \
   -o "ServerAliveInterval 30" \
-  -CfNg -R $NEW_SERVER_PORT:$OLD_SERVER_IP:$OLD_SERVER_PORT \
-  root@$NEW_SERVER_IP
+  -CfNg -R 0.0.0.0:$REMOTE_PORT:$LAN_SERVER_IP:$LAN_SERVER_PORT \
+  root@REMOTE_IP
 ```
