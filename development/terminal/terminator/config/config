@@ -1,6 +1,9 @@
 [global_config]
   dbus = False
+  ask_before_closing = never
 [keybindings]
+  go_left =
+  go_right=
 [profiles]
   [[default]]
     font = Monaco 11
