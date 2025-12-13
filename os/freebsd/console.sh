@@ -89,7 +89,7 @@ pkg install -y nmap
 
 # tmux
 pkg install -y tmux
-sh $CURRENT_DIR/../../development/terminal/tmux/install.sh
+cp -rf $CURRENT_DIR/../../development/terminal/tmux/config/* /usr/local/etc/
 
 # 启动加载
 mkdir -p /usr/local/etc/profile.d/

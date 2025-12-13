@@ -204,7 +204,7 @@ def set_swapping_config():
 def install_tmux():
     os.system("apt install -y tmux")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "sh %s/../../development/terminal/tmux/install.sh" % (current_dir)
+    cmd = "cp -rf %s/../../development/terminal/tmux/config/* /etc/" % (current_dir)
     os.system(cmd)
 
 

@@ -243,11 +243,11 @@ def install_terminator(user):
     proc.run_as_user(user, cmd)
 
 
-def install_tmux(user):
+def install_tmux():
     os.system("yes | pacman --noconfirm -S tmux")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "sh %s/../../development/terminal/tmux/install.sh" % (current_dir)
-    proc.run_as_user(user, cmd)
+    cmd = "cp -rf %s/../../development/terminal/tmux/config/* /etc/" % (current_dir)
+    os.system(cmd)
 
 
 def install_build_essential():
@@ -534,7 +534,7 @@ if __name__ == "__main__":
     install_docker(login_user)
     install_useful_tools()
     install_terminator(login_user)
-    install_tmux(login_user)
+    install_tmux()
     install_ghostty(login_user)
     do_vim_config(login_user)
     install_chinese_input(login_user)
