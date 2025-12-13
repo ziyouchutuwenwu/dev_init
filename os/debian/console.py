@@ -201,6 +201,13 @@ def set_swapping_config():
     os.system(cmd)
 
 
+def install_tmux():
+    os.system("apt install -y tmux")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cmd = "sh %s/../../development/terminal/tmux/install.sh" % (current_dir)
+    os.system(cmd)
+
+
 def set_fs_watches_config():
     cmd = "sysctl fs.inotify.max_user_watches=524288"
     os.system(cmd)
@@ -252,7 +259,7 @@ def remove_useless_applications():
 
 
 if __name__ == "__main__":
-    if False == proc.is_root():
+    if not proc.is_root():
         print("This program must be run as root. Aborting.")
         exit(-1)
 
@@ -288,6 +295,7 @@ if __name__ == "__main__":
     install_encoding_tools()
     install_net_tools()
     install_netcat()
+    install_tmux()
     install_toys()
     install_ansible_essential()
     install_useful_tools()

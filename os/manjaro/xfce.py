@@ -243,6 +243,13 @@ def install_terminator(user):
     proc.run_as_user(user, cmd)
 
 
+def install_tmux(user):
+    os.system("yes | pacman --noconfirm -S tmux")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cmd = "sh %s/../../development/terminal/tmux/install.sh" % (current_dir)
+    proc.run_as_user(user, cmd)
+
+
 def install_build_essential():
     os.system("yes | pacman --noconfirm -S base-devel")
 
@@ -467,7 +474,7 @@ def install_embedded_tools():
 
 
 if __name__ == "__main__":
-    if False == proc.is_root():
+    if not proc.is_root():
         print("This program must be run as root. Aborting.")
         exit(-1)
 
@@ -527,6 +534,7 @@ if __name__ == "__main__":
     install_docker(login_user)
     install_useful_tools()
     install_terminator(login_user)
+    install_tmux(login_user)
     install_ghostty(login_user)
     do_vim_config(login_user)
     install_chinese_input(login_user)

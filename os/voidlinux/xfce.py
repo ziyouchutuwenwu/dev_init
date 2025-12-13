@@ -224,7 +224,7 @@ def do_clean():
 
 
 if __name__ == "__main__":
-    if False == proc.is_root():
+    if not proc.is_root():
         print("This program must be run as root. Aborting.")
         exit(-1)
 

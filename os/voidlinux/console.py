@@ -72,6 +72,13 @@ def install_kernel():
     os.system("xbps-install -y linux-lts")
 
 
+def install_tmux():
+    os.system("xbps-install -y tmux")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cmd = "sh %s/../../development/terminal/tmux/install.sh" % (current_dir)
+    os.system(cmd)
+
+
 def install_vim():
     os.system("xbps-install -y neovim")
 
@@ -131,7 +138,7 @@ def do_zsh_config():
 
 
 if __name__ == "__main__":
-    if False == proc.is_root():
+    if not proc.is_root():
         print("This program must be run as root. Aborting.")
         exit(-1)
 
@@ -148,6 +155,7 @@ if __name__ == "__main__":
     install_kernel()
     install_fonts()
     install_ssh_esential()
+    install_tmux()
     install_vim()
     set_sudo_timeout()
     install_search_tools()

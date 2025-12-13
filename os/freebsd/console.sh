@@ -87,6 +87,10 @@ pkg install -y binaryen
 # 自动安装 nmap 的 ncat
 pkg install -y nmap
 
+# tmux
+pkg install -y tmux
+sh $CURRENT_DIR/../../development/terminal/tmux/install.sh
+
 # 启动加载
 mkdir -p /usr/local/etc/profile.d/
 cp -rf $CURRENT_DIR/profile.d/*.sh /usr/local/etc/profile.d/
