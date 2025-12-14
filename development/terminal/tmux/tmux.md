@@ -30,6 +30,16 @@ tmux kill-session -t xxx
 tmux kill-server
 ```
 
+### 剪贴板
+
+用支持 OSC52 协议的终端模拟器
+
+如果不支持 OSC52
+
+```sh
+ssh -YC xx.xx.xx.xx
+```
+
 ## 调试
 
 按 prefix 键，然后和 vim 一样
