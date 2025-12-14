@@ -10,5 +10,5 @@ chmod -w ~/.zshrc
 mkdir -p ~/.local/
 cp -rf $CURRENT_DIR/etc ~/.local/
 
-echo "pkg update -fq; pkg upgrade -y; pkg autoremove -y; pkg clean -ay; freebsd-update fetch install" > ~/.zsh_history
+echo "pkg update -fq; pkg upgrade -y; pkg autoremove -y; pkg clean -ay" > ~/.zsh_history
 chmod -w ~/.zsh_history

@@ -2,7 +2,7 @@
 
 ## 说明
 
-pkg, ports, freebsd-update 都支持 `HTTP_PROXY` 和 `HTTPS_PROXY`
+pkg, ports 都支持 `HTTP_PROXY` 和 `HTTPS_PROXY`
 
 ## 配置
 
@@ -39,10 +39,10 @@ export HTTPS_PROXY=http://127.0.0.1:8118
 桌面右上角设置
 
 ```sh
-时间 -> 右键 -> 属性
-  外观 -> 布局 -> 数字式
-  时钟选项 -> 布局 -> 仅时间
-  时间 -> 格式 -> 自定义格式 -> %Y-%m-%d %H:%M:%S
+时间 -> 右键
+  时钟选项 -> 
+    布局 -> 仅时间
+    时间 -> 格式 -> 自定义格式 -> %Y-%m-%d %H:%M:%S
 ```
 
 #### 终端设置
@@ -59,5 +59,4 @@ xfce 终端设置
 
 ```sh
 bsdconfig
-bsdinstall
 ```

@@ -19,10 +19,11 @@ sysrc -f /boot/loader.conf.local carp_load="YES"
 # 中科大的镜像似乎会有校验码错误，目前用官方加代理
 # mkdir -p /usr/local/etc/pkg/repos/
 #cp -rf $CURRENT_DIR/rc_files/pkg.conf /usr/local/etc/pkg/repos/
+ASSUME_ALWAYS_YES=yes pkg bootstrap -f
 ASSUME_ALWAYS_YES=yes pkg update -fq
 
 # 安装预装的工具
-pkg install -y axel curl aria2
+pkg install -y axel curl aria2 git
 
 # 暂时不放配置
 pkg install -y neovim
@@ -37,9 +38,6 @@ chmod a+x /etc/rc.local
 # rm ports.tar.gz
 git clone --depth 1 https://git.FreeBSD.org/ports.git /usr/ports
 cp -rf $CURRENT_DIR/rc_files/ports.conf /etc/make.conf
-
-# update 源
-# sed -i "" 's#update.FreeBSD.org#update.freebsd.cn#g' /etc/freebsd-update.conf
 
 # ssh 允许 root 登录
 sed -i "" 's/#PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config
@@ -64,7 +62,6 @@ cp -rf $CURRENT_DIR/rc_files/pkg.conf /usr/jails/template/usr/local/etc/pkg/repo
 
 TIME_ZONE=$(cat /var/db/zoneinfo)
 cp -rf /usr/share/zoneinfo/$TIME_ZONE /usr/jails/template/etc/localtime
-# sed -i "" 's#update.FreeBSD.org#update.freebsd.cn#g' /usr/jails/template/etc/freebsd-update.conf
 sed -i "" 's/#PermitRootLogin no/PermitRootLogin yes/g' /usr/jails/template/etc/ssh/sshd_config
 
 # 常用工具
@@ -73,7 +70,6 @@ pkg install -y fusefs-sshfs
 pkg install -y autossh sshpass
 pkg install -y screen
 pkg install -y fastfetch
-pkg install -y zellij
 pkg install -y fd-find ripgrep
 pkg install -y enca
 pkg install -y tree

@@ -88,7 +88,6 @@ def install_useful_tools():
         "rsync",
         "fastfetch",
         "tree",
-        "zellij",
         "git",
         "axel",
         "curl",

@@ -299,10 +299,6 @@ def install_useful_tools():
         os.system(cmd)
 
 
-def install_zellij():
-    os.system("yes | pacman --noconfirm -S zellij")
-
-
 def make_git_default_config(user):
     os.system("yes | pacman --noconfirm -S git")
     proc.run_as_user(user, "git config --global core.autocrlf false")
@@ -518,7 +514,6 @@ if __name__ == "__main__":
     install_essential_fonts()
     install_sync_tool()
     install_ssh_server()
-    install_zellij()
     install_ansible_essential()
     install_media_player()
     install_screen_recorder()
