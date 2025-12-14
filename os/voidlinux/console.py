@@ -85,6 +85,7 @@ def install_vim():
 
 def install_useful_tools():
     tools = [
+        "xclip",
         "rsync",
         "fastfetch",
         "tree",

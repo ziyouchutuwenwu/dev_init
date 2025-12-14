@@ -134,6 +134,7 @@ def install_encoding_tools():
 
 def install_useful_tools():
     tool_list = [
+        "xclip",
         "binaryen",
         "virt-what",
         "git",

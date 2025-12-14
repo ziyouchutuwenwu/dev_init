@@ -125,7 +125,7 @@ su $USER -c 'rm -rf ~/Desktop'
 su $USER -c 'mkdir -p ~/.templates'
 su $USER -c 'cp -rf $CURRENT_DIR/englih_user_dir/user-dirs.dirs ~/.config/'
 
-pkg install -y xfce4-terminal ripgrep xclip wget
+pkg install -y xfce4-terminal ripgrep wget
 
 # neovim
 su $USER -c 'sh $CURRENT_DIR/../../development/editor/nvim/install.sh'

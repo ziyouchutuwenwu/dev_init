@@ -142,7 +142,6 @@ def install_themes(user):
 
 
 def do_vim_config(user):
-    os.system("xbps-install -y xclip")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/../../development/editor/nvim/install.sh" % (current_dir)
     proc.run_as_user(user, cmd)

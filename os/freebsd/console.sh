@@ -65,7 +65,7 @@ cp -rf /usr/share/zoneinfo/$TIME_ZONE /usr/jails/template/etc/localtime
 sed -i "" 's/#PermitRootLogin no/PermitRootLogin yes/g' /usr/jails/template/etc/ssh/sshd_config
 
 # 常用工具
-pkg install -y cmatrix cowsay
+pkg install -y xclip
 pkg install -y fusefs-sshfs
 pkg install -y autossh sshpass
 pkg install -y screen

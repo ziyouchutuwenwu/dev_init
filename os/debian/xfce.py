@@ -338,7 +338,7 @@ def install_modbus_tool():
 
 
 def do_vim_config(user):
-    os.system("apt install -y xfce4-terminal ripgrep xclip neovim")
+    os.system("apt install -y xfce4-terminal ripgrep neovim")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/../../development/editor/nvim/install.sh" % (current_dir)
     proc.run_as_user(user, cmd)

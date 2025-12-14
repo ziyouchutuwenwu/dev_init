@@ -29,3 +29,15 @@ tmux kill-session -t xxx
 ```sh
 tmux kill-server
 ```
+
+## 调试
+
+按 prefix 键，然后和 vim 一样
+
+```sh
+:show-options -g
+```
+
+```sh
+tmux show-options -g | rg pane
+```
