@@ -38,6 +38,13 @@ def set_mirror(mirror_name):
 def do_full_upgrade():
     os.system("xbps-install -Suy xbps")
     os.system("xbps-install -Suy")
+
+
+def config_ssh_server():
+    os.system(
+        "sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config"
+    )
+    os.system("sed -i 's/^#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config")
     os.system("sv restart sshd")
 
 
@@ -152,6 +159,7 @@ if __name__ == "__main__":
     set_mirror(mirror_name)
     set_global_profiles()
     do_full_upgrade()
+    config_ssh_server()
     install_kernel()
     install_fonts()
     install_ssh_esential()
