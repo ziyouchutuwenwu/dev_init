@@ -21,6 +21,8 @@ clipboard-paste-protection = false
 # 快捷键
 keybind = ctrl+shift+t=new_tab
 
+app-notifications = no-clipboard-copy
+
 # 重命名 tab
 keybind = ctrl+shift+r=prompt_surface_title
 
