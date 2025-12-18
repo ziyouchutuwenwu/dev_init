@@ -2,15 +2,15 @@
 
 ## 说明
 
-容器里面的 nvidia 相关不需要装，是在主机上装
+容器通过 container-toolkit, 直接调用主机上的 nvidia-xxx 相关的工具
 
 ## 步骤
 
 ### 宿主机
 
-安装驱动
+安装显卡驱动
 
-docker 安装 nvidia-container-runtime
+docker 安装 nvidia-container-toolkit
 
 ### 容器
 
