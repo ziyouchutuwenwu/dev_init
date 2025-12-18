@@ -39,9 +39,10 @@ chmod a+x /etc/rc.local
 git clone --depth 1 https://git.FreeBSD.org/ports.git /usr/ports
 cp -rf $CURRENT_DIR/rc_files/ports.conf /etc/make.conf
 
-# ssh 允许 root 登录
+# ssh
 sed -i "" 's/#PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config
 sed -i "" 's/^#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
+sed -i "" 's/^#\?GatewayPorts.*/GatewayPorts clientspecified/' /etc/ssh/sshd_config
 service sshd restart
 
 # jail 虚拟化
