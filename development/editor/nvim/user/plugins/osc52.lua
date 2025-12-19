@@ -1,4 +1,3 @@
--- 剪贴板支持
 vim.g.clipboard = {
   name = "osc 52",
   copy = {
