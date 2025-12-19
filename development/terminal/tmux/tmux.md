@@ -50,4 +50,5 @@ ssh -YC xx.xx.xx.xx
 
 ```sh
 tmux show-options -g | rg pane
+tmux show-window-options -g | rg passthrough
 ```
