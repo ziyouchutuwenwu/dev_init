@@ -5,39 +5,23 @@ vim.cmd([[
 
 
 -- 编辑
-vim.keymap.set({'n', 'v'}, '<C-c>', function()
-  if vim.fn.mode() == 'n' then
-    if vim.env.SSH_CLIENT or vim.env.SSH_TTY or vim.env.TMUX then
-      require("osc52").copy_register("+")
-    else
-      vim.cmd('normal! "+yy')
-    end
-  else
-    if vim.env.SSH_CLIENT or vim.env.SSH_TTY or vim.env.TMUX then
-      require("osc52").copy_visual()
-    else
-      vim.cmd('normal! "+y')
-    end
-  end
-end, { noremap = true, desc = "复制" })
-vim.keymap.set('v', '<C-x>', function()
-  vim.cmd('normal! "+d')
-end, { noremap = true, desc = "剪切" })
+vim.keymap.set({'n', 'v'}, '<C-c>', '"+y', { noremap = true, desc = "复制" })
+vim.keymap.set('v', '<C-x>', '"+d', { noremap = true, desc = "剪切" })
 
 
 -- 粘贴
 vim.keymap.set({'n', 'v', 'i', 'c'}, '<C-v>', function()
   if vim.fn.mode() == 'i' then
     local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+    local text = vim.fn.getreg('+')
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>"+pi', true, false, true), 'n', false)
     vim.schedule(function()
-      local text = vim.fn.getreg('+')
       vim.api.nvim_win_set_cursor(0, {row, col + #text})
     end)
   elseif vim.fn.mode() == 'c' then
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-r>+', true, false, true), 'n', false)
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-c>"+p', true, false, true), 'n', false)
   else
-    vim.cmd('normal! "+p')
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('"+p', true, false, true), 'n', false)
   end
 end, { noremap = true, desc = "粘贴" })
 
