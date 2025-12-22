@@ -15,7 +15,10 @@ font-size = 11
 
 # 退出不提示
 confirm-close-surface = false
+
 # 剪贴板不提示
+clipboard-read = allow
+clipboard-write = allow
 clipboard-paste-protection = false
 
 # 快捷键
