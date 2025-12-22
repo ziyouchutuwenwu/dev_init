@@ -1,4 +1,7 @@
--- 自动换行
-vim.cmd('set wrap')
-
-return {}
+vim.api.nvim_create_autocmd("VimEnter", {
+  callback = function()
+    vim.cmd('set wrap')
+    vim.cmd('set linebreak')
+    vim.cmd('set breakindent')
+  end,
+})
