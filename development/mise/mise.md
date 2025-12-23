@@ -12,7 +12,7 @@
 https://github.com/jdx/mise
 ```
 
-安装命令
+安装
 
 ```sh
 curl https://mise.run | sh
@@ -21,6 +21,10 @@ curl https://mise.run | sh
 ~/.profile
 
 ```sh
+# bash
+eval "$(mise activate bash)"
+
+# zsh
 eval "$(mise activate zsh)"
 ```
 
