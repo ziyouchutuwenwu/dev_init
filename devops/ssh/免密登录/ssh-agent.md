@@ -16,6 +16,7 @@
 
 ```sh
 eval "$(ssh-agent -s)"
+chmod 600 ~/.ssh/id_rsa
 ssh-add ~/.ssh/id_rsa
 ```
 
@@ -26,6 +27,7 @@ if ! pgrep -u "$USER" ssh-agent > /dev/null; then
     eval "$(ssh-agent -s 2> /dev/null | grep -v 'Agent pid')" > /dev/null
     trap 'ssh-agent -k > /dev/null 2>&1' EXIT
 fi
+chmod 600 ~/downloads/keys/key
 ssh-add ~/downloads/keys/key > /dev/null 2>&1
 ```
 
