@@ -43,7 +43,7 @@ server-tls tls://dns.alidns.com -group china
 
 server-https https://120.53.53.53/dns-query -group oversea
 server-https https://doh.360.cn/dns-query -group oversea
-server-https https://dns.alidns.com/dns-query -oversea oversea
+server-https https://dns.alidns.com/dns-query -group oversea
 server-https https://doh.pub/dns-query -group oversea
 
 # 规则
