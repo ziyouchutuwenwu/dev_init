@@ -6,7 +6,6 @@ return {
       opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, {
         -- lua_ls 在 bsd 下不支持
         -- "lua_ls",
-        "elixirls"
       })
     end,
   },
