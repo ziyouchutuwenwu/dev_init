@@ -1,12 +1,23 @@
--- 名字是 :Mason 手动安装的时候，后面的灰色的名字
 return {
   {
     "williamboman/mason-lspconfig.nvim",
     opts = function(_, opts)
-      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, {
-        -- lua_ls 在 bsd 下不支持
-        -- "lua_ls",
-      })
+      local is_linux = false
+      local uname = vim.fn.system("uname -s"):gsub("%s+", "")
+      if uname == "Linux" then
+        is_linux = true
+      end
+
+      local lsp_list = {
+        -- "elixir-ls",
+      }
+
+      -- bsd 下不兼容
+      if is_linux then
+        table.insert(lsp_list, "lua-language-server")
+      end
+
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, lsp_list)
     end,
   },
 }
