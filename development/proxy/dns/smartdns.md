@@ -17,8 +17,11 @@ smartdns.conf
 log-level debug
 log-file /var/log/smartdns.log
 
-# 装了 virt-manager 的话，用回环 ip, 否则绑定失败
-bind 127.0.0.1:53
+# 装 virt-manager 的话
+# sudo systemctl stop dnsmasq
+# sudo systemctl disable dnsmasq
+# sudo lsof -i :53
+bind 0.0.0.0:53
 
 # 优化
 cache-size 512
