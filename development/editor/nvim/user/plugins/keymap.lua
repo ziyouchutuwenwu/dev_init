@@ -41,8 +41,8 @@ end, { noremap = true, desc = "撤销" })
 vim.keymap.set({'n', 'v'}, '<C-y>', '<C-r>', { noremap = true, desc = "重做" })
 
 -- 跳转导航
-vim.keymap.set('n', '<A-,>', '<C-o>', { noremap = true, desc = "上一个位置" })
-vim.keymap.set('n', '<A-.>', '<C-i>', { noremap = true, desc = "下一个位置" })
+vim.keymap.set('n', '<M-,>', '<C-o>', { noremap = true, desc = "上一个位置" })
+vim.keymap.set('n', '<M-.>', '<C-i>', { noremap = true, desc = "下一个位置" })
 
 -- 全选
 vim.keymap.set({'n', 'v', 'i', 'c'}, '<C-a>', function()
