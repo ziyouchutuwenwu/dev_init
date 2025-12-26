@@ -5,7 +5,7 @@ for _, file in ipairs(files) do
   if mod then
     local spec = require(mod:gsub("/", "."))
     if type(spec) == "table" then
-      if vim.tbl_islist(spec) then
+      if vim.islist(spec) then
         vim.list_extend(M, spec)
       else
         table.insert(M, spec)
