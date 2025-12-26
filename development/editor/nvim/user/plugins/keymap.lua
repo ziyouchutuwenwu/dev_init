@@ -1,12 +1,12 @@
+-- 命令行历史导航
 vim.cmd([[
   cmap <Down> <C-n>
   cmap <Up> <C-p>
 ]])
 
-
+-- 复制粘贴
 vim.keymap.set({'n', 'v'}, '<C-c>', '"+y', { noremap = true, desc = "复制" })
 vim.keymap.set('v', '<C-x>', '"+d', { noremap = true, desc = "剪切" })
-
 
 vim.keymap.set({'n', 'v', 'i', 'c'}, '<C-v>', function()
   local mode = vim.fn.mode()
@@ -28,7 +28,7 @@ vim.keymap.set({'n', 'v', 'i', 'c'}, '<C-v>', function()
   end
 end, { noremap = true, desc = "粘贴" })
 
-
+-- 撤销重做
 vim.keymap.set({'n', 'v', 'i', 'c'}, '<C-z>', function()
   if vim.fn.mode() == 'i' then
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>uli', true, false, true), 'n', false)
@@ -40,11 +40,11 @@ vim.keymap.set({'n', 'v', 'i', 'c'}, '<C-z>', function()
 end, { noremap = true, desc = "撤销" })
 vim.keymap.set({'n', 'v'}, '<C-y>', '<C-r>', { noremap = true, desc = "重做" })
 
-
+-- 跳转导航
 vim.keymap.set('n', '<A-,>', '<C-o>', { noremap = true, desc = "上一个位置" })
 vim.keymap.set('n', '<A-.>', '<C-i>', { noremap = true, desc = "下一个位置" })
 
-
+-- 全选
 vim.keymap.set({'n', 'v', 'i', 'c'}, '<C-a>', function()
   if vim.fn.mode() == 'i' then
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>ggVGi', true, false, true), 'n', false)
@@ -57,15 +57,24 @@ vim.keymap.set({'n', 'v', 'i', 'c'}, '<C-a>', function()
   end
 end, { noremap = true, desc = "全选" })
 
-
+-- 保存
 vim.keymap.set({'n', 'v'}, '<C-s>', ':w<CR>', { noremap = true, desc = "保存" })
 vim.keymap.set('i', '<C-s>', '<Esc>:w<CR>a', { noremap = true, desc = "保存" })
 
+-- 整行移动
+vim.keymap.set('n', '<M-Up>', 'ddkP', { noremap = true, desc = "向上移动当前行" })
+vim.keymap.set('n', '<M-Down>', 'ddp', { noremap = true, desc = "向下移动当前行" })
+vim.keymap.set('v', '<M-Up>', ":move '<-2<CR>gv", { noremap = true, desc = "向上移动选中行" })
+vim.keymap.set('v', '<M-Down>', ":move '>+1<CR>gv", { noremap = true, desc = "向下移动选中行" })
 
+-- 智能删除
 vim.keymap.set('v', '<BS>', function()
   local start_line = vim.fn.line("'<")
   local end_line = vim.fn.line("'>")
   local lines = vim.fn.getline(start_line, end_line)
+  if type(lines) == "string" then
+    lines = { lines }
+  end
   local all_empty = true
   for _, line in ipairs(lines) do
     if line:match("%S") then
