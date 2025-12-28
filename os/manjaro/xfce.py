@@ -367,7 +367,7 @@ def install_ssh_server():
     os.system("yes | pacman --noconfirm -S openssh")
     os.system("sed -i 's/^#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config")
     os.system(
-        "sed -i 's/^#\?GatewayPorts.*/GatewayPorts clientspecified/' /etc/ssh/sshd_config"
+        "sed -i 's/^#\\?GatewayPorts.*/GatewayPorts clientspecified/' /etc/ssh/sshd_config"
     )
     os.system("systemctl restart sshd; systemctl enable sshd")
 
