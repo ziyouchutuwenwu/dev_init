@@ -52,10 +52,14 @@ mise ls-remote node
 安装并且写入 toml
 
 ```sh
+# 最新版
+mise use -g uv
+
+# 指定版本
 mise use node@22
 mise use -g node@lts
 
-# 从 toml 里面删除
+# toml 里面删除
 mise unuse node@22
 ```
 
