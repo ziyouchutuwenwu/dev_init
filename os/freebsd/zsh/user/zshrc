@@ -16,5 +16,6 @@ zinit snippet OMZ::lib/history.zsh
 zinit snippet OMZT::steeef
 
 # 设置补全
+fpath=(~/.local/share/zsh/completions $fpath)
 autoload -Uz compinit
 compinit -C
