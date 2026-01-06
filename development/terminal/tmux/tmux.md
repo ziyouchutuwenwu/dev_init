@@ -14,6 +14,12 @@ tmux new -s xxx
 tmux a -t xxx
 ```
 
+### 重命名
+
+```sh
+tmux rename-session -t old_xxx new_xxx
+```
+
 ### 查看
 
 ```sh
