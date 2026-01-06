@@ -11,13 +11,15 @@ tmux new -s xxx
 ### 附加
 
 ```sh
-tmux a -t xxx
+tmux attach -t xxx
 ```
 
 ### 重命名
 
+session 重命名
+
 ```sh
-tmux rename-session -t old_xxx new_xxx
+tmux rename -t old_xxx new_xxx
 ```
 
 ### 查看
@@ -26,11 +28,15 @@ tmux rename-session -t old_xxx new_xxx
 tmux ls
 ```
 
-### kill
+### 杀掉
+
+杀掉某个 session
 
 ```sh
 tmux kill-session -t xxx
 ```
+
+无论多少 session，都杀掉
 
 ```sh
 tmux kill-server
@@ -53,7 +59,16 @@ ssh -YC xx.xx.xx.xx
 热加载配置，文件可以自己指定
 
 ```sh
-tmux source-file /etc/tmux.conf
+# source-file 的缩写
+tmux source /etc/tmux.conf
+```
+
+### 缩写
+
+查看所有缩写
+
+```sh
+tmux list-commands | grep -E '\(' | sed 's/ \[.*//'
 ```
 
 ### 调试
