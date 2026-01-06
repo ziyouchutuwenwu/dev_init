@@ -1,6 +1,6 @@
 # tmux
 
-## 用法
+## 基本用法
 
 ### 创建
 
@@ -30,6 +30,8 @@ tmux kill-session -t xxx
 tmux kill-server
 ```
 
+## 其它用法
+
 ### 剪贴板
 
 用支持 OSC52 协议的终端模拟器
@@ -40,7 +42,15 @@ tmux kill-server
 ssh -YC xx.xx.xx.xx
 ```
 
-## 调试
+### 配置更新
+
+热加载配置，文件可以自己指定
+
+```sh
+tmux source-file /etc/tmux.conf
+```
+
+### 调试
 
 按 prefix 键，然后和 vim 一样
 
