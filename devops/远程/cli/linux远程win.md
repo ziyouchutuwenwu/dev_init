@@ -6,23 +6,35 @@
 
 [下载地址](https://github.com/PowerShell/Win32-OpenSSH/releases/)
 
-### 启动
+### 备忘
+
+tmux 需要
 
 ```sh
-# 关闭防火墙
+set LANG=zh_CN.UTF-8
+```
+
+关闭防火墙
+
+```sh
 netsh advfirewall set allprofiles state off
 ```
 
-```sh
-# 改密码
-net user xxx 123456
+改密码
 
-# 查看 group
+```sh
+net user xxx 123456
+```
+
+查看所在 group
+
+```sh
 net user xxx
 ```
 
+创建用户
+
 ```sh
-# 创建用户
 net user runner 123456 /add
 net localgroup Administrators runner /add
 ```
