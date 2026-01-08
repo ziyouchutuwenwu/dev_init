@@ -83,3 +83,11 @@ tmux list-commands | grep -E '\(' | sed 's/ \[.*//'
 tmux show-options -g | rg pane
 tmux show-window-options -g | rg passthrough
 ```
+
+### win
+
+如果是 win 主机，最好
+
+```sh
+set LANG=zh_CN.UTF-8
+```

@@ -8,12 +8,6 @@
 
 ### 备忘
 
-tmux 需要
-
-```sh
-set LANG=zh_CN.UTF-8
-```
-
 关闭防火墙
 
 ```sh
