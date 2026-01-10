@@ -164,21 +164,26 @@ safe_gpa.zig
 const std = @import("std");
 
 pub const Gpa = struct {
-    gpa: std.heap.GeneralPurposeAllocator(.{}) = std.heap.GeneralPurposeAllocator(.{}){},
+    gpa: std.heap.GeneralPurposeAllocator(.{}),
+
+    pub fn init() Gpa {
+        return .{ .gpa = .{} };
+    }
 
     pub fn allocator(self: *Gpa) std.mem.Allocator {
         return self.gpa.allocator();
     }
 
     pub fn deinit(self: *Gpa) void {
-        if (self.gpa.deinit() != .ok) {
-            @panic("发现内存泄漏");
+        const result = self.gpa.deinit();
+        if (result != .ok) {
+            std.log.err("内存泄漏！", .{});
         }
     }
 };
 
 pub fn init() Gpa {
-    return Gpa{};
+    return Gpa.init();
 }
 ```
 
@@ -187,12 +192,19 @@ tsa.zig
 ```zig
 const std = @import("std");
 
-var _tsa: ?std.heap.ThreadSafeAllocator = null;
+pub const ThreadSafeAllocator = struct {
+    tsa: std.heap.ThreadSafeAllocator,
 
-pub fn ts_allocator(allocator: std.mem.Allocator) std.mem.Allocator {
-    _tsa = std.heap.ThreadSafeAllocator{ .child_allocator = allocator };
-    return _tsa.?.allocator();
-}
+    pub fn init(child_allocator: std.mem.Allocator) ThreadSafeAllocator {
+        return .{
+            .tsa = .{ .child_allocator = child_allocator },
+        };
+    }
+
+    pub fn allocator(self: *ThreadSafeAllocator) std.mem.Allocator {
+        return self.tsa.allocator();
+    }
+};
 ```
 
 arena.zig
@@ -200,43 +212,50 @@ arena.zig
 ```zig
 const std = @import("std");
 
-var _arena: ?std.heap.ArenaAllocator = null;
+pub const Arena = struct {
+    arena: std.heap.ArenaAllocator,
 
-pub fn arena_allocator(allocator: std.mem.Allocator) std.mem.Allocator {
-    _arena = std.heap.ArenaAllocator.init(allocator);
-    return _arena.?.allocator();
-}
-
-pub fn deinit() void {
-    if (_arena != null) {
-        _arena.?.deinit();
-        _arena = null;
+    pub fn init(child_allocator: std.mem.Allocator) Arena {
+        return .{
+            .arena = std.heap.ArenaAllocator.init(child_allocator),
+        };
     }
-}
+
+    pub fn allocator(self: *Arena) std.mem.Allocator {
+        return self.arena.allocator();
+    }
+
+    pub fn deinit(self: *Arena) void {
+        self.arena.deinit();
+    }
+};
 ```
 
 main.zig
 
 ```zig
 const std = @import("std");
+
+const arena = @import("arena.zig");
 const safe_gpa = @import("safe_gpa.zig");
 const tsa = @import("tsa.zig");
-const arena = @import("arena.zig");
 
 pub fn main() !void {
     var gpa = safe_gpa.init();
     defer gpa.deinit();
 
     const gpa_allocator = gpa.allocator();
-    const tsa_allocator = tsa.ts_allocator(gpa_allocator);
 
-    // 外面包一层 arena 分配器
-    const allocator = arena.arena_allocator(tsa_allocator);
-    defer arena.deinit();
+    // 线程安全分配器
+    var ts = tsa.ThreadSafeAllocator.init(gpa_allocator);
+    const tsa_allocator = ts.allocator();
+
+    // Arena 分配器
+    var ar = arena.Arena.init(tsa_allocator);
+    defer ar.deinit();
+    const allocator = ar.allocator();
 
     const formatted_str = try std.fmt.allocPrint(allocator, "测试 {}", .{42});
-    // defer allocator.free(formatted_str);
-
     std.log.debug("{s}", .{formatted_str});
 }
 ```
