@@ -1,14 +1,14 @@
-# 静态编译
+# musl
 
 ## 说明
 
-cdylib 和 dylib 类型的项目不能静态编译
+无依赖的静态编译
+
+cdylib 和 dylib 类型的项目不支持
 
 ## 步骤
 
-### 添加支持
-
-这个用镜像或者设置代理
+### toolchain
 
 ```sh
 rustup target list | grep musl
@@ -17,8 +17,6 @@ rustup target remove xxx
 ```
 
 ### 编译配置
-
-项目目录或者全局目录都可以
 
 ```sh
 .cargo/config.toml
