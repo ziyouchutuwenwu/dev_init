@@ -6,75 +6,9 @@ beam 被杀死以后，会重新启动，用于对于稳定性要求很高的场
 
 或者先 kill 掉 heart 进程，在 kill 掉 beam 进程
 
-## 激活
+## 用法
 
-### rebar3 项目
-
-vm.args
-
-```sh
-# 这个必须设置
--heart
-
-# 不设置 HEART_COMMAND，使用默认重启命令
-# 一定要用绝对路径，不然找不到
--env HEART_COMMAND "/xxx/rel/demo_release/bin/demo_release daemon"
--env HEART_BEAT_TIMEOUT 10
-```
-
-或者设置环境变量
-
-```sh
-export HEART_COMMAND="/xxx/rel/demo_release/bin/demo_release daemon"
-export HEART_BEAT_TIMEOUT=10
-```
-
-### 原始命令行
-
-#### 方法 1
-
-节点 1
-
-```sh
-erl -heart -sname aaa@manjaro -setcookie 123456 \
-  -env HEART_COMMAND "erl -heart -sname aaa@manjaro -setcookie 123456" \
-  -env HEART_BEAT_TIMEOUT 10
-```
-
-节点 2
-
-```erlang
-erl -sname bbb@manjaro -setcookie 123456
-net_kernel:connect_node('aaa@manjaro').
-```
-
-#### 方法 2
-
-节点 1
-
-```sh
-export HEART_COMMAND="erl -heart -sname aaa@manjaro -setcookie 123456"
-export HEART_BEAT_TIMEOUT=10
-erl -heart -sname aaa@manjaro -setcookie 123456
-```
-
-节点 2
-
-```erlang
-erl -sname bbb@manjaro -setcookie 123456
-net_kernel:connect_node('aaa@manjaro').
-```
-
-切换到远程节点
-
-```erlang
-Ctrl + G
-User switch command
- --> r 'aaa@manjaro'
- --> c
-```
-
-### 动态修改
+### 测试
 
 ```erlang
 os:getenv("HEART_COMMAND").
@@ -101,21 +35,43 @@ heart:get_cmd().
 {ok,"erl -heart"}
 ```
 
-## 关闭
+### 关闭
 
-### 正常关闭
+remsh 到目标节点
 
-如果要关闭，则 remsh 到目标节点，执行
+```erlang
+% heart stop
+heart:stop().
 
-```elixir
-:init.stop()
+% 应用 stop
+init:stop().
 ```
 
-### 杀掉
-
-不可以用 pkill, 因为 heart 也是 erl 体系内的
+或者 vm.args 注释掉 `-heart`， 重启应用
 
 ```sh
-ps aux | grep erl
-kill -9 xxx
+bin/demo stop
+bin/demo daemon
+```
+
+不建议 kill
+
+### 发布
+
+erts 目录必须存在，prod 模式下默认存在
+
+vm.args
+
+```sh
+# 启用 heart
+-heart
+
+# 设置 heart 检查间隔（秒），默认 30 秒
+-env HEART_BEAT_TIMEOUT 10
+
+# 一般不需要设置，因为 _build/prod/rel/xxx/bin/xxx 脚本里面会设置
+# -env HEART_COMMAND "/path/to/bin/demo daemon"
+
+# 启动延迟（秒）
+-env HEART_DELAY 5
 ```
