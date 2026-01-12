@@ -36,16 +36,14 @@ MIX_ENV=prod mix release
 
 ## 测试
 
-### 查看变量
-
-启动节点
+启动
 
 ```sh
 bin/demo daemon
 bin/demo remote
 ```
 
-测试
+查看
 
 ```elixir
 System.get_env("HEART_COMMAND")
@@ -55,19 +53,14 @@ System.get_env("HEART_BEAT_TIMEOUT")
 :heart.get_options()
 ```
 
-### 杀掉
-
-不可以用 pkill, 因为 heart 也是 erl 体系内的
-
-```sh
-ps aux | grep erl
-kill -9 xxx
-```
-
 ## 关闭
 
-如果要关闭，则 remsh 到目标节点，执行
+remsh 到目标节点
 
 ```elixir
-:init.stop()
+# heart stop
+:heart.stop
+
+# 应用 stop
+:init.stop
 ```
