@@ -4,7 +4,9 @@
 
 beam 被杀死以后，会重新启动，用于对于稳定性要求很高的场合。
 
-## 例子
+## 用法
+
+### 配置
 
 初始化
 
@@ -12,10 +14,12 @@ beam 被杀死以后，会重新启动，用于对于稳定性要求很高的场
 mix release.init
 ```
 
+不需要修改 vm.args.eex
+
 env.sh.eex, 取消以下注释
 
 ```sh
-# 在 daemon 模式下会启动 heart
+# daemon 模式下启用
 # 路径可以动态获取
 case $RELEASE_COMMAND in
   daemon*)
@@ -28,13 +32,19 @@ case $RELEASE_COMMAND in
 esac
 ```
 
-编译
+### 打包
 
 ```sh
 MIX_ENV=prod mix release
 ```
 
-## 测试
+设置变量位置如下，和 erlang 的位置不一样
+
+```sh
+_build/prod/rel/xxx/releases/0.1.0/env.sh
+```
+
+### 测试
 
 启动
 
@@ -53,7 +63,7 @@ System.get_env("HEART_BEAT_TIMEOUT")
 :heart.get_options()
 ```
 
-## 关闭
+### 关闭
 
 remsh 到目标节点
 

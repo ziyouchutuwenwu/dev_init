@@ -69,9 +69,16 @@ vm.args
 # 设置 heart 检查间隔（秒），默认 30 秒
 -env HEART_BEAT_TIMEOUT 10
 
-# 一般不需要设置，因为 _build/prod/rel/xxx/bin/xxx 脚本里面会设置
+# 不需要设置，
+# _build/prod/rel/xxx/bin/xxx 脚本会自动设置这个环境变量
 # -env HEART_COMMAND "/path/to/bin/demo daemon"
 
 # 启动延迟（秒）
 -env HEART_DELAY 5
+```
+
+打包
+
+```sh
+rebar3 as prod release
 ```
