@@ -118,7 +118,7 @@ def install_ssh_esential():
 
 
 def install_zip_essential():
-    os.system("xbps-install -y unzip unrar")
+    os.system("xbps-install -y xz unzip unrar")
 
 
 def set_sudo_timeout():
