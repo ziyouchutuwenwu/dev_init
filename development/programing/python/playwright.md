@@ -13,10 +13,10 @@ export PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright
 ```
 
 ```sh
-# 开发用
+# 完整版
 playwright install chromium
 
-# 生产用，修改代码的 headless 为 true 即可
+# 无头版，更快更小
 playwright install chromium-headless-shell
 
 # 查看可用的浏览器
