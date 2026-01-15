@@ -4,10 +4,12 @@
 
 自动化测试和爬虫工具，因为是调用浏览器，所以基本上可以通杀 js
 
-## 安装
+## 配置
+
+mirror
 
 ```sh
-pip install playwright
+export PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright
 ```
 
 ```sh
@@ -21,7 +23,7 @@ playwright install chromium-headless-shell
 playwright install --help
 ```
 
-## 录制脚本
+## 录制
 
 生成代码，非常方便
 
