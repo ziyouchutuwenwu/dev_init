@@ -9,7 +9,7 @@
 mirror
 
 ```sh
-export PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright
+export PLAYWRIGHT_DOWNLOAD_HOST="https://npmmirror.com/mirrors/playwright"
 ```
 
 ```sh
