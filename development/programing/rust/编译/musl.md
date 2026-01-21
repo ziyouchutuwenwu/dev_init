@@ -8,15 +8,7 @@ cdylib 和 dylib 类型的项目不支持
 
 ## 步骤
 
-### toolchain
-
-```sh
-rustup target list | grep musl
-rustup target add x86_64-unknown-linux-musl
-rustup target remove xxx
-```
-
-### 编译配置
+### 配置
 
 ```sh
 .cargo/config.toml
@@ -29,7 +21,7 @@ target = "x86_64-unknown-linux-musl"
 # target = ["x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl"]
 ```
 
-编译
+### 编译
 
 ```sh
 cargo build --release
