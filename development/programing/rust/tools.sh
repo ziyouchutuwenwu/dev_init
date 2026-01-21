@@ -1,9 +1,7 @@
-# 工具
+#!/usr/bin/env bash
 
-## 用法
-
-```sh
 # dufs --allow-upload
 # dufs --allow-all
 cargo install dufs
-```
+
+echo "done!"
