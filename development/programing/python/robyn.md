@@ -47,10 +47,8 @@ if __name__ == "__main__":
     port = 8080
 
     if not check_port(host, port):
-        print(f"ERROR: Port {port} is already in use. Exiting.")
+        print(f"error: 端口 {port} 被占用")
         sys.exit(1)
-    else:
-        print(f"INFO: Port {port} is available. Starting server...")
 
     app = Robyn(__file__)
     routes.make(app)

@@ -13,5 +13,5 @@ uv pip install huggingface_hub
 
 export HF_ENDPOINT=https://hf-mirror.com
 
-uv run huggingface-cli xxx
+uv run hf download xxx
 ```
