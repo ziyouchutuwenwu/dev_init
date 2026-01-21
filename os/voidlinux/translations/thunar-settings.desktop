@@ -1,5 +1,6 @@
 [Desktop Entry]
 Version=1.0
+Name[ar]=تفضيلات Thunar
 Name[ast]=Axustes de Thunar
 Name[bg]=Thunar Предпочитания
 Name[ca]=Preferències del Thunar
@@ -37,7 +38,7 @@ Name[sv]=Thunar inställningar
 Name[tr]=Thunar Tercihleri
 Name[vec]=Prefarense de Thunar
 Name[vi]=Tuỳ chọn Thunar
-Name[zh_CN]=thunar首选项
+Name[zh_CN]=Thunar
 Name[zh_TW]=Thunar 偏好設定
 Name=Thunar Preferences
 Comment[ar]=إعداد مدير الملفات تونار
@@ -132,7 +133,7 @@ Keywords[nb]=thunar;innstillinger;oppsett;konfigurasjon;miniatyrbilder;filstørr
 Keywords[nl]=thunar;instellingen;voorkeuren;instellen;miniaturen;bestandsgrootte;datumopmaak;snelkoppelingsbalk;boomstructuurweergave;tabbladen;
 Keywords[oc]=thunar;paramètres;reglatges;preferéncias;configurar;vinhetas;miniaturas;talha de fichièr;format de data;acorchi;panèl;arbre;onglets;
 Keywords[pl]=thunar;ustawienia;preferencje;konfiguracja;miniatury;rozmiar pliku;format daty;położenia;widok drzewa;karty;
-Keywords[pt_BR]=thunar;definições;preferências;configuração;miniaturas;tamanho do arquivo;formato da data;painel de atalhos;visualização em árvore;separadores;
+Keywords[pt_BR]=thunar;definições;preferências;configuração;miniaturas;tamanho do arquivo;formato da data;painel de atalhos;visão em árvore;separadores;
 Keywords[pt]=thunar;definições;preferências;configurar;miniaturas;tamanho de ficheiro;formato de data;painel de atalhos;vista de árvore;separadores;
 Keywords[ro]=thunar;opțiuni;preferințe;configurare;miniaturi;dimensiunea fișierului;formatul datei;panoul de accese directe;vizualizare arborescentă;file;
 Keywords[ru]=thunar;настройки;настроить;значки;размер файла;формат даты;панель закладок;древовидный список;вкладки;
