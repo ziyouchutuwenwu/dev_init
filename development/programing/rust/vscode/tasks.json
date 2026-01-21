@@ -1,0 +1,25 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "cargo build"
+    },
+    {
+      "label": "run",
+      "type": "shell",
+      "command": "cargo run"
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "cargo clean"
+    },
+    {
+      "label": "format",
+      "type": "shell",
+      "command": "rustfmt ${file}"
+    }
+  ]
+}

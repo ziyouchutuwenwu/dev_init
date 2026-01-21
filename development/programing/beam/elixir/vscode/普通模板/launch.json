@@ -1,0 +1,54 @@
+{
+  "configurations": [
+    {
+      "type": "mix_task",
+      "name": "debug",
+      "request": "launch",
+      "task": "run",
+      "taskArgs": ["-e", "Demo.demo()"],
+      "startApps": true,
+      "exitAfterTaskReturns": false,
+      "env": {
+        // "ELS_ELIXIR_OPTS": "--name iex-dbg@127.0.0.1 --cookie 123456"
+        // "ELS_ERL_OPTS": "-sname iex-dbg@localhost -cookie 123456"
+        "ELIXIR_ERL_OPTIONS": "-sname iex-dbg@localhost -cookie 123456"
+      },
+      "projectDir": "${workspaceRoot}",
+      // 一般情况下，这里是包装 nif 的那个模块
+      "excludeModules": [":demo_nif", "SlowModule"]
+    },
+    {
+      "type": "mix_task",
+      "name": "test_one",
+      "request": "launch",
+      "task": "test",
+      // 单个文件测试
+      "taskArgs": ["test/demo_test.exs"],
+      // interpret exs 文件，使得 exs 文件里面支持断点
+      // 这里的文件都会跑单元测试，所以只写需要测试的文件
+      "requireFiles": ["test/demo_test.exs"],
+      "startApps": true,
+      "env": {
+        "ELIXIR_ERL_OPTIONS": "-sname iex-dbg@localhost -cookie 123456"
+      },
+      "projectDir": "${workspaceRoot}",
+      // 一般情况下，这里是包装 nif 的那个模块
+      "excludeModules": [":demo_nif", "SlowModule"]
+    },
+    {
+      "type": "mix_task",
+      "name": "test_all",
+      "request": "launch",
+      "task": "test",
+      "startApps": true,
+      "env": {
+        "ELIXIR_ERL_OPTIONS": "-sname iex-dbg@localhost -cookie 123456"
+      },
+      "projectDir": "${workspaceRoot}",
+      // 一般情况下，这里是包装 nif 的那个模块
+      "excludeModules": [":demo_nif", "SlowModule"]
+      // interpret exs 文件，使得 exs 文件里面支持断点
+      // "requireFiles": ["test/**/*.exs"]
+    }
+  ]
+}

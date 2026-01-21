@@ -1,0 +1,30 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build_debug",
+      "type": "shell",
+      "command": "zig build"
+    },
+    {
+      "label": "release",
+      "type": "shell",
+      "command": "zig build --release=safe"
+    },
+    {
+      "label": "run",
+      "type": "shell",
+      "command": "zig build run"
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "rm -rf zig-cache zig-out"
+    },
+    {
+      "label": "test",
+      "type": "shell",
+      "command": "zig build test"
+    }
+  ]
+}

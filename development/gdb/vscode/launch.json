@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "remote_dbg",
+      "type": "gdb",
+      "request": "attach",
+      "executable": "${workspaceFolder}/output/main",
+      "target": "xx.xx.xx.xx:12345",
+      "remote": true,
+      "cwd": "${workspaceRoot}"
+    }
+  ]
+}

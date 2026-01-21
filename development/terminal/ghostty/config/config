@@ -1,0 +1,36 @@
+theme = wombat_custom
+
+# 关闭自带的标题栏
+#gtk-titlebar = false
+
+window-theme=light
+title = 终端
+
+gtk-wide-tabs = false
+
+window-width = 92
+window-height = 24
+font-family = Monaco
+font-size = 11
+
+# 退出不提示
+confirm-close-surface = false
+
+# 剪贴板不提示
+clipboard-read = allow
+clipboard-write = allow
+clipboard-paste-protection = false
+
+# 快捷键
+keybind = ctrl+shift+t=new_tab
+
+app-notifications = no-clipboard-copy
+
+# 重命名 tab
+keybind = ctrl+shift+r=prompt_surface_title
+
+keybind = alt+shift+left=previous_tab
+keybind = alt+shift+right=next_tab
+
+keybind = f11=toggle_fullscreen
+

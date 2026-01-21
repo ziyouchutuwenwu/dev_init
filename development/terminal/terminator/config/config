@@ -1,0 +1,23 @@
+[global_config]
+  dbus = False
+  ask_before_closing = never
+[keybindings]
+  go_left =
+  go_right=
+[profiles]
+  [[default]]
+    font = Monaco 11
+    scrollback_infinite = True
+    palette = "#000000:#ff615a:#b1e969:#ebd99c:#5da9f6:#e86aff:#55aaff:#dedacf:#313131:#f58c80:#55aaff:#eee5b2:#a5c7ff:#ddaaff:#b1e969:#ffffff"
+    use_system_font = False
+[layouts]
+  [[default]]
+    [[[window0]]]
+      type = Window
+      size = 800, 450
+      parent = ""
+    [[[child1]]]
+      type = Terminal
+      parent = window0
+      profile = default
+[plugins]

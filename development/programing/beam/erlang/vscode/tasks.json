@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "deps",
+      "type": "shell",
+      "command": "rebar3 get-deps"
+    },
+    {
+      "label": "dbg_shell",
+      "type": "shell",
+      "command": "ERL_AFLAGS='+D' rebar3 shell --name remote-dbg@127.0.0.1 --setcookie 123456"
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "rm -rf ./_build; rm -rf ./rebar.lock"
+    },
+    {
+      "label": "ct",
+      "type": "shell",
+      "command": "rebar3 ct"
+    },
+    {
+      "label": "prod_tar",
+      "type": "shell",
+      "command": "rebar3 as prod tar"
+    },
+    {
+      "label": "unit",
+      "type": "shell",
+      "command": "rebar3 eunit"
+    }
+  ]
+}

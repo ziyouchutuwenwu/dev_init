@@ -1,0 +1,5 @@
+{
+  "zig.zls.zigLibPath": "${env:HOME}/dev/ziglang/zig/lib/",
+  "zig.path": "${env:HOME}/dev/ziglang/zig/zig",
+  "zig.zls.path": "${env:HOME}/dev/ziglang/zls"
+}

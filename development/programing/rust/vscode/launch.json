@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    // 不用插件也可以断点，可以显示复杂类型
+    // 或者用 CodeLLDB 插件
+    // native debug 的 gdb 无法显示 string 等复杂类型， 它的 lldb 不能用
+    {
+      "name": "debug",
+      "type": "lldb",
+      "request": "launch",
+      "cargo": {
+        "args": ["run", "--bin=${workspaceFolderBasename}"]
+      },
+      "args": []
+    }
+  ]
+}
