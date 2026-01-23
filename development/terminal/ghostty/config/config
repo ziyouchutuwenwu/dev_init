@@ -20,11 +20,11 @@ confirm-close-surface = false
 clipboard-read = allow
 clipboard-write = allow
 clipboard-paste-protection = false
-
-# 快捷键
-keybind = ctrl+shift+t=new_tab
-
+# 禁止剪贴板通知
 app-notifications = no-clipboard-copy
+
+# 创建 tab
+keybind = ctrl+shift+t=new_tab
 
 # 重命名 tab
 keybind = ctrl+shift+r=prompt_surface_title
@@ -33,4 +33,3 @@ keybind = alt+shift+left=previous_tab
 keybind = alt+shift+right=next_tab
 
 keybind = f11=toggle_fullscreen
-
