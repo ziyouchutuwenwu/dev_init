@@ -1,4 +1,8 @@
-# linux 远程 win
+# ssh
+
+## 说明
+
+linux 连 win
 
 ## 步骤
 

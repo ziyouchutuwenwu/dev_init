@@ -125,7 +125,7 @@ su $USER -c 'rm -rf ~/Desktop'
 su $USER -c 'mkdir -p ~/.templates'
 su $USER -c 'cp -rf $CURRENT_DIR/englih_user_dir/user-dirs.dirs ~/.config/'
 
-pkg install -y xfce4-terminal ripgrep wget
+pkg install -y xfce4-terminal ripgrep wget freerdp
 
 # neovim
 su $USER -c 'sh $CURRENT_DIR/../../development/editor/nvim/install.sh'
@@ -142,7 +142,8 @@ sysrc -f /etc/rc.conf.local privoxy_enable="YES"
 pkg install -y utouch-kmod
 sysrc -f /boot/loader.conf.local utouch_load="YES"
 
-pkg install -y python
+# python
+pkg install -y uv
 
 # erlang
 pkg install -y erlang rebar3

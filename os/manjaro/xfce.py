@@ -437,7 +437,7 @@ def set_timezone():
 
 
 def install_remote_desktop():
-    os.system("yes | pacman --noconfirm -S rdesktop")
+    os.system("yes | pacman --noconfirm -S freerdp")
 
 
 def install_ios_essential():

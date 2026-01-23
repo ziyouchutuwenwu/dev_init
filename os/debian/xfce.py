@@ -217,7 +217,7 @@ def make_xfce_ftp_support():
 
 
 def install_remote_gui_client():
-    os.system("apt install -y rdesktop")
+    os.system("apt install -y freerdp3-x11")
 
 
 def install_notes_tool():

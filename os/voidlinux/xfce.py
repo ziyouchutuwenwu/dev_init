@@ -85,6 +85,10 @@ def install_beam():
     os.system("xbps-install -y elixir")
 
 
+def install_remote_desktop():
+    os.system("xbps-install -y freerdp")
+
+
 def install_filemon_tool():
     os.system("xbps-install -y inotify-tools watchman")
 
@@ -249,6 +253,7 @@ if __name__ == "__main__":
     install_embedded_tools()
     install_sniffer(login_user)
     install_qtct()
+    install_remote_desktop()
     install_media_player()
     install_pg_essential()
     disable_file_history(login_user)
