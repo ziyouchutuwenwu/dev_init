@@ -9,7 +9,8 @@
 ctllers.py
 
 ```python
-def demo(request):
+# 加 async 以后，直接支持 asyncio
+async def demo(request):
     return "aaaaaaaaaaaa"
 ```
 
