@@ -2,7 +2,7 @@
 
 ## 说明
 
-win 连接 linux
+linux 为服务端
 
 ### 安装
 
