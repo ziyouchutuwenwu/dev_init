@@ -1,6 +1,10 @@
 # agent
 
-agent 是基于 gen_server 实现的用于存储数据的进程
+## 说明
+
+start_link 的参数为初始 state
+
+get 和 update 操作的参数，都是这个
 
 ## 例子
 
