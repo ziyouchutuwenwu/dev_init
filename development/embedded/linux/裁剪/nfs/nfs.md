@@ -1,4 +1,4 @@
-# 服务配置
+# nfs
 
 ## 说明
 
@@ -6,7 +6,7 @@ nfs 服务和 tftp 服务
 
 ## 配置
 
-### nfs
+### 服务端
 
 host 模式
 
@@ -20,6 +20,8 @@ docker run --rm -d --name nfs-server -v ~/projects/docker/nfs/:/mnt/nfs -e NFS_E
 docker run --rm -d --name nfs-server -v ~/projects/docker/nfs/:/mnt/nfs -e NFS_EXPORT_DIR_1=/mnt/nfs -e NFS_EXPORT_DOMAIN_1=\* -e NFS_EXPORT_OPTIONS_1=rw,insecure,no_subtree_check,no_root_squash,fsid=1 -p 111:111 -p 111:111/udp -p 2049:2049 -p 2049:2049/udp -p 32765:32765 -p 32765:32765/udp -p 32766:32766 -p 32766:32766/udp -p 32767:32767 -p 32767:32767/udp --privileged=true fuzzle/docker-nfs-server:latest
 ```
 
+### 注意
+
 这里用的 nfs 的版本是 3, 可以通过以下命令看到
 
 ```sh
@@ -30,25 +32,4 @@ docker logs -f nfs-server
 
 ```sh
 mount -t nfs -o nolock 10.0.2.1:/mnt/nfs ./nfs
-```
-
-### tftp
-
-host 模式
-
-```sh
-docker run --rm -d -it --name=tftpd --net=host -v ~/projects/docker/tftp:/srv/tftp hkarhani/tftpd
-```
-
-端口映射模式
-
-```sh
-docker run --rm -d -it --name=tftpd -p 69:69/udp -v ~/projects/docker/tftp:/srv/tftp hkarhani/tftpd
-```
-
-测试命令
-
-```sh
-tftp 10.0.2.1
-get xxx
 ```
