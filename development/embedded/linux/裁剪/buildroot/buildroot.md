@@ -2,7 +2,7 @@
 
 ## 说明
 
-目前自定义设备树测试会有问题，等新版
+目前自定义设备树测试会有问题
 
 ## 源码
 
@@ -55,12 +55,25 @@ demo_board.dts
 ```dts
 /dts-v1/;
 
-#include "arm/vexpress-v2p-ca9"
+#include "arm/vexpress-v2p-ca9.dts"
 
 / {
-    model = "Simple Demo Board";
-    compatible = "demo_vendor,simple_demo_board";
+    model = "demo board";
+    compatible = "demo_vendor,demo_board";
 };
+```
+
+现在需要手动处理
+
+```sh
+output/build/linux-*/arch/arm/boot/dts/Makefile
+```
+
+手动添加
+
+```Makefile
+dtb-y += \
+  demo_board.dtb
 ```
 
 ### deconfig
