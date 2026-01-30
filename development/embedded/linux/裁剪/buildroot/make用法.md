@@ -2,6 +2,8 @@
 
 ## 用法
 
+### rebuild
+
 ```sh
 # uboot
 make O=output uboot-rebuild -j$(nproc)
@@ -11,6 +13,18 @@ make O=output linux-rebuild -j$(nproc)
 
 # 文件系统
 make O=output busybox-rebuild -j$(nproc)
+```
+
+### 保存配置
+
+```sh
+make O=output BR2_DEFCONFIG=board/demo_vendor/demo_board/demo_board.defconfig savedefconfig
+```
+
+### 还原配置
+
+```sh
+make O=output BR2_DEFCONFIG=board/demo_vendor/demo_board/demo_board.defconfig defconfig
 ```
 
 ## 清理
