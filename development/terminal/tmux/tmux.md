@@ -1,5 +1,9 @@
 # tmux
 
+## 说明
+
+[这里](https://github.com/tmux/tmux-builds) 有 musl 版本
+
 ## 基本用法
 
 ### 创建
