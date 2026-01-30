@@ -5,7 +5,6 @@ tools=(
   mycli
   pgcli
   sqlmap
-  you-get
   yt-dlp
 )
 
