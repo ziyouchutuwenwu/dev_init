@@ -121,6 +121,13 @@ def install_embedded_tools():
     os.system("xbps-install -y mtd-utils squashfs-tools")
 
 
+def install_serial_tools(user):
+    os.system("xbps-install -y picocom lrzsz")
+    os.system("xbps-install -y tio")
+    cmd = "usermod -a -G dialout %s" % user
+    os.system(cmd)
+
+
 def install_terminator(user):
     os.system("xbps-install -y terminator")
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -250,6 +257,7 @@ if __name__ == "__main__":
     install_terminator(login_user)
     install_proxychains()
     install_privoxy()
+    install_serial_tools()
     install_embedded_tools()
     install_sniffer(login_user)
     install_qtct()
