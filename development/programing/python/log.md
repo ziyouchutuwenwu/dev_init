@@ -6,6 +6,15 @@
 
 ## 用法
 
+### 基础
+
+```python
+from loguru import logger
+logger.debug("xxx {}", 123)
+```
+
+### 特殊
+
 log.py
 
 ```python
@@ -25,10 +34,8 @@ def init():
 main.py
 
 ```python
-# 先 init
 import log
 log.init()
-
-from loguru import logger
-logger.debug("xxx {}", 123)
 ```
+
+然后和基础用法一样用
