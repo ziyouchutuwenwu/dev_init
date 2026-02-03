@@ -23,7 +23,7 @@ def disable_root_history():
 
 
 def set_mirror():
-    os.system("pacman-mirrors --geoip")
+    os.system("pacman-mirrors --timezone -m rank")
 
 
 def update_keyring():
