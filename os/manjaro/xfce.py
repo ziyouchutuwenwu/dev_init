@@ -229,13 +229,6 @@ def install_beam():
     os.system("yes | pacman --noconfirm -S inotify-tools")
 
 
-def install_ghostty(user):
-    os.system("yes | pacman --noconfirm -S ghostty")
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "sh %s/../../development/terminal/ghostty/install.sh" % (current_dir)
-    proc.run_as_user(user, cmd)
-
-
 def install_terminator(user):
     os.system("yes | pacman --noconfirm -S terminator")
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -534,7 +527,6 @@ if __name__ == "__main__":
     install_useful_tools()
     install_terminator(login_user)
     install_tmux()
-    install_ghostty(login_user)
     do_vim_config(login_user)
     install_chinese_input(login_user)
 
