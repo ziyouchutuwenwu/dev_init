@@ -8,7 +8,7 @@
       "executable": "${workspaceFolder}/output/main",
       "target": "xx.xx.xx.xx:12345",
       "remote": true,
-      "cwd": "${workspaceRoot}"
+      "cwd": "${workspaceFolder}"
     }
   ]
 }

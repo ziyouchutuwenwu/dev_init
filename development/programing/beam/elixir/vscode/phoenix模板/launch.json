@@ -10,7 +10,7 @@
       "env": {
         "ELIXIR_ERL_OPTIONS": "-sname iex-dbg@localhost -cookie 123456"
       },
-      "projectDir": "${workspaceRoot}",
+      "projectDir": "${workspaceFolder}",
       // 一般情况下，这里是包装 nif 的那个模块
       "excludeModules": [":demo_nif", "SlowModule"]
     },
@@ -23,7 +23,7 @@
       "env": {
         "ELIXIR_ERL_OPTIONS": "-sname iex-dbg@localhost -cookie 123456"
       },
-      "projectDir": "${workspaceRoot}",
+      "projectDir": "${workspaceFolder}",
       // 一般情况下，这里是包装 nif 的那个模块
       "excludeModules": [":demo_nif", "SlowModule"],
       "requireFiles": [
@@ -47,7 +47,7 @@
       "env": {
         "ELIXIR_ERL_OPTIONS": "-sname iex-dbg@localhost -cookie 123456"
       },
-      "projectDir": "${workspaceRoot}",
+      "projectDir": "${workspaceFolder}",
       // 一般情况下，这里是包装 nif 的那个模块
       "excludeModules": [":demo_nif", "SlowModule"]
     },
@@ -60,7 +60,7 @@
       "env": {
         "ELIXIR_ERL_OPTIONS": "-sname iex-dbg@localhost -cookie 123456"
       },
-      "projectDir": "${workspaceRoot}",
+      "projectDir": "${workspaceFolder}",
       // 一般情况下，这里是包装 nif 的那个模块
       "excludeModules": [":demo_nif", "SlowModule"]
       // interpret exs 文件，使得 exs 文件里面支持断点

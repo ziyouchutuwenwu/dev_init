@@ -458,7 +458,6 @@ def install_net_tools():
 
 
 def install_embedded_tools():
-    os.system("yes | pacman --noconfirm -S openocd")
     os.system("yes | pacman --noconfirm -S gdb lldb")
     os.system("yes | pacman --noconfirm -S arm-none-eabi-gcc arm-none-eabi-newlib")
     os.system("yes | pacman --noconfirm -S uboot-tools qemu-system-arm")

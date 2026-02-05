@@ -42,7 +42,6 @@ def install_rt_test_tools():
 
 
 def install_embedded_tools():
-    os.system("apt install -y openocd")
     os.system("apt install -y gdbserver gdb-multiarch")
     os.system(
         "apt install -y gcc-arm-linux-gnueabi gcc-arm-none-eabi gcc-arm-linux-gnueabihf"

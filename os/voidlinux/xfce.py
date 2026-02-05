@@ -113,7 +113,6 @@ def install_login_setting():
 
 
 def install_embedded_tools():
-    os.system("xbps-install -y openocd")
     os.system("xbps-install -y gdb-multiarch")
     os.system("xbps-install -y qemu-user-static")
     os.system("xbps-install -y u-boot-tools")

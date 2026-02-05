@@ -6,7 +6,7 @@
       "type": "gdb",
       "request": "launch",
       "target": "${workspaceFolder}/zig-out/bin/${workspaceFolderBasename}",
-      "cwd": "${workspaceRoot}"
+      "cwd": "${workspaceFolder}"
     }
   ]
 }
