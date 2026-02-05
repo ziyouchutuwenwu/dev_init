@@ -76,6 +76,16 @@ def install_privoxy():
     os.system("ln -s /etc/sv/privoxy /var/service/")
 
 
+def set_dev_rules():
+    cmd = "mkdir -p /etc/udev/rules.d"
+    os.system(cmd)
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cmd = "cp -rf %s/dev_rules/*.rules /etc/udev/rules.d/" % (current_dir)
+    os.system(cmd)
+    cmd = "udevadm control --reload-rules; udevadm trigger"
+    os.system(cmd)
+
+
 def install_browser():
     os.system("xbps-install -y chromium")
 
@@ -247,6 +257,7 @@ if __name__ == "__main__":
 
     run_root_console_script(mirror_name)
     disable_pc_beep()
+    set_dev_rules()
     make_user_dir_en(login_user)
     install_firmware()
     install_themes(login_user)

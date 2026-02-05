@@ -177,10 +177,12 @@ def install_power_management_tool():
 
 
 def set_dev_rules():
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/dev_rules/* /etc/udev/rules.d/" % (current_dir)
+    cmd = "mkdir -p /etc/udev/rules.d"
     os.system(cmd)
-    cmd = "sh %s/dev_rules/reload_rules.sh" % (current_dir)
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cmd = "cp -rf %s/dev_rules/*.rules /etc/udev/rules.d/" % (current_dir)
+    os.system(cmd)
+    cmd = "udevadm control --reload-rules; udevadm trigger"
     os.system(cmd)
 
 
