@@ -1,2 +1,0 @@
-# Bus 001 Device 003: ID 18d1:4ee7 Google Inc
-SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", MODE="0666", GROUP="plugdev"
