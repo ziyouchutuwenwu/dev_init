@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "debug",
+      "cwd": "${workspaceFolder}",
+      "executable": "${workspaceFolder}/build/zephyr/zephyr.elf",
+      "request": "launch",
+      "type": "cortex-debug",
+      "servertype": "openocd",
+      "configFiles": ["interface/esp_usb_bridge.cfg", "target/esp32s3.cfg"],
+      "searchDir": ["${env:HOME}/dev/openocd/share/openocd/scripts/"],
+      "showDevDebugOutput": "raw",
+      "overrideLaunchCommands": ["monitor reset halt", "monitor targets", "monitor gdb_breakpoint_override hard"],
+      "overrideResetCommands": ["monitor reset halt", "monitor targets"],
+      "runToEntryPoint": "main",
+      "toolchainPrefix": "xtensa-espressif_esp32s3_zephyr-elf",
+      "gdbPath": "${env:HOME}/dev/zephyr/sdk/xtensa-espressif_esp32s3_zephyr-elf/bin/xtensa-espressif_esp32s3_zephyr-elf-gdb",
+      "preLaunchTask": "flash"
+    }
+  ]
+}

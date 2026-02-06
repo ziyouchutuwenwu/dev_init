@@ -1,0 +1,30 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "west build -b esp32s3_devkitc/esp32s3/procpu --pristine",
+      "group": "build"
+    },
+    {
+      "label": "erase",
+      "type": "shell",
+      "command": "esptool --port /dev/ttyACM0 erase-flash",
+      "group": "build"
+    },
+    {
+      "label": "flash",
+      "type": "shell",
+      "command": "west flash",
+      "dependsOn": ["build"],
+      "group": "build"
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "rm -rf build",
+      "group": "build"
+    }
+  ]
+}

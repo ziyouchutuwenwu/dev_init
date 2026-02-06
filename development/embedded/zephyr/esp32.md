@@ -12,7 +12,7 @@ esp32 的板子，需要一些特殊处理
 uv pip install esptool
 
 # 擦除
-esptool --chip esp32-S3 --port /dev/ttyACM0 erase-flash
+esptool --port /dev/ttyACM0 erase-flash
 ```
 
 安装闭源 blob
