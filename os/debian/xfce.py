@@ -180,7 +180,7 @@ def set_dev_rules():
     cmd = "mkdir -p /etc/udev/rules.d"
     os.system(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/dev_rules/*.rules /etc/udev/rules.d/" % (current_dir)
+    cmd = "cp -rf %s/udev/*.rules /etc/udev/rules.d/" % (current_dir)
     os.system(cmd)
     cmd = "udevadm control --reload-rules; udevadm trigger"
     os.system(cmd)
