@@ -4,27 +4,23 @@
     {
       "label": "build",
       "type": "shell",
-      "command": "west build -b esp32s3_devkitc/esp32s3/procpu --pristine",
-      "group": "build"
+      "command": "west build -b esp32s3_devkitc/esp32s3/procpu --pristine"
     },
     {
       "label": "erase",
       "type": "shell",
-      "command": "esptool --port /dev/ttyACM0 erase-flash",
-      "group": "build"
+      "command": "esptool --port /dev/ttyACM0 erase-flash"
     },
     {
       "label": "flash",
       "type": "shell",
-      "command": "west flash",
-      "dependsOn": ["build"],
-      "group": "build"
+      "command": "ESPTOOL_PORT=/dev/ttyACM0 west flash",
+      "dependsOn": ["build"]
     },
     {
       "label": "clean",
       "type": "shell",
-      "command": "rm -rf build",
-      "group": "build"
+      "command": "rm -rf build"
     }
   ]
 }
