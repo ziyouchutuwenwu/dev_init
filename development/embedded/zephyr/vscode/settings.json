@@ -1,0 +1,23 @@
+{
+  // 不支持环境变量
+  "devicetree.contexts": [
+    {
+      "devicetree.cwd": "/home/mmc/downloads/board_led",
+      "bindingType": "Zephyr",
+      "zephyrBindings": ["/home/mmc/dev/zephyr/repo/zephyr/dts/bindings", "./dts/bindings"],
+
+      "includePaths": [
+        "/home/mmc/dev/zephyr/repo/zephyr/dts/xtensa",
+        "/home/mmc/dev/zephyr/repo/zephyr/dts/vendor",
+        "/home/mmc/dev/zephyr/repo/zephyr/boards/espressif/esp32s3_devkitc",
+        "/home/mmc/dev/zephyr/repo/zephyr/include",
+        "/home/mmc/dev/zephyr/repo/zephyr/include/zephyr",
+        "/home/mmc/dev/zephyr/repo/zephyr/include/zephyr/dt-bindings/pinctrl/",
+        //
+        "./boards"
+      ],
+      "dtsFile": "/home/mmc/dev/zephyr/repo/zephyr/boards/espressif/esp32s3_devkitc/esp32s3_devkitc_procpu.dts",
+      "overlays": ["./boards/esp32s3_devkitc_procpu.overlay"]
+    }
+  ]
+}
