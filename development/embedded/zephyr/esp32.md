@@ -13,6 +13,9 @@ uv pip install esptool
 
 # 擦除
 esptool --port /dev/ttyACM0 erase-flash
+
+# 烧单独 bin
+esptool --port /dev/ttyACM0 write-flash 0 ./zephyr.bin
 ```
 
 安装闭源 blob

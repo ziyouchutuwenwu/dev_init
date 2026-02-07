@@ -9,7 +9,6 @@ c/c++ 的 lsp，支持各种 ide
 .clangd
 
 ```yml
-# build 是 compile_commands.json 文件所在的目录
 CompileFlags:
-  CompilationDatabase: build
+  CompilationDatabase: build/debug
 ```
