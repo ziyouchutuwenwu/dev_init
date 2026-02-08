@@ -2,17 +2,19 @@
   // 不支持环境变量
   "devicetree.contexts": [
     {
-      "devicetree.cwd": "/home/mmc/downloads/board_led",
+      "devicetree.cwd": "${workspaceFolder}",
       "bindingType": "Zephyr",
       "zephyrBindings": ["/home/mmc/dev/zephyr/repo/zephyr/dts/bindings", "./dts/bindings"],
 
       "includePaths": [
+        "/home/mmc/dev/zephyr/repo/zephyr/dts",
         "/home/mmc/dev/zephyr/repo/zephyr/dts/xtensa",
         "/home/mmc/dev/zephyr/repo/zephyr/dts/vendor",
+        "/home/mmc/dev/zephyr/repo/zephyr/dts/common",
         "/home/mmc/dev/zephyr/repo/zephyr/boards/espressif/esp32s3_devkitc",
         "/home/mmc/dev/zephyr/repo/zephyr/include",
         "/home/mmc/dev/zephyr/repo/zephyr/include/zephyr",
-        "/home/mmc/dev/zephyr/repo/zephyr/include/zephyr/dt-bindings/pinctrl/",
+        "/home/mmc/dev/zephyr/repo/zephyr/include/zephyr/dt-bindings/gpio/",
         //
         "./boards"
       ],
