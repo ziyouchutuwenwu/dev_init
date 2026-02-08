@@ -2,6 +2,12 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "menuconfig",
+      "type": "shell",
+      "command": "west build -b esp32s3_devkitc/esp32s3/procpu -t menuconfig -d build/debug",
+      "group": "build"
+    },
+    {
       "label": "debug",
       "type": "shell",
       "command": "west build -b esp32s3_devkitc/esp32s3/procpu -p always -d build/debug",
