@@ -16,7 +16,8 @@
     {
       "label": "release",
       "type": "shell",
-      "command": "west build -b esp32s3_devkitc/esp32s3/procpu -p always -d build/release -- -DCMAKE_BUILD_TYPE=Release",
+      // --sysbuild
+      "command": "west build -b esp32s3_devkitc/esp32s3/procpu -p always -d build/release --sysbuild -- -DCMAKE_BUILD_TYPE=Release",
       "group": "build"
     },
     {
@@ -25,10 +26,16 @@
       "command": "esptool --port /dev/ttyACM0 erase-flash"
     },
     {
-      "label": "flash",
+      "label": "debug_flash",
       "type": "shell",
       "command": "ESPTOOL_PORT=/dev/ttyACM0 west flash -d build/debug",
       "dependsOn": ["debug"]
+    },
+    {
+      "label": "release_flash",
+      "type": "shell",
+      "command": "ESPTOOL_PORT=/dev/ttyACM0 west flash -d build/release",
+      "dependsOn": ["release"]
     },
     {
       "label": "clean",
