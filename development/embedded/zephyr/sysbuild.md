@@ -12,7 +12,7 @@
 uv pip install cbor
 ```
 
-### 编译
+### 配置
 
 sysbuild.conf
 
@@ -28,45 +28,35 @@ sysbuild/mcuboot.conf
 # rsa 签名
 CONFIG_BOOT_SIGNATURE_TYPE_RSA=y
 
-# 禁止降级
 CONFIG_BOOT_UPGRADE_ONLY=y
-
-# log level
 CONFIG_MCUBOOT_LOG_LEVEL_INF=y
 ```
 
-prj.conf
+prj_mcumgr.conf
 
 ```conf
-# mcuboot 作为 bootloader
-CONFIG_BOOTLOADER_MCUBOOT=y
+# 依赖项
+CONFIG_NET_BUF=y
+CONFIG_ZCBOR=y
+CONFIG_BASE64=y
+CONFIG_CRC=y
 
-# 镜像管理与 ota 写入支持
+# 镜像
 CONFIG_IMG_MANAGER=y
 CONFIG_STREAM_FLASH=y
 CONFIG_IMG_ERASE_PROGRESSIVELY=y
 
-# mcumgr 核心功能
+# mcumgr 核心
 CONFIG_MCUMGR=y
 CONFIG_MCUMGR_GRP_IMG=y
 CONFIG_MCUMGR_GRP_OS=y
 
 # mcumgr 串口传输
-CONFIG_MCUMGR_TRANSPORT_UART=y
 CONFIG_MCUMGR_TRANSPORT_UART_MTU=512
+CONFIG_MCUMGR_TRANSPORT_UART=y
 CONFIG_UART_MCUMGR=y
 
-# 禁用串口控制台，避免与 mcumgr 冲突
-# CONFIG_UART_CONSOLE is not set
-
-# mcumgr 依赖
-CONFIG_NET_BUF=y
-CONFIG_ZCBOR=y
-CONFIG_BASE64=y
-CONFIG_CRC=y
-CONFIG_STATS=y
-
-# Flash 支持
+# flash 支持
 CONFIG_FLASH=y
 CONFIG_FLASH_MAP=y
 CONFIG_FLASH_PAGE_LAYOUT=y
@@ -74,12 +64,79 @@ CONFIG_FLASH_PAGE_LAYOUT=y
 # 日志
 CONFIG_LOG=y
 CONFIG_MCUMGR_LOG_LEVEL_INF=y
+
+# 下载完固件后触发升级
+CONFIG_REBOOT=y
 ```
 
-编译
+prj_http.conf
+
+```conf
+# 镜像
+CONFIG_IMG_MANAGER=y
+CONFIG_STREAM_FLASH=y
+CONFIG_IMG_ERASE_PROGRESSIVELY=y
+
+# 网络
+CONFIG_NETWORKING=y
+CONFIG_NET_IPV4=y
+CONFIG_NET_TCP=y
+CONFIG_NET_SOCKETS=y
+CONFIG_DNS_RESOLVER=y
+CONFIG_HTTP_CLIENT=y
+CONFIG_NET_SOCKETS_SOCKOPT_TLS=y
+CONFIG_TLS_CREDENTIALS=y
+
+# mbedtls
+CONFIG_MBEDTLS=y
+CONFIG_MBEDTLS_BUILTIN=y
+CONFIG_MBEDTLS_CFG_FILE="config-mbedtls.h"
+CONFIG_MBEDTLS_SSL_PROTO_TLS1_2=y
+CONFIG_MBEDTLS_KEY_EXCHANGE_PSK_ENABLED=y
+
+# flash 支持
+CONFIG_FLASH=y
+CONFIG_FLASH_MAP=y
+CONFIG_FLASH_PAGE_LAYOUT=y
+
+# 日志 + 重启
+CONFIG_LOG=y
+CONFIG_REBOOT=y
+```
+
+boards/esp32s3_devkitc.overlay
+
+```c
+&uart0 {
+  current-speed = <115200>;
+};
+
+/ {
+  chosen {
+    // CONFIG_UART_MCUMGR 需要这里的 zephyr,uart-mcumgr
+    zephyr,uart-mcumgr = &uart0;
+  };
+};
+```
+
+### 编译
 
 ```sh
-west build -b esp32s3_devkitc/esp32s3/procpu -p always -d build/debug --sysbuild
+west build -b esp32s3_devkitc/esp32s3/procpu \
+    -d build/release \
+    --sysbuild \
+    -- \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DOVERLAY_CONFIG=prj_http.conf
+```
+
+```sh
+west build -b esp32s3_devkitc/esp32s3/procpu \
+    -d build/release \
+    --sysbuild \
+    -- \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DOVERLAY_CONFIG=prj_mcumgr.conf
 ```
 
 ### 测试
