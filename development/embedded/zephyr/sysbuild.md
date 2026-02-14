@@ -2,7 +2,9 @@
 
 ## 说明
 
-一般用于 ota
+生成两个固件，一个为 app, 一个为 mcuboot
+
+用于 ota
 
 ## 步骤
 
@@ -139,6 +141,21 @@ west build -b esp32s3_devkitc/esp32s3/procpu \
     -DOVERLAY_CONFIG=prj_mcumgr.conf
 ```
 
+生成固件
+
+```sh
+mcuboot/zephyr/zephyr.bin
+xxx/zephyr/zephyr.bin
+```
+
+第一次需烧录，自动烧录两个固件
+
+或者手动合并固件
+
+```sh
+west flash -d build/release
+```
+
 ### 测试
 
 准备
@@ -147,7 +164,7 @@ west build -b esp32s3_devkitc/esp32s3/procpu \
 go install github.com/apache/mynewt-mcumgr-cli/mcumgr@latest
 ```
 
-上传
+上传，只要应用层固件即可
 
 ```sh
 mcumgr \

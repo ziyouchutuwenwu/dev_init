@@ -15,7 +15,12 @@ uv pip install esptool
 esptool --port /dev/ttyACM0 erase-flash
 
 # 烧单独 bin
-esptool --port /dev/ttyACM0 write-flash 0 ./zephyr.bin
+esptool --port /dev/ttyACM0 write-flash 0x0 ./zephyr.bin
+
+# 合并固件
+esptool --chip esp32s3 merge-bin -o merged.bin \
+  0x0 build/release/mcuboot/zephyr/zephyr.bin \
+  0x20000 build/release/hello_world/zephyr/zephyr.signed.bin
 ```
 
 安装闭源 blob
