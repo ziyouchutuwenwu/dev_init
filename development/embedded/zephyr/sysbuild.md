@@ -2,9 +2,9 @@
 
 ## 说明
 
-生成两个固件，一个为 app, 一个为 mcuboot
+传统方式，编译以后，固件偏移量为 0x0，一个就可以，不能更新
 
-用于 ota
+sysbuild 方式生成两个固件，偏移量 0x0 的为 mcuboot, 另外一个0xXXXXXX 的为 应用程序固件，用于 ota
 
 ## 步骤
 
@@ -15,6 +15,8 @@ uv pip install cbor
 ```
 
 ### 配置
+
+极简配置，只要这个就可以
 
 sysbuild.conf
 
@@ -145,7 +147,7 @@ west build -b esp32s3_devkitc/esp32s3/procpu \
 
 ```sh
 mcuboot/zephyr/zephyr.bin
-xxx/zephyr/zephyr.bin
+xxx/zephyr/zephyr.signed.bin
 ```
 
 第一次需烧录，自动烧录两个固件
@@ -170,7 +172,7 @@ go install github.com/apache/mynewt-mcumgr-cli/mcumgr@latest
 mcumgr \
   --conntype serial \
   --connstring "dev=/dev/ttyACM0,mtu=512" \
-  image upload ~/downloads/board_led/build/debug/board_led/zephyr/zephyr.signed.bin
+  image upload build/release/xxx/zephyr/zephyr.signed.bin
 ```
 
 新的固件在 slot1 里面，正常情况下，flags 为空
