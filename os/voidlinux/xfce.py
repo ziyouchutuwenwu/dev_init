@@ -86,6 +86,10 @@ def set_dev_rules():
     os.system(cmd)
 
 
+def install_kernel_build_essential():
+    os.system("xbps-install -y ncurses-devel patch")
+
+
 def install_browser():
     os.system("xbps-install -y chromium")
 
@@ -271,6 +275,7 @@ if __name__ == "__main__":
     install_embedded_tools()
     install_sniffer(login_user)
     install_qtct()
+    install_kernel_build_essential()
     install_remote_desktop()
     install_media_player()
     install_pg_essential()
