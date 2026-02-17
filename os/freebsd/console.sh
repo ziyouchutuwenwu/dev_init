@@ -67,7 +67,6 @@ sed -i "" 's/#PermitRootLogin no/PermitRootLogin yes/g' /usr/jails/template/etc/
 
 # 常用工具
 pkg install -y reptyr
-pkg install -y xclip
 pkg install -y fusefs-sshfs
 pkg install -y autossh sshpass
 pkg install -y screen
