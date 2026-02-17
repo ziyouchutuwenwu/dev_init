@@ -268,7 +268,6 @@ def install_encoding_tools():
 def install_useful_tools():
     tool_list = [
         "reptyr",
-        "xclip",
         "binaryen",
         "virt-what",
         "progress",
