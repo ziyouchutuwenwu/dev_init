@@ -16,20 +16,20 @@ from py_mods import file, proc
 
 def update_sudo_passwd_template(pwd):
     sudo_passwd_template = "/tmp/pass.sh"
-    os.system("rm -rf %s" % sudo_passwd_template)
-    os.system("touch %s" % sudo_passwd_template)
-    os.system("chmod a+x %s" % sudo_passwd_template)
+    proc.run("rm -rf %s" % sudo_passwd_template)
+    proc.run("touch %s" % sudo_passwd_template)
+    proc.run("chmod a+x %s" % sudo_passwd_template)
     file.set_to_file(sudo_passwd_template, "'#! /bin/bash'")
     file.set_to_file(sudo_passwd_template, "echo %s" % pwd)
 
 
 def remove_sudo_passwd_template():
     sudo_passwd_template = "/tmp/pass.sh"
-    os.system("rm -rf %s" % sudo_passwd_template)
+    proc.run("rm -rf %s" % sudo_passwd_template)
 
 
 def init_yay(user):
-    os.system("yes | pacman --noconfirm -S yay")
+    proc.run("yes | pacman --noconfirm -S yay")
     sudo_ask_pass_info = "export SUDO_ASKPASS=/tmp/pass.sh"
     install_cmd = "yay --sudoloop --save"
     cmd = "%s; %s" % (sudo_ask_pass_info, install_cmd)
@@ -52,7 +52,7 @@ def install_pdf_viewer(user):
     install_cmd = "yes | yay --noconfirm -S --sudoflags -A qpdfview"
     cmd = "%s; %s" % (sudo_ask_pass_info, install_cmd)
     proc.run_as_user(user, cmd)
-    os.system("yes | pacman --noconfirm -Rcns qt5-tools")
+    proc.run("yes | pacman --noconfirm -Rcns qt5-tools")
 
 
 def install_browser(user):

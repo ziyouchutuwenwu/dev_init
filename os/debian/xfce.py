@@ -22,52 +22,52 @@ def add_usr_sbin_to_path_env():
 def enable_sleep():
     # 自定义的配置文件内禁用了 sleep
     cmd = "rm -rf /etc/systemd/sleep.conf.d"
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def install_beam():
-    os.system("apt install -y erlang rebar3")
-    os.system("apt install -y elixir")
-    os.system("apt purge -y erlang-jinterface")
+    proc.run("apt install -y erlang rebar3")
+    proc.run("apt install -y elixir")
+    proc.run("apt purge -y erlang-jinterface")
 
 
 def install_sudo(user):
-    os.system("apt install -y sudo")
+    proc.run("apt install -y sudo")
     cmd = "gpasswd -a %s sudo" % user
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def install_rt_test_tools():
-    os.system("apt install -y stress rt-tests")
+    proc.run("apt install -y stress rt-tests")
 
 
 def install_embedded_tools():
-    os.system("apt install -y gdbserver gdb-multiarch")
-    os.system(
+    proc.run("apt install -y gdbserver gdb-multiarch")
+    proc.run(
         "apt install -y gcc-arm-linux-gnueabi gcc-arm-none-eabi gcc-arm-linux-gnueabihf"
     )
-    os.system("apt install -y qemu-user-static")
-    os.system("apt install -y u-boot-tools")
-    os.system("apt install -y i2c-tools spi-tools can-utils")
-    os.system("apt install -y mtd-utils squashfs-tools")
+    proc.run("apt install -y qemu-user-static")
+    proc.run("apt install -y u-boot-tools")
+    proc.run("apt install -y i2c-tools spi-tools can-utils")
+    proc.run("apt install -y mtd-utils squashfs-tools")
 
 
 def install_clang_llvm_lldb():
-    os.system("apt install -y valgrind clang llvm lldb")
+    proc.run("apt install -y valgrind clang llvm lldb")
 
 
 def install_audio_manager():
-    os.system("apt install -y pulseaudio")
+    proc.run("apt install -y pulseaudio")
 
 
 def install_login_setting():
-    os.system("apt install -y lightdm-gtk-greeter-settings")
+    proc.run("apt install -y lightdm-gtk-greeter-settings")
 
 
 def disable_pc_beep():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/mod_blacklist/blacklist.conf /etc/modprobe.d/" % (current_dir)
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def make_user_dir_en(user):
@@ -85,37 +85,37 @@ def make_git_default_config(user):
 
 
 def install_color_picker():
-    os.system("apt install -y kcolorchooser")
+    proc.run("apt install -y kcolorchooser")
 
 
 def install_api_viewer():
-    os.system("apt install -y zeal")
+    proc.run("apt install -y zeal")
 
 
 def install_serial_tools(user):
-    os.system("apt install -y picocom lrzsz")
-    os.system("apt install -y tio")
+    proc.run("apt install -y picocom lrzsz")
+    proc.run("apt install -y tio")
     cmd = "usermod -a -G dialout %s" % user
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def install_sniffer(user):
-    os.system(
+    proc.run(
         'echo "wireshark-common wireshark-common/install-setuid boolean true" | debconf-set-selections'
     )
-    os.system("apt install -y wireshark")
+    proc.run("apt install -y wireshark")
     cmd = "usermod -a -G wireshark %s" % user
-    os.system(cmd)
-    os.system("apt install -y tcpdump")
+    proc.run(cmd)
+    proc.run("apt install -y tcpdump")
 
 
 def install_vm_essential():
     # 虚拟机装，剪贴板共享程序
-    os.system("apt install -y spice-vdagent")
+    proc.run("apt install -y spice-vdagent")
 
 
 def install_virt_manager(user):
-    os.system("apt install -y virt-manager")
+    proc.run("apt install -y virt-manager")
     install_list = [
         "qemu-system",
         "qemu-system-arm",
@@ -125,9 +125,9 @@ def install_virt_manager(user):
     ]
     for item in install_list:
         cmd = "apt install -y %s" % item
-        os.system(cmd)
+        proc.run(cmd)
     # 物理机装，剪贴板共享程序
-    os.system("apt install -y qemu-guest-agent")
+    proc.run("apt install -y qemu-guest-agent")
     groups = [
         "libvirt",
         "libvirt-qemu",
@@ -135,45 +135,45 @@ def install_virt_manager(user):
     ]
     for group in groups:
         cmd = "usermod -aG %s %s" % (group, user)
-        os.system(cmd)
-    os.system("systemctl enable libvirtd")
-    os.system("systemctl start libvirtd")
+        proc.run(cmd)
+    proc.run("systemctl enable libvirtd")
+    proc.run("systemctl start libvirtd")
 
 
 def install_qt_setting_tool():
-    os.system("apt install -y qt5ct")
+    proc.run("apt install -y qt5ct")
 
 
 def install_pg_essential():
-    os.system("apt install -y libpq-dev")
+    proc.run("apt install -y libpq-dev")
 
 
 def install_ios_tools():
-    os.system("apt install -y libimobiledevice-utils ideviceinstaller ifuse")
+    proc.run("apt install -y libimobiledevice-utils ideviceinstaller ifuse")
 
 
 def install_power_management_tool():
-    os.system("apt install -y tlp")
+    proc.run("apt install -y tlp")
 
 
 def set_dev_rules():
     cmd = "mkdir -p /etc/udev/rules.d"
-    os.system(cmd)
+    proc.run(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/udev/*.rules /etc/udev/rules.d/" % (current_dir)
-    os.system(cmd)
+    proc.run(cmd)
     cmd = "udevadm control --reload-rules; udevadm trigger"
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def install_chinese_fonts():
-    os.system(
+    proc.run(
         "apt install -y xfonts-intl-chinese fonts-wqy-microhei fonts-wqy-zenhei xfonts-wqy"
     )
 
 
 def install_fcitx(user):
-    os.system("apt install -y fcitx5 fcitx5-chinese-addons")
+    proc.run("apt install -y fcitx5 fcitx5-chinese-addons")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "mkdir -p ~/.config/fcitx5/"
     proc.run_as_user(user, cmd)
@@ -186,39 +186,39 @@ def install_fcitx(user):
 
 
 def install_image_viewer():
-    os.system("apt install -y gpicview")
+    proc.run("apt install -y gpicview")
 
 
 def install_touch_board_driver():
-    os.system("apt install -y xserver-xorg-input-synaptics")
+    proc.run("apt install -y xserver-xorg-input-synaptics")
 
 
 def make_xfce_ftp_support():
-    os.system("apt install -y gvfs-backends")
+    proc.run("apt install -y gvfs-backends")
 
 
 def install_remote_gui_client():
-    os.system("apt install -y freerdp3-x11")
+    proc.run("apt install -y freerdp3-x11")
 
 
 def install_notes_tool():
-    os.system("apt install -y gnote")
+    proc.run("apt install -y gnote")
 
 
 def install_pdf_reader():
-    os.system("apt install -y qpdfview")
+    proc.run("apt install -y qpdfview")
 
 
 def install_disk_partition_tool():
-    os.system("apt install -y gparted")
+    proc.run("apt install -y gparted")
 
 
 def install_media_player():
-    os.system("apt install -y ffmpeg vlc smplayer audacious")
+    proc.run("apt install -y ffmpeg vlc smplayer audacious")
 
 
 def install_unzipper():
-    os.system("apt install -y xarchiver")
+    proc.run("apt install -y xarchiver")
 
 
 def disable_file_history(user):
@@ -227,7 +227,7 @@ def disable_file_history(user):
 
 
 def install_video_recorder():
-    os.system("apt install -y vokoscreen")
+    proc.run("apt install -y vokoscreen")
 
 
 def do_clean_after_install():
@@ -238,19 +238,19 @@ def do_clean_after_install():
     ]
     for app in app_list:
         cmd = "apt purge -y %s" % app
-        os.system(cmd)
-    os.system("apt autoremove -y; apt autoclean -y")
+        proc.run(cmd)
+    proc.run("apt autoremove -y; apt autoclean -y")
 
 
 def add_amazing_fonts():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/fonts/* /usr/share/fonts/" % (current_dir)
-    os.system(cmd)
-    os.system("fc-cache -f -v")
+    proc.run(cmd)
+    proc.run("fc-cache -f -v")
 
 
 def install_themes(user):
-    os.system("apt install -y faenza-icon-theme")
+    proc.run("apt install -y faenza-icon-theme")
     proc.run_as_user(user, "mkdir -p ~/.themes")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/themes/* ~/.themes" % (current_dir)
@@ -263,7 +263,7 @@ def init_profile(user):
 
 
 def install_filemon_tool():
-    os.system("apt install -y inotify-tools watchman")
+    proc.run("apt install -y inotify-tools watchman")
 
 
 def install_tools():
@@ -279,48 +279,48 @@ def install_tools():
     ]
     for tool in tool_list:
         cmd = "apt install -y %s" % tool
-        os.system(cmd)
+        proc.run(cmd)
 
 
 # http://localhost:631/
 def install_printer_essential():
-    os.system("apt install -y system-config-printer")
-    os.system("apt install -y cups cups-browsed")
-    os.system("systemctl enable cups-browsed --now")
-    os.system("systemctl enable cups --now")
+    proc.run("apt install -y system-config-printer")
+    proc.run("apt install -y cups cups-browsed")
+    proc.run("systemctl enable cups-browsed --now")
+    proc.run("systemctl enable cups --now")
 
 
 def install_browser():
-    os.system("apt install -y chromium chromium-l10n")
+    proc.run("apt install -y chromium chromium-l10n")
 
 
 def do_zsh_config(user):
     cmd = "usermod -s $(which zsh) %s" % (user)
-    os.system(cmd)
+    proc.run(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/zsh/user/config.sh" % (current_dir)
     proc.run_as_user(user, cmd)
 
 
 def install_key_tool():
-    os.system("apt install -y seahorse")
+    proc.run("apt install -y seahorse")
 
 
 def install_terminator(user):
-    os.system("apt install -y terminator")
+    proc.run("apt install -y terminator")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/../../development/terminal/terminator/install.sh" % (current_dir)
     proc.run_as_user(user, cmd)
     # 查询 sudo update-alternatives --config x-terminal-emulator
-    os.system("update-alternatives --set x-terminal-emulator /usr/bin/terminator")
+    proc.run("update-alternatives --set x-terminal-emulator /usr/bin/terminator")
 
 
 def install_modbus_tool():
-    os.system("apt install -y mbpoll")
+    proc.run("apt install -y mbpoll")
 
 
 def do_vim_config(user):
-    os.system("apt install -y xfce4-terminal ripgrep neovim")
+    proc.run("apt install -y xfce4-terminal ripgrep neovim")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/../../development/editor/nvim/install.sh" % (current_dir)
     proc.run_as_user(user, cmd)
@@ -329,7 +329,7 @@ def do_vim_config(user):
 def run_root_console_script(mirror_name):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "python %s/console.py %s" % (current_dir, mirror_name)
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def fix_translation_bug(user):
@@ -343,7 +343,7 @@ def fix_translation_bug(user):
 
 
 def do_clean():
-    os.system("apt autoremove -y; apt autoclean")
+    proc.run("apt autoremove -y; apt autoclean")
 
 
 if __name__ == "__main__":

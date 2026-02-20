@@ -3,17 +3,17 @@
 
 
 import sys
+import os
+import subprocess
 
 sys.dont_write_bytecode = True
-
-import os
 
 
 def _is_in_file(file, content):
     reader = open(file)
     line = reader.readline()
 
-    while line != "" and line != None:
+    while line != "" and line is not None:
         if -1 != line.find(content):
             print(line)
             reader.close()
@@ -28,6 +28,6 @@ def set_to_file(file, content, need_new_blank_line=False):
     if not is_existed:
         if need_new_blank_line:
             profile_cmd = "echo '' >> %s" % file
-            os.system(profile_cmd)
+            subprocess.run(profile_cmd, shell=True)
         profile_cmd = "echo '%s' >> %s" % (content, file)
-        os.system(profile_cmd)
+        subprocess.run(profile_cmd, shell=True)

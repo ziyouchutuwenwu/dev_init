@@ -15,79 +15,79 @@ from py_mods import proc
 
 
 def disable_root_history():
-    os.system(
+    proc.run(
         "echo 'yes | pacman --noconfirm -Syyu; yes | pacman --noconfirm -Scc' > ~/.bash_history"
     )
-    os.system("chattr +i ~/.bash_history")
-    os.system("bash -cl 'history -c'")
+    proc.run("chattr +i ~/.bash_history")
+    proc.run("bash -cl 'history -c'")
 
 
 def set_mirror():
-    os.system("pacman-mirrors --timezone -m rank")
+    proc.run("pacman-mirrors --timezone -m rank")
 
 
 def update_keyring():
-    os.system("yes | pacman --noconfirm -S archlinux-keyring manjaro-keyring")
-    os.system("yes | pacman-key --populate")
-    os.system("yes | pacman --noconfirm -S ca-certificates")
+    proc.run("yes | pacman --noconfirm -S archlinux-keyring manjaro-keyring")
+    proc.run("yes | pacman-key --populate")
+    proc.run("yes | pacman --noconfirm -S ca-certificates")
 
 
 def do_upgrade():
-    os.system("yes | pacman --noconfirm -Syyu")
+    proc.run("yes | pacman --noconfirm -Syyu")
 
 
 def set_swapping_config():
     cmd = "sysctl vm.swappiness=10"
-    os.system(cmd)
+    proc.run(cmd)
     cmd = "echo vm.swappiness=10 > /etc/sysctl.d/swapping.conf"
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def set_fs_watches_config():
     cmd = "sysctl fs.inotify.max_user_watches=524288"
-    os.system(cmd)
+    proc.run(cmd)
     cmd = "echo fs.inotify.max_user_watches=524288 > /etc/sysctl.d/fs_watches.conf"
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def init_profile(user):
     proc.run_as_user(user, "rm -rf ~/.profile")
     proc.run_as_user(user, "touch ~/.profile")
-    os.system("rm -rf ~/.profile")
-    os.system("touch ~/.profile")
+    proc.run("rm -rf ~/.profile")
+    proc.run("touch ~/.profile")
 
 
 def set_dev_rules():
     cmd = "mkdir -p /etc/udev/rules.d"
-    os.system(cmd)
+    proc.run(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/udev/*.rules /etc/udev/rules.d/" % (current_dir)
-    os.system(cmd)
+    proc.run(cmd)
     cmd = "udevadm control --reload-rules; udevadm trigger"
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def make_colorful():
     cmd = "sed -i 's/#Color/Color/g' /etc/pacman.conf"
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def install_api_viewer():
-    os.system("yes | pacman --noconfirm -S zeal")
+    proc.run("yes | pacman --noconfirm -S zeal")
 
 
 def install_key_tool():
-    os.system("yes | pacman --noconfirm -S seahorse")
+    proc.run("yes | pacman --noconfirm -S seahorse")
 
 
 def set_global_profiles():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/profile/*.sh /etc/profile.d/" % (current_dir)
-    os.system(cmd)
+    proc.run(cmd)
     cmd = "mkdir -p /usr/local/etc/profile.d"
-    os.system(cmd)
+    proc.run(cmd)
     cmd = "cp -rf %s/profile/profile.d/* /usr/local/etc/profile.d/" % (current_dir)
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def disable_file_history(user):
@@ -96,28 +96,28 @@ def disable_file_history(user):
 
 
 def install_android_tools():
-    os.system("yes | pacman --noconfirm -S scrcpy")
+    proc.run("yes | pacman --noconfirm -S scrcpy")
 
 
 def install_toys():
-    os.system("yes | pacman --noconfirm -S cmatrix cowsay")
+    proc.run("yes | pacman --noconfirm -S cmatrix cowsay")
 
 
 def install_sniffer(user):
-    os.system("yes | pacman --noconfirm -S wireshark-qt")
+    proc.run("yes | pacman --noconfirm -S wireshark-qt")
     cmd = "usermod -a -G wireshark %s" % user
-    os.system(cmd)
-    os.system("yes | pacman --noconfirm -S tcpdump")
+    proc.run(cmd)
+    proc.run("yes | pacman --noconfirm -S tcpdump")
 
 
 def install_vm_essential():
     # 虚拟机装，剪贴板共享程序
-    os.system("yes | pacman --noconfirm -S spice-vdagent")
+    proc.run("yes | pacman --noconfirm -S spice-vdagent")
 
 
 def install_virt_manager(user):
-    os.system("yes | pacman --noconfirm -S virt-manager qemu-full dnsmasq")
-    os.system("yes | pacman --noconfirm -S qemu-guest-agent")
+    proc.run("yes | pacman --noconfirm -S virt-manager qemu-full dnsmasq")
+    proc.run("yes | pacman --noconfirm -S qemu-guest-agent")
     groups = [
         "libvirt",
         "libvirt-qemu",
@@ -125,70 +125,70 @@ def install_virt_manager(user):
     ]
     for group in groups:
         cmd = "usermod -aG %s %s" % (group, user)
-        os.system(cmd)
-    os.system("systemctl enable libvirtd")
-    os.system("systemctl start libvirtd")
+        proc.run(cmd)
+    proc.run("systemctl enable libvirtd")
+    proc.run("systemctl start libvirtd")
 
 
 def install_qt5ct():
-    os.system("yes | pacman --noconfirm -S qt5ct")
+    proc.run("yes | pacman --noconfirm -S qt5ct")
 
 
 def install_docker(user):
-    os.system("yes | pacman --noconfirm -S docker")
+    proc.run("yes | pacman --noconfirm -S docker")
     cmd = "usermod -a -G docker %s" % user
-    os.system(cmd)
+    proc.run(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "mkdir -p /etc/docker/; cp -rf %s/docker/daemon.json /etc/docker/" % (
         current_dir
     )
-    os.system(cmd)
-    os.system("systemctl enable docker.service")
+    proc.run(cmd)
+    proc.run("systemctl enable docker.service")
 
 
 def disable_pc_beep():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/mod_blacklist/blacklist.conf /etc/modprobe.d/" % (current_dir)
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def install_nvidia_drivers():
-    os.system("mhwd -r pci video-linux")
-    os.system("mhwd -r pci video-nvidia")
-    os.system("mhwd -r pci video-hybrid-intel-nvidia-prime")
-    os.system("yes | pacman --noconfirm -S mesa-utils nvidia-prime")
+    proc.run("mhwd -r pci video-linux")
+    proc.run("mhwd -r pci video-nvidia")
+    proc.run("mhwd -r pci video-hybrid-intel-nvidia-prime")
+    proc.run("yes | pacman --noconfirm -S mesa-utils nvidia-prime")
 
 
 def install_python_tools():
-    os.system("yes | pacman --noconfirm -S uv")
+    proc.run("yes | pacman --noconfirm -S uv")
 
 
 def install_disk_tools():
-    os.system("yes | pacman --noconfirm -S gparted ventoy")
+    proc.run("yes | pacman --noconfirm -S gparted ventoy")
 
 
 def install_essential_fonts():
-    os.system(
+    proc.run(
         "yes | pacman --noconfirm -S wqy-bitmapfont wqy-microhei wqy-microhei-lite wqy-zenhei"
     )
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/fonts/* /usr/share/fonts/" % (current_dir)
-    os.system(cmd)
-    os.system("fc-cache -fv")
+    proc.run(cmd)
+    proc.run("fc-cache -fv")
 
 
 def install_sync_tool():
-    os.system("yes | pacman --noconfirm -S grsync rsync")
+    proc.run("yes | pacman --noconfirm -S grsync rsync")
 
 
 def install_serial_tools(user):
-    os.system("yes | pacman --noconfirm -S picocom lrzsz")
+    proc.run("yes | pacman --noconfirm -S picocom lrzsz")
     cmd = "usermod -a -G uucp %s" % user
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def install_chinese_input(user):
-    os.system(
+    proc.run(
         "yes | pacman --noconfirm -S manjaro-asian-input-support-fcitx5 fcitx5-chinese-addons"
     )
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -212,57 +212,57 @@ def make_user_dir_en(user):
 
 
 def do_zsh_config(user):
-    os.system("yes | pacman --noconfirm -S zsh")
-    os.system("usermod -s $(which zsh) root")
+    proc.run("yes | pacman --noconfirm -S zsh")
+    proc.run("usermod -s $(which zsh) root")
     cmd = "usermod -s $(which zsh) %s" % (user)
-    os.system(cmd)
+    proc.run(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/zsh/global/config.sh" % (current_dir)
-    os.system(cmd)
+    proc.run(cmd)
     cmd = "sh %s/zsh/root/config.sh" % (current_dir)
-    os.system(cmd)
+    proc.run(cmd)
     cmd = "sh %s/zsh/user/config.sh" % (current_dir)
     proc.run_as_user(user, cmd)
 
 
 def install_beam():
-    os.system("yes | pacman --noconfirm -S jre-openjdk erlang rebar3")
-    os.system("yes | pacman --noconfirm -S elixir")
-    os.system("yes | pacman --noconfirm -S inotify-tools")
+    proc.run("yes | pacman --noconfirm -S jre-openjdk erlang rebar3")
+    proc.run("yes | pacman --noconfirm -S elixir")
+    proc.run("yes | pacman --noconfirm -S inotify-tools")
 
 
 def install_terminator(user):
-    os.system("yes | pacman --noconfirm -S terminator")
+    proc.run("yes | pacman --noconfirm -S terminator")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/../../development/terminal/terminator/install.sh" % (current_dir)
     proc.run_as_user(user, cmd)
 
 
 def install_tmux():
-    os.system("yes | pacman --noconfirm -S tmux")
+    proc.run("yes | pacman --noconfirm -S tmux")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/../../development/terminal/tmux/config/* /etc/" % (current_dir)
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def install_build_essential():
-    os.system("yes | pacman --noconfirm -S base-devel")
+    proc.run("yes | pacman --noconfirm -S base-devel")
 
 
 def install_pg_essential():
-    os.system("yes | pacman --noconfirm -S postgresql-libs")
+    proc.run("yes | pacman --noconfirm -S postgresql-libs")
 
 
 def install_zip_essential():
-    os.system("yes | pacman --noconfirm -S p7zip zip unzip")
+    proc.run("yes | pacman --noconfirm -S p7zip zip unzip")
 
 
 def install_search_tools():
-    os.system("yes | pacman --noconfirm -S fd ripgrep")
+    proc.run("yes | pacman --noconfirm -S fd ripgrep")
 
 
 def install_encoding_tools():
-    os.system("yes | pacman --noconfirm -S enca")
+    proc.run("yes | pacman --noconfirm -S enca")
 
 
 def install_useful_tools():
@@ -291,17 +291,17 @@ def install_useful_tools():
     ]
     for tool in tool_list:
         cmd = "yes | pacman --noconfirm -S %s" % tool
-        os.system(cmd)
+        proc.run(cmd)
 
 
 def make_git_default_config(user):
-    os.system("yes | pacman --noconfirm -S git")
+    proc.run("yes | pacman --noconfirm -S git")
     proc.run_as_user(user, "git config --global core.autocrlf false")
     proc.run_as_user(user, "git config --global core.quotepath off")
 
 
 def remove_useless_files():
-    os.system("rm -rf /desktopfs-pkgs.txt /rootfs-pkgs.txt")
+    proc.run("rm -rf /desktopfs-pkgs.txt /rootfs-pkgs.txt")
     links = [
         "manjaro-hello.desktop",
         "manjaro-documentation.desktop",
@@ -313,7 +313,7 @@ def remove_useless_files():
     ]
     for link in links:
         cmd = "rm -rf /usr/share/applications/%s" % link
-        os.system(cmd)
+        proc.run(cmd)
 
 
 def remove_useless_applications():
@@ -341,11 +341,11 @@ def remove_useless_applications():
     ]
     for app in app_list:
         cmd = "yes | pacman --noconfirm -Rcns %s" % app
-        os.system(cmd)
+        proc.run(cmd)
 
 
 def remove_catfish(user):
-    os.system("yes | pacman --noconfirm -Rcns catfish")
+    proc.run("yes | pacman --noconfirm -Rcns catfish")
     cmd = (
         r"sed -i '/<action>/,/<\/action>/ { "
         r"/<icon>system-search<\/icon>/,/<\/action>/d "
@@ -355,62 +355,62 @@ def remove_catfish(user):
 
 
 def install_ansible_essential():
-    os.system("yes | pacman --noconfirm -S sshpass")
+    proc.run("yes | pacman --noconfirm -S sshpass")
 
 
 def install_ssh_server():
-    os.system("yes | pacman --noconfirm -S openssh")
-    os.system("sed -i 's/^#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config")
-    os.system(
+    proc.run("yes | pacman --noconfirm -S openssh")
+    proc.run("sed -i 's/^#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config")
+    proc.run(
         "sed -i 's/^#\\?GatewayPorts.*/GatewayPorts clientspecified/' /etc/ssh/sshd_config"
     )
-    os.system("systemctl restart sshd; systemctl enable sshd")
+    proc.run("systemctl restart sshd; systemctl enable sshd")
 
 
 def install_media_player():
-    os.system("yes | pacman --noconfirm -S vlc smplayer audacious")
+    proc.run("yes | pacman --noconfirm -S vlc smplayer audacious")
 
 
 def install_screen_recorder():
-    os.system("yes | pacman --noconfirm -S vokoscreen")
+    proc.run("yes | pacman --noconfirm -S vokoscreen")
 
 
 def install_color_picker():
-    os.system("yes | pacman --noconfirm -S kcolorchooser")
+    proc.run("yes | pacman --noconfirm -S kcolorchooser")
 
 
 def install_proxychains():
-    os.system("yes | pacman --noconfirm -S proxychains-ng")
+    proc.run("yes | pacman --noconfirm -S proxychains-ng")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = (
         "cp -rf %s/../../development/proxy/proxychains/proxychains.conf /etc/proxychains.conf"
         % (current_dir)
     )
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def install_privoxy():
-    os.system("yes | pacman --noconfirm -S privoxy")
+    proc.run("yes | pacman --noconfirm -S privoxy")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/../../development/proxy/privoxy/config /etc/privoxy/config" % (
         current_dir
     )
-    os.system(cmd)
-    os.system("systemctl daemon-reload; systemctl enable privoxy --now")
+    proc.run(cmd)
+    proc.run("systemctl daemon-reload; systemctl enable privoxy --now")
 
 
 def do_vim_config(user):
-    os.system("yes | pacman --noconfirm -S neovim")
+    proc.run("yes | pacman --noconfirm -S neovim")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/../../development/editor/nvim/install.sh" % (current_dir)
     proc.run_as_user(user, cmd)
 
 
 def install_printer_essential():
-    os.system("yes | pacman --noconfirm -S system-config-printer")
-    os.system("yes | pacman --noconfirm -S cups cups-browsed")
-    os.system("systemctl enable cups-browsed.service --now")
-    os.system("systemctl enable cups.service --now")
+    proc.run("yes | pacman --noconfirm -S system-config-printer")
+    proc.run("yes | pacman --noconfirm -S cups cups-browsed")
+    proc.run("systemctl enable cups-browsed.service --now")
+    proc.run("systemctl enable cups.service --now")
 
 
 def fix_translation_bug(user):
@@ -424,24 +424,24 @@ def fix_translation_bug(user):
 
 
 def set_ntp():
-    os.system("timedatectl set-ntp true")
+    proc.run("timedatectl set-ntp true")
 
 
 def set_timezone():
-    os.system("timedatectl set-timezone Asia/Shanghai")
+    proc.run("timedatectl set-timezone Asia/Shanghai")
 
 
 def install_remote_desktop():
-    os.system("yes | pacman --noconfirm -S freerdp")
+    proc.run("yes | pacman --noconfirm -S freerdp")
 
 
 def install_ios_essential():
-    os.system("yes | pacman --noconfirm -S libimobiledevice")
+    proc.run("yes | pacman --noconfirm -S libimobiledevice")
 
 
 def install_netcat():
-    os.system("yes | pacman --noconfirm -S nmap")
-    os.system("ln -s $(which ncat) /usr/bin/nc")
+    proc.run("yes | pacman --noconfirm -S nmap")
+    proc.run("ln -s $(which ncat) /usr/bin/nc")
 
 
 def install_net_tools():
@@ -456,15 +456,15 @@ def install_net_tools():
     ]
     for app in app_list:
         cmd = "yes | pacman --noconfirm -S %s" % app
-        os.system(cmd)
+        proc.run(cmd)
 
 
 def install_embedded_tools():
-    os.system("yes | pacman --noconfirm -S gdb lldb")
-    os.system("yes | pacman --noconfirm -S arm-none-eabi-gcc arm-none-eabi-newlib")
-    os.system("yes | pacman --noconfirm -S uboot-tools qemu-system-arm")
-    os.system("yes | pacman --noconfirm -S i2c-tools")
-    os.system("yes | pacman --noconfirm -S mtd-utils squashfs-tools")
+    proc.run("yes | pacman --noconfirm -S gdb lldb")
+    proc.run("yes | pacman --noconfirm -S arm-none-eabi-gcc arm-none-eabi-newlib")
+    proc.run("yes | pacman --noconfirm -S uboot-tools qemu-system-arm")
+    proc.run("yes | pacman --noconfirm -S i2c-tools")
+    proc.run("yes | pacman --noconfirm -S mtd-utils squashfs-tools")
 
 
 if __name__ == "__main__":

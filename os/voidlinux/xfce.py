@@ -26,25 +26,25 @@ def make_user_dir_en(user):
 def run_root_console_script(mirror_name):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "python %s/console.py %s" % (current_dir, mirror_name)
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def install_firmware():
-    os.system("xbps-install -y linux-firmware")
+    proc.run("xbps-install -y linux-firmware")
 
 
 def disable_pc_beep():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/mod_blacklist/blacklist.conf /etc/modprobe.d/" % (current_dir)
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def install_fcitx(user):
     # 环境变量在 /usr/local/etc/profile.d/fcitx.sh 里面
-    os.system("xbps-install -y fcitx5 fcitx5-configtool fcitx5-chinese-addons")
+    proc.run("xbps-install -y fcitx5 fcitx5-configtool fcitx5-chinese-addons")
     # gtk 相关解决了 vscode 下，会出现字母乱跳的情况
     # qt5 解决了 qpdfview 里面不能呼唤输入法的问题
-    os.system("xbps-install -y fcitx5-qt5 fcitx5-gtk+2 fcitx5-gtk+3 fcitx5-gtk4")
+    proc.run("xbps-install -y fcitx5-qt5 fcitx5-gtk+2 fcitx5-gtk+3 fcitx5-gtk4")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "mkdir -p ~/.config/fcitx5/"
     proc.run_as_user(user, cmd)
@@ -58,37 +58,37 @@ def install_fcitx(user):
 
 def set_dev_rules():
     cmd = "mkdir -p /etc/udev/rules.d"
-    os.system(cmd)
+    proc.run(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/udev/*.rules /etc/udev/rules.d/" % (current_dir)
-    os.system(cmd)
+    proc.run(cmd)
     cmd = "udevadm control --reload-rules; udevadm trigger"
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def install_kernel_build_essential():
-    os.system("xbps-install -y ncurses-devel patch")
+    proc.run("xbps-install -y ncurses-devel patch")
 
 
 def install_browser():
-    os.system("xbps-install -y chromium")
+    proc.run("xbps-install -y chromium")
 
 
 def install_beam():
-    os.system("xbps-install -y erlang rebar3")
-    os.system("xbps-install -y elixir")
+    proc.run("xbps-install -y erlang rebar3")
+    proc.run("xbps-install -y elixir")
 
 
 def install_remote_desktop():
-    os.system("xbps-install -y freerdp")
+    proc.run("xbps-install -y freerdp")
 
 
 def install_filemon_tool():
-    os.system("xbps-install -y inotify-tools watchman")
+    proc.run("xbps-install -y inotify-tools watchman")
 
 
 def install_pg_essential():
-    os.system("xbps-install -y postgresql-libs")
+    proc.run("xbps-install -y postgresql-libs")
 
 
 def install_tools():
@@ -99,37 +99,37 @@ def install_tools():
     ]
     for tool in tool_list:
         cmd = "xbps-install -y %s" % tool
-        os.system(cmd)
+        proc.run(cmd)
 
 
 def install_login_setting():
-    os.system("xbps-install -y lightdm-gtk-greeter-settings")
+    proc.run("xbps-install -y lightdm-gtk-greeter-settings")
 
 
 def install_embedded_tools():
-    os.system("xbps-install -y gdb-multiarch")
-    os.system("xbps-install -y qemu-user-static")
-    os.system("xbps-install -y u-boot-tools")
-    os.system("xbps-install -y i2c-tools can-utils")
-    os.system("xbps-install -y mtd-utils squashfs-tools")
+    proc.run("xbps-install -y gdb-multiarch")
+    proc.run("xbps-install -y qemu-user-static")
+    proc.run("xbps-install -y u-boot-tools")
+    proc.run("xbps-install -y i2c-tools can-utils")
+    proc.run("xbps-install -y mtd-utils squashfs-tools")
 
 
 def install_serial_tools(user):
-    os.system("xbps-install -y picocom lrzsz")
-    os.system("xbps-install -y tio")
+    proc.run("xbps-install -y picocom lrzsz")
+    proc.run("xbps-install -y tio")
     cmd = "usermod -a -G dialout %s" % user
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def install_terminator(user):
-    os.system("xbps-install -y terminator")
+    proc.run("xbps-install -y terminator")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/../../development/terminal/terminator/install.sh" % (current_dir)
     proc.run_as_user(user, cmd)
 
 
 def install_pdf_reader():
-    os.system("xbps-install -y qpdfview")
+    proc.run("xbps-install -y qpdfview")
 
 
 def disable_file_history(user):
@@ -138,7 +138,7 @@ def disable_file_history(user):
 
 
 def install_themes(user):
-    os.system("xbps-install -y faenza-icon-theme")
+    proc.run("xbps-install -y faenza-icon-theme")
     proc.run_as_user(user, "mkdir -p ~/.themes")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/themes/* ~/.themes" % (current_dir)
@@ -153,53 +153,53 @@ def do_vim_config(user):
 
 def do_zsh_config(user):
     cmd = "usermod -s /usr/bin/zsh %s" % (user)
-    os.system(cmd)
+    proc.run(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/zsh/user/config.sh" % (current_dir)
     proc.run_as_user(user, cmd)
 
 
 def install_media_player():
-    os.system("xbps-install -y ffmpeg vlc smplayer mplayer audacious")
+    proc.run("xbps-install -y ffmpeg vlc smplayer mplayer audacious")
 
 
 def install_unzipper():
-    os.system("xbps-install -y xarchiver thunar-archive-plugin")
+    proc.run("xbps-install -y xarchiver thunar-archive-plugin")
 
 
 def install_vm_essential():
     # 虚拟机装，剪贴板共享程序
-    os.system("xbps-install -y spice-vdagent")
-    os.system("ln -s /etc/sv/spice-vdagentd /var/service/")
+    proc.run("xbps-install -y spice-vdagent")
+    proc.run("ln -s /etc/sv/spice-vdagentd /var/service/")
 
 
 def install_virt_manager(user):
-    os.system("xbps-install -y virt-manager qemu")
-    os.system("ln -s /etc/sv/libvirtd /var/service/")
-    os.system("ln -s /etc/sv/virtlogd /var/service/")
-    os.system("sv start libvirtd")
+    proc.run("xbps-install -y virt-manager qemu")
+    proc.run("ln -s /etc/sv/libvirtd /var/service/")
+    proc.run("ln -s /etc/sv/virtlogd /var/service/")
+    proc.run("sv start libvirtd")
     groups = [
         "libvirt",
         "kvm",
     ]
     for group in groups:
         cmd = "usermod -aG %s %s" % (group, user)
-        os.system(cmd)
+        proc.run(cmd)
 
 
 def install_sniffer(user):
-    os.system("xbps-install -y wireshark-qt")
+    proc.run("xbps-install -y wireshark-qt")
     cmd = "usermod -a -G wireshark %s" % user
-    os.system(cmd)
-    os.system("xbps-install -y tcpdump")
+    proc.run(cmd)
+    proc.run("xbps-install -y tcpdump")
 
 
 def install_qtct():
-    os.system("xbps-install -y qt5ct")
+    proc.run("xbps-install -y qt5ct")
 
 
 def install_image_viewer():
-    os.system("xbps-install -y gpicview")
+    proc.run("xbps-install -y gpicview")
 
 
 def fix_translation_bug(user):
@@ -213,17 +213,17 @@ def fix_translation_bug(user):
 
 
 def set_brightness():
-    os.system("xbps-install -y brightnessctl")
-    os.system("mkdir -p /etc/sv/brightness")
+    proc.run("xbps-install -y brightnessctl")
+    proc.run("mkdir -p /etc/sv/brightness")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/brightness/* /etc/sv/brightness/" % (current_dir)
-    os.system(cmd)
-    os.system("chmod a+x /etc/sv/brightness/run")
-    os.system("ln -s /etc/sv/brightness /var/service/")
+    proc.run(cmd)
+    proc.run("chmod a+x /etc/sv/brightness/run")
+    proc.run("ln -s /etc/sv/brightness /var/service/")
 
 
 def do_clean():
-    os.system("xbps-remove -Ooy")
+    proc.run("xbps-remove -Ooy")
 
 
 if __name__ == "__main__":

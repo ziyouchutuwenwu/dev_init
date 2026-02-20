@@ -21,76 +21,76 @@ def remove_useless():
     ]
     for tool in tools:
         cmd = "xbps-remove -Ry %s" % tool
-        os.system(cmd)
+        proc.run(cmd)
 
 
 def set_mirror(mirror_name):
-    os.system("mkdir -p /etc/xbps.d")
-    os.system("cp /usr/share/xbps.d/*-repository-*.conf /etc/xbps.d/")
+    proc.run("mkdir -p /etc/xbps.d")
+    proc.run("cp /usr/share/xbps.d/*-repository-*.conf /etc/xbps.d/")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     src = f"{current_dir}/mirror/{mirror_name}.conf"
     matches = glob.glob("/etc/xbps.d/*-repository-*.conf")
     if matches:
         dst = matches[0]
-        os.system(f"cat {src} > {dst}")
+        proc.run(f"cat {src} > {dst}")
 
 
 def do_full_upgrade():
-    os.system("xbps-install -Suy xbps")
-    os.system("xbps-install -Suy")
+    proc.run("xbps-install -Suy xbps")
+    proc.run("xbps-install -Suy")
 
 
 def config_ssh_server():
-    os.system(
+    proc.run(
         "sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config"
     )
-    os.system(
+    proc.run(
         "sed -i 's/^#\\?GatewayPorts.*/GatewayPorts clientspecified/' /etc/ssh/sshd_config"
     )
-    os.system("sed -i 's/^#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config")
-    os.system("sv restart sshd")
+    proc.run("sed -i 's/^#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config")
+    proc.run("sv restart sshd")
 
 
 def do_clean():
-    os.system("xbps-remove -Ooy")
+    proc.run("xbps-remove -Ooy")
 
 
 def install_fonts():
     cmd = "xbps-install -y wqy-microhei"
-    os.system(cmd)
+    proc.run(cmd)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/fonts/* /usr/share/fonts/" % (current_dir)
-    os.system(cmd)
+    proc.run(cmd)
     cmd = "xbps-reconfigure -f fontconfig"
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def install_search_tools():
-    os.system("xbps-install -y fd ripgrep")
+    proc.run("xbps-install -y fd ripgrep")
 
 
 def install_python_uv():
-    os.system("xbps-install -y uv")
+    proc.run("xbps-install -y uv")
 
 
 # nmap 自带的 nc 最强大
 def install_nmap():
-    os.system("xbps-install -y nmap")
+    proc.run("xbps-install -y nmap")
 
 
 def install_kernel():
-    os.system("xbps-install -y linux-lts")
+    proc.run("xbps-install -y linux-lts")
 
 
 def install_tmux():
-    os.system("xbps-install -y tmux")
+    proc.run("xbps-install -y tmux")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/../../development/terminal/tmux/config/* /etc/" % (current_dir)
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def install_vim():
-    os.system("xbps-install -y neovim")
+    proc.run("xbps-install -y neovim")
 
 
 def install_useful_tools():
@@ -110,61 +110,61 @@ def install_useful_tools():
     ]
     for tool in tools:
         cmd = "xbps-install -y %s" % tool
-        os.system(cmd)
+        proc.run(cmd)
 
 
 def install_ssh_esential():
-    os.system("xbps-install -y autossh fuse-sshfs")
+    proc.run("xbps-install -y autossh fuse-sshfs")
 
 
 def install_zip_essential():
-    os.system("xbps-install -y xz unzip unrar")
+    proc.run("xbps-install -y xz unzip unrar")
 
 
 def set_sudo_timeout():
-    os.system(
+    proc.run(
         "echo 'Defaults timestamp_timeout=30' | tee /etc/sudoers.d/global-timeout > /dev/null"
     )
 
 
 def install_privoxy():
-    os.system("xbps-install -y privoxy")
+    proc.run("xbps-install -y privoxy")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/../../development/proxy/privoxy/config /etc/privoxy/config" % (
         current_dir
     )
-    os.system(cmd)
-    os.system("ln -s /etc/sv/privoxy /var/service/")
+    proc.run(cmd)
+    proc.run("ln -s /etc/sv/privoxy /var/service/")
 
 
 def install_proxychains():
-    os.system("xbps-install -y proxychains-ng")
+    proc.run("xbps-install -y proxychains-ng")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = (
         "cp -rf %s/../../development/proxy/proxychains/proxychains.conf /etc/proxychains.conf"
         % (current_dir)
     )
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def set_global_profiles():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/profile/*.sh /etc/profile.d/" % (current_dir)
-    os.system(cmd)
+    proc.run(cmd)
     cmd = "mkdir -p /usr/local/etc/profile.d"
-    os.system(cmd)
+    proc.run(cmd)
     cmd = "cp -rf %s/profile/profile.d/* /usr/local/etc/profile.d/" % (current_dir)
-    os.system(cmd)
+    proc.run(cmd)
 
 
 def do_zsh_config():
-    os.system("xbps-install -y zsh")
-    os.system("usermod -s /usr/bin/zsh root")
+    proc.run("xbps-install -y zsh")
+    proc.run("usermod -s /usr/bin/zsh root")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "sh %s/zsh/global/config.sh" % (current_dir)
-    os.system(cmd)
+    proc.run(cmd)
     cmd = "sh %s/zsh/root/config.sh" % (current_dir)
-    os.system(cmd)
+    proc.run(cmd)
 
 
 if __name__ == "__main__":
