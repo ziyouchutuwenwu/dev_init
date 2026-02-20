@@ -127,6 +127,16 @@ def set_sudo_timeout():
     )
 
 
+def install_proxychains():
+    os.system("xbps-install -y proxychains-ng")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cmd = (
+        "cp -rf %s/../../development/proxy/proxychains/proxychains.conf /etc/proxychains.conf"
+        % (current_dir)
+    )
+    os.system(cmd)
+
+
 def set_global_profiles():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/profile/*.sh /etc/profile.d/" % (current_dir)
@@ -174,5 +184,6 @@ if __name__ == "__main__":
     install_zip_essential()
     install_nmap()
     install_python_uv()
+    install_proxychains()
     do_zsh_config()
     do_clean()

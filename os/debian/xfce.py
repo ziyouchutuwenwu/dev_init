@@ -64,14 +64,7 @@ def install_login_setting():
     os.system("apt install -y lightdm-gtk-greeter-settings")
 
 
-def install_proxychains():
-    os.system("apt install -y proxychains4")
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = (
-        "cp -rf %s/../../development/proxy/proxychains/proxychains.conf /etc/proxychains4.conf"
-        % (current_dir)
-    )
-    os.system(cmd)
+
 
 
 def install_privoxy():
@@ -429,7 +422,6 @@ if __name__ == "__main__":
     install_unzipper()
     install_beam()
     disable_file_history(login_user)
-    install_proxychains()
     install_privoxy()
     install_rt_test_tools()
     install_terminator(login_user)

@@ -56,16 +56,6 @@ def install_fcitx(user):
     proc.run_as_user(user, cmd)
 
 
-def install_proxychains():
-    os.system("xbps-install -y proxychains-ng")
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = (
-        "cp -rf %s/../../development/proxy/proxychains/proxychains.conf /etc/proxychains.conf"
-        % (current_dir)
-    )
-    os.system(cmd)
-
-
 def install_privoxy():
     os.system("xbps-install -y privoxy")
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -269,7 +259,6 @@ if __name__ == "__main__":
     install_fcitx(login_user)
     install_beam()
     install_terminator(login_user)
-    install_proxychains()
     install_privoxy()
     install_serial_tools()
     install_embedded_tools()

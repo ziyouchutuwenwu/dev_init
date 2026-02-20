@@ -84,6 +84,9 @@ pkg install -y binaryen
 # 自动安装 nmap 的 ncat
 pkg install -y nmap
 
+pkg install -y proxychains-ng
+cp -rf $CURRENT_DIR/../../development/proxy/proxychains/proxychains.conf /usr/local/etc/proxychains.conf
+
 # tmux
 pkg install -y tmux
 cp -rf $CURRENT_DIR/../../development/terminal/tmux/config/* /usr/local/etc/

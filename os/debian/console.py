@@ -87,6 +87,16 @@ def install_gdebi():
     os.system("apt install -y gdebi")
 
 
+def install_proxychains():
+    os.system("apt install -y proxychains4")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cmd = (
+        "cp -rf %s/../../development/proxy/proxychains/proxychains.conf /etc/proxychains4.conf"
+        % (current_dir)
+    )
+    os.system(cmd)
+
+
 def disable_sleep():
     cmd = "mkdir -p /etc/systemd/sleep.conf.d"
     os.system(cmd)
@@ -293,7 +303,6 @@ if __name__ == "__main__":
     install_aptitude()
     install_apt_file()
     install_build_tools()
-
     install_keepalived()
     install_gdebi()
     add_chinese_support()
@@ -302,6 +311,7 @@ if __name__ == "__main__":
     install_netcat()
     install_tmux()
     install_toys()
+    install_proxychains()
     install_ansible_essential()
     install_useful_tools()
     install_search_tools()
