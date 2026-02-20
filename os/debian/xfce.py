@@ -64,19 +64,6 @@ def install_login_setting():
     os.system("apt install -y lightdm-gtk-greeter-settings")
 
 
-
-
-
-def install_privoxy():
-    os.system("apt install -y privoxy")
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/../../development/proxy/privoxy/config /etc/privoxy/config" % (
-        current_dir
-    )
-    os.system(cmd)
-    os.system("systemctl daemon-reload; systemctl enable privoxy")
-
-
 def disable_pc_beep():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/mod_blacklist/blacklist.conf /etc/modprobe.d/" % (current_dir)
@@ -422,7 +409,6 @@ if __name__ == "__main__":
     install_unzipper()
     install_beam()
     disable_file_history(login_user)
-    install_privoxy()
     install_rt_test_tools()
     install_terminator(login_user)
     install_media_player()

@@ -87,6 +87,16 @@ def install_gdebi():
     os.system("apt install -y gdebi")
 
 
+def install_privoxy():
+    os.system("apt install -y privoxy")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cmd = "cp -rf %s/../../development/proxy/privoxy/config /etc/privoxy/config" % (
+        current_dir
+    )
+    os.system(cmd)
+    os.system("systemctl daemon-reload; systemctl enable privoxy")
+
+
 def install_proxychains():
     os.system("apt install -y proxychains4")
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -307,10 +317,11 @@ if __name__ == "__main__":
     install_gdebi()
     add_chinese_support()
     install_encoding_tools()
+    install_toys()
     install_net_tools()
     install_netcat()
     install_tmux()
-    install_toys()
+    install_privoxy()
     install_proxychains()
     install_ansible_essential()
     install_useful_tools()

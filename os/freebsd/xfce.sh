@@ -130,11 +130,6 @@ pkg install -y xfce4-terminal ripgrep wget freerdp
 # neovim
 su $USER -c 'sh $CURRENT_DIR/../../development/editor/nvim/install.sh'
 
-# 代理转发
-pkg install -y privoxy
-cp -rf $CURRENT_DIR/../../development/proxy/privoxy/config /usr/local/etc/privoxy/config
-sysrc -f /etc/rc.conf.local privoxy_enable="YES"
-
 # qemu 下鼠标支持
 pkg install -y utouch-kmod
 sysrc -f /boot/loader.conf.local utouch_load="YES"

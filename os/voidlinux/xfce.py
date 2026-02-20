@@ -56,16 +56,6 @@ def install_fcitx(user):
     proc.run_as_user(user, cmd)
 
 
-def install_privoxy():
-    os.system("xbps-install -y privoxy")
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/../../development/proxy/privoxy/config /etc/privoxy/config" % (
-        current_dir
-    )
-    os.system(cmd)
-    os.system("ln -s /etc/sv/privoxy /var/service/")
-
-
 def set_dev_rules():
     cmd = "mkdir -p /etc/udev/rules.d"
     os.system(cmd)
@@ -259,7 +249,6 @@ if __name__ == "__main__":
     install_fcitx(login_user)
     install_beam()
     install_terminator(login_user)
-    install_privoxy()
     install_serial_tools()
     install_embedded_tools()
     install_sniffer(login_user)

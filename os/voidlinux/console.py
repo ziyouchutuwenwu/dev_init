@@ -127,6 +127,16 @@ def set_sudo_timeout():
     )
 
 
+def install_privoxy():
+    os.system("xbps-install -y privoxy")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    cmd = "cp -rf %s/../../development/proxy/privoxy/config /etc/privoxy/config" % (
+        current_dir
+    )
+    os.system(cmd)
+    os.system("ln -s /etc/sv/privoxy /var/service/")
+
+
 def install_proxychains():
     os.system("xbps-install -y proxychains-ng")
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -177,6 +187,8 @@ if __name__ == "__main__":
     install_fonts()
     install_ssh_esential()
     install_tmux()
+    install_privoxy()
+    install_proxychains()
     install_vim()
     set_sudo_timeout()
     install_search_tools()
@@ -184,6 +196,5 @@ if __name__ == "__main__":
     install_zip_essential()
     install_nmap()
     install_python_uv()
-    install_proxychains()
     do_zsh_config()
     do_clean()

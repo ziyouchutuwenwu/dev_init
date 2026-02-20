@@ -87,6 +87,11 @@ pkg install -y nmap
 pkg install -y proxychains-ng
 cp -rf $CURRENT_DIR/../../development/proxy/proxychains/proxychains.conf /usr/local/etc/proxychains.conf
 
+# 代理转发
+pkg install -y privoxy
+cp -rf $CURRENT_DIR/../../development/proxy/privoxy/config /usr/local/etc/privoxy/config
+sysrc -f /etc/rc.conf.local privoxy_enable="YES"
+
 # tmux
 pkg install -y tmux
 cp -rf $CURRENT_DIR/../../development/terminal/tmux/config/* /usr/local/etc/
