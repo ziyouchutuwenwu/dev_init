@@ -4,30 +4,24 @@
     {
       "label": "debug",
       "type": "shell",
-      "command": "zig build",
+      "command": "mkdir -p build; odin build . -debug -out:build/debug",
       "group": "build"
     },
     {
       "label": "release",
       "type": "shell",
-      "command": "zig build --release=safe",
+      "command": "mkdir -p build; odin build . -out:build/release -extra-linker-flags:-static",
       "group": "build"
     },
     {
       "label": "run",
       "type": "shell",
-      "command": "zig build run"
+      "command": "odin run ."
     },
     {
       "label": "clean",
       "type": "shell",
-      "command": "rm -rf zig-cache zig-out"
-    },
-    {
-      "label": "test",
-      "type": "shell",
-      "command": "zig build test",
-      "group": "test"
+      "command": "rm -rf build"
     }
   ]
 }

@@ -5,7 +5,7 @@
       "name": "gdb",
       "type": "gdb",
       "request": "launch",
-      "target": "${workspaceFolder}/zig-out/bin/${workspaceFolderBasename}",
+      "target": "${workspaceFolder}/build/debug",
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "debug"
     },
@@ -13,8 +13,10 @@
       "name": "lldb",
       "type": "lldb",
       "request": "launch",
-      "program": "${workspaceFolder}/zig-out/bin/${workspaceFolderBasename}",
+      "program": "${workspaceFolder}/build/debug",
       "cwd": "${workspaceFolder}",
+      "args": [],
+      "stopOnEntry": false,
       "preLaunchTask": "debug"
     }
   ]

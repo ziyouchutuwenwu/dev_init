@@ -2,9 +2,16 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build",
+      "label": "debug",
       "type": "shell",
-      "command": "cargo build"
+      "command": "cargo build",
+      "group": "build"
+    },
+    {
+      "label": "release",
+      "type": "shell",
+      "command": "cargo build --release",
+      "group": "build"
     },
     {
       "label": "run",
@@ -15,11 +22,6 @@
       "label": "clean",
       "type": "shell",
       "command": "cargo clean"
-    },
-    {
-      "label": "format",
-      "type": "shell",
-      "command": "rustfmt ${file}"
     }
   ]
 }
