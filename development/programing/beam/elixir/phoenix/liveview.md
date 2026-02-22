@@ -1,8 +1,17 @@
 # liveview
 
+## 场景
+
+用的是 websocket，不需要刷新页面
+
 ## 说明
 
-ex 自动在当前目录下加载 heex
+注意默认渲染的名字
+
+```sh
+xxx_live.ex
+xxx.html.heex
+```
 
 ## 步骤
 
@@ -15,16 +24,22 @@ mix phx.new web_demo --no-ecto --no-gettext
 ### 路由
 
 ```elixir
-# 和普通路由没有区别
-live "/live", PageLive
+scope "/", WebDemoWeb do
+  pipe_through :browser
+
+  get "/", PageController, :home
+
+  # 和普通路由没有区别
+  live "/live", Live.Page
+end
 ```
 
 ### 代码
 
-page_live.ex
+lib/web_demo_web/live/page/page_live.ex
 
 ```elixir
-defmodule WebDemoWeb.PageLive do
+defmodule WebDemoWeb.Live.Page do
   use WebDemoWeb, :live_view
 
   def mount(_params, _session, socket) do
@@ -53,18 +68,18 @@ defmodule WebDemoWeb.PageLive do
 end
 ```
 
-page_live.html.heex
+lib/web_demo_web/live/page/page.html.heex
 
 ```html
 <div>开始</div>
-<WebDemoWeb.Views.Shared.Live.demo number="{@number}" />
+<WebDemoWeb.Live.Page.Components.AAA.demo number="{@number}" />
 <div>结束</div>
 ```
 
-live_component.ex
+lib/web_demo_web/live/page/components/aaa.ex
 
 ```elixir
-defmodule WebDemoWeb.Views.Shared.Live do
+defmodule WebDemoWeb.Live.Page.Components.AAA do
   use Phoenix.Component
 
   def demo(assigns) do
