@@ -187,18 +187,18 @@ def install_serial_tools(user):
     proc.run(cmd)
 
 
-def install_chinese_input(user):
+def install_fcitx5(user):
     proc.run(
         "yes | pacman --noconfirm -S manjaro-asian-input-support-fcitx5 fcitx5-chinese-addons"
     )
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "mkdir -p ~/.config/fcitx5/"
     proc.run_as_user(user, cmd)
-    cmd = "cp -rf %s/fcitx/config/* ~/.config/fcitx5/" % (current_dir)
+    cmd = "cp -rf %s/fcitx5/config/* ~/.config/fcitx5/" % (current_dir)
     proc.run_as_user(user, cmd)
-    cmd = "mkdir -p ~/.local/share/fcitx5/themes/"
+    cmd = "mkdir -p ~/.local/share/fcitx5/"
     proc.run_as_user(user, cmd)
-    cmd = "cp -rf %s/fcitx/themes/* ~/.local/share/fcitx5/themes/" % (current_dir)
+    cmd = "cp -rf %s/fcitx5/local/* ~/.local/share/fcitx5/" % (current_dir)
     proc.run_as_user(user, cmd)
 
 
@@ -529,8 +529,7 @@ if __name__ == "__main__":
     install_terminator(login_user)
     install_tmux()
     do_vim_config(login_user)
-    install_chinese_input(login_user)
-
+    install_fcitx5(login_user)
     set_dev_rules()
     install_serial_tools(login_user)
     install_android_tools()

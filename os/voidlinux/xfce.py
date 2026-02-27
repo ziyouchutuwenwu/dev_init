@@ -39,8 +39,7 @@ def disable_pc_beep():
     proc.run(cmd)
 
 
-def install_fcitx(user):
-    # 环境变量在 /usr/local/etc/profile.d/fcitx.sh 里面
+def install_fcitx5(user):
     proc.run("xbps-install -y fcitx5 fcitx5-configtool fcitx5-chinese-addons")
     # gtk 相关解决了 vscode 下，会出现字母乱跳的情况
     # qt5 解决了 qpdfview 里面不能呼唤输入法的问题
@@ -48,11 +47,11 @@ def install_fcitx(user):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "mkdir -p ~/.config/fcitx5/"
     proc.run_as_user(user, cmd)
-    cmd = "cp -rf %s/fcitx/config/* ~/.config/fcitx5/" % (current_dir)
+    cmd = "cp -rf %s/fcitx5/config/* ~/.config/fcitx5/" % (current_dir)
     proc.run_as_user(user, cmd)
-    cmd = "mkdir -p ~/.local/share/fcitx5/themes/"
+    cmd = "mkdir -p ~/.local/share/fcitx5/"
     proc.run_as_user(user, cmd)
-    cmd = "cp -rf %s/fcitx/themes/* ~/.local/share/fcitx5/themes/" % (current_dir)
+    cmd = "cp -rf %s/fcitx5/local/* ~/.local/share/fcitx5/" % (current_dir)
     proc.run_as_user(user, cmd)
 
 
@@ -246,7 +245,7 @@ if __name__ == "__main__":
     install_firmware()
     install_themes(login_user)
     install_browser()
-    install_fcitx(login_user)
+    install_fcitx5(login_user)
     install_beam()
     install_terminator(login_user)
     install_serial_tools()

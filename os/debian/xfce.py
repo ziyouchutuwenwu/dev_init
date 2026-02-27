@@ -172,16 +172,16 @@ def install_chinese_fonts():
     )
 
 
-def install_fcitx(user):
+def install_fcitx5(user):
     proc.run("apt install -y fcitx5 fcitx5-chinese-addons")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "mkdir -p ~/.config/fcitx5/"
     proc.run_as_user(user, cmd)
-    cmd = "cp -rf %s/fcitx/config/* ~/.config/fcitx5/" % (current_dir)
+    cmd = "cp -rf %s/fcitx5/config/* ~/.config/fcitx5/" % (current_dir)
     proc.run_as_user(user, cmd)
-    cmd = "mkdir -p ~/.local/share/fcitx5/themes/"
+    cmd = "mkdir -p ~/.local/share/fcitx5/"
     proc.run_as_user(user, cmd)
-    cmd = "cp -rf %s/fcitx/themes/* ~/.local/share/fcitx5/themes/" % (current_dir)
+    cmd = "cp -rf %s/fcitx5/local/* ~/.local/share/fcitx5/" % (current_dir)
     proc.run_as_user(user, cmd)
 
 
@@ -381,7 +381,7 @@ if __name__ == "__main__":
 
     # 中文和主题美化
     install_chinese_fonts()
-    install_fcitx(login_user)
+    install_fcitx5(login_user)
     install_themes(login_user)
     add_amazing_fonts()
 

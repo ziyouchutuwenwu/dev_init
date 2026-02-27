@@ -73,9 +73,9 @@ pkg install -y wqy-fonts
 pkg install -y fcitx5 fcitx5-configtool
 pkg install -y zh-fcitx5-chinese-addons
 su $USER -c 'mkdir -p ~/.config/fcitx5/'
-su $USER -c 'cp -rf $CURRENT_DIR/fcitx/config/* ~/.config/fcitx5/'
-su $USER -c 'mkdir -p ~/.local/share/fcitx5/themes/'
-su $USER -c 'cp -rf $CURRENT_DIR/fcitx/themes/* ~/.local/share/fcitx5/themes/'
+su $USER -c 'cp -rf $CURRENT_DIR/fcitx5/config/* ~/.config/fcitx5/'
+su $USER -c 'mkdir -p ~/.local/share/fcitx5'
+su $USER -c 'cp -rf $CURRENT_DIR/fcitx5/local/* ~/.local/share/fcitx5/'
 su $USER -c 'mkdir -p ~/.config/autostart'
 su $USER -c 'ln -s /usr/local/share/applications/org.fcitx.Fcitx5.desktop ~/.config/autostart/'
 
