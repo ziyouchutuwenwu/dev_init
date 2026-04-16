@@ -1,0 +1,27 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "debug",
+      "type": "shell",
+      "command": "mkdir -p build; odin build . -debug -out:build/debug",
+      "group": "build"
+    },
+    {
+      "label": "release",
+      "type": "shell",
+      "command": "mkdir -p build; odin build . -out:build/release -extra-linker-flags:-static",
+      "group": "build"
+    },
+    {
+      "label": "run",
+      "type": "shell",
+      "command": "odin run ."
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "rm -rf build"
+    }
+  ]
+}

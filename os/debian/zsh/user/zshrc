@@ -1,0 +1,21 @@
+source ~/.zinit/bin/zinit.zsh
+source ~/.local/etc/profile
+source ~/.profile
+
+# 插件
+zinit light zsh-users/zsh-autosuggestions
+zinit light zsh-users/zsh-syntax-highlighting
+
+zinit ice blockf
+zinit light zsh-users/zsh-completions
+
+# 命令行输出彩色
+zinit snippet OMZ::lib/history.zsh
+
+# 主题
+zinit snippet OMZT::steeef
+
+# 设置补全
+fpath=(~/.local/share/zsh/completions $fpath)
+autoload -Uz compinit
+compinit -C

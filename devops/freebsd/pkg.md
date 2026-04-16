@@ -1,0 +1,11 @@
+# pkg
+
+## 说明
+
+查找命令所属包
+
+## 用法
+
+```sh
+pkg which $(which gtk3-demo)
+```

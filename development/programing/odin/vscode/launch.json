@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "gdb",
+      "type": "gdb",
+      "request": "launch",
+      "target": "${workspaceFolder}/build/debug",
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "debug"
+    },
+    {
+      "name": "lldb",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/debug",
+      "cwd": "${workspaceFolder}",
+      "args": [],
+      "stopOnEntry": false,
+      "preLaunchTask": "debug"
+    }
+  ]
+}
