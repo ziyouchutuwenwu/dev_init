@@ -8,8 +8,6 @@
 
 作用和 import 一样，区别是为 **模块** 创建别名，可以减少输入
 
-- 定义测试模块
-
 ```elixir
 defmodule DemoMod do
   defmodule DemoMod1 do
