@@ -6,7 +6,7 @@ html 解析库
 
 ## 用法
 
-### 安装
+依赖
 
 ```elixir
 defp deps do
@@ -16,18 +16,11 @@ defp deps do
 end
 ```
 
-### 代码
+代码
 
 ```elixir
 {:ok, document} = Floki.parse_document(html)
 document
   |> Floki.find("p.headline")
   |> Floki.raw_html()
-```
-
-### 测试
-
-```shell
-iex --name aaa@127.0.0.1 --cookie 123456 -S mix
-iex --name bbb@127.0.0.1 --cookie 123456 -S mix
 ```
