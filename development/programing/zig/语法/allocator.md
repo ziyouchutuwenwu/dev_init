@@ -2,43 +2,33 @@
 
 ## 说明
 
-建议把 allocator 当作为参数，类型是 std.mem.Allocator
+建议把 allocator 当作为参数
 
 ## 用法
 
 ### page_allocator
 
-通常用于处理大块内存的分配, 很慢, 不需要 deinit
+很慢, 全局唯一，不需要 new
+
+不推荐用
 
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
 
-test "page allocator" {
+pub fn main() void {
     const allocator = std.heap.page_allocator;
 
-    const memory = demo(allocator) catch |err| {
-        std.debug.print("error occurred: {}\n", .{err});
+    const memory = allocator.alloc(u8, 100) catch |err| {
+        std.debug.print("内存分配失败: {}\n", .{err});
         return;
     };
+    defer allocator.free(memory);
 
-    try expect(memory.len == 100);
-    try expect(@TypeOf(memory) == []u8);
-}
-
-pub fn demo(allocator: std.mem.Allocator) ![]u8 {
-    const memory = try allocator.alloc(u8, 100);
-
-    defer {
-        std.debug.print("准备 free allocator\n", .{});
-        allocator.free(memory);
-    }
-
-    return memory;
+    std.debug.print("分配成功, 长度: {}\n", .{memory.len});
 }
 ```
 
-### fba
+### FixedBufferAllocator
 
 不能使用堆内存的时候用，比如写内核的时候, 如果字节用完，会报 OutOfMemory 错误
 
@@ -46,83 +36,20 @@ pub fn demo(allocator: std.mem.Allocator) ![]u8 {
 
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
 
-test "fba" {
+pub fn main() void {
     var buffer: [1000]u8 = undefined;
     var fba = std.heap.FixedBufferAllocator.init(&buffer);
     const allocator = fba.allocator();
 
-    const memory = demo(allocator) catch |err| {
-        std.log.debug("error occurred: {}", .{err});
+    const memory = allocator.alloc(u8, 100) catch |err| {
+        std.debug.print("内存分配失败: {}\n", .{err});
         return;
     };
+    defer allocator.free(memory);
 
-    try expect(memory.len == 100);
-    try expect(@TypeOf(memory) == []u8);
+    std.debug.print("分配成功, 长度: {}\n", .{memory.len});
 }
-
-pub fn demo(allocator: std.mem.Allocator) ![]u8 {
-    const memory = try allocator.alloc(u8, 100);
-
-    defer {
-        std.debug.print("准备 free allocator\n", .{});
-        allocator.free(memory);
-    }
-
-    return memory;
-}
-```
-
-### gpa
-
-为安全设计的内存分配器
-
-deinit 返回状态值，用来检测内存泄漏
-
-```zig
-const std = @import("std");
-const expect = std.testing.expect;
-
-test "gpa" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer {
-        if (gpa.deinit() != .ok) {
-            @panic("发现内存泄漏");
-        }
-    }
-
-    const allocator = gpa.allocator();
-
-    const memory = demo(allocator) catch |err| {
-        std.log.debug("error occurred: {}", .{err});
-        return;
-    };
-
-    try expect(memory.len == 100);
-    try expect(@TypeOf(memory) == []u8);
-}
-
-pub fn demo(allocator: std.mem.Allocator) ![]u8 {
-    const memory = try allocator.alloc(u8, 100);
-
-    defer {
-        std.debug.print("准备 free allocator\n", .{});
-        allocator.free(memory);
-    }
-
-    return memory;
-}
-```
-
-### testing_allocator
-
-用于测试用例里面检测 leak
-
-运行 `zig test xxx.zig` 的时候才能用
-
-```zig
-const allocator = std.testing.allocator;
 ```
 
 ### ArenaAllocator
@@ -134,99 +61,105 @@ alloc 出来的内存会自动 free
 ```zig
 const std = @import("std");
 
-test "arena" {
+pub fn main() void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer {
-        std.debug.print("准备 arena Allocator.deinit\n", .{});
-        arena.deinit();
-    }
+    defer arena.deinit();
 
     const allocator = arena.allocator();
 
-    const m1 = try allocator.alloc(u8, 1);
-    const m2 = try allocator.alloc(u8, 10);
-    _ = try allocator.alloc(u8, 100);
+    const m1 = allocator.alloc(u8, 1) catch |err| {
+        std.debug.print("内存分配失败: {}\n", .{err});
+        return;
+    };
+    const m2 = allocator.alloc(u8, 10) catch |err| {
+        std.debug.print("内存分配失败: {}\n", .{err});
+        return;
+    };
+    _ = allocator.alloc(u8, 100) catch |err| {
+        std.debug.print("内存分配失败: {}\n", .{err});
+        return;
+    };
 
-    defer {
-        std.debug.print("准备 free arena Allocator\n", .{});
-        allocator.free(m1);
-        allocator.free(m2);
-        // allocator.free(m3);
-    }
+    std.debug.print("分配成功: m1={}, m2={}\n", .{ m1.len, m2.len });
 }
 ```
 
-## 封装
+### testing_allocator
 
-safe_gpa.zig
+用于测试用例里面检测 leak
+
+```zig
+const allocator = std.testing.allocator;
+```
+
+### DebugAllocator
+
+调试用，deinit 返回状态值，用来检测内存泄漏
 
 ```zig
 const std = @import("std");
 
-pub const Gpa = struct {
-    gpa: std.heap.GeneralPurposeAllocator(.{}),
+pub fn main() void {
+    var da = std.heap.DebugAllocator(.{}){};
+    defer std.debug.assert(da.deinit() == .ok);
+    const allocator = da.allocator();
 
-    pub fn init() Gpa {
-        return .{ .gpa = .{} };
+    const memory = allocator.alloc(u8, 100) catch |err| {
+        std.debug.print("内存分配失败: {}\n", .{err});
+        return;
+    };
+    defer allocator.free(memory);
+
+    std.debug.print("分配成功, 长度: {}\n", .{memory.len});
+}
+```
+
+### smp_allocator
+
+生产环境推荐，全局唯一，不需要 new
+
+支持多线程，多核
+
+```zig
+const std = @import("std");
+
+pub fn main() !void {
+    const allocator = std.heap.smp_allocator;
+
+    const memory = allocator.alloc(u8, 100) catch |err| {
+        std.debug.print("内存分配失败: {}\n", .{err});
+        return;
+    };
+    defer allocator.free(memory);
+
+    std.debug.print("分配成功, 长度: {}\n", .{memory.len});
+}
+```
+
+## 最佳实践
+
+debug 和 release 模式下自动选择分配器
+
+mem.zig
+
+```zig
+const std = @import("std");
+const builtin = @import("builtin");
+
+pub const AppAllocator = struct {
+    dbg: std.heap.DebugAllocator(.{}) = .{},
+
+    pub fn get(self: *AppAllocator) std.mem.Allocator {
+        return switch (builtin.mode) {
+            .Debug, .ReleaseSafe => self.dbg.allocator(),
+            .ReleaseFast, .ReleaseSmall => std.heap.smp_allocator,
+        };
     }
 
-    pub fn allocator(self: *Gpa) std.mem.Allocator {
-        return self.gpa.allocator();
-    }
-
-    pub fn deinit(self: *Gpa) void {
-        const result = self.gpa.deinit();
-        if (result != .ok) {
-            std.log.err("内存泄漏！", .{});
+    pub fn deinit(self: *AppAllocator) void {
+        if (builtin.mode == .Debug or builtin.mode == .ReleaseSafe) {
+            std.debug.assert(self.dbg.deinit() == .ok);
         }
-    }
-};
-
-pub fn init() Gpa {
-    return Gpa.init();
-}
-```
-
-tsa.zig
-
-```zig
-const std = @import("std");
-
-pub const ThreadSafeAllocator = struct {
-    tsa: std.heap.ThreadSafeAllocator,
-
-    pub fn init(child_allocator: std.mem.Allocator) ThreadSafeAllocator {
-        return .{
-            .tsa = .{ .child_allocator = child_allocator },
-        };
-    }
-
-    pub fn allocator(self: *ThreadSafeAllocator) std.mem.Allocator {
-        return self.tsa.allocator();
-    }
-};
-```
-
-arena.zig
-
-```zig
-const std = @import("std");
-
-pub const Arena = struct {
-    arena: std.heap.ArenaAllocator,
-
-    pub fn init(child_allocator: std.mem.Allocator) Arena {
-        return .{
-            .arena = std.heap.ArenaAllocator.init(child_allocator),
-        };
-    }
-
-    pub fn allocator(self: *Arena) std.mem.Allocator {
-        return self.arena.allocator();
-    }
-
-    pub fn deinit(self: *Arena) void {
-        self.arena.deinit();
     }
 };
 ```
@@ -235,27 +168,16 @@ main.zig
 
 ```zig
 const std = @import("std");
+const mem = @import("mem.zig");
 
-const arena = @import("arena.zig");
-const safe_gpa = @import("safe_gpa.zig");
-const tsa = @import("tsa.zig");
+pub fn main(init: std.process.Init) !void {
+    var app_allocator = mem.AppAllocator{};
+    defer app_allocator.deinit();
 
-pub fn main() !void {
-    var gpa = safe_gpa.init();
-    defer gpa.deinit();
+    const allocator = app_allocator.get();
+    const memory = try allocator.alloc(u8, 100);
+    defer allocator.free(memory);
 
-    const gpa_allocator = gpa.allocator();
-
-    // 线程安全分配器
-    var ts = tsa.ThreadSafeAllocator.init(gpa_allocator);
-    const tsa_allocator = ts.allocator();
-
-    // Arena 分配器
-    var ar = arena.Arena.init(tsa_allocator);
-    defer ar.deinit();
-    const allocator = ar.allocator();
-
-    const formatted_str = try std.fmt.allocPrint(allocator, "测试 {}", .{42});
-    std.log.debug("{s}", .{formatted_str});
+    std.debug.print("分配成功, 长度: {}\n", .{memory.len});
 }
 ```

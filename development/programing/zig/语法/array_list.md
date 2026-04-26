@@ -4,12 +4,12 @@
 
 ```zig
 const std = @import("std");
-const equal = std.mem.eql;
+
 const ArrayList = std.ArrayListUnmanaged;
 const allocator = std.heap.page_allocator;
 
 pub fn main() !void {
-    var array_list = ArrayList(u8){};
+    var array_list = ArrayList(u8){ .items = &.{}, .capacity = 0 };
     defer array_list.deinit(allocator);
 
     try array_list.append(allocator, 'H');
