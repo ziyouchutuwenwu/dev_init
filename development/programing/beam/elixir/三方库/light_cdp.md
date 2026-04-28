@@ -29,7 +29,7 @@ defmodule Demo do
   require Logger
 
   def demo do
-    {:ok, session} = LightCDP.start()
+    {:ok, session} = LightCDP.start(host: "127.0.0.1", port: 9222)
     {:ok, page} = LightCDP.new_page(session)
 
     :ok = LightCDP.Page.navigate(page, "https://www.baidu.com")
