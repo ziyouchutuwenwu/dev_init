@@ -42,6 +42,7 @@ defmodule Demo do
     {:ok, session} = LightCDP.start(host: "127.0.0.1", port: 9222)
     {:ok, page} = LightCDP.new_page(session)
 
+    # https://httpbin.org/ip
     :ok = LightCDP.Page.navigate(page, "https://httpbin.org/user-agent")
     {:ok, html} = LightCDP.Page.content(page)
     Logger.debug(inspect(html))

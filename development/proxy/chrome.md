@@ -1,7 +1,9 @@
 # chrome
 
-## 用法
+## 说明
+
+只能用下面这个，其它的不能设置
 
 ```sh
-google-chrome --proxy-server=socks5://127.0.0.1:1080
+HTTPS_PROXY
 ```
