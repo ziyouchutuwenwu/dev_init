@@ -11,7 +11,9 @@
 chrome
 
 ```sh
-chromium --remote-debugging-address=0.0.0.0 --remote-debugging-port=9222
+chromium \
+  --user-data-dir=/tmp/chrome_debug --no-first-run \
+  --remote-debugging-address=0.0.0.0 --remote-debugging-port=9222
 ```
 
 lightpanda
