@@ -16,10 +16,16 @@ chromium \
   --remote-debugging-address=0.0.0.0 --remote-debugging-port=9222
 ```
 
-lightpanda
+zig 版 [lightpanda](https://github.com/lightpanda-io/browser)
 
 ```sh
 lightpanda serve --host 127.0.0.1 --port 9222 --user-agent xxx-user
+```
+
+rust 版 [obscura](https://github.com/h4ckf0r0day/obscura)
+
+```sh
+obscura serve --stealth --port 9222
 ```
 
 依赖
