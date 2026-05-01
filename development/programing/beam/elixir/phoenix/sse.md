@@ -70,8 +70,11 @@ end
 finch_http_stream.ex
 
 ```elixir
-defmodule FinchHTTPStream do
+defmodule FinchHttpStream do
   require Logger
+
+  # 每个 chunk 的超时
+  @timeout 10_000
 
   def get(url) do
     Stream.resource(
@@ -84,40 +87,41 @@ defmodule FinchHTTPStream do
   def _start_stream_request(url) do
     Logger.debug("on stream start")
 
-    # 主进程收消息，task 用来干活
     parent_pid = self()
 
-    Task.start_link(fn ->
+    Task.start(fn ->
       request = Finch.build(:get, url)
 
-      Finch.stream(request, ConfigedFinch, nil, fn
-        {:status, status}, _acc ->
-          Logger.debug("{:status, #{status}}")
-          {:cont, nil}
+      result =
+        Finch.stream(request, ConfigedFinch, nil, fn
+          {:status, status}, _acc ->
+            Logger.debug("{:status, #{status}}")
+            nil
 
-        {:headers, headers}, _acc ->
-          Logger.debug("{:headers, #{inspect(headers)}}")
-          {:cont, nil}
+          {:headers, headers}, _acc ->
+            Logger.debug("{:headers, #{inspect(headers)}}")
+            nil
 
-        {:data, chunk}, _acc ->
-          Logger.debug("{:data, chunk}")
-          send(parent_pid, {:sse_event, chunk})
-          {:cont, nil}
+          {:data, chunk}, _acc ->
+            Logger.debug("{:data, chunk}")
+            send(parent_pid, {:sse_event, chunk})
+            nil
 
-        # 这里无法触发
-        :done, _acc ->
-          Logger.debug(":done, _acc")
+          {:trailers, trailers}, _acc ->
+            Logger.debug("{:trailers, #{inspect(trailers)}}")
+            nil
+        end,
+        receive_timeout: @timeout
+      )
+
+      case result do
+        {:ok, _acc} ->
           send(parent_pid, {:sse_finished, :done})
-          {:halt, nil}
 
-        {:error, reason}, _acc ->
-          Logger.error(" {:error, reason} #{inspect(reason)}")
+        {:error, reason, _acc} ->
+          Logger.error("stream error: #{inspect(reason)}")
           send(parent_pid, {:sse_error, reason})
-          {:halt, nil}
-      end)
-
-      # 因为 :done 无法触发，所以手动 send finish 消息
-      send(parent_pid, {:sse_finished, :done})
+      end
     end)
 
     parent_pid
@@ -137,7 +141,7 @@ defmodule FinchHTTPStream do
         Logger.error("on sse_error: #{inspect(reason)}")
         {:halt, pid}
     after
-      20000 ->
+      @timeout ->
         Logger.info("on sse_timeout")
         {:halt, pid}
     end
@@ -152,8 +156,11 @@ end
 req_http_stream.ex
 
 ```elixir
-defmodule ReqHTTPStream do
+defmodule ReqHttpStream do
   require Logger
+
+  # 每个 chunk 的超时
+  @timeout 10_000
 
   def get(url) do
     Stream.resource(
@@ -173,7 +180,7 @@ defmodule ReqHTTPStream do
       try do
         default_options = [
           retry: false,
-          receive_timeout: :infinity,
+          receive_timeout: @timeout,
           finch: ConfigedFinch
         ]
 
@@ -212,9 +219,9 @@ defmodule ReqHTTPStream do
         Logger.error("on sse_error: #{inspect(reason)}")
         {:halt, pid}
     after
-      50000 ->
+      @timeout ->
         Logger.info("on sse_timeout")
-        {[], pid}
+        {:halt, pid}
     end
   end
 
@@ -227,20 +234,49 @@ end
 或者
 
 ```elixir
-defmodule ReqHTTPStream do
+defmodule ReqHttpStream do
   require Logger
+
+  # 每个 chunk 的超时
+  @timeout 10_000
 
   def get(url) do
     default_options = [
       retry: false,
-      receive_timeout: :infinity,
+      receive_timeout: @timeout,
       finch: ConfigedFinch
     ]
 
+    # stream 模式的关键参数
     options = [into: :self] |> Keyword.merge(default_options)
 
-    resp = url |> Req.get!(options)
-    resp.body
+    Logger.debug("requesting: #{url}")
+
+    case Req.get(url, options) do
+      {:ok, %{status: status, body: body}} when status in 200..299 ->
+        Logger.debug("got 200, streaming body")
+        body
+
+      {:ok, %{status: status}} ->
+        Logger.error("upstream non-2xx: #{status}")
+        _empty_stream()
+
+      {:error, %Req.TransportError{reason: :timeout}} ->
+        Logger.error("upstream timeout")
+        _empty_stream()
+
+      {:error, reason} ->
+        Logger.error("upstream error: #{inspect(reason)}")
+        _empty_stream()
+    end
+  end
+
+  defp _empty_stream do
+    Stream.resource(
+      fn -> nil end,
+      fn _ -> {:halt, nil} end,
+      fn _ -> :ok end
+    )
   end
 
   def debug(url) do
@@ -285,8 +321,8 @@ defmodule WebDemoWeb.StreamController do
 
     url = "http://127.0.0.1:4000/api/stream"
 
-    # 这里换成 ReqHTTPStream
-    HTTPStream.get(url)
+    # 这里换成 ReqHttpStream
+    FinchHttpStream.get(url)
     |> Enum.reduce_while(conn, fn chunk, conn ->
       case Plug.Conn.chunk(conn, chunk) do
         {:ok, conn} ->
