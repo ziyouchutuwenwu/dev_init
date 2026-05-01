@@ -5,6 +5,7 @@
 配置文件路径
 
 ```sh
+./opencode.jsonc
 $HOME/.config/opencode/opencode.jsonc
 ```
 
