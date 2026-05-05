@@ -24,7 +24,7 @@ input("暂停的信息")
 
 ### 脚本运行前
 
-manjaro_init.py 运行前, 普通用户配 git 代理, 不要用环境变量
+xfce.py 运行前, 普通用户配 git 代理, 不要用环境变量
 
 ```sh
 ~/.gitconfig
