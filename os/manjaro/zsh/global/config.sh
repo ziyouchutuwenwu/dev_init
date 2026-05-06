@@ -2,8 +2,9 @@
 
 CURRENT_DIR=$(cd "$(dirname "$0")";pwd)
 
-# 禁止生成 zprofile, 否则会导致菜单全部便英文
-rm -rf /etc/zsh/zprofile; mkdir -p /etc/zsh/zprofile
+# zprofile 会导致菜单全部便英文
+# 如果禁止生成会导致大更新的时候失败
+rm -rf /etc/zsh/zprofile
 
 cp -rf $CURRENT_DIR/zshenv /etc/zsh/
 mkdir -p /usr/local/etc/zsh/
