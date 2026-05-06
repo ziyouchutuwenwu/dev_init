@@ -320,6 +320,7 @@ def remove_useless_applications():
     app_list = [
         "ibus",
         "vim",
+        "flatpak",
         "galculator",
         "engrampa",
         "micro",
