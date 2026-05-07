@@ -31,6 +31,26 @@ opencode mcp add
 opencode mcp debug xxx
 ```
 
+opencode.jsonc
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    // tailwindcss
+    "tailwindcss": {
+      "type": "local",
+      "command": ["npx", "-y", "tailwindcss-mcp-server"],
+    },
+    // tidewave
+    "tidewave": {
+      "type": "remote",
+      "url": "http://localhost:4000/tidewave/mcp",
+    },
+  },
+}
+```
+
 ### session
 
 ```sh
