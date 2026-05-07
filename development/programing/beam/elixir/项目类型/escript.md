@@ -2,7 +2,9 @@
 
 ## 说明
 
-可执行脚本，需要本机安装 elixir
+生成可执行文件
+
+运行时，需要安装 elixir
 
 ## 例子
 
@@ -16,13 +18,14 @@ mix.exs
 def project do
   [
     ...
-    escript: escript()
+    escript: escript(),
   ]
 end
 
 defp escript do
   [
     main_module: DemoApp,
+    # 生成的可执行文件名
     path: "_build/escripts/aaa",
   ]
 end
