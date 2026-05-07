@@ -8,7 +8,7 @@
 
 ## 步骤
 
-官网下载可执行文件，运行一次，会告诉你如何傻瓜式安装
+[tidewave_phoenix](https://github.com/tidewave-ai/tidewave_phoenix)
 
 ```sh
 mix archive.install hex igniter_new --force && mix igniter.install tidewave --yes
