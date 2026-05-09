@@ -11,9 +11,20 @@
 chrome
 
 ```sh
+# 复制配置
+# export SRC_DATA=~/.config/google-chrome
+export SRC_DATA=~/.config/chromium
+export DEST_DATA=/tmp/chrome_debug
+
+rm -rf $DEST_DATA
+mkdir -p $DEST_DATA
+
+rsync -av --exclude='*Cache*' "$SRC_DATA/" "$DEST_DATA"
+
 chromium \
-  --user-data-dir=/tmp/chrome_debug --no-first-run \
-  --remote-debugging-address=0.0.0.0 --remote-debugging-port=9222
+  --user-data-dir=$DEST_DATA \
+  --remote-debugging-address=0.0.0.0 \
+  --remote-debugging-port=9222
 ```
 
 zig 版 [lightpanda](https://github.com/lightpanda-io/browser)
