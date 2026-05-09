@@ -19,7 +19,7 @@ export DATA_DIR=/tmp/chrome_debug
 rm -rf $DATA_DIR
 mkdir -p $DATA_DIR
 
-rsync -av --exclude='*Cache*' "$DEFAULT_DATA_DIR/" "$DATA_DIR"
+rsync -a --exclude='*Cache*' "$DEFAULT_DATA_DIR/" "$DATA_DIR"
 
 chromium \
   --user-data-dir=$DATA_DIR \
