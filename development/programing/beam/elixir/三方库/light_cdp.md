@@ -12,17 +12,17 @@ chrome
 
 ```sh
 # 复制配置
-# export SRC_DATA=~/.config/google-chrome
-export SRC_DATA=~/.config/chromium
-export DEST_DATA=/tmp/chrome_debug
+# export DEFAULT_DATA_DIR=~/.config/google-chrome
+export DEFAULT_DATA_DIR=~/.config/chromium
+export DATA_DIR=/tmp/chrome_debug
 
-rm -rf $DEST_DATA
-mkdir -p $DEST_DATA
+rm -rf $DATA_DIR
+mkdir -p $DATA_DIR
 
-rsync -av --exclude='*Cache*' "$SRC_DATA/" "$DEST_DATA"
+rsync -av --exclude='*Cache*' "$DEFAULT_DATA_DIR/" "$DATA_DIR"
 
 chromium \
-  --user-data-dir=$DEST_DATA \
+  --user-data-dir=$DATA_DIR \
   --remote-debugging-address=0.0.0.0 \
   --remote-debugging-port=9222
 ```
