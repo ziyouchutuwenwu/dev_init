@@ -68,3 +68,73 @@ defmodule Demo do
   end
 end
 ```
+
+js 处理
+
+```html
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>动态加载测试页面</title>
+  </head>
+  <body>
+    <script>
+      setTimeout(function () {
+        var div = document.createElement("div");
+        div.id = "aaa";
+        div.textContent = "这是一个动态加载的 dom";
+        document.body.appendChild(div);
+        console.log("[页面] #aaa 已动态插入");
+      }, 3000);
+    </script>
+  </body>
+</html>
+```
+
+```elixir
+defmodule Demo do
+  require Logger
+
+  def demo do
+    {:ok, session} = LightCDP.start(host: "127.0.0.1", port: 9222)
+    {:ok, page} = LightCDP.new_page(session)
+
+    js = """
+      function on_ready() {
+        return new Promise((resolve) => {
+          function check() {
+            const dom = document.getElementById("aaa");
+            if (dom) {
+              alert("找到 dom");
+              resolve(dom);
+            } else {
+              // 单位 ms
+              setTimeout(check, 50);
+            }
+          }
+          check();
+        });
+      }
+
+      window.__on_ready = on_ready();
+    """
+
+    {:ok, _} =
+      LightCDP.Connection.send_command(
+        page.conn,
+        "Page.addScriptToEvaluateOnNewDocument",
+        %{source: js},
+        5_000,
+        page.session_id
+      )
+
+    :ok = LightCDP.Page.navigate(page, "http://127.0.0.1:8000/index.html")
+
+    {:ok, title} = LightCDP.Page.evaluate(page, "document.title")
+    Logger.debug("title #{inspect(title)}")
+
+    LightCDP.stop(session)
+  end
+end
+```
