@@ -59,10 +59,19 @@ defmodule Demo do
     {:ok, session} = LightCDP.start(host: "127.0.0.1", port: 9222)
     {:ok, page} = LightCDP.new_page(session)
 
-    # https://httpbin.org/ip
-    :ok = LightCDP.Page.navigate(page, "https://httpbin.org/user-agent")
+    # window.onload
+    :ok = LightCDP.Page.navigate(page, "https://www.baidu.com")
     {:ok, html} = LightCDP.Page.content(page)
-    Logger.debug(inspect(html))
+    Logger.debug("百度首页 #{inspect(html)}")
+
+    :ok = LightCDP.Page.fill(page, "#chat-textarea", "调试分析")
+
+    # 等它出现
+    :ok = LightCDP.Page.wait_for_selector(page, "#ci-submit-button", timeout: 5_000)
+    LightCDP.Page.click(page, "#ci-submit-button")
+
+    {:ok, html} = LightCDP.Page.content(page)
+    Logger.debug("二级页面 #{inspect(html)}")
 
     LightCDP.stop(session)
   end
