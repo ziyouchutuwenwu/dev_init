@@ -1,0 +1,44 @@
+{
+  "skill_name": "proxy-auto",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "i was trying to git clone https://github.com/torvalds/linux.git but it keeps saying 'Failed to connect to github.com port 443: Connection timed out'. my HTTP_PROXY is currently set to http://127.0.0.1:8118. can you help me figure out what's wrong?",
+      "expected_output": "Diagnoses the network error as proxy-related, toggles proxy off, verifies connectivity, and reports the fix to the user.",
+      "files": [],
+      "expectations": [
+        "The skill detected that the error is network-related",
+        "The skill checked the current proxy state and found it ON",
+        "The skill tried toggling the proxy OFF",
+        "The skill verified connectivity after toggling",
+        "The skill reported the resolution to the user"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "npm install keeps failing with 'npm ERR! code ECONNRESET' and 'npm ERR! network CONNECTION RESET'. i think my office network blocks direct connections but i'm not sure if my proxy is set up right. right now HTTP_PROXY is not set. what should i do?",
+      "expected_output": "Identifies the npm network error, checks proxy state is OFF, tries turning proxy ON, verifies connectivity, and suggests the user retry.",
+      "files": [],
+      "expectations": [
+        "The skill detected the npm network error",
+        "The skill checked proxy state and found it OFF",
+        "The skill tried toggling the proxy ON",
+        "The skill verified connectivity after toggling",
+        "The skill reported the resolution to the user"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "curl -I https://google.com gives me 'curl: (7) Failed to connect to google.com port 443 after 30000 ms: Couldn't connect to server'. I have no idea if my proxy should be on or off for this. Can you check what's going on and fix it?",
+      "expected_output": "Recognizes curl error (7) as connection failure, checks current proxy state, tries toggling, verifies connectivity, and reports findings.",
+      "files": [],
+      "expectations": [
+        "The skill recognized curl error code (7) as network-related",
+        "The skill checked the current proxy state",
+        "The skill attempted to toggle the proxy",
+        "The skill verified connectivity after toggling",
+        "The skill reported findings to the user"
+      ]
+    }
+  ]
+}

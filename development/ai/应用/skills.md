@@ -2,9 +2,18 @@
 
 ## 说明
 
+[skills.sh](https://skills.sh/)
+
 对 ai 做增强
 
 ## 列表
+
+### 技能
+
+```sh
+npx skills add https://github.com/vercel-labs/skills --skill find-skills
+npx skills add https://github.com/anthropics/skills --skill skill-creator
+```
 
 ### 工程
 
@@ -23,10 +32,13 @@ npx skills@latest add mattpocock/skills
 虚拟工程师团队
 
 ```sh
-/office-hours     ai 问你问题，确认需求
+/office-hours     ai 和你确认需求
 /plan-ceo-review  天马行空的想法
+/plan-eng-review  技术型设计
+/design-xxx       ui 设计相关
 /review           代码审查
 /qa               测试
+/browse           浏览器
 
 git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.gstack
 cd ~/.gstack
@@ -52,17 +64,6 @@ npx skills add https://github.com/anthropics/skills --skill frontend-design
 ```sh
 npm install -g uipro-cli
 uipro init --ai opencode
-```
-
-### 浏览器
-
-[playwright-cli](https://github.com/microsoft/playwright-cli)
-
-```sh
-npm install -g @playwright/cli@latest
-
-# 不支持全局安装
-playwright-cli install --skills
 ```
 
 ### seo
