@@ -2,10 +2,10 @@
 
 ## 说明
 
-对 ai 做增强，使得可以排版，打开网页等等
+对 ai 做增强
 
 
-## 用法
+## 列表
 
 [mattpocock/skills](https://github.com/mattpocock/skills)
 
@@ -16,6 +16,8 @@
 # 安装
 npx skills@latest add mattpocock/skills
 ```
+
+[gstack](https://github.com/garrytan/gstack.git)
 
 虚拟工程师团队
 
@@ -30,7 +32,7 @@ cd ~/.gstack
 ./setup --host opencode
 ```
 
-playwright
+[playwright-cli](https://github.com/microsoft/playwright-cli)
 
 ```sh
 npm install -g @playwright/cli@latest
@@ -39,16 +41,25 @@ npm install -g @playwright/cli@latest
 playwright-cli install --skills
 ```
 
-ui
+frontend-design
 
 ```sh
 npx skills add https://github.com/anthropics/skills --skill frontend-design
 ```
 
-ui-ux-pro-max
+[ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
 
 ```sh
 npm install -g uipro-cli
 uipro init --ai opencode
 ```
 
+[Agent Reach](https://github.com/Panniantong/Agent-Reach)
+
+帮你从网上找东西
+
+```sh
+# python 项目，用 uv 创建虚拟环境，在项目内运行
+# 在 opencode 等工具里面直接输入即可
+帮我安装 Agent Reach：https://raw.githubusercontent.com/Panniantong/agent-reach/main/docs/install.md
+```
