@@ -11,6 +11,12 @@
 chrome
 
 ```sh
+chrome://inspect/#remote-debugging
+```
+
+或者
+
+```sh
 # 复制配置
 # export DEFAULT_DATA_DIR=~/.config/google-chrome
 export DEFAULT_DATA_DIR=~/.config/chromium

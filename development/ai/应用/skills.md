@@ -54,15 +54,14 @@ npm install -g uipro-cli
 uipro init --ai opencode
 ```
 
-### seo
+### 浏览器
 
-[seo-geo-claude-skills](https://github.com/aaron-he-zhu/seo-geo-claude-skills)
+[agent-browser](https://github.com/vercel-labs/agent-browser)
 
 ```sh
-npx skills add aaron-he-zhu/seo-geo-claude-skills
+npm install -g agent-browser
+npx skills add vercel-labs/agent-browser
 ```
-
-### 其它
 
 [playwright-cli](https://github.com/microsoft/playwright-cli)
 
@@ -72,6 +71,16 @@ npm install -g @playwright/cli@latest
 # 不支持全局安装
 playwright-cli install --skills
 ```
+
+### seo
+
+[seo-geo-claude-skills](https://github.com/aaron-he-zhu/seo-geo-claude-skills)
+
+```sh
+npx skills add aaron-he-zhu/seo-geo-claude-skills
+```
+
+### 其它
 
 [Agent Reach](https://github.com/Panniantong/Agent-Reach)
 
