@@ -56,13 +56,6 @@ uipro init --ai opencode
 
 ### 浏览器
 
-[agent-browser](https://github.com/vercel-labs/agent-browser)
-
-```sh
-npm install -g agent-browser
-npx skills add vercel-labs/agent-browser
-```
-
 [playwright-cli](https://github.com/microsoft/playwright-cli)
 
 ```sh
@@ -78,16 +71,4 @@ playwright-cli install --skills
 
 ```sh
 npx skills add aaron-he-zhu/seo-geo-claude-skills
-```
-
-### 其它
-
-[Agent Reach](https://github.com/Panniantong/Agent-Reach)
-
-帮你从网上找东西
-
-```sh
-# python 项目，用 uv 创建虚拟环境，在项目内运行
-# 在 opencode 等工具里面直接输入即可
-帮我安装 Agent Reach：https://raw.githubusercontent.com/Panniantong/agent-reach/main/docs/install.md
 ```
