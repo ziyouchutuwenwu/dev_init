@@ -1,11 +1,12 @@
-# skill
+# skills
 
 ## 说明
 
 对 ai 做增强
 
-
 ## 列表
+
+### 工程
 
 [mattpocock/skills](https://github.com/mattpocock/skills)
 
@@ -32,13 +33,12 @@ cd ~/.gstack
 ./setup --host opencode
 ```
 
-[playwright-cli](https://github.com/microsoft/playwright-cli)
+### 前端
+
+claude design 提取为 skill
 
 ```sh
-npm install -g @playwright/cli@latest
-
-# 项目目录内安装
-playwright-cli install --skills
+npx skills add ConardLi/garden-skills -s web-design-engineer --global
 ```
 
 frontend-design
@@ -52,6 +52,25 @@ npx skills add https://github.com/anthropics/skills --skill frontend-design
 ```sh
 npm install -g uipro-cli
 uipro init --ai opencode
+```
+
+### seo
+
+[seo-geo-claude-skills](https://github.com/aaron-he-zhu/seo-geo-claude-skills)
+
+```sh
+npx skills add aaron-he-zhu/seo-geo-claude-skills
+```
+
+### 其它
+
+[playwright-cli](https://github.com/microsoft/playwright-cli)
+
+```sh
+npm install -g @playwright/cli@latest
+
+# 不支持全局安装
+playwright-cli install --skills
 ```
 
 [Agent Reach](https://github.com/Panniantong/Agent-Reach)
