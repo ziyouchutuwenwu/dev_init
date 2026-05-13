@@ -4,22 +4,24 @@
 
 结合浏览器做 html 解析，支持 js
 
-## 例子
+## 配置
 
 ### 浏览器
-
-chrome
 
 ```sh
 chrome://inspect/#remote-debugging
 ```
 
-或者
+chromium
 
 ```sh
-# 复制配置
-# export DEFAULT_DATA_DIR=~/.config/google-chrome
-export DEFAULT_DATA_DIR=~/.config/chromium
+chromium --remote-debugging-address=0.0.0.0 --remote-debugging-port=9222
+```
+
+chrome
+
+```sh
+export DEFAULT_DATA_DIR=~/.config/google-chrome
 export DATA_DIR=/tmp/chrome_debug
 
 rm -rf $DATA_DIR
@@ -27,7 +29,7 @@ mkdir -p $DATA_DIR
 
 rsync -a --exclude='*Cache*' "$DEFAULT_DATA_DIR/" "$DATA_DIR"
 
-chromium \
+google-chrome \
   --user-data-dir=$DATA_DIR \
   --remote-debugging-address=0.0.0.0 \
   --remote-debugging-port=9222
