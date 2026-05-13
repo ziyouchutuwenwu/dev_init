@@ -2,7 +2,7 @@
 
 ## 说明
 
-结合浏览器做 html 解析，支持 js
+浏览器自动化
 
 ## 配置
 
@@ -29,7 +29,7 @@ mkdir -p $DATA_DIR
 
 rsync -a --exclude='*Cache*' "$DEFAULT_DATA_DIR/" "$DATA_DIR"
 
-google-chrome \
+google-chrome-stable \
   --user-data-dir=$DATA_DIR \
   --remote-debugging-address=0.0.0.0 \
   --remote-debugging-port=9222
@@ -80,76 +80,6 @@ defmodule Demo do
 
     {:ok, html} = LightCDP.Page.content(page)
     Logger.debug("二级页面 #{inspect(html)}")
-
-    LightCDP.stop(session)
-  end
-end
-```
-
-js 处理
-
-```html
-<!doctype html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <title>动态加载测试页面</title>
-  </head>
-  <body>
-    <script>
-      setTimeout(function () {
-        var div = document.createElement("div");
-        div.id = "aaa";
-        div.textContent = "这是一个动态加载的 dom";
-        document.body.appendChild(div);
-        console.log("[页面] #aaa 已动态插入");
-      }, 3000);
-    </script>
-  </body>
-</html>
-```
-
-```elixir
-defmodule Demo do
-  require Logger
-
-  def demo do
-    {:ok, session} = LightCDP.start(host: "127.0.0.1", port: 9222)
-    {:ok, page} = LightCDP.new_page(session)
-
-    js = """
-      function on_ready() {
-        return new Promise((resolve) => {
-          function check() {
-            const dom = document.getElementById("aaa");
-            if (dom) {
-              alert("找到 dom");
-              resolve(dom);
-            } else {
-              // 单位 ms
-              setTimeout(check, 50);
-            }
-          }
-          check();
-        });
-      }
-
-      window.__on_ready = on_ready();
-    """
-
-    {:ok, _} =
-      LightCDP.Connection.send_command(
-        page.conn,
-        "Page.addScriptToEvaluateOnNewDocument",
-        %{source: js},
-        5_000,
-        page.session_id
-      )
-
-    :ok = LightCDP.Page.navigate(page, "http://127.0.0.1:8000/index.html")
-
-    {:ok, title} = LightCDP.Page.evaluate(page, "document.title")
-    Logger.debug("title #{inspect(title)}")
 
     LightCDP.stop(session)
   end
