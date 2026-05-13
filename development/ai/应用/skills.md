@@ -32,13 +32,12 @@ npx skills@latest add mattpocock/skills
 虚拟工程师团队
 
 ```sh
-/office-hours     ai 和你确认需求
-/plan-ceo-review  天马行空的想法
-/plan-eng-review  技术型设计
-/design-xxx       ui 设计相关
-/review           代码审查
-/qa               测试
-/browse           浏览器
+/office-hours   确认需求
+/autoplan       做计划
+/design-xxx     设计相关
+/review         代码审查
+/qa             测试
+/browse         浏览器
 
 git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.gstack
 cd ~/.gstack
