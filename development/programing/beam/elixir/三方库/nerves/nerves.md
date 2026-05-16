@@ -20,12 +20,18 @@ mix archive.install hex nerves_bootstrap
 mix nerves.new demo
 ```
 
-### 依赖
+### 准备
 
-需要设置 MIX_TARGET
+设置 target
 
 ```sh
-MIX_TARGET=x86_64 mix deps.get
+export MIX_TARGET=x86_64
+```
+
+### 依赖
+
+```sh
+mix deps.get
 ```
 
 ### 编译
@@ -33,7 +39,7 @@ MIX_TARGET=x86_64 mix deps.get
 需要[这个](https://github.com/fwup-home/fwup)
 
 ```sh
-MIX_TARGET=x86_64 mix firmware
+mix firmware
 ```
 
 ### 测试
@@ -47,7 +53,7 @@ qemu-system-x86_64 \
   -m 1024 \
   -drive file=disk.img,if=virtio,format=raw \
   -net nic,model=virtio \
-  -net user,hostfwd=tcp::8080-:80,hostfwd=tcp::10022-:22 \
+  -net user,hostfwd=tcp::10022-:22 \
   -nographic \
   -serial mon:stdio
 ```
@@ -55,7 +61,7 @@ qemu-system-x86_64 \
 修改完以后测试
 
 ```sh
-MIX_TARGET=x86_64 mix upload 127.0.0.1 --port 10022
+mix upload 127.0.0.1 --port 10022
 ```
 
 ### 烧录

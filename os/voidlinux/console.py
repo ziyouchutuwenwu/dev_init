@@ -65,6 +65,18 @@ def install_fonts():
     proc.run(cmd)
 
 
+def install_build_tools():
+    tool_list = [
+        "autoconf",
+        "automake",
+        "libtool",
+        "pkgconf"
+    ]
+    for tool in tool_list:
+        cmd = "xbps-install -y %s" % tool
+        proc.run(cmd)
+
+
 def install_search_tools():
     proc.run("xbps-install -y fd ripgrep")
 
@@ -186,6 +198,7 @@ if __name__ == "__main__":
     install_kernel()
     install_fonts()
     install_ssh_esential()
+    install_build_tools()
     install_tmux()
     install_privoxy()
     install_proxychains()

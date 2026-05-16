@@ -2,13 +2,18 @@
 
 ## 说明
 
-网速慢的时候可以手动下载
+tailwindcss 手动下载没用
 
 ## 例子
 
-自动下载或者指定位置
+```sh
+npm install -g esbuild
+```
+
+config/config.exs
 
 ```elixir
-config :tailwind,
-  path: "/usr/local/bin/tailwindcss",
+config :esbuild,
+  version_check: false,
+  path: System.find_executable("esbuild"),
 ```
