@@ -16,6 +16,7 @@ mix phx.new my_web --no-ecto
 
 ```sh
 export MIX_TARGET=x86_64
+export MIX_ENV=prod
 ```
 
 ### 依赖
@@ -35,7 +36,9 @@ end
 
 ### 开机启动
 
-主项目 config/target.exs
+主项目
+
+config/target.exs
 
 ```elixir
 config :my_web, MyWebWeb.Endpoint,
@@ -43,8 +46,49 @@ config :my_web, MyWebWeb.Endpoint,
   http: [ip: {0, 0, 0, 0}, port: 4000],
   server: true,
   force_ssl: false,
-  check_origin: false,
+  check_origin: true,
   secret_key_base: System.get_env("SECRET_KEY_BASE")
+```
+
+或者
+
+```elixir
+config :my_web, MyWebWeb.Endpoint,
+  adapter: Bandit.PhoenixAdapter,
+  http: [ip: {0, 0, 0, 0}, port: 4000],
+  server: true,
+  force_ssl: false,
+  check_origin: true
+```
+
+runtime.exs
+
+```elixir
+import Config
+
+data_dir = "/data"
+secret_file = Path.join(data_dir, "phoenix_secret_key_base")
+
+secret_key =
+  if File.exists?(secret_file) do
+    File.read!(secret_file) |> String.trim()
+  else
+    key = :crypto.strong_rand_bytes(64) |> Base.encode16(case: :lower)
+
+    if File.dir?(data_dir) do
+      try do
+        File.write!(secret_file, key)
+      rescue
+        _error ->
+          IO.puts("/data 分区只读，无法写入密钥")
+          key
+      end
+    end
+
+    key
+  end
+
+config :my_web, MyWebWeb.Endpoint, secret_key_base: secret_key
 ```
 
 ### phx 配置
@@ -54,6 +98,7 @@ phoenix 项目内
 ```bash
 mix compile
 
+# 如果 secret_key 是自己动态生成，则不需要这个
 # 需要先 compile，否则 SECRET_KEY_BASE 会带编译信息
 export SECRET_KEY_BASE=`mix phx.gen.secret`
 
