@@ -1,18 +1,20 @@
 # tailwindcss
 
-## 说明
-
-tailwindcss 手动下载没用
-
-## 例子
+## 配置
 
 ```sh
-npm install -g esbuild
+手动下载 phoenix 提供的版本
+npm 的版本有问题
 ```
 
 config/config.exs
 
 ```elixir
+config :tailwind,
+  version_check: false,
+  path: System.find_executable("tailwind"),
+
+
 config :esbuild,
   version_check: false,
   path: System.find_executable("esbuild"),

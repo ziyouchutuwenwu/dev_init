@@ -17,7 +17,7 @@ priv/static/
 
 ### 安装
 
-在 assets 目录下生成 package.json
+在 assets 目录下安装 npm 依赖包
 
 ```sh
 npm install xxx --prefix assets
