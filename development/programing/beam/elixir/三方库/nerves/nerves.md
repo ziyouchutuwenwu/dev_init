@@ -65,6 +65,13 @@ qemu-system-x86_64 \
 mix upload 10.0.2.238 --port 22
 ```
 
+### 关机
+
+```sh
+power
+reboot
+```
+
 ### 烧录
 
 不支持虚拟机
