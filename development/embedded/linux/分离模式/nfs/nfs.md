@@ -58,13 +58,13 @@ make -j$(nproc)
 ### 测试
 
 ```sh
-sudo qemu-system-arm \
+qemu-system-arm \
   -M vexpress-a9 \
   -m 512M \
   -kernel ~/downloads/u-boot-2023.04/output/u-boot \
   -nographic \
   -netdev bridge,id=net0,br=virbr0 \
-  -net nic,netdev=net0
+  -device virtio-net-pci,netdev=net0
 ```
 
 手动，支持变量展开，需要用双引号，单引号不支持

@@ -27,13 +27,13 @@ make LOADADDR=0x60003000 uImage -j$(nproc)
 进入 uboot 后中断
 
 ```sh
-sudo qemu-system-arm \
+qemu-system-arm \
   -M vexpress-a9 \
   -m 512M \
   -kernel ~/downloads/u-boot-2023.04/output/u-boot \
   -nographic \
   -netdev bridge,id=net0,br=virbr0 \
-  -net nic,netdev=net0
+  -device virtio-net-pci,netdev=net0
 ```
 
 手动设置变量
@@ -85,11 +85,11 @@ make -j$(nproc)
 #### 运行
 
 ```sh
-sudo qemu-system-arm \
+qemu-system-arm \
   -M vexpress-a9 \
   -m 512M \
   -kernel ~/downloads/u-boot-2023.04/output/u-boot \
   -nographic \
   -netdev bridge,id=net0,br=virbr0 \
-  -net nic,netdev=net0
+  -device virtio-net-pci,netdev=net0
 ```
