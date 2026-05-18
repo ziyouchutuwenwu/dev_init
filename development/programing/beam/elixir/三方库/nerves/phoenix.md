@@ -28,7 +28,7 @@ defp deps do
   [
     {:my_web, path: "../my_web", targets: @all_targets},
      # 这个依赖需要手动添加，否则启动失败
-    {:hackney, "~> 1.20", targets: @all_targets}
+    {:hackney, "~> 1.20", targets: @all_targets},
     ...
   ]
 end
@@ -114,17 +114,17 @@ nerves 项目里
 mix firmware
 
 # dev
-fwup -d disk.img _build/x86_64_dev/nerves/images/demo.fw -y
+fwup -d disk.img _build/x86_64_dev/nerves/images/nerves_demo.fw -y
 # prod
-fwup -d disk.img _build/x86_64_prod/nerves/images/demo.fw -y
+fwup -d disk.img _build/x86_64_prod/nerves/images/nerves_demo.fw -y
 
 ```bash
 qemu-system-x86_64 \
   -enable-kvm \
   -m 1024 \
   -drive file=disk.img,if=virtio,format=raw \
-  -net nic,model=virtio \
-  -net user,hostfwd=tcp::4000-:4000,hostfwd=tcp::10022-:22 \
+  -netdev bridge,id=net0,br=virbr0 \
+  -device virtio-net-pci,netdev=net0 \
   -nographic \
   -serial mon:stdio
 ````

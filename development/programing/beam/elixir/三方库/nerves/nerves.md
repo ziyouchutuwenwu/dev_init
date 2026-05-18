@@ -17,7 +17,7 @@ mix archive.install hex nerves_bootstrap
 ### 创建
 
 ```sh
-mix nerves.new demo
+mix nerves.new nerves_demo
 ```
 
 ### 准备
@@ -46,14 +46,14 @@ mix firmware
 
 ```sh
 qemu-img create -f raw disk.img 1G
-fwup -d disk.img _build/x86_64_dev/nerves/images/demo.fw
+fwup -d disk.img _build/x86_64_dev/nerves/images/nerves_demo.fw
 
 qemu-system-x86_64 \
   -enable-kvm \
   -m 1024 \
   -drive file=disk.img,if=virtio,format=raw \
-  -net nic,model=virtio \
-  -net user,hostfwd=tcp::10022-:22 \
+  -netdev bridge,id=net0,br=virbr0 \
+  -device virtio-net-pci,netdev=net0 \
   -nographic \
   -serial mon:stdio
 ```
@@ -61,7 +61,8 @@ qemu-system-x86_64 \
 修改完以后测试
 
 ```sh
-mix upload 127.0.0.1 --port 10022
+# qemu 里面，先看 ip
+mix upload 10.0.2.238 --port 22
 ```
 
 ### 烧录

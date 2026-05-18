@@ -12,7 +12,7 @@ config/config.exs
 ```elixir
 config :tailwind,
   version_check: false,
-  path: System.find_executable("tailwind"),
+  path: System.find_executable("tailwindcss"),
 
 
 config :esbuild,
