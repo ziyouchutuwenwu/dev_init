@@ -70,5 +70,5 @@ mix upload 10.0.2.238 --port 22
 不支持虚拟机
 
 ```sh
-MIX_TARGET=bbb mix firmware.burn
+mix burn
 ```
