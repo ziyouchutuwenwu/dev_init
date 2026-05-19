@@ -4,8 +4,6 @@
 
 [nerves_hub_web](https://github.com/nerves-hub/nerves_hub_web) 是服务端平台
 
-[nerves_hub_cli](https://github.com/nerves-hub/nerves_hub_cli)
-
 固件部分
 
 ### nerves_hub_web
@@ -21,13 +19,6 @@ rm -rf .tool-versions
 docker compose up -d
 ```
 
-准备
-
-```elixir
-# config
-config :nerves_hub, allow_shared_secrets: true
-```
-
 编译
 
 ```sh
@@ -40,7 +31,7 @@ mix ecto.reset
 启动
 
 ```sh
-mix phx.server
+iex -S mix phx.server
 ```
 
 默认账号密码
@@ -64,25 +55,6 @@ team
   -> xx 产品
     settigs
       -> Device Shared Secret Authentication
-```
-
-### nerves_hub_cli
-
-注册只能通过 web 端
-
-```sh
-nh config set uri "http://10.0.2.1:4000/"
-
-nh config set org "team1"
-nh user auth
-```
-
-key
-
-```sh
-# key 会根据当前用户所在的 org, 自动复制过去
-# $HOME/.nerves-hub/keys
-nh key create my_key
 ```
 
 ### 固件
