@@ -11,7 +11,7 @@ config/target.exs
 ```elixir
 # 支持多个公钥
 keys = [
-  Path.join([System.user_home!(), "./sda/服务器相关/天翼云/keys/key.pub"]),
+  Path.join([System.user_home!(), "sda/服务器相关/天翼云/keys/key.pub"]),
 ]
 
 existed_keys = Enum.filter(keys, &File.exists?/1)

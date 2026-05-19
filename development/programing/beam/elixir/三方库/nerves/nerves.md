@@ -62,7 +62,7 @@ qemu-system-x86_64 \
 
 ```sh
 # qemu 里面，先看 ip
-mix upload 10.0.2.238 --port 22
+mix upload root@10.0.2.238 --port 22
 ```
 
 ### 关机
