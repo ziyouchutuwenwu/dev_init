@@ -5,12 +5,17 @@
 ## 例子
 
 ```sh
-mix deps.get --only prod
-MIX_ENV=prod mix compile
+export MIX_ENV=prod
 
-MIX_ENV=prod mix assets.deploy
-# MIX_ENV=prod mix ecto.migrate
-MIX_ENV=prod mix release
-export SECRET_KEY_BASE=`mix phx.gen.secret` PHX_SERVER=true PHX_HOST="aaa.com" PORT=9876;
+mix deps.get
+mix assets.deploy
+# mix ecto.migrate
+mix release
+
+export SECRET_KEY_BASE=$(mix phx.gen.secret | tail -n 1)
+export PHX_SERVER=true
+export PHX_HOST="aaa.com"
+export PORT=9876;
+
 _build/prod/rel/web_demo/bin/web_demo start
 ```

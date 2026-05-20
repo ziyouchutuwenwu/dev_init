@@ -25,7 +25,7 @@ RUN mix deps.get && \
 
 EXPOSE 4000
 
-CMD SECRET_KEY_BASE=$(mix phx.gen.secret) mix phx.server
+CMD SECRET_KEY_BASE=$(mix phx.gen.secret | tail -n 1) mix phx.server
 ```
 
 build
