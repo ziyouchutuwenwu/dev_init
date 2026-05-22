@@ -11,7 +11,7 @@
 启用 nfs，默认已经开启了
 
 ```sh
-make O=output linux-menuconfig
+make linux-menuconfig
 ```
 
 ```sh
@@ -27,7 +27,7 @@ File systems  --->
 核心已经支持, 就算不选中, nfs 也可以加载
 
 ```sh
-make O=output uboot-menuconfig
+make uboot-menuconfig
 ```
 
 ```sh
@@ -40,7 +40,7 @@ Command line interface  --->
 启用 uImage, 设置加载地址
 
 ```sh
-make O=output menuconfig
+make menuconfig
 ```
 
 ```sh
@@ -81,7 +81,7 @@ bootcmd=tftp 0x60010000 uImage; tftp 0x61000000 vexpress-v2p-ca9.dtb; bootm 0x60
 ### 编译
 
 ```sh
-make O=output -j$(nproc)
+make
 ```
 
 ### 测试

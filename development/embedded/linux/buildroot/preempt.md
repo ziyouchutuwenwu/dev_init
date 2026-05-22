@@ -2,33 +2,44 @@
 
 ## 说明
 
-就是配置实时性
+arm 板只支持 CONFIG_PREEMPT
+
+CONFIG_PREEMPT_RT 实时性最好
 
 ## 步骤
 
 ```sh
-make O=output linux-menuconfig
+make linux-menuconfig
 ```
 
 ```sh
 General setup  --->
-  Preemption Model ()  --->
-    (X) Preemptible Kernel (Low-Latency Desktop)
+  [*] Configure standard kernel features (expert users)
+  [*] Fully Preemptible Kernel (Real-Time)
+
+# 高精度定时器
+General setup  --->
   Timers subsystem  --->
     [*] High Resolution Timer Support
 
+# 省电加减少抖动
+General setup  --->
+  Timers subsystem --->
+    Timer tick handling (X) Full dynticks system (tickless)
 
-Kernel Features  --->
-  [*] Symmetric Multi-Processing
-  Timer frequency ()  --->
-    (X) 1000 Hz
-```
+# 关闭调试
+Kernel hacking  --->
+  [ ] Debug preemptible kernel
+  Lock Debugging (spinlocks, mutexes, etc...)  --->
+    [ ] Sleep inside atomic section checking
+  [ ] Debug shared IRQ handlers
 
-还有两个宏，没有找到设置的地方，默认都是 y
 
-```sh
-# 将中断处理改成线程化，提高 Low-Latency 响应，多核必选
-CONFIG_IRQ_FORCED_THREADING
-# 允许 RCU 被抢占，防止阻塞调度，Low-Latency 默认选中
-CONFIG_PREEMPT_RCU
+# 内核 cmdline 中加
+# isolcpus 调度器不给她普通任务
+# nohz_full 停止周期性的 tick 中断，减少抖动
+# rcu_nocbs rcu 转移到其它核，不让他们打断
+Processor type and features  --->
+  [*] Built-in kernel command line
+  (isolcpus=3 nohz_full=3 rcu_nocbs=3) Built-in kernel command string
 ```
