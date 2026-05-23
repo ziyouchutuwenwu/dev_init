@@ -49,27 +49,10 @@ make rootfs-ext2
 make menuconfig
 ```
 
-设置脚本，一般用来动态创建一些节点之类的
-
 ```sh
 System configuration  --->
+  # 创建文件镜像之前，一般用来动态创建一些节点之类的
   (board/demo_vendor/demo_board/custom_fs/extra.sh)  Custom scripts to run before creating filesystem images
-```
-
-时期说明
-
-```sh
-# 在所有包开始编译之前执行。适合做一些环境准备，比如检查工具版本、下载外部文件。
-()  Custom scripts to run before commencing the build
-
-# 所有包编译完成、同步到 output/target/ 之后，在生成 .ext4、.cpio 等镜像文件之前执行。适合修 target 目录里的文件、删不需要的东西、创建设备节点。
-() Custom scripts to run before creating filesystem images
-
-# 在生成镜像文件时，Buildroot 会启动 fakeroot 模拟 root 权限。这个脚本在 fakeroot 环境内部运行，适合做需要 root 权限的操作（比如 mknod、chown、chmod）
-()  Custom scripts to run inside the fakeroot environment
-
-# 镜像文件（.ext4、zImage、dtb 等）已经全部生成到 output/images/ 之后执行。适合打包固件、生成校验和、上传到 TFTP 服务器等
-(board/qemu/post-image.sh) Custom scripts to run after creating filesystem images
 ```
 
 目录结构如下

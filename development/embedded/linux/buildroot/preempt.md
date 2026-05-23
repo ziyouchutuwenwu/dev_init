@@ -25,7 +25,8 @@ General setup  --->
 # 省电加减少抖动
 General setup  --->
   Timers subsystem --->
-    Timer tick handling (X) Full dynticks system (tickless)
+    Timer tick handling
+      (X) Full dynticks system (tickless)
 
 # 关闭调试
 Kernel hacking  --->
