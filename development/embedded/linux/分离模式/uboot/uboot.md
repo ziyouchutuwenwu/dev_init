@@ -7,14 +7,14 @@
 下载地址
 
 ```sh
-https://ftp.denx.de/pub/u-boot/u-boot-2023.04.tar.bz2
+https://ftp.denx.de/pub/u-boot/u-boot-2026.04.tar.bz2
 ```
 
 ### 编译
 
 ```sh
-make vexpress_ca9x4_defconfig
-make -j$(nproc)
+make qemu_arm64_defconfig
+make
 ```
 
 ### 测试
@@ -24,7 +24,7 @@ qemu 加载 uboot 需要用 elf 的格式
 bin 格式的没有入口点，适合烧录到板子上
 
 ```sh
-qemu-system-arm \
+qemu-system-arm64 \
   -M vexpress-a9 \
   -m 512M \
   -kernel ~/downloads/u-boot-2023.04/output/u-boot \

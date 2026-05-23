@@ -10,5 +10,6 @@ thunar 下配置右键
 
 ```sh
 # 条件为目录
+# 图标为 monitor
 ghostty --working-directory=%f
 ```

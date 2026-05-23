@@ -43,9 +43,6 @@ def install_rt_test_tools():
 
 def install_embedded_tools():
     proc.run("apt install -y gdbserver gdb-multiarch")
-    proc.run(
-        "apt install -y gcc-arm-linux-gnueabi gcc-arm-none-eabi gcc-arm-linux-gnueabihf"
-    )
     proc.run("apt install -y qemu-user-static")
     proc.run("apt install -y u-boot-tools")
     proc.run("apt install -y i2c-tools spi-tools can-utils")
