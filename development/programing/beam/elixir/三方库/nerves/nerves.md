@@ -30,6 +30,8 @@ export MIX_TARGET=x86_64
 
 ### 依赖
 
+如果提示 ssh 报错，参考 ssh 的处理
+
 ```sh
 mix deps.get
 ```
