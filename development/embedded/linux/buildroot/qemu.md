@@ -61,7 +61,9 @@ qemu-system-aarch64 \
   -append "root=/dev/vda rootwait console=ttyAMA0"
 ```
 
-整个 img，虚拟机下测试，dtb 不会被加载
+整个 img
+
+虚拟机下测试，dtb 不会被加载
 
 ```sh
 qemu-system-aarch64 \
