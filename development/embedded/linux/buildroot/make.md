@@ -13,6 +13,23 @@ make linux-extract
 make busybox-extract
 ```
 
+### 子项配置
+
+```sh
+make uboot-menuconfig
+make linux-menuconfig
+make busybox-menuconfig
+```
+
+子项更新配置，用于配置拆分以后，把当前的配置，同步到拆分出来的配置文件里面
+
+```sh
+# 运行之前，一定要先 xxx-menuconfig
+make uboot-update-defconfig
+make linux-update-defconfig
+make busybox-update-config
+```
+
 ### rebuild
 
 ```sh
