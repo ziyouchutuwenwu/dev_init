@@ -2,6 +2,17 @@
 
 ## 用法
 
+## 解压源码
+
+```sh
+# 没有下载的会下载
+make uboot-extract
+
+make linux-extract
+
+make busybox-extract
+```
+
 ### rebuild
 
 ```sh
@@ -19,7 +30,7 @@ make busybox-rebuild
 
 单个包
 
-只删除 output/build/xxx/
+只删除 $OUTPUT_DIR/build/xxx/
 
 ```sh
 make xxx-dirclean
@@ -34,7 +45,7 @@ make clean
 全删，保留下载的源码
 
 ```sh
-make clean && rm -f .config && rm -rf output
+make clean && rm -f .config && rm -rf $OUTPUT_DIR
 
 # 或者备份 dl 目录
 make distclean

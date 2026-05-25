@@ -38,7 +38,7 @@ overlay_fs
 编译
 
 ```sh
-# output/target 能看到
+# $OUTPUT_DIR/target 能看到
 # 生成 etx2
 make rootfs-ext2
 ```
@@ -69,7 +69,7 @@ extra.sh
 ```sh
 #!/bin/sh
 
-# output/target
+# $OUTPUT_DIR/target
 TARGET_DIR=$1
 CURRENT_DIR=$(cd "$(dirname "$0")";pwd)
 
@@ -82,7 +82,7 @@ chmod a+x ${TARGET_DIR}/usr/local/bin/*
 编译
 
 ```sh
-# output/target 能看到
+# $OUTPUT_DIR/target 能看到
 # 生成 etx2
 make rootfs-ext2
 ```
