@@ -178,7 +178,7 @@ def install_essential_fonts():
 
 
 def install_sync_tool():
-    proc.run("yes | pacman --noconfirm -S grsync rsync")
+    proc.run("yes | pacman --noconfirm -S rsync rclone")
 
 
 def install_serial_tools(user):

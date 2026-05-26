@@ -152,6 +152,10 @@ def install_encoding_tools():
     proc.run("apt install -y enca")
 
 
+def install_sync_tool():
+    proc.run("apt install -y rsync rclone")
+
+
 def install_useful_tools():
     tool_list = [
         "reptyr",
@@ -169,7 +173,6 @@ def install_useful_tools():
         "expect",
         "htop",
         "socat",
-        "rsync",
         "neovim",
         "setserial",
         "genisoimage",
@@ -325,6 +328,7 @@ if __name__ == "__main__":
     install_proxychains()
     install_ansible_essential()
     install_useful_tools()
+    install_sync_tool()
     install_search_tools()
     install_zip_essential()
     install_wifi_driver()

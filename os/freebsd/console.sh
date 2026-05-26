@@ -69,6 +69,7 @@ sed -i "" 's/#PermitRootLogin no/PermitRootLogin yes/g' /usr/jails/template/etc/
 pkg install -y reptyr
 pkg install -y fusefs-sshfs
 pkg install -y autossh sshpass
+pkg install -y rsync rclone
 pkg install -y screen
 pkg install -y fastfetch
 pkg install -y fd-find ripgrep

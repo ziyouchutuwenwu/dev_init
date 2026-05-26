@@ -105,10 +105,13 @@ def install_vim():
     proc.run("xbps-install -y neovim")
 
 
+def install_sync_tool():
+    proc.run("xbps-install -y rsync rclone")
+
+
 def install_useful_tools():
     tools = [
         "reptyr",
-        "rsync",
         "fastfetch",
         "tree",
         "git",
@@ -206,6 +209,7 @@ if __name__ == "__main__":
     set_sudo_timeout()
     install_search_tools()
     install_useful_tools()
+    install_sync_tool()
     install_zip_essential()
     install_nmap()
     install_python_uv()
