@@ -38,7 +38,7 @@ qemu-system-aarch64 \
   -M virt -cpu cortex-a53 -m 1G \
   -kernel Image \
   -drive file=rootfs.ext4,if=none,format=raw,id=hd0 \
-  -dtb demo_board.dtb \
+  -dtb board.dtb \
   -device virtio-blk-device,drive=hd0 \
   -netdev bridge,id=net0,br=virbr0 \
   -device virtio-net-pci,netdev=net0 \
