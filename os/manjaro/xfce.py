@@ -448,7 +448,6 @@ def install_netcat():
 def install_net_tools():
     app_list = [
         "whois",
-        "sshfs",
         "traceroute",
         "bridge-utils",
         "netctl",

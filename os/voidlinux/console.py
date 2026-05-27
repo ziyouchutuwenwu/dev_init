@@ -129,7 +129,7 @@ def install_useful_tools():
 
 
 def install_ssh_esential():
-    proc.run("xbps-install -y autossh fuse-sshfs")
+    proc.run("xbps-install -y autossh")
 
 
 def install_zip_essential():

@@ -127,7 +127,6 @@ def install_netcat():
 def install_net_tools():
     tool_list = [
         "whois",
-        "cifs-utilssshfs",
         "uml-utilities",
         "bridge-utils",
         "net-tools",
