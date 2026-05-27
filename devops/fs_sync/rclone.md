@@ -30,7 +30,7 @@ rclone copy --progress --include "*.tar.gz" :sftp,host=xx.xx.xx.xx,user=root:/tm
 
 ```sh
 # 指定文件名
-rclone copyto --progress :sftp,host=xx.xx.xx.xx,user=root:/tmp/code-stable-x64-1779186414.tar.gz ~/downloads/111.tar.gz
+rclone copyto --progress :sftp,host=xx.xx.xx.xx,user=root:/tmp/aaa.tar.gz ~/downloads/111.tar.gz
 ```
 
 ### 网盘
