@@ -6,10 +6,18 @@
 
 ```sh
 SRC 无论加不加 /, 操作的都是 SRC 这个目录
-小文件多，加大 transfers
 ```
 
 ## 用法
+
+### 参数说明
+
+```sh
+--transfers               小文件多，加大
+--metadata                保留权限
+--delete-during           边传边删除
+--create-empty-src-dirs   保留空目录
+```
 
 ### 目录
 
@@ -17,7 +25,7 @@ SRC 无论加不加 /, 操作的都是 SRC 这个目录
 
 ```sh
 rclone sync \
-  --transfers=1 --progress --delete-during --create-empty-src-dirs \
+  --progress --metadata --delete-during --create-empty-src-dirs \
   $LOCAL_DIR ":sftp,host=$REMOTE_IP,user=$REMOTE_USER:$REMOTE_DIR"
 ```
 
