@@ -16,9 +16,8 @@ uv tool install aider-chat
 
 ```yaml
 model: deepseek/deepseek-v4-flash
-
 api-key:
-  - deepseek = xxxxxxxxxxxxx
+  - deepseek = xxxxxxxxxxxxxxxxxxxxxx
 
 architect: true
 git: false
