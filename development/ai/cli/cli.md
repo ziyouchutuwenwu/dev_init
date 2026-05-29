@@ -33,7 +33,9 @@ api-key:
 architect: true
 git: false
 verify-ssl: false
+check-update: false
 show-model-warnings: false
+analytics-disable: true
 ```
 
 ### claude code
