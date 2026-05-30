@@ -1,5 +1,9 @@
 # cli
 
+## 说明
+
+opencode, claude code 很费钱，需要 rtk
+
 ## 列表
 
 ### aider
@@ -71,4 +75,18 @@ npm install -g codewhale
 ```sh
 export DEEPSEEK_API_KEY="xxxxxxxxxxxxxxxxxxxxxx"
 export DEEPSEEK_MODEL="deepseek-v4-flash"
+```
+
+### opencode
+
+偏向于自动化操作
+
+```sh
+npm i -g opencode-ai@latest
+```
+
+api
+
+```sh
+opencode providers list
 ```
