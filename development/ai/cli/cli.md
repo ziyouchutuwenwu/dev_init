@@ -43,7 +43,8 @@ git: true
 # commit 以后，/diff 才有效果，/diff 的高亮依赖 git
 auto-commits: false
 # 回复的代码块的高亮，和 /diff 无关
-code-theme: monokai
+code-theme: one-dark
+#code-theme: nord
 pretty: true
 
 verify-ssl: false
