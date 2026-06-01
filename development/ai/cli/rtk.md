@@ -14,10 +14,13 @@ claude, opencode 强烈建议使用
 
 ```sh
 # claude code
-rtk init --global
+rtk init -g
 
 # opencode
-rtk init --global --opencode
+rtk init -g --opencode
+
+# pi agent
+rtk init -g --agent pi
 ```
 
 查看账本

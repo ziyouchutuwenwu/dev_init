@@ -2,13 +2,13 @@
 
 ## 说明
 
-opencode, claude code 很费钱，需要 rtk
+能用 rtk 的一定要用，省钱
 
 ## 列表
 
 ### aider
 
-用于精细控制
+用于代码精细控制，严格绑定 git
 
 ```sh
 uv tool install aider-chat
@@ -58,7 +58,7 @@ show-model-warnings: false
 
 ### claude code
 
-用于攻坚，接 [deepseek](https://api-docs.deepseek.com/zh-cn/quick_start/agent_integrations/claude_code)
+用于项目攻坚，接 [deepseek](https://api-docs.deepseek.com/zh-cn/quick_start/agent_integrations/claude_code)
 
 ```sh
 npm install -g @anthropic-ai/claude-code
@@ -77,9 +77,15 @@ export DEEPSEEK_API_KEY="xxxxxxxxxxxxxxxxxxxxxx"
 export DEEPSEEK_MODEL="deepseek-v4-flash"
 ```
 
-### opencode
+### pi agent
 
-偏向于自动化操作
+办公自动化
+
+```sh
+npm install -g --ignore-scripts @earendil-works/pi-coding-agent
+```
+
+### opencode
 
 ```sh
 npm i -g opencode-ai@latest
