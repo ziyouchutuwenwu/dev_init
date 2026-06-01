@@ -1,2 +1,3 @@
-**/*.pyc
-**/erl_crash.dump
+*.pyc
+erl_crash.dump
+.aider*
