@@ -2,13 +2,13 @@
 
 ## 说明
 
-能用 rtk 的一定要用，省钱
+能用 rtk 的一定要用，省 token
 
 ## 列表
 
 ### aider
 
-用于代码精细控制，严格绑定 git
+用于代码精细控制，项目内必须用 git
 
 ```sh
 uv tool install aider-chat
@@ -77,15 +77,9 @@ export DEEPSEEK_API_KEY="xxxxxxxxxxxxxxxxxxxxxx"
 export DEEPSEEK_MODEL="deepseek-v4-flash"
 ```
 
-### pi agent
-
-办公自动化
-
-```sh
-npm install -g --ignore-scripts @earendil-works/pi-coding-agent
-```
-
 ### opencode
+
+通用，支持的厂商最多
 
 ```sh
 npm i -g opencode-ai@latest
@@ -95,4 +89,12 @@ api
 
 ```sh
 opencode providers list
+```
+
+### pi agent
+
+办公自动化
+
+```sh
+npm install -g --ignore-scripts @earendil-works/pi-coding-agent
 ```
