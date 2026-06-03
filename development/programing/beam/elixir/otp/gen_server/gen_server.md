@@ -1,120 +1,63 @@
 # gen_server
 
+## 说明
+
+```sh
+call  可以同步返回，可以异步返回
+cast  只能异步
+info  只能异步
+```
+
 ## 代码
 
-qps_gen_server.ex
-
 ```elixir
-defmodule QpsGenServer do
+defmodule GenServerDemo do
   use GenServer
   require Logger
 
-  def start_link(state) do
-    GenServer.start_link(__MODULE__, state, name: __MODULE__)
+  def start_link(opts \\ []) do
+    GenServer.start_link(__MODULE__, :ok, opts)
   end
 
-  def get_qps_info_by_ip(ip) do
-    GenServer.call(__MODULE__, {:get_qps_info_by_ip, ip})
+  def init(:ok) do
+    {:ok, nil}
   end
 
-  def update_ip_qps_info(ip, {accecc_time, count}) do
-    GenServer.cast(__MODULE__, {:update_ip_qps_info, {ip, {accecc_time, count}}})
+  # 直接返回
+  def handle_call(:aaa_call, _from, state) do
+    {:reply, :ok, state}
   end
 
-  def stop() do
-    GenServer.stop(__MODULE__)
+  # 异步，不直接返回
+  def handle_call({:bbb_call, _data}, from, nil) do
+    Process.send(self(), :bbb, [])
+    {:noreply, from}
   end
 
-  def async_stop do
-    GenServer.cast(__MODULE__, :stop)
-  end
-
-  # --------------------------------------------------------------------------------------------------
-  def init(state) do
-    Qps.init_table()
-    {:ok, state}
-  end
-
-  def handle_call({:get_qps_info_by_ip, ip}, _from, state) do
-    result = Qps.get_qps_info_by_ip(ip)
-    {:reply, result, state}
-  end
-
-  def handle_call(:stop, _from, state) do
-    {:stop, :normal, "server stopped", state}
-  end
-
-  def handle_cast({:update_ip_qps_info, {ip, {accecc_time, count}}}, state) do
-    Qps.update_ip_qps_info(ip, {accecc_time, count})
+  def handle_cast({:ccc, msg}, state) do
+    Logger.debug("cast ccc: #{inspect(msg)}")
     {:noreply, state}
   end
 
-  def handle_cast(:stop, state) do
-    {:stop, :normal, state}
+  def handle_info(:ddd, state) do
+    Logger.debug("handle_info ddd")
+    {:noreply, state}
   end
 
-  def terminate(reason, _state) do
-    Qps.delete_table()
-    Logger.debug("reason #{inspect(reason)} in terminate")
-  end
-end
-```
-
-qps.ex
-
-```elixir
-defmodule Qps do
-  require Logger
-
-  @qps_max 100
-
-  def limitation_reached?(ip) do
-    time = DateTime.utc_now()
-
-    case get_qps_info_by_ip(ip) do
-      {prev, count} ->
-        now = DateTime.utc_now()
-        elapsed = DateTime.diff(now, prev, :millisecond)
-
-        if elapsed <= 1000 and elapsed > 0 do
-          qps = count / (elapsed / 1000)
-
-          if qps >= @qps_max do
-            true
-          else
-            false
-          end
-        else
-          update_ip_qps_info(ip, {time, count + 1})
-          false
-        end
-
-      _ ->
-        update_ip_qps_info(ip, {time, 1})
-        false
-    end
+  # bbb 正常返回
+  def handle_info(:bbb, {_pid, _ref} = from) do
+    Logger.debug("bbb done")
+    GenServer.reply(from, :ok)
+    {:noreply, nil}
   end
 
-  def init_table() do
-    :ets.new(:qps, [:set, :named_table])
+  # 默认正常
+  def handle_info(:bbb, state) do
+    {:noreply, state}
   end
 
-  def delete_table() do
-    :ets.delete(:qps)
-  end
-
-  def get_qps_info_by_ip(ip) do
-    case :ets.lookup(:qps, ip) do
-      [{_, {prev, count}}] ->
-        {prev, count}
-
-      [] ->
-        {}
-    end
-  end
-
-  def update_ip_qps_info(ip, {accecc_time, count}) do
-    :ets.insert(:qps, {ip, {accecc_time, count}})
+  def terminate(_reason, _state) do
+    :ok
   end
 end
 ```
@@ -125,17 +68,20 @@ demo.ex
 defmodule Demo do
   require Logger
 
-  def demo() do
-    QpsGenServer.start_link([])
+  def demo do
+    {:ok, pid} = GenServerDemo.start_link()
 
-    time = DateTime.utc_now()
-    ip = "192.168.1.100"
-    QpsGenServer.update_ip_qps_info(ip, {time, 100})
+    a = GenServer.call(pid, :aaa_call)
+    Logger.debug("call aaa_call -> #{inspect(a)}")
 
-    :timer.sleep(500)
+    b = GenServer.call(pid, {:bbb_call, "bbb msg"})
+    Logger.debug("call bbb_call -> #{inspect(b)}")
 
-    is_limited = Qps.limitation_reached?(ip)
-    Logger.debug(is_limited)
+    c = GenServer.cast(pid, {:ccc, "ccc msg"})
+    Logger.debug("cast ccc -> #{inspect(c)}")
+
+    d = send(pid, :ddd)
+    Logger.debug("send ddd -> #{inspect(d)}")
   end
 end
 ```
