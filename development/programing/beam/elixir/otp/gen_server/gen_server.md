@@ -15,39 +15,41 @@ defmodule GenServerDemo do
   use GenServer
   require Logger
 
-  def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, :ok, opts)
+  def start_link() do
+    GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
 
-  def init(:ok) do
-    {:ok, nil}
+  def init(state) do
+    {:ok, state}
   end
 
   # 直接返回
-  def handle_call(:aaa_call, _from, state) do
-    {:reply, :ok, state}
+  def handle_call(:aaa, _from, state) do
+    Logger.debug("on call aaa")
+    {:reply, 111, state}
   end
 
   # 异步，不直接返回
-  def handle_call({:bbb_call, _data}, from, nil) do
+  def handle_call({:bbb, _data}, from, _state) do
+    Logger.debug("on call bbb")
     Process.send(self(), :bbb, [])
     {:noreply, from}
   end
 
   def handle_cast({:ccc, msg}, state) do
-    Logger.debug("cast ccc: #{inspect(msg)}")
+    Logger.debug("on handle_cast ccc #{inspect(msg)}")
     {:noreply, state}
   end
 
   def handle_info(:ddd, state) do
-    Logger.debug("handle_info ddd")
+    Logger.debug("on handle_info ddd")
     {:noreply, state}
   end
 
   # bbb 正常返回
   def handle_info(:bbb, {_pid, _ref} = from) do
-    Logger.debug("bbb done")
-    GenServer.reply(from, :ok)
+    Logger.debug("on handle_info bbb")
+    GenServer.reply(from, 222)
     {:noreply, nil}
   end
 
@@ -69,19 +71,12 @@ defmodule Demo do
   require Logger
 
   def demo do
-    {:ok, pid} = GenServerDemo.start_link()
+    GenServerDemo.start_link()
 
-    a = GenServer.call(pid, :aaa_call)
-    Logger.debug("call aaa_call -> #{inspect(a)}")
-
-    b = GenServer.call(pid, {:bbb_call, "bbb msg"})
-    Logger.debug("call bbb_call -> #{inspect(b)}")
-
-    c = GenServer.cast(pid, {:ccc, "ccc msg"})
-    Logger.debug("cast ccc -> #{inspect(c)}")
-
-    d = send(pid, :ddd)
-    Logger.debug("send ddd -> #{inspect(d)}")
+    GenServer.call(GenServerDemo, :aaa)
+    GenServer.call(GenServerDemo, {:bbb, "msg"})
+    GenServer.cast(GenServerDemo, {:ccc, "msg"})
+    send(GenServerDemo, :ddd)
   end
 end
 ```
