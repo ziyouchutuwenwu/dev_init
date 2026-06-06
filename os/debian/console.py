@@ -90,9 +90,7 @@ def install_gdebi():
 def install_privoxy():
     proc.run("apt install -y privoxy")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/../../development/proxy/privoxy/config /etc/privoxy/config" % (
-        current_dir
-    )
+    cmd = "cp -rf %s/privoxy/config /etc/privoxy/config" % (current_dir)
     proc.run(cmd)
     proc.run("systemctl daemon-reload; systemctl enable privoxy")
 
@@ -100,9 +98,8 @@ def install_privoxy():
 def install_proxychains():
     proc.run("apt install -y proxychains4")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = (
-        "cp -rf %s/../../development/proxy/proxychains/proxychains.conf /etc/proxychains4.conf"
-        % (current_dir)
+    cmd = "cp -rf %s/proxychains/proxychains.conf /etc/proxychains4.conf" % (
+        current_dir
     )
     proc.run(cmd)
 

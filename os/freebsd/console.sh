@@ -85,11 +85,11 @@ pkg install -y binaryen
 pkg install -y nmap
 
 pkg install -y proxychains-ng
-cp -rf $CURRENT_DIR/../../development/proxy/proxychains/proxychains.conf /usr/local/etc/proxychains.conf
+cp -rf $CURRENT_DIR/proxychains/proxychains.conf /usr/local/etc/proxychains.conf
 
 # 代理转发
 pkg install -y privoxy
-cp -rf $CURRENT_DIR/../../development/proxy/privoxy/config /usr/local/etc/privoxy/config
+cp -rf $CURRENT_DIR/privoxy/config /usr/local/etc/privoxy/config
 sysrc -f /etc/rc.conf.local privoxy_enable="YES"
 
 # tmux

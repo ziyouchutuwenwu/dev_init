@@ -66,12 +66,7 @@ def install_fonts():
 
 
 def install_build_tools():
-    tool_list = [
-        "autoconf",
-        "automake",
-        "libtool",
-        "pkgconf"
-    ]
+    tool_list = ["autoconf", "automake", "libtool", "pkgconf"]
     for tool in tool_list:
         cmd = "xbps-install -y %s" % tool
         proc.run(cmd)
@@ -145,9 +140,7 @@ def set_sudo_timeout():
 def install_privoxy():
     proc.run("xbps-install -y privoxy")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "cp -rf %s/../../development/proxy/privoxy/config /etc/privoxy/config" % (
-        current_dir
-    )
+    cmd = "cp -rf %s/privoxy/config /etc/privoxy/config" % (current_dir)
     proc.run(cmd)
     proc.run("ln -s /etc/sv/privoxy /var/service/")
 
@@ -155,10 +148,7 @@ def install_privoxy():
 def install_proxychains():
     proc.run("xbps-install -y proxychains-ng")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = (
-        "cp -rf %s/../../development/proxy/proxychains/proxychains.conf /etc/proxychains.conf"
-        % (current_dir)
-    )
+    cmd = "cp -rf %s/proxychains/proxychains.conf /etc/proxychains.conf" % (current_dir)
     proc.run(cmd)
 
 
