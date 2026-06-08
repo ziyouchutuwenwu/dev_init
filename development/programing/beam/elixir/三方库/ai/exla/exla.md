@@ -13,7 +13,24 @@
 
 最佳实践：打包的时候，把 cuda 的支持一起打包进去，发布的时候，通过环境变量决定以什么模式启动
 
-## 例子
+## 配置
+
+### 准备
+
+```sh
+apt install nvidia-cuda-toolkit
+```
+
+exla 需要 nccl, nvshmem
+
+非常的麻烦，用猥琐的办法解决
+
+```sh
+uv venv extra_libs
+uv pip install nvidia-nccl-cu12 nvidia-nvshmem-cu12 nvidia-cudnn-cu12
+```
+
+### 例子
 
 ```elixir
 defmodule Demo do
@@ -92,10 +109,15 @@ mix release
 运行
 
 ```sh
-# nvcc 所在目录
-# $CUDA_HOME/bin
-export CUDA_HOME=/opt/cuda
-export XLA_FLAGS="--xla_gpu_cuda_data_dir=$CUDA_HOME"
+# nvcc 所在的上层目录
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
 export PATH="$CUDA_HOME/bin:$PATH"
-export LD_LIBRARY_PATH="$CUDA_HOME/lib64:$LD_LIBRARY_PATH"
+
+# 用 python 跑出来的依赖，比较省力
+export EXTRA_LIB_BASE=extra_libs/nvidia/
+export EXTRA_LIB_PATHS=$(find "$EXTRA_LIB_BASE" -name "*.so*" -exec dirname {} \; 2>/dev/null | sort -u | paste -sd:)
+export LD_LIBRARY_PATH="$CUDA_HOME/lib64:$EXTRA_LIB_PATHS:$LD_LIBRARY_PATH"
+
+export XLA_FLAGS="--xla_gpu_cuda_data_dir=$CUDA_HOME"
+export ELIXIR_ERL_OPTIONS="+sssdio 128"
 ```
