@@ -97,4 +97,5 @@ mix release
 export CUDA_HOME=/opt/cuda
 export XLA_FLAGS="--xla_gpu_cuda_data_dir=$CUDA_HOME"
 export PATH="$CUDA_HOME/bin:$PATH"
+export LD_LIBRARY_PATH="$CUDA_HOME/lib64:$LD_LIBRARY_PATH"
 ```
