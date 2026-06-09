@@ -44,5 +44,5 @@ rclone copyto --progress :sftp,host=xx.xx.xx.xx,user=root:/tmp/aaa.tar.gz ~/down
 ### 网盘
 
 ```sh
-rclone mount --vfs-cache-mode full :sftp,host=xx.xx.xx.xx,user=root:/tmp ~/downloads/aaaaaaa
+rclone mount --vfs-cache-mode full --daemon :sftp,host=xx.xx.xx.xx,user=root:/tmp ~/downloads/aaaaaaa
 ```
