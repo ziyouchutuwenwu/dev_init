@@ -93,11 +93,16 @@ end
 编译
 
 ```sh
+# 编译源码才需要 CUDA_HOME
 export EXLA_TARGET=cuda12
 
-# nvcc 所在的上层目录
-export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
-export PATH="$CUDA_HOME/bin:$PATH"
+# 把 python 环境里面的 lib/python3.12/site-packages/nvidia 目录复制出来
+export BASE_PATH=nvidia
+export LIB_PATHS=$(find "$BASE_PATH" -name "*.so*" -exec dirname {} \; 2>/dev/null | sort -u | paste -sd:)
+
+# libcudart.so 位置
+export REAL_CUDA_LIB="/usr/lib/x86_64-linux-gnu"
+export LD_LIBRARY_PATH="$REAL_CUDA_LIB:$LIB_PATHS:$LD_LIBRARY_PATH"
 ```
 
 ```sh
@@ -109,17 +114,10 @@ mix release
 
 运行
 
+除了上面的环境变量，再加上这个
+
 ```sh
-# 把 python 环境里面的 nvidia 目录复制出来
-export BASE_PATH=extra_libs/nvidia/
-export LIB_PATHS=$(find "$BASE_PATH" -name "*.so*" -exec dirname {} \; 2>/dev/null | sort -u | paste -sd:)
-
-# libcudart.so 位置
-export REAL_CUDA_LIB="/usr/lib/x86_64-linux-gnu" 
-export LD_LIBRARY_PATH="$REAL_CUDA_LIB:$LIB_PATHS:$LD_LIBRARY_PATH"
-
 # 非必须
 # export XLA_FLAGS="--xla_force_host_platform_device_count=8 --xla_gpu_force_compilation_parallelism=1"
-# export XLA_FLAGS="--xla_gpu_cuda_data_dir=$CUDA_HOME"
 export ELIXIR_ERL_OPTIONS="+sssdio 128"
 ```
