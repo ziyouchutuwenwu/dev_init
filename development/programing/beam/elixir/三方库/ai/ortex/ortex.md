@@ -6,9 +6,22 @@
 
 最佳实践：打包的时候，把 cuda 的支持一起打包进去，发布的时候，通过环境变量决定以什么模式启动
 
+需要 rust 环境
+
 ## 例子
 
+### cudnn
+
+```sh
+uv venv extra_libs
+
+# libcudnn.so.9
+uv pip install nvidia-cudnn-cu12
+```
+
 ### 准备
+
+生成测试模型
 
 ```python
 import torch
@@ -27,8 +40,18 @@ print("超微型测试模型生成成功！")
 
 deps
 
-```elixir
+```sh
 {:ortex, "~> 0.1.10"}
+```
+
+```sh
+export ORTEX_TARGET=gpu
+
+mix deps.get
+mix compile
+
+# 把 libonnxruntime_xxx.so 都复制到 ortex 目录
+cp -RLf deps/ortex/native/ortex/target/release/libonnxruntime*.so deps/ortex/priv/native/
 ```
 
 config.exs
@@ -71,10 +94,13 @@ defmodule OrtexModel do
     config_app = Keyword.get(opts, :config_app)
 
     quote do
+      require Logger
+
       def load(model_path) do
         app = unquote(config_app)
         settings = Application.get_env(app, :ortex_global)
         providers = settings[:providers]
+        Logger.debug("providers #{inspect(providers)}")
         Ortex.load(model_path, providers)
       end
     end
@@ -89,22 +115,33 @@ defmodule Demo do
   use OrtexModel, config_app: :demo
   require Logger
 
-  def demo() do
-    model = Demo.load("model/model.onnx")
+  def demo do
+    model = Demo.load("./model/model.onnx")
+    Logger.debug("#{inspect(model)}")
 
-    Logger.debug("正在构建 1x3x640x640 的伪图像输入张量...")
-    dummy_image = Nx.broadcast(0.5, {1, 3, 640, 640}) |> Nx.as_type(:f32)
+    Logger.debug("正在构建 1x3 的输入张量...")
+    input_tensor = Nx.broadcast(2.0, {1, 3})
 
     Logger.debug("正在执行推理...")
-
-    outputs = Ortex.run(model, dummy_image)
-    output_tensor = if is_tuple(outputs), do: elem(outputs, 0), else: outputs
-
-    Logger.debug("\n--- 模型推理成功 ---")
-    IO.inspect(Nx.shape(output_tensor), label: "输出张量的形状 (Shape)")
-
-    flat_preview = output_tensor |> Nx.flatten() |> Nx.slice([0], [5])
-    IO.inspect(flat_preview, label: "输出张量的前 5 个特征值预览")
+    result = Ortex.run(model, input_tensor)
+    Logger.debug("结果 #{inspect(result)}")
   end
 end
+```
+
+### 运行
+
+动态库的路径
+
+```sh
+# 把 python 环境里面的 lib/python3.12/site-packages/nvidia 目录复制出来
+export BASE_PATH=nvidia
+export LIB_PATHS=$(find "$BASE_PATH" -name "*.so*" -exec dirname {} \; 2>/dev/null | sort -u | paste -sd:)
+export LD_LIBRARY_PATH="$LIB_PATHS:$LD_LIBRARY_PATH"
+```
+
+如果有 cudnn 找不到，则回退到 cpu, 无任何提示和 log
+
+```sh
+ldd deps/ortex/priv/native/libonnxruntime_providers_cuda.so | rg "not found"
 ```

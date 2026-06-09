@@ -35,14 +35,13 @@ defmodule Demo do
   def demo() do
     Logger.debug("正在初始化测试张量...")
 
-    a = Nx.broadcast(1.5, {2000, 2000}) |> Nx.as_type(:f32)
-    b = Nx.broadcast(2.0, {2000, 2000}) |> Nx.as_type(:f32)
+    a = Nx.broadcast(1.5, {2, 2}) |> Nx.as_type(:f32)
+    b = Nx.broadcast(2.0, {2, 2}) |> Nx.as_type(:f32)
 
-    Logger.debug("正在调用 EXLA 编译器进行 GPU 矩阵乘法...")
-
+    Logger.debug("正在调用 EXLA 编译器进行矩阵乘法...")
     result = Nx.dot(a, b)
-    Logger.debug("--- GPU 计算成功 ---")
-    IO.inspect(Nx.slice(result, [0, 0], [2, 2]), label: "左上角 2x2 结果预览")
+
+    Logger.debug("自己看是 cuda 还是 host: #{inspect(result)}")
   end
 end
 ```
@@ -94,7 +93,7 @@ end
 
 ```sh
 # 编译源码才需要 CUDA_HOME
-export EXLA_TARGET=cuda12
+export EXLA_TARGET=cuda
 
 # 把 python 环境里面的 lib/python3.12/site-packages/nvidia 目录复制出来
 export BASE_PATH=nvidia
@@ -117,7 +116,11 @@ mix release
 除了上面的环境变量，再加上这个
 
 ```sh
-# 非必须
-# export XLA_FLAGS="--xla_force_host_platform_device_count=8 --xla_gpu_force_compilation_parallelism=1"
+# 否则会报警告找不到 libdevice
+ln -s /usr/lib/nvidia-cuda-toolkit /usr/lib/nvidia-cuda-toolkit/nvvm
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
+export XLA_FLAGS="--xla_gpu_cuda_data_dir=$CUDA_HOME"
+
+# 增加吞吐量
 export ELIXIR_ERL_OPTIONS="+sssdio 128"
 ```
