@@ -1,3 +1,7 @@
+# ssh-terminfo 把本地能力装到远程
+# 本地降级，兼容远程
+shell-integration-features = ssh-terminfo,ssh-env
+
 theme = wombat_custom
 
 # 关闭自带的标题栏
