@@ -8,6 +8,10 @@
 
 [文档](https://pytorch.org/get-started/locally/)
 
+```sh
+uv add torch torchvision --index https://download.pytorch.org/whl/cu124
+```
+
 验证
 
 ```sh
