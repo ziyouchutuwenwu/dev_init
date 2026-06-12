@@ -2,7 +2,11 @@
 
 ## 说明
 
-需要先装显卡驱动和 cuda
+cuda 可以找 api 兼容的版本
+
+一个 cuda 版本，对应多个版本的 pytorch
+
+一个 pytorch 版本，对应多个版本的 cuda
 
 ## 步骤
 
