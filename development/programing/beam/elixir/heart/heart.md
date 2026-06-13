@@ -20,7 +20,7 @@ env.sh.eex, 取消以下注释
 
 ```sh
 # daemon 模式下启用
-# 路径可以动态获取
+# 路径是自动获取的，不要改这里
 case $RELEASE_COMMAND in
   daemon*)
     HEART_COMMAND="$RELEASE_ROOT/bin/$RELEASE_NAME $RELEASE_COMMAND"
@@ -36,12 +36,6 @@ esac
 
 ```sh
 MIX_ENV=prod mix release
-```
-
-设置变量位置如下，和 erlang 的位置不一样
-
-```sh
-_build/prod/rel/xxx/releases/0.1.0/env.sh
 ```
 
 ### 测试
@@ -61,6 +55,16 @@ System.get_env("HEART_BEAT_TIMEOUT")
 
 :heart.get_cmd()
 :heart.get_options()
+
+# 升级的时候，手动设置这个变量，然后触发 beam 的重启
+:heart.set_cmd(~c"/opt/demo/0.2.0/bin/demo daemon")
+```
+
+### 触发
+
+```elixir
+:erlang.halt
+System.halt
 ```
 
 ### 关闭
@@ -68,9 +72,6 @@ System.get_env("HEART_BEAT_TIMEOUT")
 remsh 到目标节点
 
 ```elixir
-# heart stop
-:heart.stop
-
 # 应用 stop
 :init.stop
 ```
