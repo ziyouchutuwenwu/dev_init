@@ -56,14 +56,6 @@ check-update: false
 show-model-warnings: false
 ```
 
-### claude code
-
-用于项目攻坚，接 [deepseek](https://api-docs.deepseek.com/zh-cn/quick_start/agent_integrations/claude_code)
-
-```sh
-npm install -g @anthropic-ai/claude-code
-```
-
 ### codewhale
 
 两者之间
@@ -75,6 +67,48 @@ npm install -g codewhale
 ```sh
 export DEEPSEEK_API_KEY="xxxxxxxxxxxxxxxxxxxxxx"
 export DEEPSEEK_MODEL="deepseek-v4-flash"
+```
+
+### codex
+
+协议不一样，需要转发
+
+```sh
+npm install -g @classicicn/codex-transfer
+codex-transfer -d -k -u https://api.deepseek.com/v1 --api-key $DEEPSEEK_API_KEY
+```
+
+```sh
+npm install -g @openai/codex
+```
+
+~/.codex/config.toml
+
+```toml
+model_provider = "deepseek"
+model = "deepseek-v4-flash"
+model_context_window = 128000
+
+[model_providers.deepseek]
+name = "deepseek"
+base_url = "http://127.0.0.1:4444/v1"
+wire_api = "responses"
+requires_openai_auth = false
+
+# 需要定义一个 CODEX_API_KEY 变量
+env_key = "CODEX_API_KEY"
+```
+
+```sh
+export CODEX_API_KEY="any"
+```
+
+### claude code
+
+用于项目攻坚，接 [deepseek](https://api-docs.deepseek.com/zh-cn/quick_start/agent_integrations/claude_code)
+
+```sh
+npm install -g @anthropic-ai/claude-code
 ```
 
 ### opencode

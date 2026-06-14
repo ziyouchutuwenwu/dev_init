@@ -16,7 +16,7 @@ claude, opencode 强烈建议使用
 # claude code
 rtk init -g
 
-# opencode
+rtk init -g --codex
 rtk init -g --opencode
 
 # pi agent
