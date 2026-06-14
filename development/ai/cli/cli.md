@@ -87,20 +87,12 @@ npm install -g @openai/codex
 ```toml
 model_provider = "deepseek"
 model = "deepseek-v4-flash"
-model_context_window = 128000
 
 [model_providers.deepseek]
 name = "deepseek"
 base_url = "http://127.0.0.1:4444/v1"
 wire_api = "responses"
 requires_openai_auth = false
-
-# 需要定义一个 CODEX_API_KEY 变量
-env_key = "CODEX_API_KEY"
-```
-
-```sh
-export CODEX_API_KEY="any"
 ```
 
 ### claude code
