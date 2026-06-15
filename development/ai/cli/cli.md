@@ -42,11 +42,3 @@ npm install -g @anthropic-ai/claude-code
 ```sh
 npm i -g opencode-ai@latest
 ```
-
-### pi
-
-办公自动化
-
-```sh
-npm install -g --ignore-scripts @earendil-works/pi-coding-agent
-```

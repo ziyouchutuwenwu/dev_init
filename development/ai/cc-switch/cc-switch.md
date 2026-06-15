@@ -27,13 +27,8 @@ cc-switch --app codex provider list
 使用某个
 
 ```sh
-cc-switch --app codex use xxx
-```
-
-切换
-
-```sh
-cc-switch --app codex provider switch xxx
+cc-switch --app codex use id_xxx
+cc-switch --app codex provider switch id_xxx
 ```
 
 ### 代理
@@ -47,6 +42,7 @@ cc-switch proxy show
 修改端口
 
 ```sh
+cc-switch --app claude proxy config --listen-port 15721
 cc-switch --app codex proxy config --listen-port 15722
 ```
 
