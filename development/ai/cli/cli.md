@@ -75,24 +75,40 @@ export DEEPSEEK_MODEL="deepseek-v4-flash"
 
 ```sh
 npm install -g @classicicn/codex-transfer
-codex-transfer -d -k -u https://api.deepseek.com/v1 --api-key $DEEPSEEK_API_KEY
 ```
 
 ```sh
 npm install -g @openai/codex
 ```
 
+~/.codex-transfer/config.json
+
+```json
+{
+  "modelMap": {
+    "gpt-5.5": "deepseek-v4-flash",
+    "codex-auto-review": "deepseek-v4-flash"
+  }
+}
+```
+
 ~/.codex/config.toml
 
 ```toml
-model_provider = "deepseek"
-model = "deepseek-v4-flash"
+model_provider = "proxy"
+model = "gpt-5.5"
 
-[model_providers.deepseek]
-name = "deepseek"
+[model_providers.proxy]
+name = "proxy"
 base_url = "http://127.0.0.1:4444/v1"
 wire_api = "responses"
 requires_openai_auth = false
+```
+
+```sh
+# codex-transfer 用这个
+export CODEX_TRANSFER_API_KEY=$DEEPSEEK_API_KEY
+codex-transfer -d -k -u https://api.deepseek.com/v1
 ```
 
 ### claude code
