@@ -50,6 +50,12 @@ cc-switch proxy show
 cc-switch --app codex proxy config --listen-port 15722
 ```
 
+生效，同步到 cli 的配置文件
+
+```sh
+cc-switch --app codex proxy enable
+```
+
 ### mcp
 
 同步
