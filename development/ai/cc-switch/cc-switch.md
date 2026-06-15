@@ -44,6 +44,12 @@ cc-switch --app codex provider switch xxx
 cc-switch proxy show
 ```
 
+修改端口
+
+```sh
+cc-switch --app codex proxy config --listen-port 15722
+```
+
 codex 需要转发
 
 ```sh
