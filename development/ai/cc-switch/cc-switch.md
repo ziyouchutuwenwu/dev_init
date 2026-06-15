@@ -8,32 +8,89 @@
 
 ## 配置
 
-给 codex 添加 provider
+### provider
+
+默认 app 是 claude
+
+添加
 
 ```sh
 cc-switch --app codex provider add
 ```
 
-cc-switch 的配置同步到 codex
+查看
 
 ```sh
-cc-switch proxy enable --app codex
+cc-switch --app codex provider list
 ```
 
-同步 mcp
+使用某个
+
+```sh
+cc-switch --app codex use xxx
+```
+
+切换
+
+```sh
+cc-switch --app codex provider switch xxx
+```
+
+### 代理
+
+查看
+
+```sh
+cc-switch proxy show
+```
+
+codex 需要转发
+
+```sh
+# cc-switch 能把一些非标格式的转换为标准格式
+cc-switch --app codex proxy enable
+```
+
+### mcp
+
+同步
 
 ```sh
 cc-switch --app codex mcp sync
 ```
 
-查看 mcp
+查看
 
 ```sh
 cc-switch --app codex mcp list
 ```
 
-同步 skills
+### skill
+
+同步
 
 ```sh
 cc-switch --app codex skills sync
+```
+
+### 启动
+
+```sh
+cc-switch daemon start
+cc-switch daemon stop
+```
+
+### config
+
+查看
+
+```sh
+cc-switch --app codex config show
+```
+
+导出的是 sql
+
+```sh
+cc-switch --app codex config export ./bak.sql
+cc-switch --app codex config import ./bak.sql
 ```
