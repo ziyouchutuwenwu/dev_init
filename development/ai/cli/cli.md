@@ -21,49 +21,15 @@ export DEEPSEEK_MODEL="deepseek-v4-flash"
 
 ### codex
 
-协议不一样，需要转发
-
-```sh
-npm install -g @classicicn/codex-transfer
-```
+全能型选手
 
 ```sh
 npm install -g @openai/codex
 ```
 
-~/.codex-transfer/config.json
-
-```json
-{
-  "modelMap": {
-    "gpt-5.5": "deepseek-v4-flash",
-    "codex-auto-review": "deepseek-v4-flash"
-  }
-}
-```
-
-~/.codex/config.toml
-
-```toml
-model_provider = "proxy"
-model = "gpt-5.5"
-
-[model_providers.proxy]
-name = "proxy"
-base_url = "http://127.0.0.1:4444/v1"
-wire_api = "responses"
-requires_openai_auth = false
-```
-
-```sh
-# codex-transfer 用这个
-export CODEX_TRANSFER_API_KEY=$DEEPSEEK_API_KEY
-codex-transfer -d -k -u https://api.deepseek.com/v1
-```
-
 ### claude code
 
-用于项目攻坚，接 [deepseek](https://api-docs.deepseek.com/zh-cn/quick_start/agent_integrations/claude_code)
+用于项目攻坚
 
 ```sh
 npm install -g @anthropic-ai/claude-code
@@ -77,13 +43,7 @@ npm install -g @anthropic-ai/claude-code
 npm i -g opencode-ai@latest
 ```
 
-api
-
-```sh
-opencode providers list
-```
-
-### pi agent
+### pi
 
 办公自动化
 
