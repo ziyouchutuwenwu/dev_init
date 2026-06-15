@@ -50,13 +50,6 @@ cc-switch proxy show
 cc-switch --app codex proxy config --listen-port 15722
 ```
 
-codex 需要转发
-
-```sh
-# cc-switch 能把一些非标格式的转换为标准格式
-cc-switch --app codex proxy enable
-```
-
 ### mcp
 
 同步
