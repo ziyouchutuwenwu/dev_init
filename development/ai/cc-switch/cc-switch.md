@@ -52,6 +52,18 @@ cc-switch --app codex proxy config --listen-port 15722
 cc-switch --app codex proxy enable
 ```
 
+### 提示词
+
+```sh
+cc-switch --app codex prompts list
+cc-switch --app codex prompts create
+cc-switch --app codex prompts edit
+cc-switch --app codex prompts rename
+cc-switch --app codex prompts delete
+cc-switch --app codex prompts activate
+cc-switch --app codex prompts deactivate
+```
+
 ### mcp
 
 同步
@@ -77,7 +89,7 @@ cc-switch --app codex skills sync
 ### 启动
 
 ```sh
-cc-switch daemon start
+cc-switch daemon start --detach
 cc-switch daemon stop
 ```
 

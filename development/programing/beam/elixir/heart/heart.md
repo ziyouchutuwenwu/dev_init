@@ -62,9 +62,11 @@ System.get_env("HEART_BEAT_TIMEOUT")
 
 ### 触发
 
+非 0 的退出代码才会触发完整的 heart
+
 ```elixir
-:erlang.halt
-System.halt
+:erlang.halt(1)
+System.halt(1)
 ```
 
 ### 关闭
