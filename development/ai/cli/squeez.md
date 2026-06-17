@@ -9,6 +9,7 @@
 [官网](https://github.com/claudioemmanuel/squeez)
 
 ```sh
-squeez setup
+squeez setup > /dev/null 2>&1
+
 squeez uninstall
 ```
