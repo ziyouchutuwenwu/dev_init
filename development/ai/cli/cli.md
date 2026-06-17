@@ -1,23 +1,6 @@
 # cli
 
-## 说明
-
-能用 rtk 的一定要用，省 token
-
-## 列表
-
-### codewhale
-
-对于 deepseek 支持比较好
-
-```sh
-npm install -g codewhale
-```
-
-```sh
-export DEEPSEEK_API_KEY="xxxxxxxxxxxxxxxxxxxxxx"
-export DEEPSEEK_MODEL="deepseek-v4-flash"
-```
+## 分类
 
 ### codex
 

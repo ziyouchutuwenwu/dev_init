@@ -2,9 +2,7 @@
 
 ## 说明
 
-节约 token 的
-
-claude, opencode 强烈建议使用
+省 token
 
 ## 用法
 
