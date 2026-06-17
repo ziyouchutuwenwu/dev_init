@@ -50,13 +50,20 @@ Stream.with_index([1, 2, 3]) |> Enum.to_list
 Stream.with_index([1, 2, 3], 3) |> Enum.to_list
 ```
 
-### 去重
+### uniq
 
 整个去重
 
 ```elixir
 Stream.uniq([1, 2, 3, 3, 2, 1]) |> Enum.to_list()
-Stream.uniq_by([a: {:tea, 2}, b: {:tea, 2}, c: {:coffee, 1}], fn {_, y} -> y end) |> Enum.to_list()
+
+data = [
+  a: {:tea, 2},
+  b: {:tea, 2},
+  c: {:coffee, 1}
+]
+
+data |> Stream.uniq_by(fn {_, y} -> y end) |> Enum.to_list()
 ```
 
 相邻元素去重
@@ -71,6 +78,32 @@ Stream.dedup([1, 2, 3, 3, 2, 1]) |> Enum.to_list()
 
 ```elixir
 Stream.take(1..1000_000_000, -5) |> Enum.to_list()
+```
+
+### map
+
+修改每个 item
+
+```elixir
+1..10 |> Stream.map(fn num -> num * 2 end) |> Enum.to_list
+```
+
+### repeatedly
+
+重复执行，无参数
+
+```elixir
+Stream.repeatedly(fn -> "1111" end) |> Enum.take(5)
+```
+
+### scan
+
+item 是一个个遍历过去参数，acc 是上一次的结果
+
+```elixir
+Stream.scan(1..5, 10, fn(item, acc) ->
+  item + acc
+end) |> Enum.to_list
 ```
 
 ### take_while
@@ -126,14 +159,6 @@ Stream.map_every(1..12, 3, fn x -> x * 2 end) |> Enum.to_list()
 Stream.chunk_every(1..6, 2) |> Enum.to_list()
 ```
 
-### scan
-
-```elixir
-Stream.scan(1..5, 10, fn(item, acc) ->
-  item + acc
-end) |> Enum.to_list
-```
-
 ### transform
 
 处理相对复杂的逻辑
@@ -170,7 +195,7 @@ File.stream!("/path/to/file")
 |> Stream.run()
 ```
 
-### 万能包装器 1
+### 并发
 
 ```elixir
 defmodule Demo do
@@ -190,12 +215,9 @@ defmodule Demo do
 end
 ```
 
-### 万能包装器 2
+### resource
 
-- 第二个回调函数
-  参数为第一个回调函数的返回值；
-  返回值如果是 `{[data], xxx}`，则重复调用自己
-  返回值如果是 `{:halt, xxx}`，则跳转到第三个回调函数，把 `xxx` 作为参数传过去
+单进程惰性资源做迭代
 
 ```elixir
 defmodule DemoStream do
@@ -215,6 +237,8 @@ defmodule DemoStream do
     )
   end
 
+  # 返回  {[data], xxx} 则继续调用自己，xxx 为参数
+  # 返回  {:halt, xxx}  则 _on_finish，xxx 为参数
   def _on_start(file_name) do
     File.open!(file_name)
   end
