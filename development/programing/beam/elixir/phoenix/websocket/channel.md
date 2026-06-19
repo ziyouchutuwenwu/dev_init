@@ -126,7 +126,7 @@ chat_live.html.heex
     </div>
   </div>
 
-  <div class="flex h-full min-h-[calc(100vh-100px)] gap-3 px-4 pb-4">
+  <div class="flex h-full min-h-[calc(100vh-100px)] gap-3 px-4 pb-4" id="chat-app" phx-hook="chat_room">
     <%!-- Left: room controls (15%) --%>
     <div class="flex w-[15%] flex-col rounded-xl border border-base-300/60 bg-base-100 p-3 shadow-sm">
       <div class="mb-2 flex items-center justify-between">
@@ -169,103 +169,208 @@ chat_live.html.heex
       <div class="mb-2">
         <div class="flex items-center justify-between">
           <p class="text-sm font-semibold text-base-content/70">数据</p>
-          <button id="clear-telemetry" class="text-xs text-base-content/40 hover:text-red-500">清除</button>
+          <button id="clear-data" class="text-xs text-base-content/40 hover:text-red-500">清除</button>
         </div>
         <p class="mt-1 text-[10px] text-base-content/40">格式: [room_ref, msg_id, topic, event, payload]</p>
       </div>
-      <div id="telemetry" class="flex-1 overflow-auto font-mono text-[11px] leading-relaxed"></div>
+      <div id="data" class="flex-1 overflow-auto font-mono text-[11px] leading-relaxed"></div>
     </div>
   </div>
 </Layouts.app>
 ```
 
-user_socket.js
+chat/chat_room.js
 
 ```javascript
 import { Socket } from "phoenix";
+import { ViewHook } from "phoenix_live_view";
 
-const socket = new Socket("/socket", { params: {} });
-socket.connect();
+class ChatRoom extends ViewHook {
+  // ViewHook 里面的
+  mounted() {
+    this.socket = new Socket("/socket", { params: {} });
+    this.channel = null;
+    this.socket.connect();
 
-let channel = null;
+    this.enterRoom = document.getElementById("enter-room");
+    this.leaveRoom = document.getElementById("leave-room");
+    this.roomMsg = document.getElementById("room-msg");
+    this.inputContent = document.getElementById("chat-input");
+    this.htmlMsg = document.getElementById("msg");
+    this.data = document.getElementById("data");
 
-const enterRoom = document.getElementById("enter-room");
-const leaveRoom = document.getElementById("leave-room");
-const roomMsg = document.getElementById("room-msg");
-const inputContent = document.getElementById("chat-input");
-const htmlMsg = document.getElementById("msg");
-const telemetry = document.getElementById("telemetry");
+    document.getElementById("clear-room")?.addEventListener("click", this.handleClearRoom.bind(this));
+    document.getElementById("clear-msg")?.addEventListener("click", this.handleClearMsg.bind(this));
+    document.getElementById("clear-data")?.addEventListener("click", this.handleClearData.bind(this));
+    this.enterRoom.addEventListener("click", this.handleEnterRoom.bind(this));
+    this.leaveRoom.addEventListener("click", this.handleLeaveRoom.bind(this));
+    this.inputContent.addEventListener("keypress", this.handleInputKeypress.bind(this));
+  }
 
-document.getElementById("clear-room")?.addEventListener("click", () => (roomMsg.innerHTML = ""));
-document.getElementById("clear-msg")?.addEventListener("click", () => (htmlMsg.innerHTML = ""));
-document.getElementById("clear-telemetry")?.addEventListener("click", () => (telemetry.innerHTML = ""));
-function addTelemetry(dir, data) {
-  if (!telemetry) return;
-  const item = document.createElement("div");
-  item.className = "border-b border-base-200/30 pb-1 text-xs";
-  const label = dir === "发" ? "发" : "收";
-  item.innerHTML = `<span class="font-semibold ${dir === "发" ? "text-blue-500" : "text-green-500"}">${label}</span> ${JSON.stringify(data)}`;
-  telemetry.appendChild(item);
-  telemetry.scrollTop = telemetry.scrollHeight;
+  // ViewHook 里面的
+  destroyed() {
+    if (this.channel) {
+      this.channel.leave();
+      this.channel = null;
+    }
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+    }
+  }
+
+  handleClearRoom() {
+    this.roomMsg.innerHTML = "";
+  }
+
+  handleClearMsg() {
+    this.htmlMsg.innerHTML = "";
+  }
+
+  handleClearData() {
+    this.data.innerHTML = "";
+  }
+
+  handleEnterRoom() {
+    this.createChannel();
+    this.channel.on("room_msg", this.handleRoomMsg.bind(this));
+    this.addData("发", [null, "phx_join", "room:abc", "phx_join", {}]);
+    this.channel.join().receive("ok", this.handleJoinOk.bind(this)).receive("error", this.handleJoinError.bind(this));
+  }
+
+  handleRoomMsg(payload) {
+    this.addData("收", [this.channel.joinRef(), null, this.channel.topic, "room_msg", payload]);
+    var msgItem = document.createElement("p");
+    msgItem.innerText = "收到: " + payload.body;
+    this.htmlMsg.appendChild(msgItem);
+    this.htmlMsg.scrollTop = this.htmlMsg.scrollHeight;
+  }
+
+  handleJoinOk(resp) {
+    this.addData("收", [this.channel.joinRef(), null, this.channel.topic, "phx_join_reply", resp]);
+    var item = document.createElement("p");
+    item.innerText = "成功加入房间";
+    this.roomMsg.appendChild(item);
+  }
+
+  handleJoinError(resp) {
+    this.addData("收", [this.channel.joinRef(), null, this.channel.topic, "phx_join_reply", resp]);
+    var item = document.createElement("p");
+    item.innerText = "加入房间失败: " + resp.reason;
+    item.className = "text-red-500";
+    this.roomMsg.appendChild(item);
+  }
+
+  handleLeaveRoom() {
+    if (this.channel) {
+      this.addData("发", [this.channel.joinRef(), "phx_leave", this.channel.topic, "phx_leave", {}]);
+      var ch = this.channel;
+      var self = this;
+      this.channel = null;
+      ch.leave().receive("ok", function () {
+        self.addData("收", [ch.joinRef(), null, ch.topic, "phx_leave_reply", {}]);
+      });
+    } else {
+      this.addData("发", [null, "phx_leave", "room:abc", "phx_leave", {}]);
+      this.addData("收", [null, null, "room:abc", "phx_leave_reply", {}]);
+    }
+    var item = document.createElement("p");
+    item.innerText = "离开房间";
+    this.roomMsg.appendChild(item);
+  }
+
+  handleInputKeypress(event) {
+    if (event.key !== "Enter") return;
+    if (!this.channel) return;
+    var body = this.inputContent.value.trim();
+    if (!body) return;
+    var payload = { body: body };
+    var push = this.channel.push("room_msg", payload);
+    push.receive("ok", this.handleSendOk.bind(this));
+    this.addData("发", [this.channel.joinRef(), push.ref, this.channel.topic, "room_msg", payload]);
+    this.inputContent.value = "";
+  }
+
+  handleSendOk(resp) {
+    var msgItem = document.createElement("p");
+    msgItem.className = "text-blue-600 font-medium";
+    msgItem.innerText = "我: " + resp.body;
+    this.htmlMsg.appendChild(msgItem);
+    this.htmlMsg.scrollTop = this.htmlMsg.scrollHeight;
+  }
+
+  addData(dir, payload) {
+    if (!this.data) return;
+    var item = document.createElement("div");
+    item.className = "border-b border-base-200/30 pb-1 text-xs";
+    var label = dir === "发" ? "发" : "收";
+    item.innerHTML =
+      '<span class="font-semibold ' +
+      (dir === "发" ? "text-blue-500" : "text-green-500") +
+      '">' +
+      label +
+      "</span> " +
+      JSON.stringify(payload);
+    this.data.appendChild(item);
+    this.data.scrollTop = this.data.scrollHeight;
+  }
+
+  createChannel() {
+    if (this.channel) this.channel.leave();
+    this.channel = this.socket.channel("room:abc", {});
+    return this.channel;
+  }
 }
 
-enterRoom.addEventListener("click", () => {
-  if (channel) channel.leave();
-  channel = socket.channel("room:abc", {});
-  channel.on("room_msg", (payload) => {
-    addTelemetry("收", [channel.joinRef(), null, channel.topic, "room_msg", payload]);
-    const msgItem = document.createElement("p");
-    msgItem.innerText = `on room_msg ${payload.body}`;
-    htmlMsg.appendChild(msgItem);
-    htmlMsg.scrollTop = htmlMsg.scrollHeight;
-  });
-  addTelemetry("发", [null, "phx_join", "room:abc", "phx_join", {}]);
-  channel
-    .join()
-    .receive("ok", (resp) => {
-      addTelemetry("收", [channel.joinRef(), null, channel.topic, "phx_join_reply", resp]);
-      const item = document.createElement("p");
-      item.innerText = "成功加入房间";
-      roomMsg.appendChild(item);
-    })
-    .receive("error", (resp) => {
-      addTelemetry("收", [channel.joinRef(), null, channel.topic, "phx_join_reply", resp]);
-      const item = document.createElement("p");
-      item.innerText = "加入房间失败: " + resp.reason;
-      item.className = "text-red-500";
-      roomMsg.appendChild(item);
-    });
-});
+export default ChatRoom;
+```
 
-leaveRoom.addEventListener("click", () => {
-  if (channel) {
-    const ch = channel;
-    addTelemetry("发", [ch.joinRef(), "phx_leave", ch.topic, "phx_leave", {}]);
-    ch.leave().receive("ok", () => {
-      addTelemetry("收", [ch.joinRef(), null, ch.topic, "phx_leave_reply", {}]);
-    });
-    channel = null;
-  } else {
-    addTelemetry("发", [null, "phx_leave", "room:abc", "phx_leave", {}]);
-    addTelemetry("收", [null, null, "room:abc", "phx_leave_reply", {}]);
+chat/connector.js
+
+```javascript
+import { Socket } from "phoenix";
+import { LiveSocket } from "phoenix_live_view";
+import ChatRoom from "./chat_room";
+
+class Connector {
+  constructor() {
+    this.liveSocket = null;
   }
-  const item = document.createElement("p");
-  item.innerText = "离开房间";
-  roomMsg.appendChild(item);
-});
 
-inputContent.addEventListener("keypress", (event) => {
-  if (event.key === "Enter") {
-    const body = inputContent.value.trim();
-    if (!body) return;
-    const payload = { body };
-    const push = channel.push("room_msg", payload);
-    addTelemetry("发", [channel.joinRef(), push.ref, channel.topic, "room_msg", payload]);
-    inputContent.value = "";
+  init() {
+    var csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
+    this.liveSocket = new LiveSocket("/live", Socket, {
+      longPollFallbackMs: 2500,
+      params: {
+        _csrf_token: csrfToken,
+      },
+      hooks: {
+        chat_room: ChatRoom,
+      },
+    });
   }
-});
 
-document.getElementById("clear-room")?.addEventListener("click", () => (roomMsg.innerHTML = ""));
-document.getElementById("clear-msg")?.addEventListener("click", () => (htmlMsg.innerHTML = ""));
-document.getElementById("clear-telemetry")?.addEventListener("click", () => (telemetry.innerHTML = ""));
+  connect() {
+    this.liveSocket.connect();
+  }
+
+  disconnect() {
+    if (!this.liveSocket) return;
+    this.liveSocket.disconnect();
+    this.liveSocket = null;
+  }
+}
+
+export default Connector;
+```
+
+app.js
+
+```javascript
+import "phoenix_html";
+import Connector from "./chat/connector";
+
+var connector = new Connector();
+connector.init();
+connector.connect();
 ```
