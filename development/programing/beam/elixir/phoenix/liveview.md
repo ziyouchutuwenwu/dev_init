@@ -1,27 +1,12 @@
 # liveview
 
-## 场景
+## 说明
 
 用的是 websocket，不需要刷新页面
 
-## 说明
+## 例子
 
-注意默认渲染的名字
-
-```sh
-xxx_live.ex
-xxx.html.heex
-```
-
-## 步骤
-
-### 准备
-
-```sh
-mix phx.new web_demo --no-ecto --no-gettext
-```
-
-### 路由
+路由
 
 ```elixir
 scope "/", WebDemoWeb do
@@ -29,17 +14,16 @@ scope "/", WebDemoWeb do
 
   get "/", PageController, :home
 
-  # 和普通路由没有区别
-  live "/live", Live.Page
+  live "/live", PageLive
 end
 ```
 
 ### 代码
 
-lib/web_demo_web/live/page/page_live.ex
+page_live.ex
 
 ```elixir
-defmodule WebDemoWeb.Live.Page do
+defmodule WebDemoWeb.PageLive do
   use WebDemoWeb, :live_view
 
   def mount(_params, _session, socket) do
@@ -68,30 +52,13 @@ defmodule WebDemoWeb.Live.Page do
 end
 ```
 
-lib/web_demo_web/live/page/page.html.heex
+page_live.html.heex
 
 ```html
 <div>开始</div>
-<WebDemoWeb.Live.Page.Components.AAA.demo number="{@number}" />
+<div>{@number}</div>
+<button phx-click="inc">+</button>
+<button phx-click="dec">-</button>
+<button phx-click="clear">clear</button>
 <div>结束</div>
-```
-
-lib/web_demo_web/live/page/components/aaa.ex
-
-```elixir
-defmodule WebDemoWeb.Live.Page.Components.AAA do
-  use Phoenix.Component
-
-  def demo(assigns) do
-    ~H"""
-    <div>{@number}</div>
-
-    <button phx-click="inc">+</button>
-
-    <button phx-click="dec">-</button>
-
-    <button phx-click="clear">clear</button>
-    """
-  end
-end
 ```
