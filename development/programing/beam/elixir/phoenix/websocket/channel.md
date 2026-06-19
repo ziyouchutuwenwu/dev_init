@@ -38,8 +38,8 @@ endpoint.ex
 
 ```elixir
 socket "/socket", WebDemoWeb.UserSocket,
-  websocket: [connect_info: [session: @session_options]],
-  longpoll: [connect_info: [session: @session_options]]
+  websocket: [connect_info: [:x_headers, :uri, :peer_data, session: @session_options]],
+  longpoll: [connect_info: [:x_headers, :uri, :peer_data, session: @session_options]]
 ```
 
 user_socket.ex
@@ -83,7 +83,7 @@ defmodule WebDemoWeb.RoomChannel do
   @impl true
   def handle_in("room_msg", %{"body" => body}, socket) do
     Logger.debug("on room_msg")
-    broadcast!(socket, "room_msg", %{body: body})
+    Phoenix.Channel.broadcast!(socket, "room_msg", %{body: body})
     {:noreply, socket}
   end
 
@@ -93,7 +93,7 @@ defmodule WebDemoWeb.RoomChannel do
   # @impl true
   # def handle_out("room_msg", payload, socket) do
   #   Logger.debug("拦截返回客户端的消息 #{inspect(payload)}")
-  #   push(socket, "room_msg", payload)
+  #   Phoenix.Channel.push(socket, "room_msg", payload)
   #   {:noreply, socket}
   # end
 end
@@ -166,9 +166,12 @@ chat_live.html.heex
 
     <%!-- Right: telemetry (35%) --%>
     <div class="flex w-[50%] flex-col rounded-xl border border-base-300/60 bg-base-100 p-3 shadow-sm">
-      <div class="mb-2 flex items-center justify-between">
-        <p class="text-sm font-semibold text-base-content/70">数据</p>
-        <button id="clear-telemetry" class="text-xs text-base-content/40 hover:text-red-500">清除</button>
+      <div class="mb-2">
+        <div class="flex items-center justify-between">
+          <p class="text-sm font-semibold text-base-content/70">数据</p>
+          <button id="clear-telemetry" class="text-xs text-base-content/40 hover:text-red-500">清除</button>
+        </div>
+        <p class="mt-1 text-[10px] text-base-content/40">格式: [room_ref, msg_id, topic, event, payload]</p>
       </div>
       <div id="telemetry" class="flex-1 overflow-auto font-mono text-[11px] leading-relaxed"></div>
     </div>

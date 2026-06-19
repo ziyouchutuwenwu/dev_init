@@ -20,7 +20,10 @@ endpoint.ex
  # 会往路由表里注册
 # 默认是 /demo/websocket, 改成 /demo/aaa
 socket "/demo", DemoSocket,
-  websocket: [path: "/aaa"],
+  websocket: [
+    path: "/aaa",
+    connect_info: [:x_headers, :uri, :peer_data, session: @session_options]
+  ],
   longpoll: false
 ```
 
