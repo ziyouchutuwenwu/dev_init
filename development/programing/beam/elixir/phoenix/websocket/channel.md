@@ -9,28 +9,11 @@
 路由
 
 ```elixir
-defmodule WebDemoWeb.Router do
-  use WebDemoWeb, :router
+scope "/", WebDemoWeb do
+  pipe_through :browser
 
-  pipeline :browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_live_flash
-    plug :put_root_layout, html: {WebDemoWeb.Layouts, :root}
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
-  end
-
-  pipeline :api do
-    plug :accepts, ["json"]
-  end
-
-  scope "/", WebDemoWeb do
-    pipe_through :browser
-
-    get "/", PageController, :home
-    live "/chat", ChatLive, :index
-  end
+  get "/", PageController, :home
+  live "/chat", ChatLive, :index
 end
 ```
 
@@ -126,7 +109,7 @@ chat_live.html.heex
     </div>
   </div>
 
-  <div class="flex h-full min-h-[calc(100vh-100px)] gap-3 px-4 pb-4" id="chat-app" phx-hook="chat_room">
+  <div class="flex h-full min-h-[calc(100vh-100px)] gap-3 px-4 pb-4" id="chat-app" phx-hook=".chat_room">
     <%!-- Left: room controls (15%) --%>
     <div class="flex w-[15%] flex-col rounded-xl border border-base-300/60 bg-base-100 p-3 shadow-sm">
       <div class="mb-2 flex items-center justify-between">
@@ -177,17 +160,32 @@ chat_live.html.heex
     </div>
   </div>
 </Layouts.app>
+
+<script :type="{Phoenix.LiveView.ColocatedHook}" name=".chat_room">
+  import ChatRoom from "@/js/chat/chat_room";
+
+  export default {
+    mounted() {
+      this.chatRoom = new ChatRoom();
+      this.chatRoom.init();
+    },
+    destroyed() {
+      if (this.chatRoom) {
+        this.chatRoom.destroyed();
+        this.chatRoom = null;
+      }
+    },
+  };
+</script>
 ```
 
 chat/chat_room.js
 
 ```javascript
 import { Socket } from "phoenix";
-import { ViewHook } from "phoenix_live_view";
 
-class ChatRoom extends ViewHook {
-  // ViewHook 里面的
-  mounted() {
+class ChatRoom {
+  init() {
     this.socket = new Socket("/socket", { params: {} });
     this.channel = null;
     this.socket.connect();
@@ -207,7 +205,6 @@ class ChatRoom extends ViewHook {
     this.inputContent.addEventListener("keypress", this.handleInputKeypress.bind(this));
   }
 
-  // ViewHook 里面的
   destroyed() {
     if (this.channel) {
       this.channel.leave();
@@ -323,53 +320,4 @@ class ChatRoom extends ViewHook {
 }
 
 export default ChatRoom;
-```
-
-chat/connector.js
-
-```javascript
-import { Socket } from "phoenix";
-import { LiveSocket } from "phoenix_live_view";
-import ChatRoom from "./chat_room";
-
-class Connector {
-  constructor() {
-    this.liveSocket = null;
-  }
-
-  init() {
-    var csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
-    this.liveSocket = new LiveSocket("/live", Socket, {
-      longPollFallbackMs: 2500,
-      params: {
-        _csrf_token: csrfToken,
-      },
-      hooks: {
-        chat_room: ChatRoom,
-      },
-    });
-  }
-
-  connect() {
-    this.liveSocket.connect();
-  }
-
-  disconnect() {
-    if (!this.liveSocket) return;
-    this.liveSocket.disconnect();
-    this.liveSocket = null;
-  }
-}
-
-export default Connector;
-```
-
-app.js
-
-```javascript
-import Connector from "./chat/connector";
-
-var connector = new Connector();
-connector.init();
-connector.connect();
 ```

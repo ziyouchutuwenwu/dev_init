@@ -62,10 +62,14 @@ page_live.html.heex
 <button phx-click="dec">-</button>
 
 <!-- phx-hook 必须以 . 开头 -->
-<!-- 这个 dom 挂载以后触发 -->
 <button phx-hook=".clear_notify" id="clear-btn">clear</button>
+<div>结束</div>
+
+
+<!-- name 字段对应的 dom 挂载以后触发 -->
 <script :type={Phoenix.LiveView.ColocatedHook} name=".clear_notify">
-  // import xxxx
+  // @ 代表 assets 目录
+  // import AAA from "@/js/aaa"
   export default {
     // liveview 组件的生命周期
     mounted() {
@@ -78,5 +82,4 @@ page_live.html.heex
     }
   }
 </script>
-<div>结束</div>
 ```
