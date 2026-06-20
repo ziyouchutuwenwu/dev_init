@@ -367,7 +367,6 @@ export default Connector;
 app.js
 
 ```javascript
-import "phoenix_html";
 import Connector from "./chat/connector";
 
 var connector = new Connector();

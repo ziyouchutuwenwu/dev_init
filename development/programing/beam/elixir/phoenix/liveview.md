@@ -31,15 +31,16 @@ defmodule WebDemoWeb.PageLive do
   end
 
   def handle_event("inc", _params, socket) do
-    {:noreply, update(socket, :number, &increment/1)}
+    {:noreply, socket |> update(:number, fn value -> increment(value) end)}
   end
 
   def handle_event("dec", _params, socket) do
-    {:noreply, update(socket, :number, &decrement/1)}
+    {:noreply, socket |> update(:number, fn value -> decrement(value) end)}
   end
 
   def handle_event("clear", _params, socket) do
-    {:noreply, socket |> assign(number: 0)}
+    number_before_clear = socket.assigns.number
+    {:reply, %{number_before_clear: number_before_clear}, assign(socket, :number, 0)}
   end
 
   defp increment(number) do
@@ -59,6 +60,23 @@ page_live.html.heex
 <div>{@number}</div>
 <button phx-click="inc">+</button>
 <button phx-click="dec">-</button>
-<button phx-click="clear">clear</button>
+
+<!-- phx-hook 必须以 . 开头 -->
+<!-- 这个 dom 挂载以后触发 -->
+<button phx-hook=".clear_notify" id="clear-btn">clear</button>
+<script :type={Phoenix.LiveView.ColocatedHook} name=".clear_notify">
+  // import xxxx
+  export default {
+    // liveview 组件的生命周期
+    mounted() {
+
+      this.el.addEventListener("click", () => {
+        this.pushEvent("clear", {}, (reply) => {
+          alert(`已清除！清除前的值是：${reply.number_before_clear}`);
+        });
+      });
+    }
+  }
+</script>
 <div>结束</div>
 ```
