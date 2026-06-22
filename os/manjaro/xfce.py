@@ -181,8 +181,8 @@ def install_sync_tool():
     proc.run("yes | pacman --noconfirm -S rsync rclone")
 
 
-def install_serial_tools(user):
-    proc.run("yes | pacman --noconfirm -S picocom lrzsz")
+def install_serial_tool(user):
+    proc.run("yes | pacman --noconfirm -S lrzsz")
     cmd = "usermod -a -G uucp %s" % user
     proc.run(cmd)
 
@@ -526,7 +526,7 @@ if __name__ == "__main__":
     do_vim_config(login_user)
     install_fcitx5(login_user)
     set_dev_rules()
-    install_serial_tools(login_user)
+    install_serial_tool(login_user)
     install_android_tools()
     install_search_tools()
     install_encoding_tools()

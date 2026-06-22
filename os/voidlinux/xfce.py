@@ -113,8 +113,8 @@ def install_embedded_tools():
     proc.run("xbps-install -y mtd-utils squashfs-tools")
 
 
-def install_serial_tools(user):
-    proc.run("xbps-install -y picocom lrzsz")
+def install_serial_tool(user):
+    proc.run("xbps-install -y lrzsz")
     proc.run("xbps-install -y tio")
     cmd = "usermod -a -G dialout %s" % user
     proc.run(cmd)
@@ -248,7 +248,7 @@ if __name__ == "__main__":
     install_fcitx5(login_user)
     install_beam()
     install_terminator(login_user)
-    install_serial_tools()
+    install_serial_tool()
     install_embedded_tools()
     install_sniffer(login_user)
     install_qtct()

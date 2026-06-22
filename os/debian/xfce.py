@@ -89,8 +89,8 @@ def install_api_viewer():
     proc.run("apt install -y zeal")
 
 
-def install_serial_tools(user):
-    proc.run("apt install -y picocom lrzsz")
+def install_serial_tool(user):
+    proc.run("apt install -y lrzsz")
     proc.run("apt install -y tio")
     cmd = "usermod -a -G dialout %s" % user
     proc.run(cmd)
@@ -394,7 +394,7 @@ if __name__ == "__main__":
     install_audio_manager()
     install_clang_llvm_lldb()
     set_dev_rules()
-    install_serial_tools(login_user)
+    install_serial_tool(login_user)
     install_printer_essential()
     install_embedded_tools()
     install_key_tool()
