@@ -456,7 +456,6 @@ def install_net_tools():
 
 def install_embedded_tools():
     proc.run("yes | pacman --noconfirm -S gdb lldb")
-    proc.run("yes | pacman --noconfirm -S arm-none-eabi-gcc arm-none-eabi-newlib")
     proc.run("yes | pacman --noconfirm -S uboot-tools qemu-system-arm")
     proc.run("yes | pacman --noconfirm -S i2c-tools")
     proc.run("yes | pacman --noconfirm -S mtd-utils squashfs-tools")
