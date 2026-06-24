@@ -1,25 +1,36 @@
 {
-  // 不支持环境变量
+  // dts 的高亮补全靠这个
   "devicetree.contexts": [
     {
       "devicetree.cwd": "${workspaceFolder}",
       "bindingType": "Zephyr",
-      "zephyrBindings": ["/home/mmc/dev/zephyr/repo/zephyr/dts/bindings", "./dts/bindings"],
+      // 需要自己手写 compatible 的器件
+      // "zephyrBindings": [
+      //   "/home/mmc/dev/zephyr/repo/zephyr/dts/bindings",
+      //   "/home/mmc/dev/zephyr/blinky/dts/bindings"
+      // ],
 
+      // 只能用绝对路径
       "includePaths": [
         "/home/mmc/dev/zephyr/repo/zephyr/dts",
+        "/home/mmc/dev/zephyr/repo/zephyr/dts/arm",
+        "/home/mmc/dev/zephyr/repo/zephyr/dts/arm64",
+        "/home/mmc/dev/zephyr/repo/zephyr/dts/riscv",
         "/home/mmc/dev/zephyr/repo/zephyr/dts/xtensa",
+        "/home/mmc/dev/zephyr/repo/zephyr/dts/sparc",
+        "/home/mmc/dev/zephyr/repo/zephyr/dts/x86",
+        "/home/mmc/dev/zephyr/repo/zephyr/dts/arc",
+        "/home/mmc/dev/zephyr/repo/zephyr/dts/rx",
+        "/home/mmc/dev/zephyr/repo/zephyr/dts/posix",
         "/home/mmc/dev/zephyr/repo/zephyr/dts/vendor",
         "/home/mmc/dev/zephyr/repo/zephyr/dts/common",
-        "/home/mmc/dev/zephyr/repo/zephyr/boards/espressif/esp32s3_devkitc",
         "/home/mmc/dev/zephyr/repo/zephyr/include",
-        "/home/mmc/dev/zephyr/repo/zephyr/include/zephyr",
-        "/home/mmc/dev/zephyr/repo/zephyr/include/zephyr/dt-bindings/gpio/",
-        //
-        "./boards"
+        "/home/mmc/dev/zephyr/blinky/boards"
       ],
-      "dtsFile": "/home/mmc/dev/zephyr/repo/zephyr/boards/espressif/esp32s3_devkitc/esp32s3_devkitc_procpu.dts",
-      "overlays": ["./boards/esp32s3_devkitc_procpu.overlay"]
+      // 当前板级硬件树
+      "dtsFile": "/home/mmc/dev/zephyr/repo/zephyr/boards/nordic/nrf54h20dk/nrf54h20dk_nrf54h20_cpuppr.dts",
+      // 覆盖补丁
+      "overlays": ["./boards/nrf54h20dk_nrf54h20_cpuppr.overlay"]
     }
   ]
 }

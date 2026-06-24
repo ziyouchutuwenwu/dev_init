@@ -1,5 +1,9 @@
 # west
 
+## 说明
+
+编译时，默认生成 compile_commands.json，c 的补全靠这个
+
 ## 用法
 
 查看所有板子
@@ -11,9 +15,11 @@ west boards
 编译
 
 ```sh
-# 这个是双核，比较特殊
+# 指定哪个板
+# -p 是设置要不要清理 build 目录
 west build -b esp32s3_devkitc/esp32s3/procpu -p always
 
+# -- 代表后面的参数是给 cmake的
 # 指定使用某个 conf
 west build -b esp32s3_devkitc/esp32s3/procpu -d xxx_dir -- -DOVERLAY_CONFIG=./overlay-bt.conf
 ```
