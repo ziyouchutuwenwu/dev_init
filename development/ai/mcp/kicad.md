@@ -9,7 +9,7 @@ kicad 的 mcp
 准备
 
 ```sh
-uv venv kicad_venv
+kicad -> 设置 -> 偏好设置 -> 插件 -> 启用 KiCad API
 ```
 
 ### mcp-server-kicad
@@ -42,5 +42,5 @@ uv pip install kicad-mcp-pro
 启动
 
 ```sh
-kicad-mcp-pro --transport stdio
+kicad-mcp-pro
 ```
