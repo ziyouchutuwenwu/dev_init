@@ -24,8 +24,7 @@
         "/home/mmc/dev/zephyr/repo/zephyr/dts/posix",
         "/home/mmc/dev/zephyr/repo/zephyr/dts/vendor",
         "/home/mmc/dev/zephyr/repo/zephyr/dts/common",
-        "/home/mmc/dev/zephyr/repo/zephyr/include",
-        "/home/mmc/dev/zephyr/blinky/boards"
+        "/home/mmc/dev/zephyr/repo/zephyr/include"
       ],
       // 当前板级硬件树
       "dtsFile": "/home/mmc/dev/zephyr/repo/zephyr/boards/nordic/nrf54h20dk/nrf54h20dk_nrf54h20_cpuppr.dts",
