@@ -6,28 +6,28 @@
       "bindingType": "Zephyr",
       // 需要自己手写 compatible 的器件
       // "zephyrBindings": [
-      //   "/home/mmc/dev/zephyr/repo/zephyr/dts/bindings",
-      //   "/home/mmc/dev/zephyr/blinky/dts/bindings"
+      //   "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/bindings",
+      //   "/home/mmc/dev/embedded/zephyr/blinky/dts/bindings"
       // ],
 
       // 只能用绝对路径
       "includePaths": [
-        "/home/mmc/dev/zephyr/repo/zephyr/dts",
-        "/home/mmc/dev/zephyr/repo/zephyr/dts/arm",
-        "/home/mmc/dev/zephyr/repo/zephyr/dts/arm64",
-        "/home/mmc/dev/zephyr/repo/zephyr/dts/riscv",
-        "/home/mmc/dev/zephyr/repo/zephyr/dts/xtensa",
-        "/home/mmc/dev/zephyr/repo/zephyr/dts/sparc",
-        "/home/mmc/dev/zephyr/repo/zephyr/dts/x86",
-        "/home/mmc/dev/zephyr/repo/zephyr/dts/arc",
-        "/home/mmc/dev/zephyr/repo/zephyr/dts/rx",
-        "/home/mmc/dev/zephyr/repo/zephyr/dts/posix",
-        "/home/mmc/dev/zephyr/repo/zephyr/dts/vendor",
-        "/home/mmc/dev/zephyr/repo/zephyr/dts/common",
-        "/home/mmc/dev/zephyr/repo/zephyr/include"
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/arm",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/arm64",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/riscv",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/xtensa",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/sparc",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/x86",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/arc",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/rx",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/posix",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/vendor",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/common",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/include"
       ],
       // 当前板级硬件树
-      "dtsFile": "/home/mmc/dev/zephyr/repo/zephyr/boards/nordic/nrf54h20dk/nrf54h20dk_nrf54h20_cpuppr.dts",
+      "dtsFile": "/home/mmc/dev/embedded/zephyr/repo/zephyr/boards/nordic/nrf54h20dk/nrf54h20dk_nrf54h20_cpuppr.dts",
       // 覆盖补丁
       "overlays": ["./boards/nrf54h20dk_nrf54h20_cpuppr.overlay"]
     }
