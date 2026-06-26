@@ -14,16 +14,23 @@ stm32 的项目模板位置
 bsp/stm32/libraries/templates/
 ```
 
-模板内，对应芯片，复制一份出来
+模板内，对应芯片，复制一份出来，放到 bsp/stm32/ 下
 
 ### stm32cubemx
 
 用 stm32cubemx 创建项目
 
 ```sh
-Project Manager -> Code Generator ->
-  # 不勾选
-  Generate peripheral initialization as a pair of '.c/.h' files per peripheral
+Project Manager ->
+  Project ->
+    Project Name ->
+      CubeMX_Config
+    Project Location ->
+      xxxxx/board/
+
+  Code Generator ->
+    # 不勾选
+    Generate peripheral initialization as a pair of '.c/.h' files per peripheral
 ```
 
 复制生成出来的 Inc 和 Src 到 board/CubeMX_Config/
@@ -68,6 +75,8 @@ SOC_
 board/SConscript
 
 ```sh
+CubeMX_Config 改成 CubeMX_Config/Core
+startup_path_prefix 注意启动的 s 文件名
 CPPDEFINES
 ```
 

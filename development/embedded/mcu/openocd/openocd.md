@@ -2,12 +2,20 @@
 
 ## 用法
 
-```sh
-openocd -f interface/调试器型号.cfg -f target/芯片型号.cfg
-```
-
-microlink 是 daplink 的 增强
+调试
 
 ```sh
 openocd -f interface/cmsis-dap.cfg -f target/芯片型号.cfg
+```
+
+擦除
+
+```sh
+openocd -f interface/cmsis-dap.cfg -f target/stm32f4x.cfg -c "init; halt; flash erase_sector 0 0 last; shutdown"
+```
+
+烧录
+
+```sh
+openocd -f interface/cmsis-dap.cfg -f target/stm32f4x.cfg -c "init; halt; flash write_image erase rtthread.bin 0x08000000; reset; shutdown"
 ```
