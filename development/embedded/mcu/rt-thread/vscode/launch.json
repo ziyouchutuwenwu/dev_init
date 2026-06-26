@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "debug",
+      "cwd": "${workspaceFolder}",
+      "executable": "${workspaceFolder}/rt-thread.elf",
+
+      "request": "launch",
+      "type": "cortex-debug",
+      "servertype": "openocd",
+
+      "configFiles": ["interface/cmsis-dap.cfg", "target/stm32f4x.cfg"],
+      "searchDir": ["/usr/share/openocd/scripts/"],
+
+      "toolchainPrefix": "arm-none-eabi",
+      "gdbPath": "${env:HOME}/dev/embedded/rtt/toolchain//bin/arm-none-eabi-gdb",
+
+      "overrideLaunchCommands": ["monitor reset halt", "monitor targets"],
+      "overrideResetCommands": ["monitor reset halt", "monitor targets"],
+
+      "showDevDebugOutput": "parsed",
+      // "runToEntryPoint": "main",
+      "preLaunchTask": "build"
+    }
+  ]
+}

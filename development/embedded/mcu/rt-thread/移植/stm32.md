@@ -80,6 +80,14 @@ startup_path_prefix 注意启动的 s 文件名
 CPPDEFINES
 ```
 
+最外层 SConscript
+
+```sh
+# 生成 compile_commands.json, 代码补全
+env.Tool("compilation_db")
+env.CompilationDatabase()
+```
+
 ### menuconfig
 
 ```sh
@@ -89,5 +97,5 @@ scons --menuconfig
 打包
 
 ```sh
-scons --target=vsc --dist
+scons --dist
 ```
