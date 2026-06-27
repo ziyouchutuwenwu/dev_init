@@ -1,10 +1,14 @@
 {
+  // 源码补全
+  "clangd.arguments": ["--compile-commands-dir=${workspaceFolder}/debug"],
+
   // dts 的高亮补全靠这个
   "devicetree.contexts": [
     {
       "devicetree.cwd": "${workspaceFolder}",
       "bindingType": "Zephyr",
-      // 需要自己手写 compatible 的器件
+
+      // 自己手写 compatible 的器件才需要
       // "zephyrBindings": [
       //   "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/bindings",
       //   "/home/mmc/dev/embedded/zephyr/blinky/dts/bindings"
