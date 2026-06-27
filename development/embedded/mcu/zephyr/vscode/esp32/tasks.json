@@ -20,12 +20,14 @@
     {
       "label": "erase",
       "type": "shell",
-      "command": "esptool --port /dev/ttyACM0 erase-flash"
+      // west flash --erase -d debug
+      // esptool --port /dev/ttyACM0 erase-flash
+      "command": "west flash --erase -d debug"
     },
     {
       "label": "burn",
       "type": "shell",
-      "command": "ESPTOOL_PORT=/dev/ttyACM0 west flash -d debug"
+      "command": "west flash -d debug"
     },
     {
       "label": "clean",

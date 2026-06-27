@@ -33,7 +33,7 @@
       // 当前板级硬件树
       "dtsFile": "/home/mmc/dev/embedded/zephyr/repo/zephyr/boards/xxx/stm32f411ceu6/stm32f411ceu6.dts",
       // 覆盖补丁
-      "overlays": ["./boards/nrf54h20dk_nrf54h20_cpuppr.overlay"]
+      "overlays": ["./boards/stm32f411ceu6.overlay"]
     }
   ]
 }

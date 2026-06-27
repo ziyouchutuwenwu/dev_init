@@ -31,9 +31,9 @@
         "/home/mmc/dev/embedded/zephyr/repo/zephyr/include"
       ],
       // 当前板级硬件树
-      "dtsFile": "/home/mmc/dev/embedded/zephyr/repo/zephyr/boards/nordic/nrf54h20dk/nrf54h20dk_nrf54h20_cpuppr.dts",
+      "dtsFile": "/home/mmc/dev/embedded/zephyr/repo/zephyr/boards/espressif/esp32s3_devkitc/esp32s3_devkitc_procpu.dts",
       // 覆盖补丁
-      "overlays": ["./boards/nrf54h20dk_nrf54h20_cpuppr.overlay"]
+      "overlays": ["./boards/esp32s3_devkitc_procpu.overlay"]
     }
   ]
 }
