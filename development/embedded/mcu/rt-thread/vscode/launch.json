@@ -16,9 +16,10 @@
       "toolchainPrefix": "arm-none-eabi",
       "gdbPath": "${env:HOME}/dev/embedded/rtt/toolchain//bin/arm-none-eabi-gdb",
 
-      "overrideLaunchCommands": ["monitor reset halt", "monitor targets"],
-      "overrideResetCommands": ["monitor reset halt", "monitor targets"],
+      "overrideLaunchCommands": ["monitor reset halt"],
+      "overrideResetCommands": ["monitor reset halt"],
 
+      // raw, parsed, none
       "showDevDebugOutput": "parsed",
       // "runToEntryPoint": "main",
       "preLaunchTask": "build"

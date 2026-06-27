@@ -10,20 +10,23 @@
       "type": "cortex-debug",
       "servertype": "openocd",
 
-      "configFiles": ["interface/cmsis-dap.cfg", "target/stm32f4x.cfg"],
-      "searchDir": [
-        "${env:HOME}/dev/embedded/zephyr/sdk/hosttools/sysroots/x86_64-pokysdk-linux/usr/share/openocd/scripts"
-      ],
+      // https://github.com/espressif/openocd-esp32/releases
+      // 这个很重要，避免使用系统自带的 openocd，导致版本不对报错
+      "serverpath": "${env:HOME}/dev/embedded/openocd/bin/openocd",
+      "configFiles": ["interface/esp_usb_bridge.cfg", "target/esp32s3.cfg"],
+      "searchDir": ["${env:HOME}/dev/embedded/openocd/share/openocd/scripts/"],
 
-      "overrideLaunchCommands": ["monitor reset halt", "monitor targets", "monitor gdb_breakpoint_override hard"],
-      "overrideResetCommands": ["monitor reset halt", "monitor targets"],
+      // 硬件断点
+      "overrideLaunchCommands": ["monitor reset halt", "monitor gdb_breakpoint_override hard"],
+      "overrideResetCommands": ["monitor reset halt"],
 
-      "toolchainPrefix": "arm-none-eabi",
-      "gdbPath": "${env:HOME}/dev/embedded/zephyr/sdk/gnu/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb",
+      "toolchainPrefix": "xtensa-espressif_esp32s3_zephyr-elf",
+      "gdbPath": "${env:HOME}/dev/embedded/zephyr/sdk/gnu/xtensa-espressif_esp32s3_zephyr-elf/bin/xtensa-espressif_esp32s3_zephyr-elf-gdb",
 
-      "showDevDebugOutput": "parsed",
+      // raw, parsed, none
+      "showDevDebugOutput": "none",
       // "runToEntryPoint": "main",
-      "preLaunchTask": "flash"
+      "preLaunchTask": "burn"
     }
   ]
 }

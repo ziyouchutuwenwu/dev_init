@@ -15,12 +15,13 @@
         "${env:HOME}/dev/embedded/zephyr/sdk/hosttools/sysroots/x86_64-pokysdk-linux/usr/share/openocd/scripts"
       ],
 
-      "overrideLaunchCommands": ["monitor reset halt", "monitor targets", "monitor gdb_breakpoint_override hard"],
-      "overrideResetCommands": ["monitor reset halt", "monitor targets"],
+      "overrideLaunchCommands": ["monitor reset halt", "monitor gdb_breakpoint_override hard"],
+      "overrideResetCommands": ["monitor reset halt"],
 
       "toolchainPrefix": "arm-none-eabi",
       "gdbPath": "${env:HOME}/dev/embedded/zephyr/sdk/gnu/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb",
 
+      // raw, parsed, none
       "showDevDebugOutput": "parsed",
       // "runToEntryPoint": "main",
       "preLaunchTask": "burn"
