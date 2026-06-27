@@ -23,7 +23,7 @@
 
       "showDevDebugOutput": "parsed",
       // "runToEntryPoint": "main",
-      "preLaunchTask": "flash"
+      "preLaunchTask": "burn"
     }
   ]
 }

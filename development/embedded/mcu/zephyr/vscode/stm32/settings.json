@@ -1,6 +1,6 @@
 {
   // 源码补全
-  "clangd.arguments": ["--compile-commands-dir=${workspaceFolder}/debug"],
+  "clangd.arguments": ["--compile-commands-dir=${workspaceFolder}/build"],
 
   // dts 的高亮补全靠这个
   "devicetree.contexts": [
