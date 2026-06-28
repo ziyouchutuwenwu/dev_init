@@ -1,49 +1,14 @@
+-- 补全配置适配 AstroNvim v6 (blink.cmp)
+-- AstroNvim v6 默认使用 blink.cmp 作为补全引擎
+-- 这里仅追加需要的快捷键（不与 AstroNvim 默认冲突）
+
 return {
-  {
-    "hrsh7th/nvim-cmp",
-    event = { "InsertEnter", "CmdlineEnter" },
-    dependencies = {
-      "hrsh7th/cmp-nvim-lsp",
-      "hrsh7th/cmp-buffer",
-      "hrsh7th/cmp-path",
-      "hrsh7th/cmp-cmdline",
+  "saghen/blink.cmp",
+  opts = {
+    keymap = {
+      -- 新增文档滚动快捷键（AstroNvim 默认使用 C-u/C-d）
+      ["<C-b>"] = { "scroll_documentation_up", "fallback" },
+      ["<C-f>"] = { "scroll_documentation_down", "fallback" },
     },
-    config = function()
-      local cmp = require("cmp")
-
-      -- 设置主补全
-      cmp.setup({
-        mapping = {
-          ["<CR>"] = cmp.mapping.confirm({ select = true }),
-          ["<Tab>"] = cmp.mapping.select_next_item(),
-          ["<S-Tab>"] = cmp.mapping.select_prev_item(),
-          ["<C-b>"] = cmp.mapping.scroll_docs(-4),
-          ["<C-f>"] = cmp.mapping.scroll_docs(4),
-          ["<C-e>"] = cmp.mapping.abort(),
-        },
-        sources = {
-          { name = "nvim_lsp" },
-          { name = "buffer" },
-          { name = "path" },
-        },
-      })
-      -- 增强 / 搜索补全
-      cmp.setup.cmdline("/", {
-        mapping = cmp.mapping.preset.cmdline(),
-        sources = {
-          { name = "buffer" },
-        },
-      })
-
-      -- 增强: 这个命令模式的补全
-      cmp.setup.cmdline(":", {
-        mapping = cmp.mapping.preset.cmdline(),
-        sources = cmp.config.sources({
-          { name = "path" },
-        }, {
-          { name = "cmdline" },
-        }),
-      })
-    end,
   },
 }
