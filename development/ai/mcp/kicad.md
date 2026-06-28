@@ -44,3 +44,9 @@ uv pip install kicad-mcp-pro
 ```sh
 kicad-mcp-pro
 ```
+
+环境变量
+
+```sh
+"KICAD_MCP_OPERATING_MODE": "write"
+```
