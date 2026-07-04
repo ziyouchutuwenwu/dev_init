@@ -1,0 +1,12 @@
+HISTFILE=~/.zsh_history
+
+if [[ -d /usr/local/etc/zsh ]]; then
+  for file in /usr/local/etc/zsh/*.zsh; do
+    [[ -f "$file" ]] && source "$file"
+  done
+  unset file
+fi
+
+emulate sh
+. /etc/profile
+emulate zsh

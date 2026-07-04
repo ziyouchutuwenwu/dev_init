@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "debug",
+      "cwd": "${workspaceFolder}",
+      "executable": "${workspaceFolder}/build/zephyr/zephyr.elf",
+
+      "request": "launch",
+      "type": "cortex-debug",
+      "servertype": "openocd",
+
+      "configFiles": ["interface/cmsis-dap.cfg", "target/stm32f4x.cfg"],
+      "searchDir": [
+        "${env:HOME}/dev/embedded/zephyr/sdk/hosttools/sysroots/x86_64-pokysdk-linux/usr/share/openocd/scripts"
+      ],
+
+      "overrideLaunchCommands": ["monitor reset halt", "monitor gdb_breakpoint_override hard"],
+      "overrideResetCommands": ["monitor reset halt"],
+
+      "toolchainPrefix": "arm-none-eabi",
+      "gdbPath": "${env:HOME}/dev/embedded/zephyr/sdk/gnu/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb",
+
+      // raw, parsed, none
+      "showDevDebugOutput": "parsed",
+      // "runToEntryPoint": "main",
+      "preLaunchTask": "burn"
+    }
+  ]
+}

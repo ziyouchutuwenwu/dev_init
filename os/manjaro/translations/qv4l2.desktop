@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=qv4l2
+Name[pt]=Utilitário de teste V4L2
+Comment=Allow testing Video4Linux devices
+Comment[pt]=Permite testar dispositivos Video4Linux
+Exec=qv4l2
+Icon=qv4l2
+Terminal=false
+Type=Application
+Categories=AudioVideo;
+Keywords=video;grabber;V4L;
+Path=
+StartupNotify=false

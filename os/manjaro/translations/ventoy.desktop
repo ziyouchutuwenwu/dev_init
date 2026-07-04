@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Icon=ventoy
+Name=ventoy
+Exec=ventoygui
+Terminal=false
+Hidden=false
+Categories=Utility
+Comment=Ventoy2Disk GUI
+Path=
+StartupNotify=false
