@@ -1,8 +1,8 @@
-# 随机数
+# secret
 
 ## 说明
 
-默认长度 64 位
+生成随机数，只能 64 位
 
 ```sh
 mix phx.gen.secret
