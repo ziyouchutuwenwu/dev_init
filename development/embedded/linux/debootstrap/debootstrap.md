@@ -2,7 +2,7 @@
 
 ## 说明
 
-buildroot 里面，一般都是裁剪过的，这个可以用来补充动态库
+可用于交叉编译的开发环境
 
 ## 步骤
 
@@ -40,8 +40,6 @@ sudo update-binfmts --enable qemu-arm
 
 ```sh
 sudo cp /usr/bin/qemu-arm ./deb_fs/usr/bin/
-
-# sudo systemd-nspawn -D ./deb_fs
 sudo chroot ./deb_fs /usr/bin/bash
 ```
 
