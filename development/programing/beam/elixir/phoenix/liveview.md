@@ -62,12 +62,13 @@ page_live.html.heex
 <button phx-click="dec">-</button>
 
 <!-- phx-hook 必须以 . 开头 -->
-<button phx-hook=".clear_notify" id="clear-btn">clear</button>
+<!-- id 属性不能少 -->
+<button phx-hook=".hook_aaa" id="btn1">clear</button>
 <div>结束</div>
 
 
 <!-- name 字段对应的 dom 挂载以后触发 -->
-<script :type={Phoenix.LiveView.ColocatedHook} name=".clear_notify">
+<script :type={Phoenix.LiveView.ColocatedHook} name=".hook_aaa">
   // @ 代表 assets 目录
   // import AAA from "@/js/aaa"
   export default {
