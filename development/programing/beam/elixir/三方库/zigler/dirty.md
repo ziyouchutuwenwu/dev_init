@@ -14,7 +14,7 @@ ccc: [:dirty_cpu, :dirty_io]
 
 ## 例子
 
-lib/zigler/src/xxx.zig
+xxx.zig
 
 ```zig
 const std = @import("std");
@@ -45,16 +45,13 @@ lib/demo_zig.ex
 ```elixir
 defmodule DemoZig do
   use Zig,
-    otp_app: :demo,
-    leak_check: true,
+    ......
     nifs: [
       aaa: [:dirty_cpu],
       bbb: [:dirty_io]
     ]
 
   ~Z"""
-  const xxx = @import("zigler/src/xxx.zig");
-
   pub fn aaa(n: u64) u64 {
     return xxx.aaa(n);
   }
