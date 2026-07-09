@@ -17,16 +17,16 @@ mix new demo
 mix.exs
 
 ```elixir
-{:zigler, "~> 0.13.2", runtime: false}
+{:zigler, "~> 0.16", runtime: false}
 ```
 
 ```sh
-mix deps.get; mix zig.get
+mix deps.get
 ```
 
 ### 代码
 
-lib/zig_src/bb.zig
+lib/native/zigler/src/bb.zig
 
 ```zig
 const std = @import("std");
@@ -40,31 +40,33 @@ pub fn demo(list: []u8, data_list: []u8) []u8 {
 }
 ```
 
-lib/demo_zig.ex
+lib/native/demo_zig.zig
+
+```zig
+const std = @import("std");
+const beam = @import("beam");
+const bb = @import("zigler/src/bb.zig");
+
+pub fn aaa(list: []u8) !beam.term {
+    const allocator = beam.context.allocator;
+
+    const data_list = try allocator.alloc(u8, list.len);
+    defer allocator.free(data_list);
+
+    const result = bb.demo(list, data_list);
+
+    return beam.make(result, .{});
+}
+```
+
+lib/native/demo_zig.ex
 
 ```elixir
 defmodule DemoZig do
   use Zig,
     otp_app: :demo,
-    leak_check: true
-
-  ~Z"""
-  const std = @import("std");
-  const beam = @import("beam");
-  const bb = @import("zig_src/bb.zig");
-
-  pub fn aaa(list: []u8) !beam.term {
-    // 在 beam.allocator 里面绑定了 beam.general_purpose_allocator，因此可以检测 leak
-    const allocator = beam.context.allocator;
-
-    const data_list = try allocator.alloc(u8, list.len);
-    // defer allocator.free(data_list);
-
-    const result = bb.demo(list, data_list);
-
-    return beam.make(result, .{});
-  }
-  """
+    leak_check: true,
+    zig_code_path: "demo_zig.zig"
 end
 ```
 
@@ -96,6 +98,7 @@ end
 ### 测试
 
 ```sh
+# zig 在 PATH 里面，或者 ZIG_EXECUTABLE_PATH 指向 zig.exe
 mix test test/demo_test.exs
 iex -S mix
 ```

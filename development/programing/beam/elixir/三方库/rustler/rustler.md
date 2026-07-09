@@ -166,44 +166,85 @@ zigbuild.ex
 defmodule Mix.Tasks.Zigbuild do
   use Mix.Task
 
-  @crate "my_lib"
-  @target "x86_64-unknown-linux-gnu.2.31"
-  @crate_dir "native/#{@crate}"
-  @output "priv/native/#{@crate}.so"
+  def run(args) do
+    {opts, _} = OptionParser.parse!(args, strict: [crate: :string, target: :string])
 
-  def run(_args) do
-    File.mkdir_p!("priv/native")
+    crate = opts[:crate] || default_crate!()
 
-    {result, 0} =
-      System.cmd(
-        "cargo",
-        [
-          "zigbuild",
-          "--release",
-          "--target",
-          @target,
-          "-p",
-          @crate,
-          "--message-format",
-          "json"
-        ],
-        cd: @crate_dir,
-        stderr_to_stdout: true,
-        into: ""
-      )
+    cargo_args = [
+      "zigbuild",
+      "--release",
+      "-p",
+      crate,
+      "--message-format",
+      "json"
+    ]
 
-    so_path = find_so(result)
+    cargo_args =
+      if target = opts[:target] do
+        cargo_args ++ ["--target", target]
+      else
+        cargo_args
+      end
 
-    unless so_path do
-      Mix.raise("Could not find .so in cargo zigbuild output")
+    crate_dir = "native/#{crate}"
+    output = "priv/native/#{crate}.so"
+
+    unless File.dir?(crate_dir) do
+      Mix.raise("Crate directory not found: #{crate_dir}")
     end
 
-    File.cp!(so_path, @output)
-    Mix.shell().info("运行以下命令检查 glibc 版本")
-    Mix.shell().info("objdump -p #{@output} | rg GLIBC_")
+    File.mkdir_p!("priv/native")
+
+    case System.cmd(
+           "cargo",
+           cargo_args,
+           cd: crate_dir,
+           stderr_to_stdout: true,
+           into: ""
+         ) do
+      {result, 0} ->
+        so_path = find_so(result, crate)
+
+        unless so_path do
+          Mix.raise("Could not find .so in cargo zigbuild output for crate: #{crate}")
+        end
+
+        File.cp!(so_path, output)
+        Mix.shell().info("编译成功，运行以下命令检查 glibc 版本")
+        Mix.shell().info("objdump -p #{output} | rg GLIBC_")
+
+      {result, exit_code} ->
+        Mix.raise("""
+        cargo zigbuild failed with exit code #{exit_code}:
+
+        #{result}
+        """)
+    end
   end
 
-  defp find_so(output) do
+  defp default_crate! do
+    native_dir = "native"
+
+    unless File.dir?(native_dir) do
+      Mix.raise("No native/ directory found")
+    end
+
+    native_dir
+    |> File.ls!()
+    |> Enum.reject(&String.starts_with?(&1, "."))
+    |> case do
+      [] -> Mix.raise("No crate directories found in native/")
+      [crate] -> crate
+      crates ->
+        Mix.raise("""
+        Multiple crate directories found in native/: #{inspect(crates)}
+        Please specify the crate with --crate <name>
+        """)
+    end
+  end
+
+  defp find_so(output, crate) do
     output
     |> String.split("\n")
     |> Enum.find_value(fn line ->
@@ -212,7 +253,7 @@ defmodule Mix.Tasks.Zigbuild do
         when is_list(filenames) ->
           kind = target["kind"] || []
 
-          if "cdylib" in kind && target["name"] == @crate do
+          if "cdylib" in kind && target["name"] == crate do
             Enum.find(filenames, &String.ends_with?(&1, ".so"))
           end
 
@@ -224,26 +265,13 @@ defmodule Mix.Tasks.Zigbuild do
 end
 ```
 
-mix.exs
-
-```elixir
-def project do
-  [
-    app: :demo,
-    ......
-    aliases: aliases()
-  ]
-end
-
-defp aliases do
-  [
-    compile: ["zigbuild", "compile"]
-  ]
-```
-
 ### 编译
 
 ```sh
+mix zigbuild
+# 指定 target
+# mix zigbuild --crate my_lib --target x86_64-unknown-linux-gnu.2.17
+
 mix compile
 MIX_ENV=prod mix compile
 
