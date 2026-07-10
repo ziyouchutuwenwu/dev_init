@@ -67,7 +67,6 @@ lib/demo_zig.ex
 
 ```elixir
 defmodule DemoZig do
-  @target System.get_env("ZIG_TARGET")
 
   use Zig,
     otp_app: :demo,
@@ -75,9 +74,7 @@ defmodule DemoZig do
     extra_modules: [
       # libroot 只是名字
       libroot: {"./native/zig_demo/src/lib_root.zig", []}
-    ],
-    # 交叉编译必需
-    build_flags: if(@target, do: ["-Dtarget=#{@target}"], else: [])
+    ]
 
   ~Z"""
   const beam = @import("beam");

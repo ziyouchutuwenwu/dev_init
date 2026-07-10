@@ -158,12 +158,10 @@ fn tuple_demo(tuple: demo_type::DemoTuple) -> demo_type::DemoTuple {
 rustler::init!("Elixir.MyLib");
 ```
 
-### zigbuild
-
-zigbuild.ex
+lib/mix/task/rustler_build.ex
 
 ```elixir
-defmodule Mix.Tasks.Zigbuild do
+defmodule Mix.Tasks.Rustler.Build do
   use Mix.Task
 
   def run(args) do
@@ -191,7 +189,7 @@ defmodule Mix.Tasks.Zigbuild do
     output = "priv/native/#{crate}.so"
 
     unless File.dir?(crate_dir) do
-      Mix.raise("Crate directory not found: #{crate_dir}")
+      Mix.raise("crate directory not found: #{crate_dir}")
     end
 
     File.mkdir_p!("priv/native")
@@ -207,7 +205,7 @@ defmodule Mix.Tasks.Zigbuild do
         so_path = find_so(result, crate)
 
         unless so_path do
-          Mix.raise("Could not find .so in cargo zigbuild output for crate: #{crate}")
+          Mix.raise("could not find .so in cargo zigbuild output for crate: #{crate}")
         end
 
         File.cp!(so_path, output)
@@ -227,19 +225,19 @@ defmodule Mix.Tasks.Zigbuild do
     native_dir = "native"
 
     unless File.dir?(native_dir) do
-      Mix.raise("No native/ directory found")
+      Mix.raise("no native/ directory found")
     end
 
     native_dir
     |> File.ls!()
     |> Enum.reject(&String.starts_with?(&1, "."))
     |> case do
-      [] -> Mix.raise("No crate directories found in native/")
+      [] -> Mix.raise("no crate directories found in native/")
       [crate] -> crate
       crates ->
         Mix.raise("""
-        Multiple crate directories found in native/: #{inspect(crates)}
-        Please specify the crate with --crate <name>
+        multiple crate directories found in native/: #{inspect(crates)}
+        please specify the crate with --crate <name>
         """)
     end
   end
@@ -268,9 +266,9 @@ end
 ### 编译
 
 ```sh
-mix zigbuild
+mix rustler.build
 # 指定 target
-# mix zigbuild --crate my_lib --target x86_64-unknown-linux-gnu.2.17
+# mix rustler.build --crate my_lib --target x86_64-unknown-linux-gnu.2.17
 
 mix compile
 MIX_ENV=prod mix compile
