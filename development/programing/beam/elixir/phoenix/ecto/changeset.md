@@ -3,17 +3,14 @@
 ## 说明
 
 - changeset
-  changeset 是带有数据变更信息和校验规则的容器。
-  它只是纯内存结构，不写数据库。
-  要保存数据库，需要手动 Repo.insert/update/delete
+  changeset 是带验证的的数据变更器。
+  不写库。
 
-- schema struct
-  对应数据库表字段，类型和表严格绑定。
-  不适合直接用于纯内存验证或表单验证，因为输入结构和数据库表不一定一致。
+- schema
+  写库需要 Repo.insert/update/delete
 
-- embedded_schema struct
-  纯内存 struct，可用来做表单或 api 输入的验证。
-  它不对应数据库表，常用做前置验证，最后可以把验证通过的数据映射到 schema struct，再写入数据库。
+- embedded_schema
+  不写库。
 
 ## 例子
 
@@ -104,7 +101,7 @@ defmodule Accounts do
 end
 ```
 
-在 phoenix 下可以
+phoenix 下，自动生成
 
 ```sh
 mix phx.gen.embedded Accounts name:string age:integer
@@ -117,39 +114,43 @@ defmodule Demo do
   alias OrmDemo.User
   alias OrmDemo.Repo
   alias Ecto.Changeset
+  alias Accounts
   require Logger
 
-  def schema_demo1() do
-    user = %User{name: "xxx", email: "xxx@xxx.com"}
-    changeset = user |> User.changeset1(%{name: "zzzzzzz", email: "无法通过的 email"})
-    Logger.debug(inspect(changeset.valid?))
-
-    user |> Changeset.change(%{email: "任意 email 都能通过"}) |> Repo.insert()
+  def prepare do
+    %User{}
+    |> Changeset.cast(%{name: "prepare", email: "prepare@prepare.com"}, [:name, :email])
+    |> Repo.insert!()
   end
 
-  def schema_demo2 do
+  def all do
+    Repo.all(User)
+  end
+
+  def demo1 do
     user = %User{}
-    user |> User.changeset2(%{name: "ccc", email: "aaa@xxx.com"})
-
-    # |> Repo.insert()
+    changeset = user |> User.changeset1(%{name: "demo1", email: "demo1@demo1.com"})
+    Logger.debug("demo1 valid? #{changeset.valid?}")
   end
 
-  def embedded_schema_demo() do
-    account = %Accounts{name: "aaa", age: 22}
-    changeset = account |> Accounts.changeset(%{name: "bbb", age: 30})
+  def demo2 do
+    user = %User{}
+    changeset = user |> User.changeset2(%{name: "demo2", email: "demo2@demo2.com"})
+    Logger.debug("demo2 valid? #{changeset.valid?}")
+  end
 
-    Logger.debug("valid? #{changeset.valid?}")
+  def demo3 do
+    user = Repo.get!(User, 1)
+    user |> User.update_to_db(Repo, %{email: "demo3@demo3.com"})
+  end
 
-    if changeset.valid? do
-      data = Changeset.apply_changes(changeset)
-      user_attrs = %{name: data.name, age: data.age}
+  def demo4 do
+    user = Repo.get!(User, 1)
+    user |> User.update_to_mem(%{name: "demo4", email: "demo4@demo4.com"})
+  end
 
-      %User{}
-      |> User.changeset1(user_attrs)
-      |> Repo.insert()
-    else
-      {:error, changeset.errors}
-    end
+  def demo5 do
+    %Accounts{name: "aaa", age: 22} |> Accounts.update_to_mem(%{name: "bbb", age: 30})
   end
 end
 ```
@@ -158,10 +159,4 @@ end
 
 ```sh
 mix ecto.drop; mix ecto.create; mix ecto.migrate --log-migrations-sql; iex -S mix
-```
-
-```elixir
-Demo.schema_demo1
-Demo.schema_demo2
-Demo.embedded_schema_demo
 ```

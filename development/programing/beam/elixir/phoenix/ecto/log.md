@@ -1,6 +1,10 @@
-# sql 打印
+# log
 
-## 显示 sql
+## 说明
+
+显示 sql
+
+## 用法
 
 显示 migration 的 sql
 
@@ -56,31 +60,4 @@ defmodule Demo do
     |> Repo.all()
   end
 end
-```
-
-## 执行 sql
-
-migration 执行 sql
-
-```sh
-mix ecto.gen.migration my_database_structure_migration
-```
-
-```elixir
-defmodule My.Database.Structure.Migration do
-  use Ecto.Migration
-
-  def up do
-    execute File.read!("/path/to/sql_dump.sql")
-  end
-
-  def down do
-  end
-end
-```
-
-执行 sql 语句
-
-```elixir
-Ecto.Adapters.SQL.query(WebDemo.Repo,"show databases",[])
 ```
