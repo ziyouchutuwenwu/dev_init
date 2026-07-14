@@ -8,9 +8,11 @@
 
 进程挂了以后，进程相关的数据会被自动清理，是最终一致。
 
-## 用法
+## 例子
 
-### 代码
+```elixir
+{:horde, "~> 0.10.0"}
+```
 
 ```elixir
 defmodule Demo.Application do
@@ -20,11 +22,22 @@ defmodule Demo.Application do
   def start(_type, _args) do
     children = [
       # 分布式 Registry
-      {Horde.Registry, [name: Demo.HordeRegistry, keys: :unique, members: :auto]},
-      {Horde.DynamicSupervisor,
-       [name: Demo.HordeSupervisor, strategy: :one_for_one, members: :auto]},
-
-      # 如果用 libcluster， 则要比 Horde 晚启动
+      {
+        Horde.Registry,
+        [
+          name: Demo.HordeRegistry,
+          keys: :unique,
+          members: :auto
+        ]
+      },
+      {
+        Horde.DynamicSupervisor,
+        [
+          name: Demo.HordeSupervisor,
+          strategy: :one_for_one,
+          members: :auto
+        ]
+      }
     ]
 
     opts = [strategy: :one_for_one, name: Demo.Supervisor]
@@ -76,7 +89,7 @@ defmodule Demo do
 end
 ```
 
-### 测试
+测试
 
 ```shell
 iex --name aaa@127.0.0.1 --cookie 123456 -S mix
