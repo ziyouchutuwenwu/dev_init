@@ -21,7 +21,7 @@ defmodule Demo.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # 分布式 Registry
+      # 必须先注册
       {
         Horde.Registry,
         [
@@ -30,6 +30,7 @@ defmodule Demo.Application do
           members: :auto
         ]
       },
+      # supervisor 通过 registry 在集群内创建唯一的 process
       {
         Horde.DynamicSupervisor,
         [
@@ -51,19 +52,20 @@ defmodule Demo.Worker do
   use GenServer
 
   def start_link(arg) do
-    GenServer.start_link(__MODULE__, arg, name: via(arg))
+    GenServer.start_link(__MODULE__, arg, name: via_registry(arg))
   end
 
-  def via(name) do
+  def via_registry(name) do
     {:via, Horde.Registry, {Demo.HordeRegistry, name}}
   end
 
   def init(arg) do
-    Logger.debug("[#{node()}] Worker started: #{inspect(arg)}")
+    Logger.debug("[#{node()}] worker started: #{inspect(arg)}")
     {:ok, arg}
   end
 end
 
+# 启停操作
 defmodule Demo do
   def create(name) do
     Horde.DynamicSupervisor.start_child(Demo.HordeSupervisor, {Demo.Worker, name})
