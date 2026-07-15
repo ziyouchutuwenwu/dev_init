@@ -4,7 +4,7 @@
 
 分布式 global, 强一致。
 
-多节点竞争的话，保留第一个节点，新的杀掉
+多节点竞争的话，保留第一个节点，新的会被杀掉
 
 ## 用法
 
@@ -45,6 +45,16 @@ defmodule Demo.Worker do
   @impl true
   def terminate(_reason, _state) do
     Logger.debug("[#{node()}] worker stopped, pid: #{inspect(self())}")
+  end
+end
+
+
+defmodule Demo do
+  def demo do
+    case Process.whereis(Demo.Worker) do
+      nil -> {:error, :worker_not_started}
+      pid -> {:ok, %{pid: pid, node: node()}}
+    end
   end
 end
 ```
