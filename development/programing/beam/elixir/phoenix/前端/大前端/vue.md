@@ -2,18 +2,22 @@
 
 ## 说明
 
+js 动态渲染
+
 ## 步骤
 
 assets 下
 
 ```sh
+# 创建项目 aaa
 npm create vue
 ```
 
 vite.config.ts
 
 ```sh
-# .......
+# 编译后，index.html 里面会有这个 base 路径
+base: "/bbb/",
 build: {
   outDir: "../../priv/static/bbb",
   emptyOutDir: true,
@@ -22,7 +26,7 @@ build: {
 
 package.json
 
-scripts 下
+scripts 字段下
 
 ```sh
 "watch": "vite build --watch",
@@ -35,31 +39,6 @@ def static_paths, do: ~w(
   bbb
   ......
 )
-```
-
-页面 layout
-
-lib/web_demo_web/components/layouts/vue.html.heex
-
-参考 vue 编译后的 index.html
-
-```html
-<!DOCTYPE html>
-<html lang="">
-  <head>
-    <meta name="csrf-token" content="{get_csrf_token()}" />
-
-    <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
-    <script type="module" crossorigin src="/bbb/assets/index-SQQ-9-xo.js"></script>
-    <link rel="stylesheet" crossorigin href="bbb/assets/index-DEm2-gV0.css" />
-  </head>
-  <body>
-    <div id="app"></div>
-  </body>
-</html>
 ```
 
 router.ex
@@ -84,22 +63,20 @@ page_controller.ex
 defmodule WebDemoWeb.PageController do
   use WebDemoWeb, :controller
 
-  def home(conn, _params) do
-    render(conn, :home, layout: {WebDemoWeb.Layouts, :vue})
-  end
-end
-```
-
-或者
-
-```elixir
-defmodule WebDemoWeb.PageController do
-  use WebDemoWeb, :controller
-
-  plug :put_layout, html: {WebDemoWeb.Layouts, :vue}
+  @index_html_path :code.priv_dir(:web_demo) |> Path.join("static/bbb/index.html")
 
   def home(conn, _params) do
-    render(conn, :home)
+    case File.read(@index_html_path) do
+      {:ok, html_content} ->
+        conn
+        |> put_root_layout(false)
+        |> html(html_content)
+
+      {:error, _reason} ->
+        conn
+        |> put_status(:not_found)
+        |> text("前端静态文件未找到，请先执行 npm run build")
+    end
   end
 end
 ```
