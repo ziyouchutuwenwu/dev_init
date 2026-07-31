@@ -6,54 +6,78 @@ html 是 js 动态渲染出来的
 
 ## 步骤
 
-位置规划
+位置
 
 ```sh
-angular 源码
-  assets/angular
+# angular 源码位置
+  assets/aaa
+```
 
-打包以后
-  priv/static/angular
+结构如下
+
+```sh
+assets/aaa
+├── angular.json
+├── node_modules
+├── package.json
+├── package-lock.json
+├── public
+├── README.md
+├── src
+├── tsconfig.app.json
+├── tsconfig.json
+└── tsconfig.spec.json
+```
+
+```sh
+# 打包后位置
+  priv/static/bbb
 ```
 
 angular.json
 
+```sh
+projects -> xxx -> architect -> build -> options
+```
+
 ```json
 "outputPath": {
-  "base": "../../priv/static/angular",
+  "base": "../../priv/static/bbb",
   "browser": ""
 }
 ```
 
 lib/web_demo_web.ex
 
-添加 angular 目录
-
 ```elixir
-def static_paths, do: ~w(assets angular fonts images favicon.ico robots.txt)
+def static_paths, do: ~w(
+  bbb
+  ......
+)
 ```
 
 页面 layout
 
 lib/web_demo_web/components/layouts/angular.html.heex
 
-参考 `priv/static/angular/index.html`
+参考 angular 编译后的 index.html
 
 ```html
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <meta name="csrf-token" content="{get_csrf_token()}" />
+
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="csrf-token" content={get_csrf_token()} />
     <title>WebDemo</title>
     <base href="/" />
-    <link rel="stylesheet" href="/angular/styles.css" />
-    <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="stylesheet" href="/bbb/styles.css" />
   </head>
   <body>
     <app-root></app-root>
-    <script src="/angular/main.js" type="module"></script>
+    <script src="/bbb/main.js" type="module"></script>
   </body>
 </html>
 ```
@@ -107,11 +131,11 @@ lib/ng/watcher.ex
 ```elixir
 defmodule Ng.Watcher do
   def run do
-    ng_dir = Path.join(File.cwd!(), "assets/angular")
+    ng_dir = Path.join(File.cwd!(), "assets/aaa")
     if File.dir?(ng_dir) do
       System.cmd("npm", ~w(run watch), cd: ng_dir, into: IO.stream(:stdio, :line))
     else
-      Mix.raise("Angular project not found at #{ng_dir}")
+      Mix.raise("angular project not found at #{ng_dir}")
     end
   end
 end
@@ -121,26 +145,26 @@ config/dev.exs
 
 ```elixir
 watchers: [
-  esbuild: {Esbuild, :install_and_run, [:web_demo, ~w(--sourcemap=inline --watch)]},
-  tailwind: {Tailwind, :install_and_run, [:web_demo, ~w(--watch)]},
+  esbuild: ......,
+  tailwind: ......,
   angular: {Ng.Watcher, :run, []}
 ]
 ```
 
-lib/ng/mix_task/ng_build.ex
+lib/ng/mix/ng_build.ex
 
 ```elixir
 # ng.build 在这里注册
-defmodule Mix.Task.NgBuild do
+defmodule Mix.Task.Ng.Build do
   use Mix.Task
 
   def run(args) do
-    ng_dir = Path.join(File.cwd!(), "assets/angular")
+    ng_dir = Path.join(File.cwd!(), "assets/aaa")
     build_args = ["run", "build"] ++ args
 
     case System.cmd("npm", build_args, cd: ng_dir, into: IO.stream(:stdio, :line)) do
-      {_, 0} -> Mix.shell().info("✓ Angular build completed")
-      _ -> Mix.raise("Angular build failed")
+      {_, 0} -> Mix.shell().info("angular build completed")
+      _ -> Mix.raise("angular build failed")
     end
   end
 end
@@ -151,9 +175,11 @@ mix.exs
 ```elixir
 defp aliases do
   [
-    # "assets.build": ["compile", "tailwind web_demo", "esbuild web_demo"],
-    "assets.build": ["compile", "ngbuild", "tailwind web_demo", "esbuild web_demo"],
-    # ...
+    "assets.build": [
+      "ng.build"
+      # ......
+    ],
+    # ......
   ]
 end
 ```
