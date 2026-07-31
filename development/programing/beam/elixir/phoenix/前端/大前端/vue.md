@@ -66,16 +66,24 @@ defmodule WebDemoWeb.PageController do
 
   def home(conn, _params) do
     case File.read(@index_html_path) do
-      {:ok, html_content} ->
+      {:ok, html} ->
+        html = html |> inject_csrf_token()
+
         conn
         |> put_root_layout(false)
-        |> html(html_content)
+        |> html(html)
 
       {:error, _reason} ->
         conn
         |> put_status(:not_found)
         |> text("前端静态文件未找到，请稍后刷新页面")
     end
+  end
+
+  defp inject_csrf_token(html) do
+    token = Plug.CSRFProtection.get_csrf_token()
+    meta_tag = "<meta name=\"csrf-token\" content=\"#{token}\">"
+    String.replace(html, "<head>", "<head>\n  #{meta_tag}")
   end
 end
 ```
