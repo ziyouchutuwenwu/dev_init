@@ -34,16 +34,26 @@ assets/aaa
 priv/static/bbb
 ```
 
-angular.json
+angular.json，查看 defaultConfiguration，记住
 
 ```sh
 projects -> xxx -> architect -> build -> options
 ```
 
-```json
+```sh
+# 实际上就是替换 browser 字段
 "outputPath": {
   "base": "../../priv/static/bbb",
   "browser": ""
+}
+```
+
+package.json
+
+```json
+"scripts": {
+  "build": "ng build --base-href /bbb/",
+  "watch": "ng build --watch --configuration development --base-href /bbb/",
 }
 ```
 
@@ -56,32 +66,6 @@ def static_paths, do: ~w(
 )
 ```
 
-页面 layout
-
-lib/web_demo_web/components/layouts/angular.html.heex
-
-参考 angular 编译后的 index.html
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta name="csrf-token" content="{get_csrf_token()}" />
-
-    <meta charset="utf-8" />
-    <title>WebDemo</title>
-    <base href="/" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/x-icon" href="favicon.ico" />
-    <link rel="stylesheet" href="/bbb/styles.css" />
-  </head>
-  <body>
-    <app-root></app-root>
-    <script src="/bbb/main.js" type="module"></script>
-  </body>
-</html>
-```
-
 router.ex
 
 ```elixir
@@ -91,7 +75,7 @@ scope "/api", WebDemoWeb do
   # ...
 end
 
-# 前端都给 angular
+# angular
 scope "/", WebDemoWeb do
   pipe_through :browser
   get "/*path", PageController, :home
@@ -104,38 +88,19 @@ page_controller.ex
 defmodule WebDemoWeb.PageController do
   use WebDemoWeb, :controller
 
-  def home(conn, _params) do
-    render(conn, :home, layout: {WebDemoWeb.Layouts, :angular})
-  end
-end
-```
-
-或者
-
-```elixir
-defmodule WebDemoWeb.PageController do
-  use WebDemoWeb, :controller
-
-  plug :put_layout, html: {WebDemoWeb.Layouts, :angular}
+  @index_html_path :code.priv_dir(:web_demo) |> Path.join("static/bbb/index.html")
 
   def home(conn, _params) do
-    render(conn, :home)
-  end
-end
-```
+    case File.read(@index_html_path) do
+      {:ok, html_content} ->
+        conn
+        |> put_root_layout(false)
+        |> html(html_content)
 
-构建
-
-lib/ng/watcher.ex
-
-```elixir
-defmodule Ng.Watcher do
-  def run do
-    src_dir = Path.join(File.cwd!(), "assets/aaa")
-    if File.dir?(src_dir) do
-      System.cmd("npm", ~w(run watch), cd: src_dir, into: IO.stream(:stdio, :line))
-    else
-      Mix.raise("angular project not found at #{src_dir}")
+      {:error, _reason} ->
+        conn
+        |> put_status(:not_found)
+        |> text("前端静态文件未找到，请稍后刷新页面")
     end
   end
 end
@@ -147,27 +112,9 @@ config/dev.exs
 watchers: [
   esbuild: ......,
   tailwind: ......,
-  angular: {Ng.Watcher, :run, []}
+
+  angular: {Mix.Tasks.Cmd, :run, [["npm", "run", "watch", "--prefix", "assets/aaa"]]}
 ]
-```
-
-lib/ng/mix/build.ex
-
-```elixir
-# ng.build 在这里注册
-defmodule Mix.Task.Ng.Build do
-  use Mix.Task
-
-  def run(args) do
-    src_dir = Path.join(File.cwd!(), "assets/aaa")
-    build_args = ["run", "build"] ++ args
-
-    case System.cmd("npm", build_args, cd: src_dir, into: IO.stream(:stdio, :line)) do
-      {_, 0} -> Mix.shell().info("angular build completed")
-      _ -> Mix.raise("angular build failed")
-    end
-  end
-end
 ```
 
 mix.exs
@@ -175,11 +122,10 @@ mix.exs
 ```elixir
 defp aliases do
   [
-    "assets.build": [
-      "ng.build"
-      # ......
-    ],
-    # ......
+    "assets.deploy": [
+      "cmd -- npm run build --prefix assets/aaa",
+      ......
+      ],
   ]
 end
 ```

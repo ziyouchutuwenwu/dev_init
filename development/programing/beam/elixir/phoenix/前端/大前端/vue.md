@@ -26,9 +26,8 @@ build: {
 
 package.json
 
-scripts 字段下
-
 ```sh
+# scripts 字段下
 "watch": "vite build --watch",
 ```
 
@@ -50,7 +49,7 @@ scope "/api", WebDemoWeb do
   # ...
 end
 
-# 前端都给 vue
+# vue
 scope "/", WebDemoWeb do
   pipe_through :browser
   get "/*path", PageController, :home
@@ -75,10 +74,21 @@ defmodule WebDemoWeb.PageController do
       {:error, _reason} ->
         conn
         |> put_status(:not_found)
-        |> text("前端静态文件未找到，请先执行 npm run build")
+        |> text("前端静态文件未找到，请稍后刷新页面")
     end
   end
 end
+```
+
+config/dev.exs
+
+```elixir
+watchers: [
+  esbuild: ......,
+  tailwind: ......,
+
+  vue: {Mix.Tasks.Cmd, :run, [["npm", "run", "watch", "--prefix", "assets/aaa"]]}
+]
 ```
 
 mix.exs
