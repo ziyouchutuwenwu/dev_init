@@ -2,7 +2,7 @@
 
 ## 说明
 
-html 是 js 动态渲染出来的
+html 是 js 动态渲染的，未启用 ssg
 
 ## 步骤
 
@@ -10,7 +10,7 @@ html 是 js 动态渲染出来的
 
 ```sh
 # angular 源码位置
-  assets/aaa
+assets/aaa
 ```
 
 结构如下
@@ -31,7 +31,7 @@ assets/aaa
 
 ```sh
 # 打包后位置
-  priv/static/bbb
+priv/static/bbb
 ```
 
 angular.json
@@ -131,11 +131,11 @@ lib/ng/watcher.ex
 ```elixir
 defmodule Ng.Watcher do
   def run do
-    ng_dir = Path.join(File.cwd!(), "assets/aaa")
-    if File.dir?(ng_dir) do
-      System.cmd("npm", ~w(run watch), cd: ng_dir, into: IO.stream(:stdio, :line))
+    src_dir = Path.join(File.cwd!(), "assets/aaa")
+    if File.dir?(src_dir) do
+      System.cmd("npm", ~w(run watch), cd: src_dir, into: IO.stream(:stdio, :line))
     else
-      Mix.raise("angular project not found at #{ng_dir}")
+      Mix.raise("angular project not found at #{src_dir}")
     end
   end
 end
@@ -151,7 +151,7 @@ watchers: [
 ]
 ```
 
-lib/ng/mix/ng_build.ex
+lib/ng/mix/build.ex
 
 ```elixir
 # ng.build 在这里注册
@@ -159,10 +159,10 @@ defmodule Mix.Task.Ng.Build do
   use Mix.Task
 
   def run(args) do
-    ng_dir = Path.join(File.cwd!(), "assets/aaa")
+    src_dir = Path.join(File.cwd!(), "assets/aaa")
     build_args = ["run", "build"] ++ args
 
-    case System.cmd("npm", build_args, cd: ng_dir, into: IO.stream(:stdio, :line)) do
+    case System.cmd("npm", build_args, cd: src_dir, into: IO.stream(:stdio, :line)) do
       {_, 0} -> Mix.shell().info("angular build completed")
       _ -> Mix.raise("angular build failed")
     end
