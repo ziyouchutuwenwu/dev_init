@@ -2,7 +2,9 @@
 
 ## 说明
 
-channel 相当于注册了某种 topic 的 mq 的 handler
+一般用于多客户端之间通信
+
+channel 是注册了某个 topic 的 handler
 
 user_socket 在 websocket 的基础上，绑定了 user
 
