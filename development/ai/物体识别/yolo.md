@@ -6,6 +6,10 @@ python 实现功能
 
 elixir 展示
 
+## 准备
+
+go2rtc
+
 ## 代码
 
 ### python
@@ -13,7 +17,6 @@ elixir 展示
 依赖库
 
 ```sh
-loguru
 ultralytics
 websockets
 ```
@@ -24,86 +27,132 @@ ws.py
 import asyncio
 import threading
 import websockets
-from loguru import logger
+import log
+
+logger = log.get_logger(__name__)
+
+_DROP_MARK = object()
 
 
 class WebSocketClient:
+    RECONNECT_INTERVAL = 3.0
+    QUEUE_MAX = 16
+
     def __init__(self, url: str):
         self.url = url
         self._loop: asyncio.AbstractEventLoop | None = None
         self._thread: threading.Thread | None = None
         self._running = False
         self._send_queue: asyncio.Queue | None = None
+        self._connected = threading.Event()
 
     def start(self):
         self._running = True
-        self._send_queue = asyncio.Queue()
+        self._send_queue = asyncio.Queue(maxsize=self.QUEUE_MAX)
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
 
     def send(self, msg: str):
-        if not self._running or self._loop is None:
+        if not self._running or self._loop is None or self._send_queue is None:
             return
         try:
-            asyncio.run_coroutine_threadsafe(self._send_queue.put(msg), self._loop)
+            asyncio.run_coroutine_threadsafe(self._put(msg), self._loop)
         except Exception:
             pass
 
     def stop(self):
         self._running = False
+        self._connected.clear()
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=5)
+
+    @property
+    def connected(self) -> bool:
+        return self._connected.is_set()
+
+    async def _put(self, msg):
+        q = self._send_queue
+        try:
+            q.put_nowait(msg)
+        except asyncio.QueueFull:
+            try:
+                q.get_nowait()
+                q.put_nowait(msg)
+            except Exception:
+                pass
 
     def _run(self):
         self._loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._loop)
-        self._loop.run_until_complete(self._connect_loop())
+        try:
+            self._loop.run_until_complete(self._connect_loop())
+        except Exception:
+            logger.exception("ws loop crashed")
+        finally:
+            self._connected.clear()
+            self._loop.close()
 
     async def _connect_loop(self):
         while self._running:
             try:
                 async with websockets.connect(self.url, ping_interval=20) as ws:
-                    logger.debug("connected {}", self.url)
+                    self._connected.set()
+                    logger.info("ws connected: %s", self.url)
+                    self._drop_pending()
                     await self._drain_queue(ws)
             except (OSError, asyncio.TimeoutError, websockets.ConnectionClosed):
-                if self._running:
-                    await asyncio.sleep(3)
+                self._on_disconnect()
+            except Exception:
+                self._on_disconnect()
+
+    def _on_disconnect(self):
+        self._connected.clear()
+        if self._running:
+            logger.info("ws disconnected, retry in %.1fs", self.RECONNECT_INTERVAL)
+            asyncio.ensure_future(asyncio.sleep(self.RECONNECT_INTERVAL))
 
     async def _drain_queue(self, ws):
         while self._running:
             try:
                 msg = await asyncio.wait_for(self._send_queue.get(), timeout=1.0)
+                if msg is _DROP_MARK:
+                    continue
                 await ws.send(msg)
             except asyncio.TimeoutError:
                 continue
             except websockets.ConnectionClosed:
                 break
             except Exception:
-                pass
+                continue
+
+    def _drop_pending(self):
+        q = self._send_queue
+        if q is None:
+            return
+        dropped = 0
+        try:
+            while True:
+                q.get_nowait()
+                dropped += 1
+        except asyncio.QueueEmpty:
+            pass
+        if dropped:
+            logger.info("ws dropped %d stale queued messages", dropped)
 ```
 
 detector.py
 
 ```python
-import base64
 import itertools
 import json
 import time
-from loguru import logger
-import logging
-import cv2
-import numpy as np
+import log
 from ultralytics import YOLO
 
-logging.getLogger("ultralytics").setLevel(logging.ERROR)
-
-CLASS_COLORS = [
-    (255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255),
-    (0, 255, 255), (128, 0, 0), (0, 128, 0), (0, 0, 128), (128, 128, 0),
-]
+logger = log.get_logger(__name__)
 
 
-def _draw_boxes(frame: np.ndarray, result, model) -> list[dict]:
+def _collect_objects(result, model) -> list[dict]:
     objects = []
     if result.boxes is None:
         return objects
@@ -111,29 +160,26 @@ def _draw_boxes(frame: np.ndarray, result, model) -> list[dict]:
     for box in result.boxes:
         x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
         cls_id = int(box.cls[0])
-        conf = float(box.conf[0])
-        label = f"{model.names[cls_id]} {conf:.2f}"
-        color = CLASS_COLORS[cls_id % len(CLASS_COLORS)]
-
-        cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-        (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
-        cv2.rectangle(frame, (x1, y1 - th - 6), (x1 + tw + 4, y1), color, -1)
-        cv2.putText(
-            frame, label, (x1 + 2, y1 - 4),
-            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1,
-        )
-
         cx = (x1 + x2) / 2
         cy = (y1 + y2) / 2
         w = x2 - x1
         h = y2 - y1
-        objects.append({
-            "class": model.names[cls_id],
-            "prob": round(conf, 3),
-            "bbox": {"cx": cx, "cy": cy, "w": w, "h": h},
-        })
+        objects.append(
+            {
+                "class": model.names[cls_id],
+                "cx": cx,
+                "cy": cy,
+                "w": w,
+                "h": h,
+            }
+        )
 
     return objects
+
+
+def _frame_shape(result) -> tuple[int, int]:
+    h, w = result.orig_shape
+    return int(w), int(h)
 
 
 def _fps_generator():
@@ -152,114 +198,130 @@ def _fps_generator():
 
 
 class Detector:
-    def __init__(self, ws_client, model_path, conf_thresh, jpeg_quality=60):
+    def __init__(self, ws_client, model_path, conf_thresh):
         self.ws_client = ws_client
         self.conf_thresh = conf_thresh
-        self.jpeg_quality = jpeg_quality
         self.model = YOLO(model_path)
         self.model.add_callback("on_predict_batch_end", self._on_batch_end)
         self.fps_gen = _fps_generator()
         self.fps = 0.0
 
     def predict(self, source, stop_flag):
-        cap = None
-        for backend in (cv2.CAP_V4L2, cv2.CAP_ANY):
-            c = cv2.VideoCapture(source, backend)
-            if c.isOpened():
-                cap = c
-                break
-            c.release()
-        if cap is None:
-            cap = cv2.VideoCapture(source)
-        if not cap.isOpened():
-            logger.error("cannot open camera /dev/video{}", source)
-            return
-        logger.info("等待 liveview")
-        try:
-            while not stop_flag.is_set():
-                ret, frame = cap.read()
-                if not ret:
-                    time.sleep(0.5)
-                    continue
+        logger.info("等待 liveview: %s", source)
+        while not stop_flag.is_set():
+            try:
                 for _ in self.model.predict(
-                    source=frame,
+                    source=source,
+                    stream=True,
                     conf=self.conf_thresh,
                     verbose=False,
                 ):
                     if stop_flag.is_set():
                         break
-        except (ConnectionError, KeyboardInterrupt):
-            pass
-        finally:
-            cap.release()
+            except KeyboardInterrupt:
+                stop_flag.set()
+                break
+            except Exception as e:
+                logger.warning("predict 终止: %s: %s, %ds 后重试", type(e).__name__, e, 3)
+                self._sleep_until(stop_flag, 3)
+
+    @staticmethod
+    def _sleep_until(stop_flag, seconds):
+        stop_flag.wait(seconds)
+
     def _on_batch_end(self, predictor):
         if not predictor.results:
             return
 
-        annotated = None
         objects = []
-
+        frame_w, frame_h = 0, 0
         for r in predictor.results:
-            img = r.orig_img.copy()
-            objects += _draw_boxes(img, r, self.model)
-            annotated = img
-
-        if annotated is None:
-            return
+            objects += _collect_objects(r, self.model)
+            frame_w, frame_h = _frame_shape(r)
 
         new_fps = next(self.fps_gen)
         if new_fps is not None:
             self.fps = new_fps
 
-
-        ok, jpeg = cv2.imencode(".jpg", annotated, [cv2.IMWRITE_JPEG_QUALITY, self.jpeg_quality])
-        if not ok:
-            return
-
-        frame_b64 = base64.b64encode(jpeg).decode("ascii")
-        msg = json.dumps({
-            "image": frame_b64,
-            "objects": objects,
-            "fps": round(self.fps, 1),
-        })
+        ts = int(time.time() * 1000)
+        msg = json.dumps(
+            {
+                "ts": ts,
+                "frame": {"w": frame_w, "h": frame_h},
+                "objects": objects,
+                "fps": round(self.fps, 1),
+            }
+        )
         self.ws_client.send(msg)
+```
+
+log.py
+
+```python
+import logging
+import sys
+
+
+def setup(level=logging.DEBUG):
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=[
+            logging.StreamHandler(sys.stdout),
+        ],
+    )
+
+    # 设置第三方库的日志级别（避免噪音）
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger("requests").setLevel(logging.WARNING)
+    logging.getLogger("ultralytics").setLevel(logging.ERROR)
+
+
+def get_logger(name):
+    return logging.getLogger(name)
 ```
 
 main.py
 
 ```python
+import logging
 import signal
 import threading
-from loguru import logger
+import log
 from ws import WebSocketClient
 from detector import Detector
 
-WS_URL = "ws://localhost:4000/ws/yolo/websocket"
-CAMERA_DEVICE = 10
+log.setup(level=logging.INFO)
+logger = log.get_logger(__name__)
+
 MODEL_PATH = "model/yolo26s-seg.pt"
 CONF_THRESH = 0.5
 
-# 0-100
-JPEG_QUALITY = 60
 
-
-def main():
-    websocket = WebSocketClient(WS_URL)
+def main(ws_server, rtsp):
+    websocket = WebSocketClient(ws_server)
     websocket.start()
 
-    detector = Detector(websocket, MODEL_PATH, CONF_THRESH, JPEG_QUALITY)
+    detector = Detector(websocket, MODEL_PATH, CONF_THRESH)
 
     stop_flag = threading.Event()
     signal.signal(signal.SIGINT, lambda s, f: stop_flag.set())
 
-    detector.predict(CAMERA_DEVICE, stop_flag)
+    detector.predict(rtsp, stop_flag)
 
     logger.debug("shutting down")
     websocket.stop()
 
 
 if __name__ == "__main__":
-    main()
+    main(
+        "ws://localhost:4000/ws/yolo/websocket",
+        "rtsp://127.0.0.1:8554/camera_01",
+    )
 ```
 
 ### elixir
@@ -302,42 +364,70 @@ yolo_frame_socket.ex
 
 ```elixir
 defmodule WebDemoWeb.YoloFrameSocket do
+  @behaviour Phoenix.Socket.Transport
+
   @pubsub_topic "yolo:frames"
 
   require Logger
 
+  @impl Phoenix.Socket.Transport
+  def child_spec(_opts), do: :ignore
+
+  @impl Phoenix.Socket.Transport
   def connect(state), do: {:ok, state}
 
-  def init(state), do: {:ok, state}
+  @impl Phoenix.Socket.Transport
+  def init(state) do
+    Logger.info("[YoloFrameSocket] detector connected")
+    {:ok, state}
+  end
 
-  def handle_in({text, _opts}, state) do
+  @impl Phoenix.Socket.Transport
+  def handle_in({text, _opcode}, state) do
     case Jason.decode(text) do
-      {:ok, %{"image" => image, "objects" => objects, "fps" => fps}} ->
-        objects =
-          for obj <- objects || [] do
-            bbox = obj["bbox"] || %{}
-            %{
-              class: obj["class"],
-              prob: obj["prob"],
-              bbox: %{cx: bbox["cx"], cy: bbox["cy"], w: bbox["w"], h: bbox["h"]}
-            }
-          end
-
-        Phoenix.PubSub.broadcast(WebDemo.PubSub, @pubsub_topic, {:yolo_frame, %{image: image, objects: objects, fps: fps}})
+      {:ok, %{"ts" => ts, "objects" => objects, "fps" => fps} = data} ->
+        frame = data["frame"] || %{"w" => 0, "h" => 0}
+        payload = normalize(ts, frame, objects, fps)
+        Phoenix.PubSub.broadcast(WebDemo.PubSub, @pubsub_topic, {:yolo_frame, payload})
         {:ok, state}
 
-      _ ->
-        Logger.warning("unexpected ws message: #{inspect(text)}")
+      {:ok, other} ->
+        Logger.warning("[YoloFrameSocket] unexpected payload: #{inspect(other)}")
+        {:ok, state}
+
+      {:error, _} ->
+        Logger.warning("[YoloFrameSocket] non-JSON message ignored")
         {:ok, state}
     end
   end
 
+  @impl Phoenix.Socket.Transport
   def handle_info(msg, state) do
-    Logger.warning("unexpected info: #{inspect(msg)}")
+    Logger.debug("[YoloFrameSocket] unexpected info: #{inspect(msg)}")
     {:ok, state}
   end
 
-  def terminate(_reason, _state), do: :ok
+  @impl Phoenix.Socket.Transport
+  def terminate(reason, _state) do
+    Logger.info("[YoloFrameSocket] detector disconnected: #{inspect(reason)}")
+    Phoenix.PubSub.broadcast(WebDemo.PubSub, @pubsub_topic, {:yolo_disconnect})
+    :ok
+  end
+
+  defp normalize(ts, frame, objects, fps) do
+    objects =
+      for obj <- objects || [] do
+        %{
+          "class" => obj["class"],
+          "cx" => obj["cx"],
+          "cy" => obj["cy"],
+          "w" => obj["w"],
+          "h" => obj["h"]
+        }
+      end
+
+    %{ts: ts, frame: frame, objects: objects, fps: fps}
+  end
 end
 ```
 
@@ -349,6 +439,9 @@ defmodule WebDemoWeb.YoloLive do
 
   @pubsub_topic "yolo:frames"
 
+  @max_sidebar 24
+  @stats_throttle_ms 500
+
   @impl true
   def mount(_params, _session, socket) do
     if connected?(socket) do
@@ -357,24 +450,43 @@ defmodule WebDemoWeb.YoloLive do
 
     socket =
       socket
-      |> assign(:image, nil)
+      |> assign(:connected, false)
       |> assign(:objects, [])
       |> assign(:count, 0)
       |> assign(:fps, 0.0)
-      |> assign(:camera_active, false)
+      |> assign(:latency_ms, nil)
+      |> assign(:last_ts, nil)
+      |> assign(:frame_count, 0)
+      |> assign(:last_stats_at, 0)
 
     {:ok, socket}
   end
 
   @impl true
-  def handle_info({:yolo_frame, %{image: image, objects: objects, fps: fps}}, socket) do
-    socket =
-      socket
-      |> assign(:image, image)
-      |> assign(:objects, objects)
-      |> assign(:count, socket.assigns.count + 1)
-      |> assign(:fps, fps)
+  def handle_info({:yolo_frame, %{ts: ts, frame: _frame, objects: objects, fps: fps}}, socket) do
+    frame_count = socket.assigns.frame_count + 1
+    now_ms = System.system_time(:millisecond)
+    last_stats_at = socket.assigns.last_stats_at
 
+    socket =
+      if now_ms - last_stats_at >= @stats_throttle_ms do
+        sidebar = Enum.take(objects, @max_sidebar)
+        latency = now_ms - ts
+
+        socket
+        |> assign(:connected, true)
+        |> assign(:objects, sidebar)
+        |> assign(:count, frame_count)
+        |> assign(:fps, fps)
+        |> assign(:latency_ms, latency)
+        |> assign(:last_ts, ts)
+        |> assign(:frame_count, frame_count)
+        |> assign(:last_stats_at, now_ms)
+      else
+        assign(socket, :frame_count, frame_count)
+      end
+
+    # 方框渲染走直连 viewer WS（/ws/yolo/view），不经过 LiveView
     {:noreply, socket}
   end
 
@@ -382,11 +494,14 @@ defmodule WebDemoWeb.YoloLive do
   def handle_info({:yolo_disconnect}, socket) do
     socket =
       socket
-      |> assign(:image, nil)
+      |> assign(:connected, false)
       |> assign(:objects, [])
       |> assign(:count, 0)
       |> assign(:fps, 0.0)
-      |> assign(:camera_active, false)
+      |> assign(:latency_ms, nil)
+      |> assign(:last_ts, nil)
+      |> assign(:frame_count, 0)
+      |> assign(:last_stats_at, 0)
 
     {:noreply, socket}
   end
@@ -397,45 +512,79 @@ yolo_live.html.heex
 
 ```html
 <Layouts.app flash={@flash} current_scope={%{}}>
-  <div class="flex flex-col items-center h-screen overflow-hidden bg-gray-950 p-4">
-    <h1 class="text-2xl font-bold text-white mb-4">识别结果</h1>
-
-    <div class="relative bg-black rounded-xl overflow-hidden shadow-2xl border border-gray-700 w-full max-w-5xl max-h-[55vh]">
-      <img
-        :if={@image}
-        src={"data:image/jpeg;base64,#{@image}"}
-        class="w-full h-full object-contain"
-        alt="检测结果"
-      />
-      <div
-        :if={!@image}
-        class="w-full h-full flex items-center justify-center text-gray-400"
-      >
-        <p>等待摄像头数据...</p>
+  <div class="flex flex-col items-center min-h-screen bg-gray-950 p-4 gap-4">
+    <div class="flex items-center justify-between w-full max-w-5xl">
+      <h1 class="text-2xl font-bold text-white">YOLO 实时识别</h1>
+      <div class="flex items-center gap-2 text-sm">
+        <span class={[
+          "px-2.5 py-1 rounded-full font-medium",
+          if(@connected,
+            do: "bg-emerald-500/20 text-emerald-300",
+            else: "bg-rose-500/20 text-rose-300"
+          )
+        ]}>
+          <span class={[
+            "inline-block w-2 h-2 rounded-full mr-1.5",
+            if(@connected, do: "bg-emerald-400", else: "bg-rose-400")
+          ]}>
+          </span>
+          {if(@connected, do: "检测中", else: "等待检测器")}
+        </span>
       </div>
     </div>
 
-    <div class="mt-4 flex gap-4 text-sm text-gray-300">
-      <span class="bg-gray-800 px-3 py-1 rounded-md">
-        检测帧数: {@count}
-      </span>
-      <span class="bg-gray-800 px-3 py-1 rounded-md">
-        帧率: {Float.round(@fps, 1)} FPS
-      </span>
-      <span class="bg-gray-800 px-3 py-1 rounded-md">
-        目标数: {length(@objects)}
-      </span>
+    <div class="relative w-full max-w-5xl rounded-xl overflow-hidden shadow-2xl border border-gray-700 bg-black">
+      <div
+        id="yolo-player"
+        phx-hook="YoloPlayer"
+        phx-update="ignore"
+        class="relative w-full aspect-video bg-black"
+        data-src="http://127.0.0.1:1984/api/ws?src=camera_01"
+      >
+        <canvas
+          id="yolo-overlay"
+          class="absolute inset-0 w-full h-full pointer-events-none"
+        >
+        </canvas>
+      </div>
     </div>
 
-    <div class="mt-4 w-full max-w-5xl h-60 flex flex-col">
-      <h2 class="text-white font-semibold mb-2">检测到的目标:</h2>
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 flex-1 min-h-0 overflow-y-auto">
-        <div
-          :for={obj <- @objects}
-          class="bg-gray-800 text-white text-xs rounded-md truncate h-6 flex items-center justify-center"
-        >
-          {obj.class} ({Float.round(obj.prob, 2)})
-        </div>
+    <div class="flex flex-wrap gap-3 text-sm text-gray-200 w-full max-w-5xl">
+      <div class="flex items-center gap-2 bg-gray-800/80 px-3 py-1.5 rounded-lg">
+        <.icon name="hero-eye" class="w-4 h-4 text-sky-400" />
+        <span class="text-gray-400">检测帧数</span>
+        <span class="font-semibold text-white tabular-nums">{@count}</span>
+      </div>
+      <div class="flex items-center gap-2 bg-gray-800/80 px-3 py-1.5 rounded-lg">
+        <.icon name="hero-bolt" class="w-4 h-4 text-amber-400" />
+        <span class="text-gray-400">帧率</span>
+        <span class="font-semibold text-white tabular-nums">{Float.round(@fps, 1)} FPS</span>
+      </div>
+      <div class="flex items-center gap-2 bg-gray-800/80 px-3 py-1.5 rounded-lg">
+        <.icon name="hero-squares-2x2" class="w-4 h-4 text-emerald-400" />
+        <span class="text-gray-400">目标数</span>
+        <span class="font-semibold text-white tabular-nums">{length(@objects)}</span>
+      </div>
+      <div class="flex items-center gap-2 bg-gray-800/80 px-3 py-1.5 rounded-lg">
+        <.icon name="hero-clock" class="w-4 h-4 text-violet-400" />
+        <span class="text-gray-400">延迟</span>
+        <span class="font-semibold text-white tabular-nums">
+          {if(is_nil(@latency_ms), do: "--", else: "#{@latency_ms} ms")}
+        </span>
+      </div>
+      <div class="flex items-center gap-2 bg-gray-800/80 px-3 py-1.5 rounded-lg">
+        <.icon name="hero-adjustments-horizontal" class="w-4 h-4 text-sky-400" />
+        <span class="text-gray-400">同步延迟</span>
+        <input
+          id="yolo-sync"
+          type="range"
+          min="0"
+          max="600"
+          step="10"
+          value="150"
+          class="w-32 accent-sky-500"
+        />
+        <span id="yolo-sync-value" class="font-semibold text-white tabular-nums">150 ms</span>
       </div>
     </div>
   </div>
