@@ -369,7 +369,7 @@ def install_ssh_server():
 
 
 def install_media_player():
-    proc.run("yes | pacman --noconfirm -S vlc smplayer audacious")
+    proc.run("yes | pacman --noconfirm -S vlc vlc-plugin-ffmpeg smplayer audacious")
 
 
 def install_screen_recorder():
