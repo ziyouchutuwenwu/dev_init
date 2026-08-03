@@ -36,7 +36,9 @@ streams:
   camera_02: ffmpeg:device?video=/dev/video0&input_format=mjpeg&video_size=1280x720
 ```
 
-会导出 rtsp, webrtc 等格式
+导出的格式，推荐用 http, 延迟低，不卡顿
+
+rtsp 如下
 
 ```sh
 rtsp://127.0.0.1:8554/camera_01
