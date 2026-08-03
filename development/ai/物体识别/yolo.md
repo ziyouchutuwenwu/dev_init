@@ -605,7 +605,7 @@ defmodule WebDemoWeb.StreamLive do
 end
 ```
 
-yolo_live.html.heex
+stream_live.html.heex
 
 ```html
 <Layouts.app flash={@flash} current_scope={%{}}>
