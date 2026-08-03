@@ -18,9 +18,10 @@ endpoint.ex
 
 ```elixir
  # 会往路由表里注册
-# 默认是 /demo/websocket, 改成 /demo/aaa
+# 路径是 /demo/aaa
 socket "/demo", DemoSocket,
   websocket: [
+    # path 不写，默认就是 /websocket
     path: "/aaa",
     connect_info: [:x_headers, :uri, :peer_data, session: @session_options]
   ],
