@@ -17,8 +17,10 @@ go2rtc
 依赖库
 
 ```sh
+aiortc
 ultralytics
 websockets
+websocket-client
 ```
 
 ws.py
@@ -28,15 +30,12 @@ import json
 import threading
 import time
 from websocket import WebSocketApp, WebSocketConnectionClosedException
-
 from log import get_logger
 
 log = get_logger("ws")
 
 
 class WebSocketClient:
-    """WebSocket 客户端，独立线程运行，断线自动重连"""
-
     def __init__(self, url: str) -> None:
         self.url = url
         self._ws: WebSocketApp | None = None
@@ -110,85 +109,108 @@ class WebSocketClient:
 detector.py
 
 ```python
-import contextlib
-import os
-import sys
 import time
-from pathlib import Path
-
+from typing import Any
+from urllib.parse import parse_qs, urlparse
 from ultralytics import YOLO
-from ultralytics.engine.predictor import BasePredictor
 from log import get_logger
+from transcode import FrameSource
 from ws import WebSocketClient
 
 log = get_logger("detector")
 
-
-@contextlib.contextmanager
-def suppress_stderr():
-    original_stderr_fd = sys.stderr.fileno()
-    saved_stderr_fd = os.dup(original_stderr_fd)
-    devnull = os.open(os.devnull, os.O_WRONLY)
-    os.dup2(devnull, original_stderr_fd)
-    os.close(devnull)
-    try:
-        yield
-    finally:
-        os.dup2(saved_stderr_fd, original_stderr_fd)
-        os.close(saved_stderr_fd)
+FRAME_TIMEOUT = 30
+RECONNECT_DELAY = 3
 
 
 class Detector:
     def __init__(
         self,
-        ws_client: WebSocketClient | None = None,
-        stream_url: str = "",
+        ws_client: WebSocketClient,
+        stream_url: str,
+        stream_name: str | None = None,
+        source_url: str | None = None,
         model_path: str = "models/yolo11n.pt",
+        conf: float = 0.25,
     ) -> None:
         self.ws_client = ws_client
         self.stream_url = stream_url
-        self.model = YOLO(str(model_path))
-        self._register_callbacks()
+        self.stream_name = stream_name or self._derive_name(stream_url)
+        self.source_url = source_url or self._derive_source_url(stream_url)
+        self.conf = conf
 
-    def predict(self, source: str, **kwargs) -> None:
-        while True:
+        self._model = YOLO(model_path)
+        self._running = True
+        self._source = FrameSource(self.stream_url)
+
+        self._current_fps = 0.0
+        self._frame_count = 0
+        self._window_start = 0.0
+
+    @staticmethod
+    def _derive_name(stream_url: str) -> str:
+        p = urlparse(stream_url)
+        return parse_qs(p.query).get("src", ["stream"])[0]
+
+    @staticmethod
+    def _derive_source_url(stream_url: str) -> str:
+        p = urlparse(stream_url)
+        src = parse_qs(p.query).get("src", ["stream"])[0]
+        scheme = "wss" if p.scheme == "https" else "ws"
+        return f"{scheme}://{p.netloc}/api/ws?src={src}"
+
+    def request_shutdown(self) -> None:
+        self._running = False
+        self._source.stop()
+
+    def run(self) -> None:
+        while self._running:
             try:
-                with suppress_stderr():
-                    for _ in self.model.predict(source=source, stream=True, **kwargs):
-                        pass
-            except KeyboardInterrupt:
-                raise
-            except Exception:
-                pass
+                self._stream_once()
+            except Exception as e:
+                if not self._running:
+                    break
+                log.warning(f"拉流中断: {e}")
+            if not self._running:
+                break
+            log.info(f"{RECONNECT_DELAY}s 后重连...")
+            time.sleep(RECONNECT_DELAY)
 
-            log.info("3 秒后重试...")
-            time.sleep(3)
+    def _stream_once(self) -> None:
+        self._source.start()
+        try:
+            self._infer_loop()
+        finally:
+            self._source.stop()
 
-    def _register_callbacks(self) -> None:
-        self.model.add_callback(
-            "on_predict_postprocess_end", self._on_predict_postprocess_end
-        )
-        self.model.add_callback("on_predict_batch_end", self._on_predict_batch_end)
+    def _infer_loop(self) -> None:
+        self._window_start = time.time()
+        self._frame_count = 0
 
-    def _on_predict_postprocess_end(self, predictor: BasePredictor) -> None:
-        self._handle_detection(predictor)
+        while self._running:
+            if not self._source.wait(timeout=FRAME_TIMEOUT):
+                raise RuntimeError(f"{FRAME_TIMEOUT}s 内没有收到视频帧")
+            self._source.clear()
 
-    def _on_predict_batch_end(self, predictor: BasePredictor) -> None:
-        pass
-        # self._handle_detection(predictor)
+            frame = self._source.latest()
+            if frame is None:
+                continue
 
-    def _handle_detection(self, predictor: BasePredictor) -> None:
+            results = self._model.predict(frame, conf=self.conf, verbose=False)
+            if results is None:
+                continue
+
+            self._frame_count += 1
+            elapsed = time.time() - self._window_start
+            if elapsed >= 1.0:
+                self._current_fps = self._frame_count / elapsed
+                self._frame_count = 0
+                self._window_start = time.time()
+
+            self._handle_detection(results)
+
+    def _handle_detection(self, results: Any) -> None:
         if not self.ws_client:
-            return
-
-        fps = (
-            predictor.dataset.fps[0]
-            if isinstance(predictor.dataset.fps, (list, tuple))
-            else getattr(predictor.dataset, "fps", 0)
-        )
-
-        results = predictor.results
-        if not results:
             return
 
         detections: list[dict] = []
@@ -196,21 +218,9 @@ class Detector:
             if result.boxes is None:
                 continue
 
-            boxes = (
-                result.boxes.xyxy.cpu().numpy().tolist()
-                if result.boxes.xyxy is not None
-                else []
-            )
-            classes = (
-                result.boxes.cls.cpu().numpy().tolist()
-                if result.boxes.cls is not None
-                else []
-            )
-            confs = (
-                result.boxes.conf.cpu().numpy().tolist()
-                if result.boxes.conf is not None
-                else []
-            )
+            boxes = result.boxes.xyxy.cpu().numpy().tolist() if result.boxes.xyxy is not None else []
+            classes = result.boxes.cls.cpu().numpy().tolist() if result.boxes.cls is not None else []
+            confs = result.boxes.conf.cpu().numpy().tolist() if result.boxes.conf is not None else []
             names = [result.names[int(c)] for c in classes]
 
             for box, cls_name, conf in zip(boxes, names, confs):
@@ -225,12 +235,15 @@ class Detector:
                     }
                 )
 
+        if not detections:
+            return
+
         payload = {
-            "stream": self.stream_url,
-            "fps": fps,
+            "stream": self.stream_name,
+            "url": self.stream_url,
+            "fps": round(self._current_fps, 2),
             "detections": detections,
         }
-
         self.ws_client.send(payload)
 ```
 
@@ -263,35 +276,177 @@ def get_logger(name: str) -> logging.Logger:
     return logging.getLogger(name)
 ```
 
+transcode.py
+
+```python
+import asyncio
+import json
+import threading
+import time
+from typing import Any
+from urllib.parse import parse_qs, urlparse
+import websockets
+from aiortc import RTCPeerConnection, RTCIceCandidate, RTCSessionDescription
+from log import get_logger
+
+log = get_logger("transcode")
+
+
+class FrameSource:
+    def __init__(self, stream_url: str, reconnect_delay: int = 3) -> None:
+        p = urlparse(stream_url)
+        self._src = parse_qs(p.query).get("src", ["stream"])[0]
+        self._host = p.netloc
+        self._scheme = "wss" if p.scheme == "https" else "ws"
+        self._reconnect_delay = reconnect_delay
+        self._running = False
+        self._latest: Any = None
+        self._frame_ready = threading.Event()
+        self._thread: threading.Thread | None = None
+        self._loop: asyncio.AbstractEventLoop | None = None
+        self._ws: Any = None
+        self._pc: RTCPeerConnection | None = None
+
+    def start(self) -> None:
+        if self._thread and self._thread.is_alive():
+            return
+        self._running = True
+        self._thread = threading.Thread(target=self._run, daemon=True, name="framesrc")
+        self._thread.start()
+
+    def stop(self) -> None:
+        self._running = False
+        self._frame_ready.set()
+        if self._loop is not None:
+            if self._ws is not None:
+                self._loop.call_soon_threadsafe(lambda: asyncio.ensure_future(self._ws.close()))
+            if self._pc is not None:
+                self._loop.call_soon_threadsafe(lambda: asyncio.ensure_future(self._pc.close()))
+
+    def latest(self) -> Any:
+        return self._latest
+
+    def wait(self, timeout: float) -> bool:
+        return self._frame_ready.wait(timeout)
+
+    def clear(self) -> None:
+        self._frame_ready.clear()
+
+    def _run(self) -> None:
+        self._loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self._loop)
+        while self._running:
+            try:
+                self._loop.run_until_complete(self._run_webrtc())
+            except Exception as e:
+                if not self._running:
+                    break
+                log.warning(f"拉流中断: {e}")
+            if not self._running:
+                break
+            time.sleep(self._reconnect_delay)
+
+    async def _run_webrtc(self) -> None:
+        pc = RTCPeerConnection()
+        self._pc = pc
+        ws_holder: dict[str, Any] = {}
+
+        @pc.on("track")
+        def on_track(track: Any) -> None:
+            if track.kind == "video":
+                log.info(f"收到 video track: {track}")
+                self._loop.create_task(self._recv_webrtc(track))
+
+        @pc.on("icecandidate")
+        def on_ice(candidate: Any) -> None:
+            ws = ws_holder.get("ws")
+            if candidate and ws:
+                self._loop.create_task(
+                    ws.send(json.dumps({"type": "webrtc", "value": {"ice": candidate.to_json()}}))
+                )
+
+        url = f"{self._scheme}://{self._host}/api/ws?src={self._src}"
+        log.info(f"连接 go2rtc WS: {url}")
+        async with websockets.connect(url) as ws:
+            ws_holder["ws"] = ws
+            self._ws = ws
+
+            pc.addTransceiver("video", direction="recvonly")
+            offer = await pc.createOffer()
+            await pc.setLocalDescription(offer)
+            await ws.send(
+                json.dumps({"type": "webrtc", "value": {"type": "offer", "sdp": pc.localDescription.sdp}})
+            )
+            log.info("已发送 WebRTC offer")
+
+            async for message in ws:
+                if not self._running:
+                    break
+                msg = json.loads(message)
+                v = msg.get("value", {})
+                if msg.get("type") == "webrtc" and v.get("type") == "answer":
+                    await pc.setRemoteDescription(RTCSessionDescription(sdp=v["sdp"], type="answer"))
+                    log.info("收到 answer，已 setRemoteDescription")
+                elif msg.get("type") == "webrtc" and v.get("ice") is not None:
+                    cand = v["ice"]
+                    if isinstance(cand, str):
+                        cand = RTCIceCandidate.from_json(cand)
+                    await pc.addIceCandidate(cand)
+                    log.info("收到 ICE candidate")
+
+        await pc.close()
+        self._pc = None
+        self._ws = None
+
+    async def _recv_webrtc(self, track: Any) -> None:
+        count = 0
+        while self._running:
+            try:
+                frame = await track.recv()
+            except Exception as e:
+                log.warning(f"接收帧失败: {e}")
+                break
+            self._latest = frame.to_ndarray(format="bgr24")
+            self._frame_ready.set()
+            count += 1
+            if count == 1:
+                log.info(f"首帧解码成功 shape={self._latest.shape}")
+```
+
 main.py
 
 ```python
+import asyncio
 from detector import Detector
 from log import get_logger, setup as log_setup
 from ws import WebSocketClient
 
 log = get_logger("main")
 
+STREAM = {
+    "name": "camera_01",
+    "url": "http://127.0.0.1:1984/stream.html?src=camera_01",
+}
+WS_URL = "ws://localhost:4000/ws/detect"
+
 
 def main() -> None:
-    stream_url = "http://127.0.0.1:1984/api/stream.mjpeg?src=camera_02"
-    ws_url = "ws://localhost:4000/ws/detect"
-
     log_setup()
 
-    log.info(f"启动检测器, 流地址: {stream_url}")
-
-    ws_client = WebSocketClient(ws_url)
+    ws_client = WebSocketClient(WS_URL)
     ws_client.start()
 
-    detector = Detector(ws_client=ws_client, stream_url=stream_url)
+    detector = Detector(
+        ws_client=ws_client,
+        stream_url=STREAM["url"],
+        stream_name=STREAM["name"],
+    )
 
+    log.info(f"启动检测器, 流: {STREAM['name']}, 拉流通道: {detector.source_url}")
     try:
-        detector.predict(source=stream_url)
+        asyncio.run(detector.run())
     except KeyboardInterrupt:
         log.info("收到中断信号，正在退出...")
-    except Exception as e:
-        log.exception(f"运行异常: {e}")
     finally:
         ws_client.stop()
 
@@ -394,18 +549,20 @@ defmodule WebDemoWeb.StreamLive do
   @pubsub WebDemo.PubSub
   @topic "detection"
 
+  @stream %{
+    name: "camera_01",
+    url: "http://127.0.0.1:1984/stream.html?src=camera_01"
+  }
+
+  @spec mount(any(), any(), Phoenix.LiveView.Socket.t()) :: {:ok, any()}
   def mount(_params, _session, socket) do
     if connected?(socket) do
       Phoenix.PubSub.subscribe(@pubsub, @topic)
     end
 
-    stream_url_list = [
-      "http://127.0.0.1:1984/stream.html?src=camera_02"
-    ]
-
     {:ok,
      assign(socket,
-       stream_url_list: stream_url_list,
+       stream: @stream,
        connected: false,
        count: 0,
        fps: 0.0,
@@ -414,48 +571,63 @@ defmodule WebDemoWeb.StreamLive do
   end
 
   def handle_info({:raw_detection, text}, socket) do
-    {detections, fps, count} =
+    result =
       case Jason.decode(text) do
-        {:ok, data} ->
-          dets = normalize_detections(data)
-          raw_fps = data["fps"] || data["frame_rate"] || data["framerate"] || data["FPS"]
+        {:ok, data} when is_map(data) ->
+          incoming_name = data["stream"] || data["name"]
 
-          fps_val =
-            case raw_fps do
-              n when is_number(n) ->
-                n / 1
+          if incoming_name != @stream.name do
+            :ignore
+          else
+            dets = normalize_detections(data)
+            raw_fps = data["fps"] || data["frame_rate"] || data["framerate"] || data["FPS"]
+            fps_val = parse_fps(raw_fps, socket.assigns.fps)
+            {:ok, dets, fps_val, socket.assigns.count + 1}
+          end
 
-              s when is_binary(s) ->
-                case Float.parse(s) do
-                  {f, _} ->
-                    f
-
-                  :error ->
-                    case Integer.parse(s) do
-                      {i, _} -> i / 1
-                      :error -> socket.assigns.fps
-                    end
-                end
-
-              _ ->
-                socket.assigns.fps
-            end
-
-          cnt = socket.assigns.count + 1
-          {dets, fps_val, cnt}
+        {:ok, _} ->
+          {:ok, [], socket.assigns.fps, socket.assigns.count}
 
         {:error, reason} ->
           Logger.error("Failed to decode JSON: #{inspect(reason)}, text: #{text}")
-          {[], socket.assigns.fps, socket.assigns.count}
+          {:ok, [], socket.assigns.fps, socket.assigns.count}
       end
 
-    {:noreply,
-     socket
-     |> assign(:connected, true)
-     |> assign(:object_count, length(detections))
-     |> assign(:count, count)
-     |> assign(:fps, fps)
-     |> push_event("detections", %{detections: detections})}
+    case result do
+      :ignore ->
+        {:noreply, socket}
+
+      {:ok, detections, fps, count} ->
+        {:noreply,
+         socket
+         |> assign(:connected, true)
+         |> assign(:object_count, length(detections))
+         |> assign(:count, count)
+         |> assign(:fps, fps)
+         |> push_event("detections", %{detections: detections})}
+    end
+  end
+
+  defp parse_fps(raw, fallback) do
+    case raw do
+      n when is_number(n) ->
+        n / 1
+
+      s when is_binary(s) ->
+        case Float.parse(s) do
+          {f, _} ->
+            f
+
+          :error ->
+            case Integer.parse(s) do
+              {i, _} -> i / 1
+              :error -> fallback
+            end
+        end
+
+      _ ->
+        fallback
+    end
   end
 
   defp normalize_detections(data) do
@@ -631,29 +803,28 @@ stream_live.html.heex
     </div>
 
     <div class="grid grid-cols-1 gap-4 w-full max-w-5xl">
-      <div
-        :for={{url, index} <- Enum.with_index(@stream_url_list)}
-        class="relative rounded-xl overflow-hidden shadow-2xl border border-gray-700 bg-black"
-      >
+      <div class="relative rounded-xl overflow-hidden shadow-2xl border border-gray-700 bg-black">
+        <div class="flex items-center justify-between px-3 py-2 bg-gray-900/80">
+          <span class="text-sm font-medium text-gray-200">{@stream.name}</span>
+          <span class="text-xs text-gray-500 truncate max-w-[16rem]">{@stream.url}</span>
+        </div>
         <div
-          id={"yolo-player-#{index}"}
+          id="yolo-player-0"
           class="relative w-full aspect-video bg-black overflow-hidden"
         >
           <iframe
-            src={url}
+            src={@stream.url}
             class="absolute inset-0 w-full h-full border-0 pointer-events-none"
             allow="autoplay; fullscreen; picture-in-picture"
           >
           </iframe>
-          <%= if index == 0 do %>
-            <canvas
-              id="yolo-overlay"
-              phx-hook=".Player"
-              phx-update="ignore"
-              class="absolute inset-0 w-full h-full pointer-events-none z-10"
-            >
-            </canvas>
-          <% end %>
+          <canvas
+            id="yolo-overlay"
+            phx-hook=".Player"
+            phx-update="ignore"
+            class="absolute inset-0 w-full h-full pointer-events-none z-10"
+          >
+          </canvas>
         </div>
       </div>
     </div>

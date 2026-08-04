@@ -33,7 +33,8 @@ api:
 
 streams:
   camera_01: rtsp://127.0.0.1:18001/stream#transport=udp
-  camera_02: ffmpeg:device?video=/dev/video0&input_format=mjpeg&video_size=1280x720
+  camera_02_mjpeg: ffmpeg:device?video=/dev/video0&input_format=mjpeg&video_size=1280x720
+  camera_02: ffmpeg:camera_02_mjpeg#video=h264
 ```
 
 导出的格式，推荐用 http, 延迟低，不卡顿
