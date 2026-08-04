@@ -38,3 +38,9 @@ paths:
     runOnInit: ffmpeg -re -stream_loop -1 -i ../videos/13.mp4 -c:v libx264 -preset ultrafast -tune zerolatency -g 30 -c:a libopus -f rtsp rtsp://127.0.0.1:$RTSP_PORT/$MTX_PATH
     runOnInitRestart: yes
 ```
+
+测试
+
+```sh
+ffplay -x800 rtsp://127.0.0.1:8511/aa
+```
