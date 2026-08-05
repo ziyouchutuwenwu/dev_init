@@ -762,12 +762,11 @@ class WsClient:
 assets/js/hook/rtc.js
 
 ```javascript
-import { Socket } from "phoenix";
+import {Socket} from "phoenix";
 
 const MAX_HOLD_TICKS = 45000;
 const MAX_QUEUE = 120;
 const WEBRTC_PORT = 1984;
-const PLAYOUT_DELAY_MS = 300;
 
 const LABEL_COLORS = {
   person: "#4ade80",
@@ -823,14 +822,8 @@ const Rtc = {
     clearInterval(this._statusTimer);
     if (this.channel) this.channel.leave();
     if (this.socket) this.socket.disconnect();
-    if (this.ws)
-      try {
-        this.ws.close();
-      } catch (e) {}
-    if (this.pc)
-      try {
-        this.pc.close();
-      } catch (e) {}
+    if (this.ws) try { this.ws.close(); } catch (e) {}
+    if (this.pc) try { this.pc.close(); } catch (e) {}
   },
 
   _connectChannel() {
@@ -839,7 +832,9 @@ const Rtc = {
 
     this.channel = this.socket.channel(`data:${this.cameraId}`, {});
     this.channel.on("sync_boxes", (payload) => this._onBoxes(payload));
-    this.channel.join().receive("error", () => console.error("[Rtc] 无法加入坐标信道"));
+    this.channel
+      .join()
+      .receive("error", () => console.error("[Rtc] 无法加入坐标信道"));
   },
 
   _onBoxes(payload) {
@@ -857,16 +852,14 @@ const Rtc = {
 
   _connectWebRTC() {
     const pc = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      iceServers: [{urls: "stun:stun.l.google.com:19302"}],
     });
     this.pc = pc;
 
-    pc.addTransceiver("video", { direction: "recvonly" });
+    pc.addTransceiver("video", {direction: "recvonly"});
 
     pc.ontrack = (event) => {
-      if ("jitterBufferTarget" in event.receiver) {
-        event.receiver.jitterBufferTarget = PLAYOUT_DELAY_MS;
-      }
+      // 方案2b：不设置全局缓冲，视频实时播放；延迟由绘制循环按帧等待框到达来控制
       if (!this.video.srcObject) {
         this.video.srcObject = event.streams[0];
         this.video.play().catch(() => {});
@@ -875,7 +868,9 @@ const Rtc = {
 
     pc.onicecandidate = (event) => {
       if (event.candidate && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({ type: "webrtc/candidate", value: event.candidate.candidate }));
+        this.ws.send(
+          JSON.stringify({type: "webrtc/candidate", value: event.candidate.candidate})
+        );
       }
     };
 
@@ -884,15 +879,15 @@ const Rtc = {
 
     ws.onopen = async () => {
       await pc.setLocalDescription(await pc.createOffer());
-      ws.send(JSON.stringify({ type: "webrtc/offer", value: pc.localDescription.sdp }));
+      ws.send(JSON.stringify({type: "webrtc/offer", value: pc.localDescription.sdp}));
     };
 
     ws.onmessage = async (msg) => {
       const m = JSON.parse(msg.data);
       if (m.type === "webrtc/answer") {
-        await pc.setRemoteDescription({ type: "answer", sdp: m.value });
+        await pc.setRemoteDescription({type: "answer", sdp: m.value});
       } else if (m.type === "webrtc/candidate") {
-        await pc.addIceCandidate({ candidate: m.value, sdpMid: "0" });
+        await pc.addIceCandidate({candidate: m.value, sdpMid: "0"});
       } else if (m.type === "error") {
         console.error("[Rtc] webrtc error:", m.value);
       }
@@ -901,7 +896,14 @@ const Rtc = {
 
   _onFrame(metadata) {
     if (this._closed) return;
-    this._draw(metadata.rtpTimestamp == null ? null : metadata.rtpTimestamp >>> 0);
+    const t = metadata.rtpTimestamp == null ? null : metadata.rtpTimestamp >>> 0;
+    if (t != null) {
+      this._jsFrameCount = (this._jsFrameCount || 0) + 1;
+      if (this._jsFrameCount <= 5 || this._jsFrameCount % 30 === 0) {
+        console.log("[Rtc][RTP-DIAG] js rtp", t, "(#" + this._jsFrameCount + ")");
+      }
+    }
+    this._draw(t);
     this.video.requestVideoFrameCallback(this._rvfc);
   },
 
@@ -944,6 +946,8 @@ const Rtc = {
     }
   },
 
+  // 精确命中本帧 rtp 的框；未到则就近匹配最近旧帧（窗口 MAX_HOLD_TICKS），
+  // 这样框以 ≈检测延迟落到随后几帧上，视频保持流畅。
   _pick(t) {
     const exact = this.queue.get(t);
     if (exact) {
@@ -992,7 +996,7 @@ const Rtc = {
   },
 };
 
-export { Rtc };
+export {Rtc};
 ```
 
 app.js
