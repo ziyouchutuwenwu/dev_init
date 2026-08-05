@@ -2,7 +2,7 @@
 
 ## 说明
 
-[官网](https://go2rtc.org/)
+[官网](https://github.com/AlexxIT/go2rtc/)
 
 把各种视频流或者视频转为 webrtc
 
