@@ -59,7 +59,7 @@ defmodule WebDemoWeb.RoomChannel do
   use WebDemoWeb, :channel
   require Logger
 
-  @impl true
+  # js 里面， this.channel.join(); 时触发这里
   def join("room:abc", _message, socket) do
     Logger.debug("on join room:abc")
     {:ok, socket}
@@ -69,7 +69,6 @@ defmodule WebDemoWeb.RoomChannel do
     {:error, %{reason: "unauthorized"}}
   end
 
-  @impl true
   def handle_in("room_msg", %{"body" => body}, socket) do
     Logger.debug("on room_msg")
     Phoenix.Channel.broadcast!(socket, "room_msg", %{body: body})
