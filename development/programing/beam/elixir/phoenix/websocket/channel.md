@@ -59,7 +59,8 @@ defmodule WebDemoWeb.RoomChannel do
   use WebDemoWeb, :channel
   require Logger
 
-  # js 里面， this.channel.join(); 时触发这里
+  # 对应 js 的 this.channel.join();
+  # 实际上就是 join 某个 topic
   def join("room:abc", _message, socket) do
     Logger.debug("on join room:abc")
     {:ok, socket}

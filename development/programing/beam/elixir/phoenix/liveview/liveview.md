@@ -2,11 +2,11 @@
 
 ## 说明
 
-用的是 websocket，不需要刷新页面
+phx-hook 的值必须以点开头，id 必须写
 
 ## 例子
 
-路由
+router.ex
 
 ```elixir
 scope "/", WebDemoWeb do
@@ -17,8 +17,6 @@ scope "/", WebDemoWeb do
   live "/live", PageLive
 end
 ```
-
-### 代码
 
 page_live.ex
 
