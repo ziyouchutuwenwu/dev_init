@@ -9,15 +9,14 @@
 基本用法
 
 ```sh
-# 提示输入密码
-pgcli -h 127.0.0.1 -p 5432 -U demo_user -d demo_db -W
+pgcli -h 127.0.0.1 -p 5432 -U user1 -d demo_db
 
 # 通过环境变量
 export PGPASSWORD='123456'
-pgcli -h 127.0.0.1 -p 5432 -U demo_user -d demo_db
+pgcli -h 127.0.0.1 -p 5432 -U user1 -d demo_db
 
 # 这个不需要环境变量
-pgcli postgres://postgres:pg123456@127.0.0.1:5432/demo_db
+pgcli postgres://user1:pg123456@127.0.0.1:5432/demo_db
 ```
 
 用于自动化
