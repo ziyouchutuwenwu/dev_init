@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=qvidcap
+Comment=Viewer for video capture
+Exec=qvidcap
+Icon=qvidcap
+Terminal=false
+Type=Application
+Categories=AudioVideo;
+Keywords=video;grabber;V4L;
+Path=
+StartupNotify=false

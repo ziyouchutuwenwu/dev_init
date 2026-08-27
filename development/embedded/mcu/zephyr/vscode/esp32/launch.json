@@ -1,0 +1,32 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "debug",
+      "cwd": "${workspaceFolder}",
+      "executable": "${workspaceFolder}/build/zephyr/zephyr.elf",
+
+      "request": "launch",
+      "type": "cortex-debug",
+      "servertype": "openocd",
+
+      // https://github.com/espressif/openocd-esp32/releases
+      // 这个很重要，避免使用系统自带的 openocd，导致版本不对报错
+      "serverpath": "${env:HOME}/dev/embedded/openocd/bin/openocd",
+      "configFiles": ["interface/esp_usb_bridge.cfg", "target/esp32s3.cfg"],
+      "searchDir": ["${env:HOME}/dev/embedded/openocd/share/openocd/scripts/"],
+
+      // 硬件断点
+      "overrideLaunchCommands": ["monitor reset halt", "monitor gdb_breakpoint_override hard"],
+      "overrideResetCommands": ["monitor reset halt"],
+
+      "toolchainPrefix": "xtensa-espressif_esp32s3_zephyr-elf",
+      "gdbPath": "${env:HOME}/dev/embedded/zephyr/sdk/gnu/xtensa-espressif_esp32s3_zephyr-elf/bin/xtensa-espressif_esp32s3_zephyr-elf-gdb",
+
+      // raw, parsed, none
+      "showDevDebugOutput": "none",
+      // "runToEntryPoint": "main",
+      "preLaunchTask": "burn"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+# cli
+
+## 安装
+
+```sh
+npm install -g @angular/cli
+```
+
+指定版本
+
+```sh
+npm install -g @angular/cli@^13.0.0
+```

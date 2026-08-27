@@ -1,0 +1,204 @@
+[Desktop Entry]
+Categories=Qt;AudioVideo;Player;Video;
+Comment=A great MPlayer front-end
+Exec=smplayer %U
+GenericName=Media Player
+Icon=smplayer
+MimeType=application/ogg;application/x-ogg;audio/ogg;audio/x-vorbis;audio/x-vorbis+ogg;video/ogg;video/x-ogm+ogg;video/x-theora+ogg;video/x-theora;audio/x-speex;audio/opus;application/x-flac;audio/flac;audio/x-flac;audio/x-ms-asf;audio/x-ms-asx;audio/x-ms-wax;audio/x-ms-wma;video/x-ms-asf;video/x-ms-asf-plugin;video/x-ms-asx;video/x-ms-wm;video/x-ms-wmv;video/x-ms-wmx;video/x-ms-wvx;video/x-msvideo;audio/x-pn-windows-acm;video/divx;video/msvideo;video/vnd.divx;video/x-avi;application/vnd.rn-realmedia;application/vnd.rn-realmedia-vbr;audio/vnd.rn-realaudio;audio/x-pn-realaudio;audio/x-pn-realaudio-plugin;audio/x-real-audio;audio/x-realaudio;video/vnd.rn-realvideo;audio/mpeg;audio/mpg;audio/mp1;audio/mp2;audio/mp3;audio/x-mp1;audio/x-mp2;audio/x-mp3;audio/x-mpeg;audio/x-mpg;video/mp2t;video/mpeg;video/mpeg-system;video/x-mpeg;video/x-mpeg2;video/x-mpeg-system;application/mpeg4-iod;application/mpeg4-muxcodetable;application/x-extension-m4a;application/x-extension-mp4;audio/aac;audio/m4a;audio/mp4;audio/x-m4a;audio/x-aac;video/mp4;video/mp4v-es;video/x-m4v;application/x-quicktime-media-link;application/x-quicktimeplayer;video/quicktime;application/x-matroska;audio/x-matroska;video/x-matroska;video/webm;audio/webm;audio/3gpp;audio/3gpp2;audio/AMR;audio/AMR-WB;audio/amr;audio/amr-wb;video/3gp;video/3gpp;video/3gpp2;x-scheme-handler/mms;x-scheme-handler/mmsh;x-scheme-handler/rtsp;x-scheme-handler/rtp;x-scheme-handler/rtmp;x-scheme-handler/icy;x-scheme-handler/icyx;x-content/video-vcd;x-content/video-svcd;x-content/video-dvd;x-content/audio-cdda;x-content/audio-player;application/ram;application/xspf+xml;audio/mpegurl;audio/x-mpegurl;audio/scpls;audio/x-scpls;text/google-video-pointer;text/x-google-video-pointer;video/vnd.mpegurl;application/vnd.apple.mpegurl;application/vnd.ms-asf;application/vnd.ms-wpl;application/sdp;audio/dv;video/dv;audio/x-aiff;audio/x-pn-aiff;video/x-anim;video/x-nsv;video/fli;video/flv;video/x-flc;video/x-fli;video/x-flv;audio/wav;audio/x-pn-au;audio/x-pn-wav;audio/x-wav;audio/ac3;audio/eac3;audio/vnd.dts;audio/vnd.dts.hd;audio/vnd.dolby.heaac.1;audio/vnd.dolby.heaac.2;audio/vnd.dolby.mlp;audio/basic;audio/midi;audio/x-ape;audio/x-gsm;audio/x-musepack;audio/x-tta;audio/x-wavpack;audio/x-shorten;application/x-shockwave-flash;application/x-flash-video;misc/ultravox;image/vnd.rn-realpix;audio/x-it;audio/x-mod;audio/x-s3m;audio/x-xm;application/mxf;
+Name=smplayer
+Type=Application
+X-KDE-StartupNotify=false
+Keywords=movie;player;media;kde;qt;
+
+X-Ayatana-Desktop-Shortcuts=Screen;Window
+
+[Mini Shortcut Group]
+Name=Open with mini GUI
+Exec=smplayer -minigui
+TargetEnvironment=Unity
+
+[mpc Shortcut Group]
+Name=Open with mpc GUI
+Exec=smplayer -mpcgui
+TargetEnvironment=Unity
+
+# Translations
+Comment[ar]=واجهة-طرفية ممتازة للمشغل MPlayer
+GenericName[ar]=مشغل وسائط
+
+Comment[bg]=Чудесната MPlayer обвивка.
+GenericName[bg]=Медиен плейър
+Name[bg]=SMPlayer
+Icon[bg]=smplayer
+
+Comment[cs]=Skvělý front-end MPlayeru
+GenericName[cs]=Přehrávač
+Name[cs]=SMPlayer
+Icon[cs]=smplayer
+
+Comment[da]=En fremragende MPlayer-brugerflade
+GenericName[da]=Medieafspiller
+Name[da]=SMPlayer
+Icon[da]=smplayer
+
+Comment[de]=Eine tolle MPlayer-Vorderseite
+GenericName[de]=Medienwiedergabe
+Name[de]=SMPlayer
+Icon[de]=smplayer
+
+Comment[el]=Ένα σπουδαίο περιβάλλον χρήστη για το MPlayer
+GenericName[el]=Αναπαραγωγέας πολυμέσων
+Name[el]=SMPlayer
+Icon[el]=smplayer
+
+Comment[en_GB]=A great MPlayer front-end
+GenericName[en_GB]=Media Player
+Name[en_GB]=SMPlayer
+Icon[en_GB]=smplayer
+
+Comment[es]=Un magnífico interfaz gráfico para el MPlayer
+GenericName[es]=Reproductor multimedia
+Name[es]=SMPlayer
+Icon[es]=smplayer
+
+Comment[eu]=MPlayer aurrealde bikain bat
+GenericName[eu]=Multimedia Irakurgailua
+Name[eu]=SMPlayer
+Icon[eu]=smplayer
+
+Comment[fa]=یک رابط کاربری عالی برای MPlayer
+GenericName[fa]=پخش‌کننده رسانه
+Name[fa]=SMPlayer
+Icon[fa]=smplayer
+
+Comment[fr]=Une excellente interface pour MPlayer
+GenericName[fr]=Lecteur média
+Name[fr]=SMPlayer
+Icon[fr]=smplayer
+
+Comment[gl]=Unha excelente interface para MPlayer
+GenericName[gl]=Reprodutor multimedia
+Name[gl]=SMPlayer
+Icon[gl]=smplayer
+
+Comment[he]=מגשר חזיתי MPlayer נהדר
+GenericName[he]=נגן מדיה
+
+Comment[hr]=Odlično MPlayer grafičko sučelje
+GenericName[hr]=Medijski reproduktor
+Name[hr]=SMPlayer
+Icon[hr]=smplayer
+
+Comment[id]=MPlayer luar biasa dengan antarmuka
+GenericName[id]=Media Player
+Name[id]=SMPlayer
+Icon[id]=smplayer
+
+Comment[it]=Un grande front-end per MPlayer
+GenericName[it]=Media Player
+Name[it]=SMPlayer
+Icon[it]=smplayer
+
+Comment[ja]=高性能 MPlayer フロントエンド
+GenericName[ja]=メディア プレーヤー
+Name[ja]=SMPlayer
+Icon[ja]=smplayer
+
+Comment[ko]=뛰어난 MPlayer 프론트엔드
+GenericName[ko]=미디어 재생기
+Name[ko]=SMPlayer
+Icon[ko]=smplayer
+
+Comment[lt]=Nuostabi MPlayer sąsaja
+GenericName[lt]=Media grotuvas
+Name[lt]=SMPlayer
+Icon[lt]=smplayer
+
+Comment[sq_AL]=Nje front-end i mrekullueshem per MPlayer.
+GenericName[sq_AL]=Media Player
+Name[sq_AL]=SMPlayer
+Icon[sq_AL]=smplayer
+
+Comment[nqo]=ߡߔߑߟߋߦߊ ߢߊߞߘߐߟߊ ߓߘߍߓߊ
+GenericName[nqo]=ߞߟߋߞߟߋ  ߘߐߞߊߙߊ߲ߝߋ߲
+
+Comment[nl]=Een geweldig MPlayer-front-end
+GenericName[nl]=Mediaspeler
+Name[nl]=SMPlayer
+Icon[nl]=smplayer
+
+Comment[pl]=Świetna nakładka dla MPlayera
+GenericName[pl]=Odtwarzacz mediów
+Name[pl]=SMPlayer
+Icon[pl]=smplayer
+
+Comment[pt]=Uma interface para o MPlayer
+GenericName[pt]=Reprodutor multimédia
+Name[pt]=SMPlayer
+Icon[pt]=smplayer
+
+Comment[pt_BR]=Uma excelente interface gráfica para o MPlayer
+GenericName[pt_BR]=Reprodutor de mídias
+Name[pt_BR]=SMPlayer
+Icon[pt_BR]=smplayer
+
+Comment[ru]=Отличная оболочка для MPlayer
+GenericName[ru]=Проигрыватель мультимедиа
+Name[ru]=SMPlayer
+Icon[ru]=smplayer
+
+Comment[sk]=Skvelá nadstavba MPlayer-u
+GenericName[sk]=Multimediálny prehrávač
+Name[sk]=SMPlayer
+Icon[sk]=smplayer
+
+Comment[sr]=Сјајно прочеље за МПлејер
+GenericName[sr]=Медија плејер
+Name[sr]=СМПлејер
+Icon[sr]=smplayer
+
+Comment[sv]=En mäktig framände till MPlayer
+GenericName[sv]=Media Spelare
+Name[sv]=SMPlayer
+Icon[sv]=smplayer
+
+Comment[th]=MPlayer front-end ที่ยอดเยี่ยม
+GenericName[th]=เครื่องเล่นสื่อ
+Name[th]=SMPlayer
+Icon[th]=smplayer
+
+Comment[tr]=MPlayer harika bir ön uç
+GenericName[tr]=Medya Oynatıcı
+Name[tr]=SMPlayer
+Icon[tr]=smplayer
+
+Comment[uk]=Відмінний інтерфейс MPlayer
+GenericName[uk]=Медія-програвач
+Name[uk]=SMPlayer
+Icon[uk]=smplayer
+
+Comment[vi]=Giao diện tuyệt vời cho MPlayer/mpv
+
+Comment[zh_CN]=强大的 MPlayer 前端
+GenericName[zh_CN]=多媒体播放器
+Name[zh_CN]=smplay
+Icon[zh_CN]=smplayer
+
+Comment[zh_TW]=一個優秀的 MPlayer 前端介面程式 
+GenericName[zh_TW]=媒體播放器
+Name[zh_TW]=SMPlayer
+Icon[zh_TW]=smplayer
+
+Comment[ms_MY]=Merupakan bahagian-hadapan MPlayer yang hebat
+GenericName[ms_MY]=Pemain Media
+Name[ms_MY]=SMPlayer
+Icon[ms_MY]=smplayer
+
+GenericName[km]=កម្មវិធី​ចាក់​មេឌា
+Name[km]=SMPlayer
+Icon[km]=smplayer
+
+Comment[nn_NO]=Eit fantastisk brukargrensesnitt for MPlayer
+GenericName[nn_NO]=Mediaspelar
+Name[nn_NO]=SMPlayer
+Icon[nn_NO]=smplayer

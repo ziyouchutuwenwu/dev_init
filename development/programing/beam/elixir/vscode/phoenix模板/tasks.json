@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "deps",
+      "type": "shell",
+      "command": "mix deps.get"
+    },
+    {
+      "label": "compile",
+      "type": "shell",
+      "command": "mix compile"
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "rm -rf ./deps; rm -rf _build"
+    },
+    {
+      "label": "shell",
+      "type": "shell",
+      "command": "MIX_ENV=dev iex --sname iex-dbg@localhost --cookie 123456 -S mix phx.server"
+    },
+    {
+      "label": "run",
+      "type": "shell",
+      "command": "MIX_ENV=dev mix phx.server"
+    },
+    {
+      "label": "epmd",
+      "type": "shell",
+      // kill -9 $(pidof epmd)
+      "command": "epmd -daemon"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "menuconfig",
+      "type": "shell",
+      "command": "west build -b stm32f411ceu6 -t menuconfig -d build",
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "west build -b stm32f411ceu6 -p always -d build",
+    },
+    {
+      "label": "release",
+      "type": "shell",
+      // --sysbuild
+      "command": "west build -b stm32f411ceu6 -p always -d build --sysbuild -- -DCMAKE_BUILD_TYPE=Release",
+    },
+    {
+      "label": "erase",
+      "type": "shell",
+      "command": "west flash -d build --runner openocd --cmd-erase 'flash erase_sector 0 0 last'"
+    },
+    {
+      "label": "burn",
+      "type": "shell",
+      "command": "west flash -d build --runner openocd",
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "rm -rf build"
+    }
+  ]
+}

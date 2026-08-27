@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "local",
+      "type": "erlang-edb",
+      "request": "launch",
+      "runInTerminal": {
+        "kind": "integrated",
+        "cwd": "${workspaceFolder}",
+        "args": ["/bin/sh", "-c", "rebar3 shell --eval \"$EDB_DAP_NODE_INIT\""]
+      },
+      "config": {
+        "nodeInitCodeInEnvVar": "EDB_DAP_NODE_INIT",
+        "nameDomain": "shortnames",
+        "timeout": 60
+      }
+    },
+    // ERL_AFLAGS='+D' rebar3 shell --name remote-dbg@127.0.0.1 --setcookie 123456
+    {
+      "name": "remote",
+      "type": "erlang-edb",
+      "request": "attach",
+      "config": {
+        "node": "remote-dbg@127.0.0.1",
+        "cookie": "123456",
+        "cwd": "${workspaceFolder}"
+      }
+    }
+  ]
+}
