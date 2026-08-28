@@ -39,6 +39,7 @@ build.rs
 
 ```rust
 use std::fs;
+use std::env;
 
 fn link_dylib(so_path: &str) {
     let so_dir = fs::canonicalize(so_path).expect("so file not found");
@@ -51,7 +52,14 @@ fn link_dylib(so_path: &str) {
 }
 
 fn main() {
-    link_dylib("../xxx.so");
+    // TARGET 不需要手动设置，cargo build --target=xxx 的时候，会自动设置
+    let target = env::var("TARGET").unwrap_or_default();
+
+    if target.contains("aarch64") {
+        link_dylib("../c_lib/build/xxx.so");
+    } else {
+        link_dylib("../clib_pc/build/xxx.so");
+    }
 }
 ```
 
