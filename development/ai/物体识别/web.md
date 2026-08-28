@@ -9,6 +9,33 @@
 overlay_renderer.js
 
 ```javascript
+const CLASS_COLORS = [
+  "#22c55e",
+  "#3b82f6",
+  "#f97316",
+  "#a855f7",
+  "#ec4899",
+  "#eab308",
+  "#06b6d4",
+  "#ef4444",
+  "#14b8a6",
+  "#8b5cf6",
+];
+
+function getColorForClass(clsId, label) {
+  if (clsId !== undefined && clsId >= 0) {
+    return CLASS_COLORS[clsId % CLASS_COLORS.length];
+  }
+  if (label && typeof label === "string") {
+    let hash = 0;
+    for (let i = 0; i < label.length; i++) {
+      hash = (hash << 5) - hash + label.charCodeAt(i);
+    }
+    return CLASS_COLORS[Math.abs(hash) % CLASS_COLORS.length];
+  }
+  return "#22c55e";
+}
+
 export function drawDetections(canvas, video, detections, frameW, frameH) {
   if (!video || !canvas) return;
   const ctx = canvas.getContext("2d");
@@ -92,7 +119,9 @@ export function drawDetections(canvas, video, detections, frameW, frameH) {
 
     if (bw <= 0 || bh <= 0) continue;
 
-    ctx.strokeStyle = "#22c55e";
+    const mainColor = getColorForClass(d.class_id, d.label);
+
+    ctx.strokeStyle = mainColor;
     ctx.strokeRect(bx, by, bw, bh);
 
     const confStr = d.confidence !== undefined ? (Number(d.confidence) * 100).toFixed(0) + "%" : "";
@@ -100,11 +129,11 @@ export function drawDetections(canvas, video, detections, frameW, frameH) {
     const textWidth = ctx.measureText(labelText).width + 8;
     const labelHeight = 18;
 
-    ctx.fillStyle = "rgba(34, 197, 94, 0.88)";
-    ctx.fillRect(bx, by, textWidth, labelHeight);
+    ctx.fillStyle = mainColor;
+    ctx.fillRect(bx, by - labelHeight >= 0 ? by - labelHeight : by, textWidth, labelHeight);
 
     ctx.fillStyle = "#ffffff";
-    ctx.fillText(labelText, bx + 4, by + 13);
+    ctx.fillText(labelText, bx + 4, (by - labelHeight >= 0 ? by - labelHeight : by) + 13);
   }
 }
 
@@ -120,8 +149,17 @@ export function renderDetectionList(listEl, detections) {
     li.className =
       "flex items-center justify-between rounded border border-zinc-100 bg-zinc-50 px-3 py-2";
     const left = document.createElement("span");
-    left.className = "font-medium text-zinc-800";
-    left.textContent = d.label || ("class_" + d.class_id);
+    left.className = "font-medium text-zinc-800 flex items-center gap-1.5";
+
+    const dot = document.createElement("span");
+    dot.className = "w-2.5 h-2.5 rounded-full inline-block";
+    dot.style.backgroundColor = getColorForClass(d.class_id, d.label);
+    left.appendChild(dot);
+
+    const text = document.createElement("span");
+    text.textContent = d.label || ("class_" + d.class_id);
+    left.appendChild(text);
+
     const right = document.createElement("span");
     right.className = "font-mono text-zinc-500 text-xs";
     const confStr = d.confidence !== undefined ? (Number(d.confidence) * 100).toFixed(0) + "%" : "";
@@ -144,59 +182,72 @@ webrtc_player.js
 import { drawDetections, renderDetectionList } from "./overlay_renderer";
 
 export class WebRtcPlayer {
-  constructor(options = {}) {
-    this.videoEl = options.videoEl || document.getElementById("video");
-    this.canvasEl = options.canvasEl || document.getElementById("overlay");
-    this.listEl = options.listEl || document.getElementById("det-list");
-    this.statusEl = options.statusEl || document.getElementById("status");
-    this.rateEl = options.rateEl || document.getElementById("det-rate");
-    this.inputEl = options.inputEl || document.getElementById("signaling-url-input");
-    this.connectBtn = options.connectBtn || document.getElementById("connect-btn");
+  constructor({
+    streamId,
+    url,
+    videoEl,
+    canvasEl,
+    listEl,
+    statusEl,
+    countEl,
+    rateEl,
+    connectBtnEl,
+  }) {
+    this.streamId = streamId;
+    this.url = url || "";
+    this.videoEl = videoEl;
+    this.canvasEl = canvasEl;
+    this.listEl = listEl;
+    this.statusEl = statusEl;
+    this.countEl = countEl;
+    this.rateEl = rateEl;
+    this.connectBtnEl = connectBtnEl;
 
     this.pc = null;
     this.msgCount = 0;
+    this.currentFps = 0;
     this.detectionQueue = [];
     this.renderLoopRunning = false;
+    this.isConnected = false;
 
     this.initRateTimer();
   }
 
   initRateTimer() {
-    setInterval(() => {
+    this.rateInterval = setInterval(() => {
+      this.currentFps = this.msgCount;
       if (this.rateEl) {
-        this.rateEl.textContent = this.msgCount;
+        this.rateEl.textContent = this.currentFps;
       }
       this.msgCount = 0;
     }, 1000);
   }
 
-  setStatus(text, ok) {
-    if (!this.statusEl) return;
-    this.statusEl.textContent = text;
-    this.statusEl.className =
-      "rounded-full px-3 py-1 text-sm transition-colors font-medium " +
-      (ok ? "bg-green-100 text-green-700" : "bg-zinc-200 text-zinc-700");
-  }
-
-  setSignalingUrl(url) {
-    if (this.inputEl) {
-      this.inputEl.value = url;
+  setStatus(text, isOk) {
+    if (this.statusEl) {
+      this.statusEl.textContent = text;
+      this.statusEl.className =
+        "rounded-full px-2 py-0.5 font-medium transition-colors whitespace-nowrap " +
+        (isOk ? "bg-green-100 text-green-700" : "bg-zinc-200 text-zinc-700");
     }
-  }
 
-  getSignalingUrl() {
-    const defaultUrl =
-      "http://" + (location.hostname || "127.0.0.1") + ":8181/offer";
-    if (this.inputEl && this.inputEl.value.trim()) {
-      return this.inputEl.value.trim();
+    if (this.connectBtnEl) {
+      if (isOk) {
+        this.connectBtnEl.textContent = "断开";
+        this.connectBtnEl.className =
+          "rounded bg-red-600 px-2.5 py-0.5 text-xs font-semibold text-white hover:bg-red-700 transition-colors cursor-pointer shadow-sm whitespace-nowrap";
+      } else {
+        this.connectBtnEl.textContent = "连接";
+        this.connectBtnEl.className =
+          "rounded bg-blue-600 px-2.5 py-0.5 text-xs font-semibold text-white hover:bg-blue-700 transition-colors cursor-pointer shadow-sm whitespace-nowrap";
+      }
     }
-    return defaultUrl;
   }
 
   waitIceComplete(conn) {
     return new Promise((resolve) => {
       if (conn.iceGatheringState === "complete") return resolve();
-      const timer = setTimeout(resolve, 1000);
+      const timer = setTimeout(resolve, 1200);
       conn.addEventListener("icegatheringstatechange", () => {
         if (conn.iceGatheringState === "complete") {
           clearTimeout(timer);
@@ -216,14 +267,22 @@ export class WebRtcPlayer {
       if (this.detectionQueue.length > 0) {
         const bestMsg = this.detectionQueue[this.detectionQueue.length - 1];
         if (bestMsg) {
-          drawDetections(
-            this.canvasEl,
-            this.videoEl,
-            bestMsg.detections || [],
-            bestMsg.frame_width,
-            bestMsg.frame_height
-          );
-          renderDetectionList(this.listEl, bestMsg.detections || []);
+          const detections = bestMsg.detections || [];
+          if (this.canvasEl && this.videoEl) {
+            drawDetections(
+              this.canvasEl,
+              this.videoEl,
+              detections,
+              bestMsg.frame_width,
+              bestMsg.frame_height
+            );
+          }
+          if (this.listEl) {
+            renderDetectionList(this.listEl, detections);
+          }
+          if (this.countEl) {
+            this.countEl.textContent = detections.length;
+          }
         }
       }
 
@@ -245,6 +304,9 @@ export class WebRtcPlayer {
     this.msgCount++;
     try {
       const msg = JSON.parse(ev.data);
+      if (msg.id && this.streamId && msg.id !== this.streamId) {
+        return;
+      }
       msg.localRecvTime = performance.now();
       this.detectionQueue.push(msg);
       if (this.detectionQueue.length > 30) {
@@ -252,33 +314,39 @@ export class WebRtcPlayer {
       }
 
       if (!this.renderLoopRunning) {
-        drawDetections(
-          this.canvasEl,
-          this.videoEl,
-          msg.detections || [],
-          msg.frame_width,
-          msg.frame_height
-        );
-        renderDetectionList(this.listEl, msg.detections || []);
+        const detections = msg.detections || [];
+        if (this.canvasEl && this.videoEl) {
+          drawDetections(
+            this.canvasEl,
+            this.videoEl,
+            detections,
+            msg.frame_width,
+            msg.frame_height
+          );
+        }
+        if (this.listEl) {
+          renderDetectionList(this.listEl, detections);
+        }
+        if (this.countEl) {
+          this.countEl.textContent = detections.length;
+        }
       }
     } catch (e) {
-      console.warn("[WebRTC] 解析 DataChannel 消息失败", e);
+      console.warn(`[WebRtcPlayer:${this.streamId}] 解析 DataChannel 数据失败`, e);
     }
   }
 
   async connect() {
-    console.log("[WebRTC] 开始发起连接...");
-    if (this.pc) {
-      try {
-        this.pc.close();
-      } catch (e) {}
-      this.pc = null;
+    let targetUrl = this.url ? this.url.trim() : "";
+    if (!targetUrl) {
+      const host = window.location.hostname || "127.0.0.1";
+      targetUrl = `http://${host}:8181/${this.streamId}`;
+    }
+    if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
+      targetUrl = "http://" + targetUrl;
     }
 
-    this.detectionQueue = [];
-    const signalingUrl = this.getSignalingUrl();
-
-    if (this.connectBtn) this.connectBtn.disabled = true;
+    this.disconnect();
     this.setStatus("连接中…", false);
 
     try {
@@ -293,31 +361,26 @@ export class WebRtcPlayer {
           this.videoEl.srcObject = e.streams[0];
           this.videoEl.play().catch(() => {});
           this.setStatus("已连接", true);
+          this.isConnected = true;
           this.startSyncRenderer();
         };
       }
 
       const dc = this.pc.createDataChannel("detection");
       dc.onmessage = (ev) => this.handleDataChannelMessage(ev);
-      dc.onopen = () => {
-        console.log("[WebRTC DataChannel] 已建立，开始接收目标检测数据");
-      };
 
       this.pc.ondatachannel = (e) => {
         e.channel.onmessage = (ev) => this.handleDataChannelMessage(ev);
       };
 
       this.pc.onconnectionstatechange = () => {
-        console.log("[WebRTC State]", this.pc.connectionState);
-        if (this.pc.connectionState === "connected") {
+        const st = this.pc.connectionState;
+        if (st === "connected") {
           this.setStatus("已连接", true);
-          if (this.connectBtn) this.connectBtn.disabled = false;
-        } else if (
-          this.pc.connectionState === "disconnected" ||
-          this.pc.connectionState === "failed"
-        ) {
-          this.setStatus("连接断开: " + this.pc.connectionState, false);
-          if (this.connectBtn) this.connectBtn.disabled = false;
+          this.isConnected = true;
+        } else if (st === "disconnected" || st === "failed" || st === "closed") {
+          this.setStatus(st === "closed" ? "已断开" : "连接断开", false);
+          this.isConnected = false;
           this.renderLoopRunning = false;
         }
       };
@@ -329,84 +392,262 @@ export class WebRtcPlayer {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 4000);
 
-      const res = await fetch(signalingUrl, {
+      const res = await fetch(targetUrl, {
         method: "POST",
         body: this.pc.localDescription.sdp,
         signal: controller.signal,
       }).catch((err) => {
         if (err.name === "AbortError") {
-          throw new Error("连接超时 (4秒)，目标信令服务未响应: " + signalingUrl);
+          throw new Error("信令响应超时 (4s): " + targetUrl);
         }
-        throw new Error(
-          "无法连接到信令服务 (" + err.message + "): " + signalingUrl
-        );
+        throw new Error("连接失败: " + err.message);
       });
       clearTimeout(timeoutId);
 
-      if (!res.ok) throw new Error("信令失败: " + (await res.text()));
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error("信令拒绝 (" + res.status + "): " + errText);
+      }
+
       const answerSdp = await res.text();
       await this.pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
-      this.setStatus("已连接 (实时流 + 目标检测)", true);
-      if (this.connectBtn) this.connectBtn.disabled = false;
+      this.setStatus("已连接", true);
+      this.isConnected = true;
     } catch (err) {
       this.setStatus("连接失败", false);
-      if (this.connectBtn) this.connectBtn.disabled = false;
-      console.error(err);
-      alert(err.message);
+      this.isConnected = false;
+      console.error(`[WebRtcPlayer:${this.streamId}] 连接异常:`, err);
+    }
+  }
+
+  disconnect() {
+    this.renderLoopRunning = false;
+    this.isConnected = false;
+    if (this.pc) {
+      try {
+        this.pc.close();
+      } catch (e) {}
+      this.pc = null;
+    }
+    if (this.videoEl) {
+      this.videoEl.srcObject = null;
+    }
+    if (this.canvasEl) {
+      const ctx = this.canvasEl.getContext("2d");
+      if (ctx) ctx.clearRect(0, 0, this.canvasEl.width, this.canvasEl.height);
+    }
+    if (this.listEl) {
+      this.listEl.innerHTML = '<li class="text-zinc-400">未连接</li>';
+    }
+    if (this.countEl) {
+      this.countEl.textContent = "0";
+    }
+    this.setStatus("未连接", false);
+  }
+
+  toggleConnect() {
+    if (this.isConnected) {
+      this.disconnect();
+    } else {
+      this.connect();
+    }
+  }
+
+  destroy() {
+    if (this.rateInterval) clearInterval(this.rateInterval);
+    this.disconnect();
+  }
+}
+
+export class StreamCardController {
+  constructor(cardEl) {
+    this.cardEl = cardEl;
+    this.streamId = cardEl.getAttribute("data-stream-id") || cardEl.id.replace("stream-card-", "");
+    this.customUrl = cardEl.getAttribute("data-stream-url") || "";
+
+    this.urlInputEl = cardEl.querySelector(`#url-input-${this.streamId}`);
+    this.videoEl = cardEl.querySelector(`#video-${this.streamId}`);
+    this.canvasEl = cardEl.querySelector(`#overlay-${this.streamId}`);
+    this.listEl = cardEl.querySelector(`#det-list-${this.streamId}`);
+    this.statusEl = cardEl.querySelector(`#status-${this.streamId}`);
+    this.countEl = cardEl.querySelector(`#count-${this.streamId}`);
+    this.rateEl = cardEl.querySelector(`#rate-${this.streamId}`);
+    this.connectBtnEl = cardEl.querySelector(`#btn-connect-${this.streamId}`);
+    this.fsBtnEl = cardEl.querySelector(`#btn-fs-${this.streamId}`);
+    this.removeBtnEl = cardEl.querySelector(`#btn-remove-${this.streamId}`);
+    this.videoWrapEl = cardEl.querySelector(`#video-wrap-${this.streamId}`);
+
+    const host = window.location.hostname || "127.0.0.1";
+    const resolvedUrl = (this.urlInputEl && this.urlInputEl.value.trim())
+      ? this.urlInputEl.value.trim()
+      : (this.customUrl || `http://${host}:8181/${this.streamId}`);
+
+    if (this.urlInputEl && !this.urlInputEl.value.trim()) {
+      this.urlInputEl.value = resolvedUrl;
+    }
+
+    this.player = new WebRtcPlayer({
+      streamId: this.streamId,
+      url: resolvedUrl,
+      videoEl: this.videoEl,
+      canvasEl: this.canvasEl,
+      listEl: this.listEl,
+      statusEl: this.statusEl,
+      countEl: this.countEl,
+      rateEl: this.rateEl,
+      connectBtnEl: this.connectBtnEl,
+    });
+
+    this.bindEvents();
+  }
+
+  bindEvents() {
+    if (this.connectBtnEl) {
+      this.connectBtnEl.onclick = () => {
+        if (this.urlInputEl && this.urlInputEl.value.trim()) {
+          this.player.url = this.urlInputEl.value.trim();
+        }
+        this.player.toggleConnect();
+      };
+    }
+    if (this.fsBtnEl && this.videoWrapEl) {
+      this.fsBtnEl.onclick = () => {
+        if (this.videoWrapEl.requestFullscreen) this.videoWrapEl.requestFullscreen();
+      };
+    }
+  }
+
+  connect() {
+    if (this.urlInputEl && this.urlInputEl.value.trim()) {
+      this.player.url = this.urlInputEl.value.trim();
+    }
+    return this.player.connect();
+  }
+
+  disconnect() {
+    return this.player.disconnect();
+  }
+
+  destroy() {
+    this.player.destroy();
+    if (this.cardEl && this.cardEl.parentNode) {
+      this.cardEl.parentNode.removeChild(this.cardEl);
     }
   }
 }
 
-let globalPlayer = null;
+export class StreamGridManager {
+  constructor() {
+    this.gridContainer = document.getElementById("stream-cards-grid");
+    this.templateEl = document.getElementById("stream-card-template");
+    this.controllers = new Map();
+    this.counter = 0;
 
-export function getPlayer() {
-  if (!globalPlayer) {
-    globalPlayer = new WebRtcPlayer();
+    this.initCards();
+    this.bindGlobalButtons();
   }
-  return globalPlayer;
+
+  initCards() {
+    if (!this.gridContainer) return;
+    const cards = this.gridContainer.querySelectorAll(".stream-card");
+    cards.forEach((cardEl) => {
+      this.attachCard(cardEl);
+    });
+  }
+
+  attachCard(cardEl) {
+    const streamId = cardEl.getAttribute("data-stream-id") || cardEl.id.replace("stream-card-", "");
+    if (this.controllers.has(streamId)) {
+      return this.controllers.get(streamId);
+    }
+
+    const controller = new StreamCardController(cardEl);
+    this.controllers.set(streamId, controller);
+
+    if (controller.removeBtnEl) {
+      controller.removeBtnEl.onclick = () => {
+        controller.destroy();
+        this.controllers.delete(streamId);
+      };
+    }
+    return controller;
+  }
+
+  addCard(streamId = "") {
+    this.counter++;
+    const id = streamId.trim() || `stream_${this.counter}`;
+    if (this.controllers.has(id)) {
+      alert(`流 [${id}] 已存在`);
+      return null;
+    }
+
+    if (this.templateEl && this.gridContainer) {
+      const templateHtml = this.templateEl.innerHTML
+        .replaceAll("__STREAM_ID__", id)
+        .replaceAll("__STREAM_TITLE__", `通道: ${id}`);
+
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = templateHtml.trim();
+      const newCardEl = wrapper.firstElementChild;
+
+      if (newCardEl) {
+        this.gridContainer.appendChild(newCardEl);
+        return this.attachCard(newCardEl);
+      }
+    }
+    return null;
+  }
+
+  connectAll() {
+    for (const ctrl of this.controllers.values()) {
+      ctrl.connect();
+    }
+  }
+
+  disconnectAll() {
+    for (const ctrl of this.controllers.values()) {
+      ctrl.disconnect();
+    }
+  }
+
+  bindGlobalButtons() {
+    const btnAdd = document.getElementById("btn-add-stream");
+    if (btnAdd) {
+      btnAdd.onclick = () => {
+        const name = prompt("请输入新流标识 (如 ccc 或 custom):", `stream_${this.controllers.size + 1}`);
+        if (name && name.trim()) {
+          this.addCard(name.trim());
+        }
+      };
+    }
+
+    const btnConnectAll = document.getElementById("btn-connect-all");
+    if (btnConnectAll) {
+      btnConnectAll.onclick = () => this.connectAll();
+    }
+
+    const btnDisconnectAll = document.getElementById("btn-disconnect-all");
+    if (btnDisconnectAll) {
+      btnDisconnectAll.onclick = () => this.disconnectAll();
+    }
+  }
 }
 
+let globalGridManager = null;
+
 export function initWebRtcUI() {
-  const player = getPlayer();
-  const inputEl = document.getElementById("signaling-url-input");
-  if (inputEl && !inputEl.value) {
-    inputEl.value = "http://192.168.88.100:8181/offer";
+  if (!globalGridManager) {
+    globalGridManager = new StreamGridManager();
   }
-
-  const btn = document.getElementById("connect-btn");
-  if (btn) {
-    btn.onclick = () => player.connect();
-  }
-
-  const btnBoard = document.getElementById("btn-preset-board");
-  if (btnBoard) {
-    btnBoard.onclick = () =>
-      player.setSignalingUrl("http://192.168.88.100:8181/offer");
-  }
-
-  const btnLocal = document.getElementById("btn-preset-local");
-  if (btnLocal) {
-    btnLocal.onclick = () =>
-      player.setSignalingUrl(
-        "http://" + (location.hostname || "127.0.0.1") + ":8181/offer"
-      );
-  }
-
-  window.setSignalingUrl = (url) => player.setSignalingUrl(url);
-  window.connectWebRTC = () => player.connect();
-
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get("autoconnect") === "1") {
-    setTimeout(() => player.connect(), 300);
-  }
+  return globalGridManager;
 }
 ```
 
 app.js
 
 ```javascript
-......
-......
+........................
+........................
 import { initWebRtcUI } from "./webrtc_player"
 
 if (document.readyState === "loading") {
@@ -417,83 +658,133 @@ if (document.readyState === "loading") {
 window.addEventListener("phx:page-loading-stop", initWebRtcUI)
 ```
 
+player_component.ex
+
+```elixir
+defmodule WebWeb.PlayerComponent do
+  use Phoenix.Component
+
+  attr :id, :string, required: true
+  attr :title, :string, default: nil
+  attr :default_url, :string, default: ""
+  attr :removable, :boolean, default: true
+
+  def stream_card(assigns) do
+    ~H"""
+    <div
+      id={"stream-card-" <> @id}
+      class="stream-card flex flex-col rounded-xl border border-zinc-200 bg-white p-3 shadow-sm hover:shadow transition-shadow"
+      data-stream-id={@id}
+      data-stream-url={@default_url}
+    >
+      <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-zinc-100">
+        <div class="flex flex-1 items-center gap-1.5 min-w-[240px]">
+          <label class="text-xs font-semibold text-zinc-600 whitespace-nowrap">URI:</label>
+          <input
+            type="text"
+            id={"url-input-" <> @id}
+            value={@default_url}
+            placeholder={"http://127.0.0.1:8181/" <> @id}
+            class="flex-1 rounded border border-zinc-300 px-2 py-1 text-xs font-mono text-zinc-800 bg-zinc-50 shadow-inner focus:border-blue-500 focus:outline-none"
+          />
+          <button
+            type="button"
+            id={"btn-connect-" <> @id}
+            class="rounded bg-blue-600 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-700 transition-colors cursor-pointer shadow-sm whitespace-nowrap"
+          >
+            连接
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs">
+          <span id={"status-" <> @id} class="rounded-full bg-zinc-200 px-2 py-0.5 font-medium text-zinc-700 transition-colors whitespace-nowrap">
+            未连接
+          </span>
+          <span class="text-zinc-500 whitespace-nowrap">目标: <b id={"count-" <> @id} class="font-mono text-green-600">0</b></span>
+          <span class="text-zinc-500 whitespace-nowrap">帧率: <b id={"rate-" <> @id} class="font-mono text-blue-600">0</b></span>
+          <button
+            type="button"
+            id={"btn-fs-" <> @id}
+            class="rounded border border-zinc-200 px-2 py-0.5 text-zinc-600 hover:bg-zinc-100 cursor-pointer whitespace-nowrap"
+            title="全屏"
+          >
+            全屏
+          </button>
+          <button
+            :if={@removable}
+            type="button"
+            id={"btn-remove-" <> @id}
+            class="rounded border border-zinc-200 px-1.5 py-0.5 text-zinc-400 hover:bg-red-50 hover:text-red-600 cursor-pointer font-bold"
+            title="移除此流窗口"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <div id={"video-wrap-" <> @id} class="relative w-full aspect-video overflow-hidden rounded-lg bg-black flex items-center justify-center">
+        <video id={"video-" <> @id} autoplay playsinline muted class="w-full h-full object-contain block"></video>
+        <canvas id={"overlay-" <> @id} class="pointer-events-none absolute inset-0 w-full h-full" style="z-index: 30; pointer-events: none;"></canvas>
+      </div>
+
+      <details class="mt-2 text-xs text-zinc-600">
+        <summary class="cursor-pointer font-medium text-zinc-500 hover:text-zinc-700 select-none">
+          实时检测目标列表
+        </summary>
+        <div class="mt-1.5 max-h-32 overflow-y-auto pr-1">
+          <ul id={"det-list-" <> @id} class="space-y-1">
+            <li class="text-zinc-400">暂无目标</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+    """
+  end
+end
+```
+
 home.html.heex
 
 ```html
-<div class="w-full min-h-screen px-4 sm:px-6 lg:px-8 py-4">
-  <header class="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 pb-3">
+<div class="w-full min-h-screen px-4 sm:px-6 lg:px-8 py-5 bg-zinc-100">
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-zinc-200 shadow-sm">
+    <div class="flex items-center gap-2">
+      <div class="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse"></div>
+      <h1 class="text-sm sm:text-base font-bold text-zinc-800">视频识别检测</h1>
+    </div>
+
     <div class="flex flex-wrap items-center gap-2">
-      <div class="flex items-center gap-1.5">
-        <label for="signaling-url-input" class="text-xs font-medium text-zinc-600">地址:</label>
-        <input
-          type="text"
-          id="signaling-url-input"
-          value="http://192.168.88.100:8181/offer"
-          class="rounded border border-zinc-300 px-2 py-1 text-xs font-mono text-zinc-800 w-64 sm:w-80 shadow-sm focus:border-blue-500 focus:outline-none"
-          placeholder="http://192.168.88.100:8181/offer"
-        />
-      </div>
       <button
         type="button"
-        id="btn-preset-board"
-        onclick="window.setSignalingUrl && window.setSignalingUrl('http://192.168.88.100:8181/offer')"
-        class="rounded border border-zinc-300 bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 cursor-pointer"
+        id="btn-add-stream"
+        class="rounded bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-700 transition-colors cursor-pointer shadow-sm flex items-center gap-1"
       >
-        开发板 (100)
+        <span>+</span> 添加流窗口
       </button>
       <button
         type="button"
-        id="btn-preset-local"
-        onclick="window.setSignalingUrl && window.setSignalingUrl('http://127.0.0.1:8181/offer')"
-        class="rounded border border-zinc-300 bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 cursor-pointer"
+        id="btn-connect-all"
+        class="rounded bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition-colors cursor-pointer shadow-sm"
       >
-        本机 (localhost)
+        全部连接
       </button>
-      <span
-        id="status"
-        class="rounded-full bg-zinc-200 px-3 py-1 text-sm text-zinc-700 transition-colors font-medium"
-      >
-        未连接
-      </span>
-      <button
-        id="connect-btn"
-        onclick="window.connectWebRTC && window.connectWebRTC()"
-        class="rounded bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50 cursor-pointer shadow-sm"
-      >
-        连接
-      </button>
-    </div>
-
-    <div class="flex items-center gap-4 text-xs text-zinc-600">
-      <span>检测帧率: <span id="det-rate" class="font-mono font-semibold text-blue-600 text-sm">0</span> 帧/秒</span>
       <button
         type="button"
-        onclick="document.getElementById('video-container').requestFullscreen && document.getElementById('video-container').requestFullscreen()"
-        class="rounded border border-zinc-300 bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 cursor-pointer"
+        id="btn-disconnect-all"
+        class="rounded border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer shadow-sm"
       >
-        全屏查看
+        全部断开
       </button>
-    </div>
-  </header>
-
-  <div class="grid grid-cols-1 gap-4 lg:grid-cols-4 xl:grid-cols-5">
-    <div class="lg:col-span-3 xl:col-span-4 flex flex-col">
-      <div id="video-container" class="relative w-full overflow-hidden rounded-xl bg-black shadow-lg aspect-video flex items-center justify-center">
-        <video id="video" autoplay playsinline muted class="w-full h-full object-contain block"></video>
-        <canvas id="overlay" class="pointer-events-none absolute inset-0 w-full h-full" style="z-index: 30; pointer-events: none;"></canvas>
-      </div>
-    </div>
-
-    <div class="lg:col-span-1 xl:col-span-1 flex flex-col rounded-xl border border-zinc-200 bg-white p-4 shadow-sm h-full max-h-[85vh]">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-base font-semibold text-zinc-800">实时检测目标</h2>
-      </div>
-      <div class="flex-1 overflow-y-auto pr-1">
-        <ul id="det-list" class="space-y-2 text-xs">
-          <li class="text-zinc-400">等待数据…</li>
-        </ul>
-      </div>
     </div>
   </div>
+
+  <div id="stream-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <WebWeb.PlayerComponent.stream_card id="aaa" title="通道 1: aaa" />
+    <WebWeb.PlayerComponent.stream_card id="bbb" title="通道 2: bbb" />
+  </div>
+
+  <template id="stream-card-template">
+    <WebWeb.PlayerComponent.stream_card id="__STREAM_ID__" title="__STREAM_TITLE__" />
+  </template>
 </div>
 ```
