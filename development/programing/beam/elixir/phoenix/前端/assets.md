@@ -2,41 +2,53 @@
 
 ## 说明
 
-endpoint 里面，定义 static_paths
+mix.exs
 
-```sh
-priv/static/
-  assets/      # 编译后的 JS/CSS 等（由 esbuild 等工具生成）
-  fonts/       # 字体文件
-  images/      # 图片文件
-  favicon.ico  # 网站图标
-  robots.txt   # 搜索引擎爬虫协议文件
+```elixir
+defp aliases do
+  [
+    ......
+    # 下载 tailwindcss 和 esbuild
+    "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
+    ......
+
+    # 为编译后，加上指纹，防止页面的缓存问题
+    "assets.deploy": [
+      # 清理之前的 digest
+      "phx.digest.clean --all",
+
+      "tailwind web_demo --minify",
+      "esbuild web_demo --minify",
+
+      "phx.digest"
+    ]
+  ]
+end
 ```
 
 ## 用法
 
-### 安装
-
-在 assets 目录下安装 npm 依赖包
+npm
 
 ```sh
+# 不是 priv/static/assets
+cd assets
 npm install xxx --prefix assets
 ```
 
-### 页面
+页面引用
 
 ```html
 <img src={~p"/images/mouse.png"}/>
 ```
 
-### 编译
+发布
 
 ```sh
 MIX_ENV=prod mix assets.deploy
-mix phx.digest.clean --all
 ```
 
-### 指定目录
+指定目录
 
 ```sh
 mix assets.deploy priv/static -o /www/public
