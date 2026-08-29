@@ -33,6 +33,15 @@ pub async fn run(tx_to_a: Sender<String>, mut rx_from_a: Receiver<String>) {
     let msg = rx_from_a.recv().await.unwrap();
     println!("task2 收到: {}", msg);
 
+    // 系统调度，让出协程
+    tokio::task::spawn_blocking(move || {
+        println!(">>> [tokio 托管的原生线程池] 开始执行 CPU 密集型任务...");
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        println!(">>> [tokio 托管的原生线程池] 计算完成，原消息: {}", msg)
+    })
+    .await
+    .unwrap();
+
     println!("task2 回复: Pong");
     tx_to_a.send("Pong".to_string()).await.unwrap();
 }
