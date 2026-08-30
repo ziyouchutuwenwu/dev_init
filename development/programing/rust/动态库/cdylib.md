@@ -31,6 +31,8 @@ pub extern "C" fn add(left: u64, right: u64) -> u64 {
 
 ## 测试
 
+静态链接，支持多层静态链接
+
 ```sh
 cargo new demo
 ```
