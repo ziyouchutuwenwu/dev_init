@@ -13,14 +13,19 @@ xanylabeling
 ```sh
 uv venv anylabel --python 3.12
 uv pip install "x-anylabeling-cvhub[cpu]"
+
+# crtl-a, 选择模型
 uv run xanylabeling
 ```
 
-x-anylabeling-server
+本地无 gpu, 远程才有
 
 ```sh
-uv venv label_server --python 3.12
-
 git clone https://github.com/CVHub520/X-AnyLabeling-Server.git
+uv evnv
 uv pip install -e '.[all]'
+
+uv run x-anylabeling-server \
+  --config configs/server.yaml \
+  --models-config configs/models.yaml
 ```
