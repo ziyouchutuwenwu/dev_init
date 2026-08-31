@@ -6,14 +6,14 @@
 
 ## 步骤
 
-### 宿主机
+### 物理机
 
 安装显卡驱动
 
-docker 安装 nvidia-container-toolkit
+安装 nvidia-container-toolkit
 
 ### 容器
 
 ```sh
-docker run -d -it --gpus all --name deb debian:stable bash
+docker run --rm --gpus all debian:stable nvidia-smi
 ```
