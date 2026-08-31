@@ -11,16 +11,16 @@ pull 模式下，sv 和 system 略有不同
 创建代理配置文件
 
 ```sh
-sudo mkdir -p /etc/systemd/system/docker.service.d
-sudo vim /etc/systemd/system/docker.service.d/proxy.conf
+mkdir -p /etc/systemd/system/docker.service.d
+nvim /etc/systemd/system/docker.service.d/proxy.conf
 ```
 
 不支持 socks5, 必须用 http 代理
 
 ```sh
 [Service]
-Environment="HTTP_PROXY=http://10.0.2.1:8118"
-Environment="HTTPS_PROXY=http://10.0.2.1:8118"
+Environment="HTTP_PROXY=http://127.0.0.1:8118"
+Environment="HTTPS_PROXY=http://127.0.0.1:8118"
 Environment="NO_PROXY=localhost,127.0.0.1,10.0.2.1"
 ```
 
