@@ -1,3 +1,6 @@
+vim.opt.clipboard = "unnamedplus"
+vim.opt.mouse = "a"
+
 local has_gui_clipboard =
   vim.env.DISPLAY ~= nil or
   vim.env.WAYLAND_DISPLAY ~= nil or

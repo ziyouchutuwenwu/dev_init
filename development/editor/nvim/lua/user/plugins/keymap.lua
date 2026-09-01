@@ -11,16 +11,18 @@ vim.keymap.set('v', '<C-x>', '"+d', { noremap = true, desc = "剪切" })
 
 -- <C-v> 在 normal 模式下是"可视块模式"入口，不能覆盖
 vim.keymap.set({'i', 'c'}, '<C-v>', function()
-  if vim.fn.getreg('+') == '' then
+  local text = vim.fn.getreg('+')
+  if text == '' then
+    text = vim.fn.getreg('"')
+  end
+  if text == '' then
     vim.notify('剪贴板为空', vim.log.levels.WARN)
     return
   end
   local mode = vim.fn.mode()
   if mode == 'i' then
-    local text = vim.fn.getreg('+')
     vim.api.nvim_paste(text, false, -1)
   elseif mode == 'c' then
-    local text = vim.fn.getreg('+')
     vim.fn.setcmdline(vim.fn.getcmdline() .. text)
     vim.fn.setcmdpos(vim.fn.getcmdpos() + #text)
   end
