@@ -158,6 +158,8 @@ fn tuple_demo(tuple: demo_type::DemoTuple) -> demo_type::DemoTuple {
 rustler::init!("Elixir.MyLib");
 ```
 
+交叉编译时
+
 lib/mix/task/rustler_build.ex
 
 ```elixir
@@ -265,14 +267,21 @@ end
 
 ### 编译
 
+交叉编译时，才需要
+
 ```sh
 mix rustler.build
 # 指定 target
 # mix rustler.build --crate my_lib --target x86_64-unknown-linux-gnu.2.17
+```
 
+```sh
 mix compile
 MIX_ENV=prod mix compile
+```
 
-# 打包
+打包
+
+```sh
 MIX_ENV=prod mix release
 ```
