@@ -6,7 +6,7 @@ rust 调用 rknn 的 so
 
 ## 步骤
 
-依赖
+### 依赖
 
 ```sh
 cargo add tokio --features full
@@ -24,16 +24,17 @@ cargo add url@2.5
 cargo add futures@0.3
 ```
 
-src/detector/detect_c_wrapper.rs
+### 代码
+
+src/detector/c/unsafe.rs
 
 ```rust
-use std::ffi::CStr;
 use std::os::raw::{c_char, c_int, c_uchar};
 
 unsafe extern "C" {
-    fn init(total_streams: c_int) -> c_int;
+    pub fn init(total_streams: c_int) -> c_int;
 
-    fn bin_to_img_stream(
+    pub fn bin_to_img_stream(
         ch: c_int,
         packet_data: *const c_uchar,
         packet_size: c_int,
@@ -41,7 +42,7 @@ unsafe extern "C" {
         pts_ms: i64,
     ) -> c_int;
 
-    fn detect_img_bin(
+    pub fn detect_img_bin(
         ch: c_int,
         out_buf: *mut c_char,
         out_buf_size: c_int,
@@ -49,12 +50,17 @@ unsafe extern "C" {
         out_pts_ms: *mut i64,
     ) -> c_int;
 }
+```
+
+src/detector/c/detect_c_wrapper.rs
+
+```rust
+use std::ffi::CStr;
+use std::os::raw::{c_char, c_int};
+use super::r#unsafe::{bin_to_img_stream, detect_img_bin, init};
 
 #[derive(Default, Debug, Clone, Copy)]
 pub struct DetectCWrapper;
-
-unsafe impl Send for DetectCWrapper {}
-unsafe impl Sync for DetectCWrapper {}
 
 impl DetectCWrapper {
     pub fn new() -> Self {
@@ -118,12 +124,83 @@ impl DetectCWrapper {
 }
 ```
 
+src/detector/c/mod.rs
+
+```rust
+pub mod detect_c_wrapper;
+pub mod r#unsafe;
+
+pub use detect_c_wrapper::DetectCWrapper;
+```
+
+src/detector/detection_result.rs
+
+```rust
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct DetectionObject {
+    pub class_id: Option<i32>,
+    pub label: Option<String>,
+    pub confidence: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rel_box: Option<Vec<f64>>,
+    pub box_coord: Vec<f64>,
+}
+
+pub type DetectionItem = DetectionObject;
+
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct DetectionResult {
+    pub id: String,
+    pub timestamp: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub frame_idx: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pts_ms: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub frame_width: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub frame_height: Option<i32>,
+    pub detections: Vec<serde_json::Value>,
+}
+
+impl DetectionResult {
+    pub fn new(timestamp: i64, id: impl Into<String>, detections: Vec<serde_json::Value>) -> Self {
+        Self {
+            id: id.into(),
+            timestamp,
+            frame_idx: None,
+            pts_ms: None,
+            frame_width: Some(1920),
+            frame_height: Some(1080),
+            detections,
+        }
+    }
+
+    pub fn now(id: impl Into<String>, detections: Vec<serde_json::Value>) -> Self {
+        Self {
+            id: id.into(),
+            timestamp: chrono::Utc::now().timestamp_millis(),
+            frame_idx: None,
+            pts_ms: None,
+            frame_width: Some(1920),
+            frame_height: Some(1080),
+            detections,
+        }
+    }
+}
+
+pub type DetectionFrame = DetectionResult;
+```
+
 src/detector/frame_detector.rs
 
 ```rust
 use std::sync::Arc;
-use super::detect_c_wrapper::DetectCWrapper;
-use super::types::DetectionFrame;
+use super::DetectCWrapper;
+use super::detection_result::DetectionResult;
 
 pub struct FrameDetector {
     detect_wrapper: Arc<DetectCWrapper>,
@@ -160,7 +237,7 @@ impl FrameDetector {
         self.detect_wrapper.bin_to_img_stream(self.channel_id, packet_data, frame_idx, pts_ms)
     }
 
-    pub fn detect_latest(&self) -> Result<DetectionFrame, String> {
+    pub fn detect_latest(&self) -> Result<DetectionResult, String> {
         let (raw_json, out_frame_idx, out_pts_ms) = self.detect_wrapper.detect_img_bin(self.channel_id)?;
         let parsed: serde_json::Value =
             serde_json::from_str(&raw_json).unwrap_or(serde_json::Value::Array(vec![]));
@@ -223,7 +300,7 @@ impl FrameDetector {
             }
         }
 
-        Ok(DetectionFrame {
+        Ok(DetectionResult {
             id: self.stream_id.clone(),
             timestamp: chrono::Utc::now().timestamp_millis(),
             frame_idx: Some(f_idx),
@@ -236,321 +313,66 @@ impl FrameDetector {
 }
 ```
 
-src/detector/types.rs
-
-```rust
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct DetectionItem {
-    pub class_id: Option<i32>,
-    pub label: Option<String>,
-    pub confidence: f64,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rel_box: Option<Vec<f64>>,
-    pub box_coord: Vec<f64>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct DetectionFrame {
-    pub id: String,
-    pub timestamp: i64,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub frame_idx: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub pts_ms: Option<i64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub frame_width: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub frame_height: Option<i32>,
-    pub detections: Vec<serde_json::Value>,
-}
-
-impl DetectionFrame {
-    pub fn new(timestamp: i64, id: impl Into<String>, detections: Vec<serde_json::Value>) -> Self {
-        Self {
-            id: id.into(),
-            timestamp,
-            frame_idx: None,
-            pts_ms: None,
-            frame_width: Some(1920),
-            frame_height: Some(1080),
-            detections,
-        }
-    }
-
-    pub fn now(id: impl Into<String>, detections: Vec<serde_json::Value>) -> Self {
-        Self {
-            id: id.into(),
-            timestamp: chrono::Utc::now().timestamp_millis(),
-            frame_idx: None,
-            pts_ms: None,
-            frame_width: Some(1920),
-            frame_height: Some(1080),
-            detections,
-        }
-    }
-}
-```
-
 src/detector/mod.rs
 
 ```rust
-pub mod detect_c_wrapper;
+pub mod c;
+pub mod detection_result;
 pub mod frame_detector;
-pub mod types;
+
+pub use c::DetectCWrapper;
+pub use detection_result::{DetectionFrame, DetectionItem, DetectionObject, DetectionResult};
+pub use frame_detector::FrameDetector;
 ```
 
-src/config.rs
+src/rtsp2frame/h264_utils.rs
 
 ```rust
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::fs;
-use std::path::Path;
+pub struct H264Utils;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServerConfig {
-    pub server: ServerOutputConfig,
-    #[serde(alias = "streams")]
-    pub input: StreamConfigInput,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServerOutputConfig {
-    pub host: String,
-    pub port: u16,
-    #[serde(default)]
-    pub http_addr: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum StreamConfigInput {
-    Map(HashMap<String, StreamEntry>),
-    List(Vec<StreamItem>),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum StreamEntry {
-    Url(String),
-    Detail(StreamDetail),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum StreamItem {
-    Url(String),
-    Detail(StreamDetail),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct StreamDetail {
-    #[serde(default)]
-    pub name: Option<String>,
-    #[serde(default)]
-    pub id: Option<String>,
-    #[serde(default)]
-    pub input: Option<String>,
-    #[serde(default)]
-    pub url: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct StreamConfig {
-    pub id: String,
-    pub input: String,
-}
-
-pub fn extract_stream_id_from_url(url: &str) -> String {
-    let clean = url.split('?').next().unwrap_or(url);
-    let clean = clean.split('#').next().unwrap_or(clean);
-    let trimmed = clean.trim_end_matches('/');
-    if let Some(pos) = trimmed.rfind('/') {
-        let seg = &trimmed[pos + 1..];
-        if !seg.is_empty() {
-            return seg.to_string();
+impl H264Utils {
+    pub fn to_annex_b(input: &[u8]) -> Vec<u8> {
+        if input.is_empty() {
+            return Vec::new();
         }
-    }
-    if !trimmed.is_empty() {
-        trimmed.to_string()
-    } else {
-        "stream".to_string()
-    }
-}
 
-impl ServerConfig {
-    pub fn http_addr(&self) -> String {
-        if let Some(ref addr) = self.server.http_addr {
-            return addr.clone();
+        if input.starts_with(&[0, 0, 0, 1]) || input.starts_with(&[0, 0, 1]) {
+            return input.to_vec();
         }
-        format!("{}:{}", self.server.host, self.server.port)
-    }
 
-    pub fn get_streams(&self) -> Vec<StreamConfig> {
-        let mut result = Vec::new();
-        match &self.input {
-            StreamConfigInput::Map(map) => {
-                let mut sorted_keys: Vec<&String> = map.keys().collect();
-                sorted_keys.sort();
-                for key in sorted_keys {
-                    let entry = &map[key];
-                    let input_url = match entry {
-                        StreamEntry::Url(url) => url.clone(),
-                        StreamEntry::Detail(d) => d
-                            .input
-                            .as_ref()
-                            .or(d.url.as_ref())
-                            .cloned()
-                            .unwrap_or_default(),
-                    };
-                    if !input_url.is_empty() {
-                        let id = if !key.is_empty() {
-                            key.clone()
-                        } else {
-                            extract_stream_id_from_url(&input_url)
-                        };
-                        result.push(StreamConfig { id, input: input_url });
-                    }
-                }
+        let mut out = Vec::with_capacity(input.len() + 16);
+        let mut offset = 0;
+        let mut is_valid_avcc = true;
+
+        while offset + 4 <= input.len() {
+            let len = u32::from_be_bytes([
+                input[offset],
+                input[offset + 1],
+                input[offset + 2],
+                input[offset + 3],
+            ]) as usize;
+            if len == 0 || offset + 4 + len > input.len() {
+                is_valid_avcc = false;
+                break;
             }
-            StreamConfigInput::List(list) => {
-                for (idx, item) in list.iter().enumerate() {
-                    match item {
-                        StreamItem::Url(url) => {
-                            if !url.is_empty() {
-                                let id = extract_stream_id_from_url(url);
-                                result.push(StreamConfig {
-                                    id: if id.is_empty() { format!("stream_{idx}") } else { id },
-                                    input: url.clone(),
-                                });
-                            }
-                        }
-                        StreamItem::Detail(d) => {
-                            let input_url = d
-                                .input
-                                .as_ref()
-                                .or(d.url.as_ref())
-                                .cloned()
-                                .unwrap_or_default();
-                            if !input_url.is_empty() {
-                                let explicit_id = d.id.as_ref().or(d.name.as_ref());
-                                let id = explicit_id
-                                    .cloned()
-                                    .unwrap_or_else(|| extract_stream_id_from_url(&input_url));
-                                result.push(StreamConfig {
-                                    id: if id.is_empty() { format!("stream_{idx}") } else { id },
-                                    input: input_url,
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        result
-    }
-
-    pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self, Box<dyn std::error::Error>> {
-        let content = fs::read_to_string(&path)?;
-        if let Ok(cfg) = serde_json::from_str::<ServerConfig>(&content) {
-            return Ok(cfg);
-        }
-        match Self::parse_yaml_content(&content) {
-            Ok(cfg) => Ok(cfg),
-            Err(e) => Err(format!("配置文件 '{}' 解析失败: {e}", path.as_ref().display()).into()),
-        }
-    }
-
-    fn parse_yaml_content(content: &str) -> Result<Self, String> {
-        let mut current_section = String::new();
-        let mut server_host: Option<String> = None;
-        let mut server_port: Option<u16> = None;
-        let mut http_addr: Option<String> = None;
-        let mut streams_map = HashMap::new();
-
-        for line_raw in content.lines() {
-            let line_no_comment = if let Some(idx) = line_raw.find('#') {
-                &line_raw[..idx]
-            } else {
-                line_raw
-            };
-            let line_trimmed = line_no_comment.trim();
-            if line_trimmed.is_empty() {
-                continue;
-            }
-
-            let indent = line_no_comment.chars().take_while(|c| c.is_whitespace()).count();
-
-            if indent == 0 && line_trimmed.ends_with(':') {
-                current_section = line_trimmed.trim_end_matches(':').trim().to_lowercase();
-                continue;
-            }
-
-            if current_section == "server" || current_section == "output" || current_section == "api" {
-                if let Some((k, v)) = line_trimmed.split_once(':') {
-                    let k = k.trim().to_lowercase();
-                    let v = v.trim().trim_matches('"').trim_matches('\'').trim();
-                    match k.as_str() {
-                        "port" | "listen_port" => {
-                            if let Ok(p) = v.parse::<u16>() {
-                                server_port = Some(p);
-                            }
-                        }
-                        "host" | "bind" => {
-                            server_host = Some(v.to_string());
-                        }
-                        "http_addr" | "listen" | "address" => {
-                            http_addr = Some(v.to_string());
-                        }
-                        _ => {}
-                    }
-                }
-            } else if current_section == "input" || current_section == "streams" {
-                if line_trimmed.starts_with("- ") {
-                    let val = line_trimmed.strip_prefix("- ").unwrap().trim().trim_matches('"').trim_matches('\'').trim();
-                    if let Some((k, v)) = val.split_once(':') {
-                        let k = k.trim();
-                        let v = v.trim().trim_matches('"').trim_matches('\'').trim();
-                        if k == "input" || k == "url" {
-                            let stream_id = extract_stream_id_from_url(v);
-                            streams_map.insert(stream_id, StreamEntry::Url(v.to_string()));
-                        }
-                    } else if !val.is_empty() {
-                        let stream_id = extract_stream_id_from_url(val);
-                        streams_map.insert(stream_id, StreamEntry::Url(val.to_string()));
-                    }
-                } else if let Some((k, v)) = line_trimmed.split_once(':') {
-                    let k = k.trim().trim_matches('"').trim_matches('\'').trim().to_string();
-                    let v = v.trim().trim_matches('"').trim_matches('\'').trim().to_string();
-                    if !k.is_empty() && !v.is_empty() {
-                        streams_map.insert(k, StreamEntry::Url(v));
-                    }
-                }
-            }
+            out.extend_from_slice(&[0x00, 0x00, 0x00, 0x01]);
+            out.extend_from_slice(&input[offset + 4..offset + 4 + len]);
+            offset += 4 + len;
         }
 
-        let host = server_host.unwrap_or_else(|| "0.0.0.0".to_string());
-        let port = server_port.unwrap_or(8181);
-
-        if streams_map.is_empty() {
-            return Err("未在 yaml 中找到任何有效的 streams / input 定义".to_string());
+        if is_valid_avcc && offset == input.len() && !out.is_empty() {
+            return out;
         }
 
-        Ok(ServerConfig {
-            server: ServerOutputConfig {
-                host,
-                port,
-                http_addr,
-            },
-            input: StreamConfigInput::Map(streams_map),
-        })
+        let mut fallback = Vec::with_capacity(4 + input.len());
+        fallback.extend_from_slice(&[0x00, 0x00, 0x00, 0x01]);
+        fallback.extend_from_slice(input);
+        fallback
     }
 }
 ```
 
-src/rtsp2frame.rs
+src/rtsp2frame/rtsp_streamer.rs
 
 ```rust
 use bytes::Bytes;
@@ -563,42 +385,8 @@ use tokio::sync::broadcast;
 use url::Url;
 use webrtc::media::Sample;
 use webrtc::track::track_local::track_local_static_sample::TrackLocalStaticSample;
-
+use super::h264_utils::H264Utils;
 use crate::detector::frame_detector::FrameDetector;
-
-fn to_annex_b(input: &[u8]) -> Vec<u8> {
-    if input.is_empty() {
-        return Vec::new();
-    }
-
-    if input.starts_with(&[0, 0, 0, 1]) || input.starts_with(&[0, 0, 1]) {
-        return input.to_vec();
-    }
-
-    let mut out = Vec::with_capacity(input.len() + 16);
-    let mut offset = 0;
-    let mut is_valid_avcc = true;
-
-    while offset + 4 <= input.len() {
-        let len = u32::from_be_bytes([input[offset], input[offset+1], input[offset+2], input[offset+3]]) as usize;
-        if len == 0 || offset + 4 + len > input.len() {
-            is_valid_avcc = false;
-            break;
-        }
-        out.extend_from_slice(&[0x00, 0x00, 0x00, 0x01]);
-        out.extend_from_slice(&input[offset + 4 .. offset + 4 + len]);
-        offset += 4 + len;
-    }
-
-    if is_valid_avcc && offset == input.len() && !out.is_empty() {
-        return out;
-    }
-
-    let mut fallback = Vec::with_capacity(4 + input.len());
-    fallback.extend_from_slice(&[0x00, 0x00, 0x00, 0x01]);
-    fallback.extend_from_slice(input);
-    fallback
-}
 
 pub struct RtspStreamer {
     stream_id: String,
@@ -630,7 +418,8 @@ impl RtspStreamer {
         &self,
         track: Arc<TrackLocalStaticSample>,
     ) -> Result<tokio::task::JoinHandle<()>, String> {
-        let parsed_url = Url::parse(&self.rtsp_url).map_err(|e| format!("无效 RTSP URL ({}): {e}", self.rtsp_url))?;
+        let parsed_url = Url::parse(&self.rtsp_url)
+            .map_err(|e| format!("无效 RTSP URL ({}): {e}", self.rtsp_url))?;
         let stream_id = self.stream_id.clone();
         let detector = Arc::clone(&self.detector);
         let tx_detection = self.tx_detection.clone();
@@ -639,7 +428,8 @@ impl RtspStreamer {
         let is_running = Arc::new(std::sync::atomic::AtomicBool::new(true));
         let is_running_worker = Arc::clone(&is_running);
 
-        let (vpu_feed_tx, mut vpu_feed_rx) = tokio::sync::mpsc::channel::<(Vec<u8>, u64, i64)>(256);
+        let (vpu_feed_tx, mut vpu_feed_rx) =
+            tokio::sync::mpsc::channel::<(Vec<u8>, u64, i64)>(256);
         let detector_feeder = Arc::clone(&detector);
         let is_running_feeder = Arc::clone(&is_running);
 
@@ -657,11 +447,12 @@ impl RtspStreamer {
             let mut last_processed_seq: Option<u64> = None;
             while is_running_worker.load(std::sync::atomic::Ordering::Relaxed) {
                 match detector_worker.detect_latest() {
-                    Ok(det_frame) => {
-                        let cur_seq = det_frame.frame_idx;
+                    Ok(det_result) => {
+                        let cur_seq = det_result.frame_idx;
                         if cur_seq.is_some() && cur_seq != last_processed_seq {
                             last_processed_seq = cur_seq;
-                            let json_msg = serde_json::to_string(&det_frame).unwrap_or_default();
+                            let json_msg =
+                                serde_json::to_string(&det_result).unwrap_or_default();
                             let _ = tx_detection_worker.send(json_msg);
                         } else {
                             std::thread::sleep(Duration::from_millis(5));
@@ -676,8 +467,8 @@ impl RtspStreamer {
 
         let handle = tokio::spawn(async move {
             loop {
-                let session_options = SessionOptions::default()
-                    .user_agent("rtsp-webrtc-streamer/1.0".to_owned());
+                let session_options =
+                    SessionOptions::default().user_agent("rtsp-webrtc-streamer/1.0".to_owned());
 
                 let session_res =
                     Session::describe(parsed_url.clone(), session_options).await;
@@ -691,7 +482,8 @@ impl RtspStreamer {
                     }
                 };
 
-                let video_stream_idx = session.streams().iter().position(|s| s.media() == "video");
+                let video_stream_idx =
+                    session.streams().iter().position(|s| s.media() == "video");
 
                 let stream_idx = match video_stream_idx {
                     Some(idx) => idx,
@@ -714,7 +506,7 @@ impl RtspStreamer {
                 {
                     let extra = v.extra_data();
                     if !extra.is_empty() {
-                        let sps_pps_annexb = to_annex_b(extra);
+                        let sps_pps_annexb = H264Utils::to_annex_b(extra);
                         let _ = detector.feed_packet(&sps_pps_annexb, 0, 0);
                     }
                 }
@@ -759,7 +551,11 @@ impl RtspStreamer {
                                 0
                             };
                             let frame_pts_ms = (frame_seq * 1000 / 30) % 30000;
-                            let pts_ms = if delta_ticks > 0 { rtp_pts_ms } else { frame_pts_ms };
+                            let pts_ms = if delta_ticks > 0 {
+                                rtp_pts_ms
+                            } else {
+                                frame_pts_ms
+                            };
 
                             let data_bytes = Bytes::from(data.clone());
 
@@ -773,8 +569,9 @@ impl RtspStreamer {
                                 log::debug!("[rtsp:{stream_id}] write_sample: {e}");
                             }
 
-                            let complete_nal = to_annex_b(&data);
-                            let _ = vpu_feed_tx.try_send((complete_nal, frame_seq, pts_ms as i64));
+                            let complete_nal = H264Utils::to_annex_b(&data);
+                            let _ = vpu_feed_tx
+                                .try_send((complete_nal, frame_seq, pts_ms as i64));
 
                             frame_seq += 1;
                         }
@@ -806,15 +603,23 @@ impl RtspStreamer {
 }
 ```
 
-src/web_rtc.rs
+src/rtsp2frame/mod.rs
 
 ```rust
+pub mod h264_utils;
+pub mod rtsp_streamer;
+
+pub use h264_utils::H264Utils;
+pub use rtsp_streamer::RtspStreamer;
+```
+
+src/web_rtc/peer_manager.rs
+
+```rust
+use super::stream_context::StreamContext;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpListener;
-use tokio::sync::broadcast;
 use tokio::sync::Mutex;
 use webrtc::api::interceptor_registry::register_default_interceptors;
 use webrtc::api::media_engine::MediaEngine;
@@ -824,110 +629,17 @@ use webrtc::peer_connection::configuration::RTCConfiguration;
 use webrtc::peer_connection::peer_connection_state::RTCPeerConnectionState;
 use webrtc::peer_connection::sdp::session_description::RTCSessionDescription;
 use webrtc::peer_connection::RTCPeerConnection;
-use webrtc::rtp_transceiver::rtp_codec::RTCRtpCodecCapability;
-use webrtc::track::track_local::track_local_static_sample::TrackLocalStaticSample;
 use webrtc::track::track_local::TrackLocal;
 
-#[derive(Clone)]
-pub struct StreamContext {
-    pub stream_id: String,
-    pub input_url: String,
-    pub video_track: Arc<TrackLocalStaticSample>,
-    pub tx_detection: broadcast::Sender<String>,
-}
+pub struct PeerManager;
 
-pub struct WebRtcServer {
-    http_addr: String,
-    streams: Arc<HashMap<String, StreamContext>>,
-    stream_order: Vec<String>,
-    default_stream_id: Option<String>,
-    active_connections: Arc<Mutex<HashMap<u64, Arc<RTCPeerConnection>>>>,
-    next_conn_id: AtomicU64,
-}
-
-impl WebRtcServer {
-    pub fn create_video_track(stream_id: &str) -> Arc<TrackLocalStaticSample> {
-        Arc::new(TrackLocalStaticSample::new(
-            RTCRtpCodecCapability {
-                mime_type: "video/H264".to_owned(),
-                clock_rate: 90000,
-                channels: 0,
-                sdp_fmtp_line: "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f".to_owned(),
-                rtcp_feedback: vec![],
-            },
-            format!("video_{}", stream_id),
-            format!("rtsp-stream-{}", stream_id),
-        ))
-    }
-
-    pub fn new(
-        http_addr: impl Into<String>,
-        stream_contexts: Vec<StreamContext>,
-    ) -> Self {
-        let mut streams = HashMap::new();
-        let mut stream_order = Vec::new();
-        let mut default_stream_id = None;
-
-        for ctx in stream_contexts {
-            if default_stream_id.is_none() {
-                default_stream_id = Some(ctx.stream_id.clone());
-            }
-            stream_order.push(ctx.stream_id.clone());
-            streams.insert(ctx.stream_id.clone(), ctx);
-        }
-
-        Self {
-            http_addr: http_addr.into(),
-            streams: Arc::new(streams),
-            stream_order,
-            default_stream_id,
-            active_connections: Arc::new(Mutex::new(HashMap::new())),
-            next_conn_id: AtomicU64::new(1),
-        }
-    }
-
-    fn resolve_stream_id(&self, path: &str) -> Option<String> {
-        if let Some(query_idx) = path.find('?') {
-            let query = &path[query_idx + 1..];
-            for pair in query.split('&') {
-                if let Some((k, v)) = pair.split_once('=') {
-                    if (k == "src" || k == "stream" || k == "id") && !v.is_empty() {
-                        let decoded = v.replace("%2F", "/");
-                        if self.streams.contains_key(&decoded) {
-                            return Some(decoded);
-                        }
-                    }
-                }
-            }
-        }
-
-        let raw_path = path.split('?').next().unwrap_or(path);
-        let raw_path = raw_path.trim_end_matches('/');
-
-        let sub = raw_path.strip_prefix('/').unwrap_or(raw_path);
-        if let Some(seg) = sub.strip_prefix("offer/") {
-            if self.streams.contains_key(seg) {
-                return Some(seg.to_string());
-            }
-        }
-        if !sub.is_empty() && sub != "health" && sub != "streams" && sub != "api" {
-            if self.streams.contains_key(sub) {
-                return Some(sub.to_string());
-            }
-            return Some(sub.to_string());
-        }
-
-        self.default_stream_id.clone()
-    }
-
-    async fn handle_offer(&self, stream_id: &str, offer_sdp: &str) -> Result<String, String> {
-        let stream_ctx = self.streams.get(stream_id).ok_or_else(|| {
-            format!(
-                "未找到指定的流 ID '{}'。当前已加载的可用流: {:?}",
-                stream_id, self.stream_order
-            )
-        })?;
-
+impl PeerManager {
+    pub async fn handle_offer(
+        stream_ctx: &StreamContext,
+        offer_sdp: &str,
+        active_connections: &Arc<Mutex<HashMap<u64, Arc<RTCPeerConnection>>>>,
+        next_conn_id: &AtomicU64,
+    ) -> Result<String, String> {
         let mut m = MediaEngine::default();
         m.register_default_codecs().map_err(|e| e.to_string())?;
         let mut registry = Registry::new();
@@ -947,13 +659,13 @@ impl WebRtcServer {
                 .map_err(|e| e.to_string())?,
         );
 
-        let conn_id = self.next_conn_id.fetch_add(1, Ordering::SeqCst);
-        self.active_connections
+        let conn_id = next_conn_id.fetch_add(1, Ordering::SeqCst);
+        active_connections
             .lock()
             .await
             .insert(conn_id, Arc::clone(&pc));
         let pc_monitor = Arc::clone(&pc);
-        let connections_ref = Arc::clone(&self.active_connections);
+        let connections_ref = Arc::clone(active_connections);
 
         pc.on_peer_connection_state_change(Box::new(move |s| {
             let pc_monitor = Arc::clone(&pc_monitor);
@@ -1023,7 +735,9 @@ impl WebRtcServer {
                     Box::pin(async move {})
                 }));
 
-                if dc_clone.ready_state() == webrtc::data_channel::data_channel_state::RTCDataChannelState::Open {
+                if dc_clone.ready_state()
+                    == webrtc::data_channel::data_channel_state::RTCDataChannelState::Open
+                {
                     spawn_sender();
                 }
             })
@@ -1040,7 +754,11 @@ impl WebRtcServer {
             .await
             .map_err(|e| e.to_string())?;
 
-        let _ = tokio::time::timeout(std::time::Duration::from_millis(1500), gather_complete.recv()).await;
+        let _ = tokio::time::timeout(
+            std::time::Duration::from_millis(1500),
+            gather_complete.recv(),
+        )
+        .await;
 
         let sdp = pc
             .local_description()
@@ -1049,121 +767,293 @@ impl WebRtcServer {
             .sdp;
         Ok(sdp)
     }
+}
+```
 
-    pub async fn run_signaling_server(self: Arc<Self>) -> std::io::Result<()> {
-        let listener = TcpListener::bind(&self.http_addr).await?;
+src/web_rtc/signaling_server.rs
+
+```rust
+use super::WebRtcServer;
+use std::sync::Arc;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::{TcpListener, TcpStream};
+
+pub struct SignalingServer;
+
+impl SignalingServer {
+    pub fn resolve_stream_id(server: &WebRtcServer, path: &str) -> Option<String> {
+        if let Some(query_idx) = path.find('?') {
+            let query = &path[query_idx + 1..];
+            for pair in query.split('&') {
+                if let Some((k, v)) = pair.split_once('=') {
+                    if (k == "src" || k == "stream" || k == "id") && !v.is_empty() {
+                        let decoded = v.replace("%2F", "/");
+                        if server.streams().contains_key(&decoded) {
+                            return Some(decoded);
+                        }
+                    }
+                }
+            }
+        }
+
+        let raw_path = path.split('?').next().unwrap_or(path);
+        let raw_path = raw_path.trim_end_matches('/');
+
+        let sub = raw_path.strip_prefix('/').unwrap_or(raw_path);
+        if let Some(seg) = sub.strip_prefix("offer/") {
+            if server.streams().contains_key(seg) {
+                return Some(seg.to_string());
+            }
+        }
+        if !sub.is_empty() && sub != "health" && sub != "streams" && sub != "api" {
+            if server.streams().contains_key(sub) {
+                return Some(sub.to_string());
+            }
+            return Some(sub.to_string());
+        }
+
+        server.default_stream_id().cloned()
+    }
+
+    pub async fn run(server: Arc<WebRtcServer>) -> std::io::Result<()> {
+        let listener = TcpListener::bind(server.http_addr()).await?;
 
         loop {
-            let (mut conn, _) = listener.accept().await?;
-            let server = Arc::clone(&self);
+            let (conn, _) = listener.accept().await?;
+            let server = Arc::clone(&server);
 
             tokio::spawn(async move {
-                let mut buf: Vec<u8> = Vec::new();
-                let mut tmp = [0u8; 4096];
-                let header_end = loop {
-                    let n = match conn.read(&mut tmp).await {
-                        Ok(0) | Err(_) => return,
-                        Ok(n) => n,
-                    };
-                    buf.extend_from_slice(&tmp[..n]);
-                    if let Some(pos) = buf.windows(4).position(|w| w == b"\r\n\r\n") {
-                        break pos + 4;
-                    }
-                    if buf.len() > (1 << 20) {
-                        return;
-                    }
-                };
-
-                let headers = String::from_utf8_lossy(&buf[..header_end]);
-                let first_line = headers.lines().next().unwrap_or("");
-                let mut parts = first_line.split_whitespace();
-                let method = parts.next().unwrap_or("");
-                let path = parts.next().unwrap_or("");
-
-                let content_length = headers
-                    .lines()
-                    .find_map(|l| {
-                        l.trim()
-                            .to_ascii_lowercase()
-                            .strip_prefix("content-length:")
-                            .and_then(|v| v.trim().parse::<usize>().ok())
-                    })
-                    .unwrap_or(0);
-
-                if method == "OPTIONS" {
-                    let resp = concat!(
-                        "HTTP/1.1 204 No Content\r\n",
-                        "Access-Control-Allow-Origin: *\r\n",
-                        "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n",
-                        "Access-Control-Allow-Headers: Content-Type\r\n",
-                        "Connection: close\r\n",
-                        "Content-Length: 0\r\n\r\n"
-                    );
-                    let _ = conn.write_all(resp.as_bytes()).await;
-                    let _ = conn.flush().await;
-                    return;
-                }
-
-                if method == "GET" && path == "/health" {
-                    let resp = "HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\nContent-Length: 2\r\n\r\nok";
-                    let _ = conn.write_all(resp.as_bytes()).await;
-                    let _ = conn.flush().await;
-                    return;
-                }
-
-                if method == "POST" {
-                    let stream_id_opt = server.resolve_stream_id(path);
-                    let stream_id = match stream_id_opt {
-                        Some(id) => id,
-                        None => {
-                            let msg = format!("未找到指定的流。可用流列表: {:?}", server.stream_order);
-                            let resp = format!(
-                                "HTTP/1.1 404 Not Found\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: {}\r\n\r\n{msg}",
-                                msg.len()
-                            );
-                            let _ = conn.write_all(resp.as_bytes()).await;
-                            let _ = conn.flush().await;
-                            return;
-                        }
-                    };
-
-                    while buf.len() < header_end + content_length {
-                        match conn.read(&mut tmp).await {
-                            Ok(0) | Err(_) => return,
-                            Ok(n) => buf.extend_from_slice(&tmp[..n]),
-                        }
-                    }
-                    let body =
-                        String::from_utf8_lossy(&buf[header_end..header_end + content_length])
-                            .to_string();
-
-                    match server.handle_offer(&stream_id, &body).await {
-                        Ok(answer_sdp) => {
-                            let resp = format!(
-                                "HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\nContent-Type: application/sdp\r\nContent-Length: {}\r\n\r\n{}",
-                                answer_sdp.len(),
-                                answer_sdp
-                            );
-                            let _ = conn.write_all(resp.as_bytes()).await;
-                            let _ = conn.flush().await;
-                        }
-                        Err(e) => {
-                            let msg = format!("Offer 处理失败 (stream={stream_id}): {e}");
-                            let resp = format!(
-                                "HTTP/1.1 500 Internal Server Error\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: {}\r\n\r\n{msg}",
-                                msg.len()
-                            );
-                            let _ = conn.write_all(resp.as_bytes()).await;
-                            let _ = conn.flush().await;
-                        }
-                    }
-                } else {
-                    let resp = "HTTP/1.1 404 Not Found\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\nContent-Length: 0\r\n\r\n";
-                    let _ = conn.write_all(resp.as_bytes()).await;
-                    let _ = conn.flush().await;
-                }
+                Self::handle_connection(server, conn).await;
             });
         }
+    }
+
+    async fn handle_connection(server: Arc<WebRtcServer>, mut conn: TcpStream) {
+        let mut buf: Vec<u8> = Vec::new();
+        let mut tmp = [0u8; 4096];
+        let header_end = loop {
+            let n = match conn.read(&mut tmp).await {
+                Ok(0) | Err(_) => return,
+                Ok(n) => n,
+            };
+            buf.extend_from_slice(&tmp[..n]);
+            if let Some(pos) = buf.windows(4).position(|w| w == b"\r\n\r\n") {
+                break pos + 4;
+            }
+            if buf.len() > (1 << 20) {
+                return;
+            }
+        };
+
+        let headers = String::from_utf8_lossy(&buf[..header_end]);
+        let first_line = headers.lines().next().unwrap_or("");
+        let mut parts = first_line.split_whitespace();
+        let method = parts.next().unwrap_or("");
+        let path = parts.next().unwrap_or("");
+
+        let content_length = headers
+            .lines()
+            .find_map(|l| {
+                l.trim()
+                    .to_ascii_lowercase()
+                    .strip_prefix("content-length:")
+                    .and_then(|v| v.trim().parse::<usize>().ok())
+            })
+            .unwrap_or(0);
+
+        if method == "OPTIONS" {
+            let resp = concat!(
+                "HTTP/1.1 204 No Content\r\n",
+                "Access-Control-Allow-Origin: *\r\n",
+                "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n",
+                "Access-Control-Allow-Headers: Content-Type\r\n",
+                "Connection: close\r\n",
+                "Content-Length: 0\r\n\r\n"
+            );
+            let _ = conn.write_all(resp.as_bytes()).await;
+            let _ = conn.flush().await;
+            return;
+        }
+
+        if method == "GET" && path == "/health" {
+            let resp = "HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\nContent-Length: 2\r\n\r\nok";
+            let _ = conn.write_all(resp.as_bytes()).await;
+            let _ = conn.flush().await;
+            return;
+        }
+
+        if method == "POST" {
+            let stream_id_opt = Self::resolve_stream_id(&server, path);
+            let stream_id = match stream_id_opt {
+                Some(id) => id,
+                None => {
+                    let msg = format!("未找到指定的流。可用流列表: {:?}", server.stream_order());
+                    let resp = format!(
+                    "HTTP/1.1 404 Not Found\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: {}\r\n\r\n{msg}",
+                    msg.len()
+                );
+                    let _ = conn.write_all(resp.as_bytes()).await;
+                    let _ = conn.flush().await;
+                    return;
+                }
+            };
+
+            while buf.len() < header_end + content_length {
+                match conn.read(&mut tmp).await {
+                    Ok(0) | Err(_) => return,
+                    Ok(n) => buf.extend_from_slice(&tmp[..n]),
+                }
+            }
+            let body =
+                String::from_utf8_lossy(&buf[header_end..header_end + content_length]).to_string();
+
+            match server.handle_offer(&stream_id, &body).await {
+                Ok(answer_sdp) => {
+                    let resp = format!(
+                    "HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\nContent-Type: application/sdp\r\nContent-Length: {}\r\n\r\n{}",
+                    answer_sdp.len(),
+                    answer_sdp
+                );
+                    let _ = conn.write_all(resp.as_bytes()).await;
+                    let _ = conn.flush().await;
+                }
+                Err(e) => {
+                    let msg = format!("Offer 处理失败 (stream={stream_id}): {e}");
+                    let resp = format!(
+                    "HTTP/1.1 500 Internal Server Error\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: {}\r\n\r\n{msg}",
+                    msg.len()
+                );
+                    let _ = conn.write_all(resp.as_bytes()).await;
+                    let _ = conn.flush().await;
+                }
+            }
+        } else {
+            let resp = "HTTP/1.1 404 Not Found\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\nContent-Length: 0\r\n\r\n";
+            let _ = conn.write_all(resp.as_bytes()).await;
+            let _ = conn.flush().await;
+        }
+    }
+}
+```
+
+src/web_rtc/stream_context.rs
+
+```rust
+use std::sync::Arc;
+use tokio::sync::broadcast;
+use webrtc::rtp_transceiver::rtp_codec::RTCRtpCodecCapability;
+use webrtc::track::track_local::track_local_static_sample::TrackLocalStaticSample;
+
+#[derive(Clone)]
+pub struct StreamContext {
+    pub stream_id: String,
+    pub input_url: String,
+    pub video_track: Arc<TrackLocalStaticSample>,
+    pub tx_detection: broadcast::Sender<String>,
+}
+
+impl StreamContext {
+    pub fn create_video_track(stream_id: &str) -> Arc<TrackLocalStaticSample> {
+        Arc::new(TrackLocalStaticSample::new(
+            RTCRtpCodecCapability {
+                mime_type: "video/H264".to_owned(),
+                clock_rate: 90000,
+                channels: 0,
+                sdp_fmtp_line: "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f".to_owned(),
+                rtcp_feedback: vec![],
+            },
+            format!("video_{}", stream_id),
+            format!("rtsp-stream-{}", stream_id),
+        ))
+    }
+}
+```
+
+src/web_rtc/web_rtc_server.rs
+
+```rust
+use super::peer_manager::PeerManager;
+use super::signaling_server::SignalingServer;
+use super::stream_context::StreamContext;
+use std::collections::HashMap;
+use std::sync::atomic::AtomicU64;
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use webrtc::peer_connection::RTCPeerConnection;
+use webrtc::track::track_local::track_local_static_sample::TrackLocalStaticSample;
+
+pub struct WebRtcServer {
+    http_addr: String,
+    streams: Arc<HashMap<String, StreamContext>>,
+    stream_order: Vec<String>,
+    default_stream_id: Option<String>,
+    active_connections: Arc<Mutex<HashMap<u64, Arc<RTCPeerConnection>>>>,
+    next_conn_id: AtomicU64,
+}
+
+impl WebRtcServer {
+    pub fn create_video_track(stream_id: &str) -> Arc<TrackLocalStaticSample> {
+        StreamContext::create_video_track(stream_id)
+    }
+
+    pub fn new(http_addr: impl Into<String>, stream_contexts: Vec<StreamContext>) -> Self {
+        let mut streams = HashMap::new();
+        let mut stream_order = Vec::new();
+        let mut default_stream_id = None;
+
+        for ctx in stream_contexts {
+            if default_stream_id.is_none() {
+                default_stream_id = Some(ctx.stream_id.clone());
+            }
+            stream_order.push(ctx.stream_id.clone());
+            streams.insert(ctx.stream_id.clone(), ctx);
+        }
+
+        Self {
+            http_addr: http_addr.into(),
+            streams: Arc::new(streams),
+            stream_order,
+            default_stream_id,
+            active_connections: Arc::new(Mutex::new(HashMap::new())),
+            next_conn_id: AtomicU64::new(1),
+        }
+    }
+
+    pub fn http_addr(&self) -> &str {
+        &self.http_addr
+    }
+
+    pub fn streams(&self) -> &HashMap<String, StreamContext> {
+        &self.streams
+    }
+
+    pub fn stream_order(&self) -> &[String] {
+        &self.stream_order
+    }
+
+    pub fn default_stream_id(&self) -> Option<&String> {
+        self.default_stream_id.as_ref()
+    }
+
+    pub async fn handle_offer(&self, stream_id: &str, offer_sdp: &str) -> Result<String, String> {
+        let stream_ctx = self.streams.get(stream_id).ok_or_else(|| {
+            format!(
+                "未找到指定的流 ID '{}'。当前已加载的可用流: {:?}",
+                stream_id, self.stream_order
+            )
+        })?;
+
+        PeerManager::handle_offer(
+            stream_ctx,
+            offer_sdp,
+            &self.active_connections,
+            &self.next_conn_id,
+        )
+        .await
+    }
+
+    pub async fn run_signaling_server(self: Arc<Self>) -> std::io::Result<()> {
+        SignalingServer::run(self).await
     }
 }
 ```
@@ -1177,8 +1067,7 @@ pub mod rtsp2frame;
 pub mod web_rtc;
 
 use config::{ServerConfig, StreamConfig};
-use detector::detect_c_wrapper::DetectCWrapper;
-use detector::frame_detector::FrameDetector;
+use detector::{DetectCWrapper, FrameDetector};
 use rtsp2frame::RtspStreamer;
 use std::path::Path;
 use std::sync::Arc;
@@ -1188,36 +1077,23 @@ use web_rtc::{StreamContext, WebRtcServer};
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().collect();
+    let config_path = args.get(1).map(String::as_str)
+        .or_else(|| Path::new("config.yaml").exists().then_some("config.yaml"))
+        .or_else(|| Path::new("config.yml").exists().then_some("config.yml"))
+        .ok_or("未找到配置文件 config.yaml")?;
 
-    let config_path = if let Some(arg1) = args.get(1) {
-        arg1.as_str()
-    } else if Path::new("config.yaml").exists() {
-        "config.yaml"
-    } else if Path::new("config.yml").exists() {
-        "config.yml"
-    } else {
-        eprintln!("[server] 错误: 未指定配置文件且当前目录下未找到 config.yaml / config.yml");
-        return Err("未找到配置文件，请传入 yaml 路径或在当前目录放置 config.yaml".into());
-    };
-
-    let config = ServerConfig::load_from_file(config_path)
-        .map_err(|e| format!("加载配置文件 '{config_path}' 失败: {e}"))?;
-
+    let config = ServerConfig::load_from_file(config_path)?;
     let http_addr = config.http_addr();
     let streams: Vec<StreamConfig> = config.get_streams();
 
     if streams.is_empty() {
-        eprintln!("[server] 错误: 配置文件中未配置任何有效视频流");
-        return Err("配置文件中未配置任何视频流 (streams / input)".into());
+        return Err("配置文件未包含有效视频流".into());
     }
 
-    println!("==================================================");
-    println!("[server] WebRTC 目标检测服务已启动");
-    println!("  • 信令监听: http://{}", http_addr);
+    println!("[server] http://{http_addr}");
     for st in &streams {
-        println!("  • 视频流 [{}] -> http://{}/{} ({})", st.id, http_addr, st.id, st.input);
+        println!("  {}: {}", st.id, st.input);
     }
-    println!("==================================================");
 
     let detect_wrapper = Arc::new(DetectCWrapper::new());
     let total_streams = streams.len() as u32;
@@ -1267,6 +1143,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+### 配置
+
+config.yaml
+
+```yaml
+input:
+  aaa: rtsp://192.168.88.20:8554/file_01
+  bbb: rtsp://192.168.88.20:8554/file_02
+
+server:
+  host: "0.0.0.0"
+  port: 8181
+```
+
 build.rs
 
 ```rust
@@ -1290,18 +1180,6 @@ fn main() {
         link_dylib("../rknn/rknn_lib/build/libdetect.so");
     }
 }
-```
-
-config.yaml
-
-```yaml
-input:
-  aaa: rtsp://192.168.88.20:8554/file_01
-  bbb: rtsp://192.168.88.20:8554/file_02
-
-server:
-  host: "0.0.0.0"
-  port: 8181
 ```
 
 build.sh
