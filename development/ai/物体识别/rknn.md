@@ -58,7 +58,7 @@ rknn_model_zoo/utils/*
 
 include/hardware/channel_decoder.h
 
-```c
+```cpp
 #pragma once
 
 #include "hardware/vpu_decoder.h"
@@ -81,7 +81,7 @@ private:
 
 src/hardware/channel_decoder.cc
 
-```c
+```cpp
 #include "hardware/channel_decoder.h"
 #include <cstdio>
 
@@ -106,7 +106,7 @@ VpuDecoder* ChannelDecoder::get_or_create(int ch) {
 
 include/hardware/npu_infer.h
 
-```c
+```cpp
 #pragma once
 
 #include "image_utils.h"
@@ -115,8 +115,40 @@ include/hardware/npu_infer.h
 #include "hardware/vpu_decoder.h"
 #include <string>
 #include <vector>
+#include <map>
 #include <mutex>
 #include <memory>
+
+class NpuChannelContext {
+public:
+    NpuChannelContext(int ch, rknn_core_mask core_mask);
+    ~NpuChannelContext();
+
+    bool init(const std::string& model_path);
+    bool infer_internal(image_buffer_t& img, object_detect_result_list& results);
+    void ensure_nv12_buffer_size(size_t needed_size);
+    void release();
+
+    int channel_id() const { return _ch; }
+    rknn_core_mask core_mask() const { return _core_mask; }
+    std::mutex& mutex() { return _mutex; }
+    bool is_initialized() const { return _is_initialized; }
+    void* nv12_buf() const { return _nv12_buf; }
+    size_t nv12_buf_size() const { return _nv12_buf_size; }
+
+private:
+    int _ch;
+    rknn_core_mask _core_mask;
+    rknn_app_context_t _app_ctx;
+    bool _is_initialized;
+    std::mutex _mutex;
+
+    void* _input_buf;
+    size_t _input_buf_size;
+
+    void* _nv12_buf;
+    size_t _nv12_buf_size;
+};
 
 class NpuInfer {
 public:
@@ -126,34 +158,35 @@ public:
     ~NpuInfer();
 
     bool init(const std::string& model_path = "", const std::string& label_path = "");
+    bool init_with_stream_count(int stream_count);
     bool infer(image_buffer_t& img, object_detect_result_list& results);
     int detect_frame(VpuDecoder* decoder, int ch, char* out_buf, int out_buf_size, unsigned long long* out_frame_idx, long long* out_pts_ms);
     const char* get_label_name(int cls_id);
     void release();
 
+    NpuChannelContext* get_or_create_channel(int ch);
+
 private:
-    bool infer_internal(image_buffer_t& img, object_detect_result_list& results);
     std::string find_model_path(const std::string& user_path);
     std::string find_labels_path(const std::string& user_path);
     void load_labels(const std::string& path);
-    void ensure_nv12_buffer_size(size_t needed_size);
+    static int detect_npu_core_num();
+    rknn_core_mask select_core_mask(int ch);
 
-    std::mutex _infer_mutex;
-    rknn_app_context_t _app_ctx;
-    bool _is_initialized;
+    std::mutex _channels_mutex;
+    std::string _model_path;
+    std::string _label_path;
+    bool _postprocess_inited;
+    int _configured_streams;
     std::vector<std::string> _labels;
 
-    void* _input_buf;
-    size_t _input_buf_size;
-
-    void* _nv12_buf;
-    size_t _nv12_buf_size;
+    std::map<int, std::unique_ptr<NpuChannelContext>> _channels;
 };
 ```
 
 src/hardware/npu_infer.cc
 
-```c
+```cpp
 #include "hardware/npu_infer.h"
 #include "consts.h"
 #include "file_utils.h"
@@ -163,23 +196,25 @@ src/hardware/npu_infer.cc
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <unistd.h>
 
-NpuInfer& NpuInfer::shareInstance() {
-    static NpuInfer s_instance;
-    return s_instance;
-}
-
-NpuInfer::NpuInfer()
-    : _is_initialized(false), _input_buf(nullptr), _input_buf_size(0), _nv12_buf(nullptr), _nv12_buf_size(0) {
+NpuChannelContext::NpuChannelContext(int ch, rknn_core_mask core_mask)
+    : _ch(ch),
+      _core_mask(core_mask),
+      _is_initialized(false),
+      _input_buf(nullptr),
+      _input_buf_size(0),
+      _nv12_buf(nullptr),
+      _nv12_buf_size(0) {
     memset(&_app_ctx, 0, sizeof(rknn_app_context_t));
 }
 
-NpuInfer::~NpuInfer() {
+NpuChannelContext::~NpuChannelContext() {
     release();
 }
 
-void NpuInfer::ensure_nv12_buffer_size(size_t needed_size) {
+void NpuChannelContext::ensure_nv12_buffer_size(size_t needed_size) {
     if (_nv12_buf && _nv12_buf_size >= needed_size) {
         return;
     }
@@ -195,6 +230,143 @@ void NpuInfer::ensure_nv12_buffer_size(size_t needed_size) {
         _nv12_buf = malloc(alloc_size);
     }
     _nv12_buf_size = alloc_size;
+}
+
+bool NpuChannelContext::init(const std::string& model_path) {
+    std::lock_guard<std::mutex> lock(_mutex);
+    if (_is_initialized) {
+        return true;
+    }
+
+    if (model_path.empty()) {
+        fprintf(stderr, "[npu_infer] [ch %d] error: model file path is empty!\n", _ch);
+        return false;
+    }
+
+    int ret = init_yolov8_model(model_path.c_str(), &_app_ctx);
+    if (ret < 0) {
+        fprintf(stderr, "[npu_infer] [ch %d] error: init model failed (%d)\n", _ch, ret);
+        return false;
+    }
+
+    ret = rknn_set_core_mask(_app_ctx.rknn_ctx, _core_mask);
+    if (ret < 0) {
+        fprintf(stderr, "[npu_infer] [ch %d] warning: rknn_set_core_mask (0x%x) failed (%d)\n", _ch, (unsigned int)_core_mask, ret);
+    }
+
+    size_t raw_size = (size_t)_app_ctx.model_width * _app_ctx.model_height * _app_ctx.model_channel;
+    _input_buf_size = ((raw_size + 4095) / 4096) * 4096 + 4096;
+    _input_buf = nullptr;
+    if (posix_memalign(&_input_buf, 4096, _input_buf_size) != 0 || !_input_buf) {
+        _input_buf = malloc(_input_buf_size);
+    }
+    if (_input_buf) {
+        memset(_input_buf, 0, _input_buf_size);
+    }
+
+    _is_initialized = true;
+    printf("[npu_infer] [ch %d] npu engine ready on core mask 0x%x (model: %dx%dx%d, quant: %d, persistent input_buf: %zu bytes)\n",
+           _ch, (unsigned int)_core_mask, _app_ctx.model_width, _app_ctx.model_height, _app_ctx.model_channel, (int)_app_ctx.is_quant, _input_buf_size);
+    return true;
+}
+
+bool NpuChannelContext::infer_internal(image_buffer_t& img, object_detect_result_list& results) {
+    if (!_is_initialized || !img.virt_addr || !_input_buf) {
+        return false;
+    }
+
+    memset(&results, 0, sizeof(object_detect_result_list));
+
+    image_buffer_t dst_img;
+    memset(&dst_img, 0, sizeof(image_buffer_t));
+    dst_img.width = _app_ctx.model_width;
+    dst_img.height = _app_ctx.model_height;
+    dst_img.width_stride = _app_ctx.model_width;
+    dst_img.height_stride = _app_ctx.model_height;
+    dst_img.format = IMAGE_FORMAT_RGB888;
+    dst_img.virt_addr = (unsigned char*)_input_buf;
+    dst_img.size = (int)(_app_ctx.model_width * _app_ctx.model_height * _app_ctx.model_channel);
+    dst_img.fd = -1;
+
+    letterbox_t letter_box;
+    memset(&letter_box, 0, sizeof(letterbox_t));
+
+    int r = convert_image_with_letterbox(&img, &dst_img, &letter_box, 114);
+    if (r < 0) {
+        fprintf(stderr, "[npu_infer] [ch %d] convert_image_with_letterbox failed\n", _ch);
+        return false;
+    }
+
+    rknn_input inputs[1];
+    memset(inputs, 0, sizeof(inputs));
+    inputs[0].index = 0;
+    inputs[0].type = RKNN_TENSOR_UINT8;
+    inputs[0].fmt = RKNN_TENSOR_NHWC;
+    inputs[0].size = _app_ctx.model_width * _app_ctx.model_height * _app_ctx.model_channel;
+    inputs[0].buf = _input_buf;
+
+    int ret = rknn_inputs_set(_app_ctx.rknn_ctx, _app_ctx.io_num.n_input, inputs);
+    if (ret < 0) {
+        fprintf(stderr, "[npu_infer] [ch %d] rknn_inputs_set failed (%d)\n", _ch, ret);
+        return false;
+    }
+
+    ret = rknn_run(_app_ctx.rknn_ctx, nullptr);
+    if (ret < 0) {
+        fprintf(stderr, "[npu_infer] [ch %d] rknn_run failed (%d)\n", _ch, ret);
+        return false;
+    }
+
+    rknn_output outputs[_app_ctx.io_num.n_output];
+    memset(outputs, 0, sizeof(outputs));
+    for (int i = 0; i < _app_ctx.io_num.n_output; i++) {
+        outputs[i].index = i;
+        outputs[i].want_float = (!_app_ctx.is_quant);
+    }
+
+    ret = rknn_outputs_get(_app_ctx.rknn_ctx, _app_ctx.io_num.n_output, outputs, NULL);
+    if (ret < 0) {
+        fprintf(stderr, "[npu_infer] [ch %d] rknn_outputs_get failed (%d)\n", _ch, ret);
+        return false;
+    }
+
+    post_process(&_app_ctx, outputs, &letter_box, BOX_THRESH, NMS_THRESH, &results);
+
+    rknn_outputs_release(_app_ctx.rknn_ctx, _app_ctx.io_num.n_output, outputs);
+    return true;
+}
+
+void NpuChannelContext::release() {
+    std::lock_guard<std::mutex> lock(_mutex);
+    if (_is_initialized) {
+        release_yolov8_model(&_app_ctx);
+        if (_input_buf) {
+            free(_input_buf);
+            _input_buf = nullptr;
+            _input_buf_size = 0;
+        }
+        if (_nv12_buf) {
+            free(_nv12_buf);
+            _nv12_buf = nullptr;
+            _nv12_buf_size = 0;
+        }
+        _is_initialized = false;
+        printf("[npu_infer] [ch %d] channel resources released.\n", _ch);
+    }
+}
+
+NpuInfer& NpuInfer::shareInstance() {
+    static NpuInfer s_instance;
+    return s_instance;
+}
+
+NpuInfer::NpuInfer()
+    : _postprocess_inited(false),
+      _configured_streams(0) {
+}
+
+NpuInfer::~NpuInfer() {
+    release();
 }
 
 std::string NpuInfer::find_model_path(const std::string& user_path) {
@@ -237,165 +409,197 @@ void NpuInfer::load_labels(const std::string& path) {
     printf("[npu_infer] loaded %zu labels from: %s\n", _labels.size(), resolved.c_str());
 }
 
-bool NpuInfer::init(const std::string& model_path, const std::string& label_path) {
-    std::lock_guard<std::mutex> lock(_infer_mutex);
-    if (_is_initialized) {
-        return true;
+int NpuInfer::detect_npu_core_num() {
+    int cores = 0;
+    std::string chip_name = "unknown";
+
+    std::ifstream dt_file("/proc/device-tree/compatible");
+    if (dt_file.is_open()) {
+        std::string content((std::istreambuf_iterator<char>(dt_file)),
+                             std::istreambuf_iterator<char>());
+        if (content.find("rk3588") != std::string::npos) {
+            chip_name = "rk3588";
+            cores = 3;
+        } else if (content.find("rk3576") != std::string::npos) {
+            chip_name = "rk3576";
+            cores = 2;
+        } else if (content.find("rk3568") != std::string::npos ||
+                   content.find("rk3566") != std::string::npos ||
+                   content.find("rk3562") != std::string::npos) {
+            chip_name = "rk356x";
+            cores = 1;
+        }
     }
 
-    std::string resolved_model = find_model_path(model_path);
-    if (resolved_model.empty()) {
+    if (cores == 0) {
+        std::ifstream cpu_file("/proc/cpuinfo");
+        if (cpu_file.is_open()) {
+            std::string line;
+            while (std::getline(cpu_file, line)) {
+                if (line.find("3588") != std::string::npos) {
+                    chip_name = "rk3588";
+                    cores = 3;
+                    break;
+                } else if (line.find("3576") != std::string::npos) {
+                    chip_name = "rk3576";
+                    cores = 2;
+                    break;
+                } else if (line.find("3568") != std::string::npos || line.find("3566") != std::string::npos) {
+                    chip_name = "rk356x";
+                    cores = 1;
+                    break;
+                }
+            }
+        }
+    }
+
+    printf("[npu_infer] auto-detected platform: %s (npu physical cores: %d)\n", chip_name.c_str(), cores);
+    return cores;
+}
+
+rknn_core_mask NpuInfer::select_core_mask(int ch) {
+    static int s_core_num = detect_npu_core_num();
+
+    if (ch < 0) {
+        if (s_core_num == 3) return RKNN_NPU_CORE_0_1_2;
+        if (s_core_num == 2) return RKNN_NPU_CORE_0_1;
+        if (s_core_num == 1) return RKNN_NPU_CORE_0;
+        return RKNN_NPU_CORE_AUTO;
+    }
+
+    int streams = _configured_streams > 0 ? _configured_streams : (int)_channels.size();
+    if (streams <= 1) {
+        if (s_core_num == 3) return RKNN_NPU_CORE_0_1_2;
+        if (s_core_num == 2) return RKNN_NPU_CORE_0_1;
+        if (s_core_num == 1) return RKNN_NPU_CORE_0;
+        return RKNN_NPU_CORE_AUTO;
+    }
+
+    if (streams > s_core_num) {
+        return RKNN_NPU_CORE_AUTO;
+    }
+
+    if (s_core_num == 3) {
+        switch (ch % 3) {
+            case 0: return RKNN_NPU_CORE_0;
+            case 1: return RKNN_NPU_CORE_1;
+            case 2: return RKNN_NPU_CORE_2;
+        }
+    } else if (s_core_num == 2) {
+        switch (ch % 2) {
+            case 0: return RKNN_NPU_CORE_0;
+            case 1: return RKNN_NPU_CORE_1;
+        }
+    } else if (s_core_num == 1) {
+        return RKNN_NPU_CORE_0;
+    }
+
+    return RKNN_NPU_CORE_AUTO;
+}
+
+bool NpuInfer::init_with_stream_count(int stream_count) {
+    std::lock_guard<std::mutex> lock(_channels_mutex);
+    _configured_streams = stream_count;
+    _model_path = find_model_path(_model_path);
+    _label_path = find_labels_path(_label_path);
+
+    if (!_postprocess_inited) {
+        init_post_process();
+        load_labels(_label_path);
+        _postprocess_inited = true;
+    }
+
+    int core_num = detect_npu_core_num();
+    printf("[npu_infer] initialized with stream count: %d, physical cores: %d\n", stream_count, core_num);
+
+    for (int ch = 0; ch < stream_count; ++ch) {
+        rknn_core_mask mask = select_core_mask(ch);
+        auto ctx = std::make_unique<NpuChannelContext>(ch, mask);
+        ctx->init(_model_path);
+        _channels[ch] = std::move(ctx);
+    }
+    return true;
+}
+
+bool NpuInfer::init(const std::string& model_path, const std::string& label_path) {
+    std::lock_guard<std::mutex> lock(_channels_mutex);
+    _model_path = find_model_path(model_path);
+    _label_path = find_labels_path(label_path);
+
+    if (!_postprocess_inited) {
+        init_post_process();
+        load_labels(_label_path);
+        _postprocess_inited = true;
+    }
+
+    if (_model_path.empty()) {
         fprintf(stderr, "[npu_infer] error: model file not found!\n");
         return false;
     }
 
-    printf("[npu_infer] initializing model: %s\n", resolved_model.c_str());
-    init_post_process();
-
-    int ret = init_yolov8_model(resolved_model.c_str(), &_app_ctx);
-    if (ret < 0) {
-        fprintf(stderr, "[npu_infer] error: init model failed (%d)\n", ret);
-        return false;
-    }
-
-    rknn_set_core_mask(_app_ctx.rknn_ctx, RKNN_NPU_CORE_0_1);
-
-    // Pre-allocate page-aligned (4096-aligned) buffer for hardware RGA & NPU input (zero-churn)
-    size_t raw_size = (size_t)_app_ctx.model_width * _app_ctx.model_height * _app_ctx.model_channel;
-    _input_buf_size = ((raw_size + 4095) / 4096) * 4096 + 4096;
-    _input_buf = nullptr;
-    if (posix_memalign(&_input_buf, 4096, _input_buf_size) != 0 || !_input_buf) {
-        _input_buf = malloc(_input_buf_size);
-    }
-    if (_input_buf) {
-        memset(_input_buf, 0, _input_buf_size);
-    }
-
-    load_labels(label_path);
-    _is_initialized = true;
-    printf("[npu_infer] npu engine ready. (model: %dx%dx%d, quant: %d, persistent input_buf: %zu bytes)\n",
-           _app_ctx.model_width, _app_ctx.model_height, _app_ctx.model_channel, (int)_app_ctx.is_quant, _input_buf_size);
+    printf("[npu_infer] model path: %s, labels: %zu\n", _model_path.c_str(), _labels.size());
     return true;
 }
 
-bool NpuInfer::infer_internal(image_buffer_t& img, object_detect_result_list& results) {
-    if (!_is_initialized || !img.virt_addr || !_input_buf) {
-        return false;
+NpuChannelContext* NpuInfer::get_or_create_channel(int ch) {
+    std::lock_guard<std::mutex> lock(_channels_mutex);
+    if (!_postprocess_inited) {
+        _model_path = find_model_path(_model_path);
+        _label_path = find_labels_path(_label_path);
+        init_post_process();
+        load_labels(_label_path);
+        _postprocess_inited = true;
     }
 
-    memset(&results, 0, sizeof(object_detect_result_list));
-
-    // Prepare target letterbox destination on persistent page-aligned buffer
-    image_buffer_t dst_img;
-    memset(&dst_img, 0, sizeof(image_buffer_t));
-    dst_img.width = _app_ctx.model_width;
-    dst_img.height = _app_ctx.model_height;
-    dst_img.width_stride = _app_ctx.model_width;
-    dst_img.height_stride = _app_ctx.model_height;
-    dst_img.format = IMAGE_FORMAT_RGB888;
-    dst_img.virt_addr = (unsigned char*)_input_buf;
-    dst_img.size = (int)(_app_ctx.model_width * _app_ctx.model_height * _app_ctx.model_channel);
-    dst_img.fd = -1;
-
-    letterbox_t letter_box;
-    memset(&letter_box, 0, sizeof(letterbox_t));
-
-    // Hardware RGA letterbox color conversion (NV12 -> RGB888 letterbox) using pre-allocated page-aligned buffer
-    int r = convert_image_with_letterbox(&img, &dst_img, &letter_box, 114);
-    if (r < 0) {
-        fprintf(stderr, "[npu_infer] convert_image_with_letterbox failed\n");
-        return false;
+    auto it = _channels.find(ch);
+    if (it != _channels.end()) {
+        return it->second.get();
     }
 
-    rknn_input inputs[1];
-    memset(inputs, 0, sizeof(inputs));
-    inputs[0].index = 0;
-    inputs[0].type = RKNN_TENSOR_UINT8;
-    inputs[0].fmt = RKNN_TENSOR_NHWC;
-    inputs[0].size = _app_ctx.model_width * _app_ctx.model_height * _app_ctx.model_channel;
-    inputs[0].buf = _input_buf;
-
-    int ret = rknn_inputs_set(_app_ctx.rknn_ctx, _app_ctx.io_num.n_input, inputs);
-    if (ret < 0) {
-        fprintf(stderr, "[npu_infer] rknn_inputs_set failed (%d)\n", ret);
-        return false;
+    rknn_core_mask mask = select_core_mask(ch);
+    auto channel = std::make_unique<NpuChannelContext>(ch, mask);
+    if (!channel->init(_model_path)) {
+        fprintf(stderr, "[npu_infer] failed to initialize channel context for ch=%d\n", ch);
+        return nullptr;
     }
 
-    ret = rknn_run(_app_ctx.rknn_ctx, nullptr);
-    if (ret < 0) {
-        fprintf(stderr, "[npu_infer] rknn_run failed (%d)\n", ret);
-        return false;
-    }
-
-    rknn_output outputs[_app_ctx.io_num.n_output];
-    memset(outputs, 0, sizeof(outputs));
-    for (int i = 0; i < _app_ctx.io_num.n_output; i++) {
-        outputs[i].index = i;
-        outputs[i].want_float = (!_app_ctx.is_quant);
-    }
-
-    ret = rknn_outputs_get(_app_ctx.rknn_ctx, _app_ctx.io_num.n_output, outputs, NULL);
-    if (ret < 0) {
-        fprintf(stderr, "[npu_infer] rknn_outputs_get failed (%d)\n", ret);
-        return false;
-    }
-
-    post_process(&_app_ctx, outputs, &letter_box, BOX_THRESH, NMS_THRESH, &results);
-
-    rknn_outputs_release(_app_ctx.rknn_ctx, _app_ctx.io_num.n_output, outputs);
-    return true;
+    NpuChannelContext* ptr = channel.get();
+    _channels[ch] = std::move(channel);
+    return ptr;
 }
 
 bool NpuInfer::infer(image_buffer_t& img, object_detect_result_list& results) {
-    std::lock_guard<std::mutex> lock(_infer_mutex);
-    if (!_is_initialized) {
-        std::string resolved = find_model_path("");
-        init_post_process();
-        int ret = init_yolov8_model(resolved.c_str(), &_app_ctx);
-        if (ret >= 0) {
-            rknn_set_core_mask(_app_ctx.rknn_ctx, RKNN_NPU_CORE_0_1);
-            size_t raw_size = (size_t)_app_ctx.model_width * _app_ctx.model_height * _app_ctx.model_channel;
-            _input_buf_size = ((raw_size + 4095) / 4096) * 4096 + 4096;
-            posix_memalign(&_input_buf, 4096, _input_buf_size);
-            load_labels("");
-            _is_initialized = true;
-        }
+    NpuChannelContext* channel = get_or_create_channel(-1);
+    if (!channel) {
+        return false;
     }
-    return infer_internal(img, results);
+    std::lock_guard<std::mutex> lock(channel->mutex());
+    return channel->infer_internal(img, results);
 }
 
 int NpuInfer::detect_frame(VpuDecoder* decoder, int ch, char* out_buf, int out_buf_size, unsigned long long* out_frame_idx, long long* out_pts_ms) {
     if (!out_buf || out_buf_size <= 0) return -1;
-    std::lock_guard<std::mutex> lock(_infer_mutex);
 
-    if (!_is_initialized) {
-        std::string resolved = find_model_path("");
-        init_post_process();
-        int ret = init_yolov8_model(resolved.c_str(), &_app_ctx);
-        if (ret < 0) {
-            snprintf(out_buf, out_buf_size, "{\"frame_width\":0,\"frame_height\":0,\"detections\":[]}");
-            return (int)strlen(out_buf);
-        }
-        rknn_set_core_mask(_app_ctx.rknn_ctx, RKNN_NPU_CORE_0_1);
-        size_t raw_size = (size_t)_app_ctx.model_width * _app_ctx.model_height * _app_ctx.model_channel;
-        _input_buf_size = ((raw_size + 4095) / 4096) * 4096 + 4096;
-        posix_memalign(&_input_buf, 4096, _input_buf_size);
-        load_labels("");
-        _is_initialized = true;
+    NpuChannelContext* channel = get_or_create_channel(ch);
+    if (!channel) {
+        snprintf(out_buf, out_buf_size, "{\"frame_width\":0,\"frame_height\":0,\"detections\":[]}");
+        return (int)strlen(out_buf);
     }
+
+    std::lock_guard<std::mutex> lock(channel->mutex());
 
     if (!decoder) {
         snprintf(out_buf, out_buf_size, "{\"frame_width\":0,\"frame_height\":0,\"detections\":[]}");
         return (int)strlen(out_buf);
     }
 
-    ensure_nv12_buffer_size(4 * 1024 * 1024);
+    channel->ensure_nv12_buffer_size(4 * 1024 * 1024);
 
     image_buffer_t frame;
     uint64_t frame_idx = 0;
     int64_t pts_ms = 0;
 
-    if (!decoder->get_latest_frame(_nv12_buf, _nv12_buf_size, frame, frame_idx, pts_ms)) {
+    if (!decoder->get_latest_frame(channel->nv12_buf(), channel->nv12_buf_size(), frame, frame_idx, pts_ms)) {
         snprintf(out_buf, out_buf_size, "{\"frame_width\":0,\"frame_height\":0,\"detections\":[]}");
         return (int)strlen(out_buf);
     }
@@ -409,7 +613,7 @@ int NpuInfer::detect_frame(VpuDecoder* decoder, int ch, char* out_buf, int out_b
     object_detect_result_list results;
     memset(&results, 0, sizeof(results));
 
-    bool infer_ok = infer_internal(frame, results);
+    bool infer_ok = channel->infer_internal(frame, results);
     if (!infer_ok) {
         snprintf(out_buf, out_buf_size, "{\"frame_width\":%d,\"frame_height\":%d,\"detections\":[]}", frame.width, frame.height);
         return (int)strlen(out_buf);
@@ -483,30 +687,26 @@ const char* NpuInfer::get_label_name(int cls_id) {
 }
 
 void NpuInfer::release() {
-    std::lock_guard<std::mutex> lock(_infer_mutex);
-    if (_is_initialized) {
+    std::lock_guard<std::mutex> lock(_channels_mutex);
+    for (auto& pair : _channels) {
+        if (pair.second) {
+            pair.second->release();
+        }
+    }
+    _channels.clear();
+
+    if (_postprocess_inited) {
         deinit_post_process();
-        release_yolov8_model(&_app_ctx);
-        if (_input_buf) {
-            free(_input_buf);
-            _input_buf = nullptr;
-            _input_buf_size = 0;
-        }
-        if (_nv12_buf) {
-            free(_nv12_buf);
-            _nv12_buf = nullptr;
-            _nv12_buf_size = 0;
-        }
-        _is_initialized = false;
+        _postprocess_inited = false;
         _labels.clear();
-        printf("[npu_infer] npu resources released.\n");
+        printf("[npu_infer] all npu channel resources released.\n");
     }
 }
 ```
 
 include/hardware/vpu_decoder.h
 
-```c
+```cpp
 #pragma once
 
 #include "rk_mpi.h"
@@ -589,7 +789,7 @@ private:
 
 src/hardware/vpu_decoder.cc
 
-```c
+```cpp
 #include "hardware/vpu_decoder.h"
 #include "consts.h"
 #include "utils/image_utils.h"
@@ -1121,7 +1321,7 @@ bool VpuDecoder::decode_raw_buffer(const unsigned char* data, int width, int hei
 
 include/detect_cli.h
 
-```c
+```cpp
 #ifndef DETECT_CLI_H
 #define DETECT_CLI_H
 
@@ -1140,7 +1340,7 @@ int detect_file(const char* image_path, const char* out_json_path, const char* o
 
 src/detect_cli.cc
 
-```c
+```cpp
 #include "detect_cli.h"
 #include "hardware/npu_infer.h"
 #include "image_utils.h"
@@ -1291,13 +1491,15 @@ int main(int argc, char* argv[]) {
 
 include/export.h
 
-```c
+```cpp
 #ifndef EXPORT_H
 #define EXPORT_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+int init(int total_streams);
 
 int bin_to_img_stream(int ch, const unsigned char* packet_data, int packet_size, unsigned long long frame_idx, long long pts_ms);
 
@@ -1312,13 +1514,17 @@ int detect_img_bin(int ch, char* out_buf, int out_buf_size, unsigned long long* 
 
 src/export.cc
 
-```c
+```cpp
 #include "export.h"
 #include "hardware/vpu_decoder.h"
 #include "hardware/channel_decoder.h"
 #include "hardware/npu_infer.h"
 #include <cstdio>
 #include <cstring>
+
+int init(int total_streams) {
+    return NpuInfer::shareInstance().init_with_stream_count(total_streams) ? 0 : -1;
+}
 
 int bin_to_img_stream(int ch, const unsigned char* packet_data, int packet_size, unsigned long long frame_idx, long long pts_ms) {
     if (!packet_data || packet_size <= 0) return -1;
@@ -1339,22 +1545,9 @@ int detect_img_bin(int ch, char* out_buf, int out_buf_size, unsigned long long* 
 }
 ```
 
-include/consts.h
-
-```c
-#ifndef CONSTS_H
-#define CONSTS_H
-
-#define LABEL_PATH       "model/coco_80_labels_list.txt"
-#define MODEL_PATH       "model/yolov8.rknn"
-#define MPP_LIB_NAME     "librockchip_mpp.so"
-
-#endif
-```
-
 CMakeLists.txt
 
-```c
+```cpp
 cmake_minimum_required(VERSION 3.10)
 project(detect_rknn C CXX)
 

@@ -31,6 +31,8 @@ use std::ffi::CStr;
 use std::os::raw::{c_char, c_int, c_uchar};
 
 unsafe extern "C" {
+    fn init(total_streams: c_int) -> c_int;
+
     fn bin_to_img_stream(
         ch: c_int,
         packet_data: *const c_uchar,
@@ -57,6 +59,16 @@ unsafe impl Sync for DetectCWrapper {}
 impl DetectCWrapper {
     pub fn new() -> Self {
         Self
+    }
+
+    pub fn init(&self, total_streams: u32) -> Result<(), String> {
+        unsafe {
+            let ret = init(total_streams as c_int);
+            if ret < 0 {
+                return Err(format!("init failed with code: {ret}"));
+            }
+            Ok(())
+        }
     }
 
     pub fn bin_to_img_stream(&self, ch: u32, packet_data: &[u8], frame_idx: u64, pts_ms: i64) -> Result<(), String> {
@@ -523,7 +535,7 @@ impl ServerConfig {
         let port = server_port.unwrap_or(8181);
 
         if streams_map.is_empty() {
-            return Err("未在 YAML 配置文件中找到任何有效的 streams / input 定义".to_string());
+            return Err("未在 yaml 中找到任何有效的 streams / input 定义".to_string());
         }
 
         Ok(ServerConfig {
@@ -727,10 +739,12 @@ impl RtspStreamer {
 
                 let mut base_rtp_ts: Option<i64> = None;
                 let mut frame_seq: u64 = 0;
+                let mut consecutive_errors: u32 = 0;
 
                 while let Some(item_res) = demuxed.next().await {
                     match item_res {
                         Ok(CodecItem::VideoFrame(frame)) => {
+                            consecutive_errors = 0;
                             let rtp_ts: i64 = frame.timestamp().timestamp();
                             let data = frame.into_data();
                             if data.is_empty() {
@@ -764,12 +778,20 @@ impl RtspStreamer {
 
                             frame_seq += 1;
                         }
-                        Ok(CodecItem::AudioFrame(_)) => {}
-                        Ok(_) => {}
+                        Ok(CodecItem::AudioFrame(_)) => {
+                            consecutive_errors = 0;
+                        }
+                        Ok(_) => {
+                            consecutive_errors = 0;
+                        }
                         Err(e) => {
-                            eprintln!("[rtsp:{stream_id}] 接收数据异常: {e}");
-                            tokio::time::sleep(Duration::from_millis(500)).await;
-                            break;
+                            consecutive_errors += 1;
+                            if consecutive_errors > 100 {
+                                eprintln!("[rtsp:{stream_id}] 接收数据异常超限: {e}");
+                                break;
+                            }
+                            log::debug!("[rtsp:{stream_id}] 忽略非致命数据异常包: {e}");
+                            continue;
                         }
                     }
                 }
@@ -1198,6 +1220,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("==================================================");
 
     let detect_wrapper = Arc::new(DetectCWrapper::new());
+    let total_streams = streams.len() as u32;
+    if let Err(e) = detect_wrapper.init(total_streams) {
+        eprintln!("[server] warning: init failed: {e}");
+    }
+
     let mut stream_contexts = Vec::new();
     let mut streamer_handles = Vec::new();
 
@@ -1260,7 +1287,7 @@ fn main() {
     let target = env::var("TARGET").unwrap_or_default();
 
     if target.contains("aarch64") {
-        link_dylib("../c_lib/build/libdetect.so");
+        link_dylib("../rknn/rknn_lib/build/libdetect.so");
     }
 }
 ```
@@ -1277,8 +1304,15 @@ server:
   port: 8181
 ```
 
-build
+build.sh
 
 ```sh
-cargo build --release --target=aarch64-unknown-linux-gnu
+#!/bin/bash
+
+set -e
+
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+cd "${SCRIPT_DIR}"
+
+RUSTFLAGS="-C link-arg=-Wl,--allow-shlib-undefined" cargo build --release --target=aarch64-unknown-linux-gnu
 ```

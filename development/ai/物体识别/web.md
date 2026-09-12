@@ -214,8 +214,42 @@ export class WebRtcPlayer {
   }
 
   initRateTimer() {
-    this.rateInterval = setInterval(() => {
-      this.currentFps = this.msgCount;
+    let lastFramesDecoded = 0;
+    let lastTimestamp = 0;
+
+    this.rateInterval = setInterval(async () => {
+      let fps = 0;
+      if (this.pc && this.isConnected) {
+        try {
+          const stats = await this.pc.getStats();
+          for (const report of stats.values()) {
+            if (report.type === "inbound-rtp" && report.kind === "video") {
+              if (report.framesPerSecond !== undefined && report.framesPerSecond !== null) {
+                fps = Math.round(report.framesPerSecond);
+              } else if (report.framesDecoded !== undefined) {
+                const currentFrames = report.framesDecoded;
+                const currentTime = report.timestamp;
+                if (lastTimestamp > 0 && currentTime > lastTimestamp) {
+                  const deltaFrames = currentFrames - lastFramesDecoded;
+                  const deltaTimeSec = (currentTime - lastTimestamp) / 1000;
+                  if (deltaTimeSec > 0) {
+                    fps = Math.round(deltaFrames / deltaTimeSec);
+                  }
+                }
+                lastFramesDecoded = currentFrames;
+                lastTimestamp = currentTime;
+              }
+              break;
+            }
+          }
+        } catch (e) {
+        }
+      } else {
+        lastFramesDecoded = 0;
+        lastTimestamp = 0;
+      }
+
+      this.currentFps = fps;
       if (this.rateEl) {
         this.rateEl.textContent = this.currentFps;
       }
@@ -442,6 +476,10 @@ export class WebRtcPlayer {
     if (this.countEl) {
       this.countEl.textContent = "0";
     }
+    if (this.rateEl) {
+      this.rateEl.textContent = "0";
+    }
+    this.currentFps = 0;
     this.setStatus("未连接", false);
   }
 
@@ -648,6 +686,7 @@ app.js
 ```javascript
 ........................
 ........................
+
 import { initWebRtcUI } from "./webrtc_player"
 
 if (document.readyState === "loading") {
