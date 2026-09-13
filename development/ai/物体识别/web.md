@@ -684,9 +684,7 @@ export function initWebRtcUI() {
 app.js
 
 ```javascript
-........................
-........................
-
+// 其它代码
 import { initWebRtcUI } from "./webrtc_player"
 
 if (document.readyState === "loading") {
