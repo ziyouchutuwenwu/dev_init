@@ -84,4 +84,8 @@ impl WebRtcServer {
     pub async fn run_signaling_server(self: Arc<Self>) -> std::io::Result<()> {
         SignalingServer::run(self).await
     }
+
+    pub async fn run_signaling_server_with_listener(self: Arc<Self>, listener: tokio::net::TcpListener) -> std::io::Result<()> {
+        SignalingServer::run_with_listener(self, listener).await
+    }
 }

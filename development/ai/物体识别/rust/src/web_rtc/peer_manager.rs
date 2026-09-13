@@ -49,14 +49,11 @@ impl PeerManager {
             .insert(conn_id, Arc::clone(&pc));
         let pc_monitor = Arc::clone(&pc);
         let connections_ref = Arc::clone(active_connections);
-        let stream_id_pc = stream_ctx.stream_id.clone();
 
         pc.on_peer_connection_state_change(Box::new(move |s| {
             let pc_monitor = Arc::clone(&pc_monitor);
             let connections_ref = Arc::clone(&connections_ref);
-            let sid = stream_id_pc.clone();
             Box::pin(async move {
-                println!("[webrtc:{sid}] PeerConnection 状态变更: {:?}", s);
                 if matches!(
                     s,
                     RTCPeerConnectionState::Failed
@@ -107,8 +104,6 @@ impl PeerManager {
                         let sid = sid_task.clone();
 
                         tokio::spawn(async move {
-                            println!("[webrtc:{sid}] DataChannel '{}' 已打开，启动检测数据转发任务", dc.label());
-
                             let init_payload = {
                                 let cache = latest.read().await;
                                 match cache.as_ref() {
@@ -117,8 +112,8 @@ impl PeerManager {
                                         let now_ms = chrono::Utc::now().timestamp_millis();
                                         serde_json::json!({
                                             "id": sid,
-                                            "timestamp": now_ms,
-                                            "detections": []
+                                            "type": "heartbeat",
+                                            "timestamp": now_ms
                                         })
                                         .to_string()
                                     }
@@ -126,18 +121,53 @@ impl PeerManager {
                             };
                             let _ = dc.send_text(init_payload).await;
 
+                            let mut last_send = std::time::Instant::now();
                             loop {
-                                match rx.recv().await {
-                                    Ok(payload) => {
-                                        if dc.send_text(payload).await.is_err() {
-                                            break;
+                                tokio::select! {
+                                    res = rx.recv() => {
+                                        match res {
+                                            Ok(payload) => {
+                                                if dc.ready_state() == RTCDataChannelState::Closed {
+                                                    break;
+                                                }
+                                                if dc.ready_state() != RTCDataChannelState::Open {
+                                                    continue;
+                                                }
+                                                if last_send.elapsed() < std::time::Duration::from_millis(60) {
+                                                    continue;
+                                                }
+                                                if dc.buffered_amount().await > 262144 {
+                                                    continue;
+                                                }
+                                                if dc.send_text(payload).await.is_err() {
+                                                    break;
+                                                }
+                                                last_send = std::time::Instant::now();
+                                            }
+                                            Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {
+                                                continue;
+                                            }
+                                            Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                                                break;
+                                            }
                                         }
                                     }
-                                    Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {
-                                        continue;
-                                    }
-                                    Err(tokio::sync::broadcast::error::RecvError::Closed) => {
-                                        break;
+                                    _ = tokio::time::sleep(tokio::time::Duration::from_millis(1000)) => {
+                                        if dc.ready_state() == RTCDataChannelState::Closed {
+                                            break;
+                                        }
+                                        if dc.ready_state() == RTCDataChannelState::Open && last_send.elapsed() >= std::time::Duration::from_millis(1000) {
+                                            let heartbeat = serde_json::json!({
+                                                "id": sid,
+                                                "type": "heartbeat",
+                                                "timestamp": chrono::Utc::now().timestamp_millis()
+                                            })
+                                            .to_string();
+                                            if dc.send_text(heartbeat).await.is_err() {
+                                                break;
+                                            }
+                                            last_send = std::time::Instant::now();
+                                        }
                                     }
                                 }
                             }
@@ -157,8 +187,6 @@ impl PeerManager {
             })
         }));
 
-        let t_start = std::time::Instant::now();
-        println!("[webrtc:{}] 正在解析 Offer SDP 并配置 PeerConnection...", stream_ctx.stream_id);
         let offer =
             RTCSessionDescription::offer(offer_sdp.to_owned()).map_err(|e| e.to_string())?;
         pc.set_remote_description(offer)
@@ -181,7 +209,6 @@ impl PeerManager {
             .await
             .ok_or_else(|| "本地 sdp 不存在".to_string())?
             .sdp;
-        println!("[webrtc:{}] Answer SDP 创建成功 (耗时: {:?}, SDP 长度: {} 字节)", stream_ctx.stream_id, t_start.elapsed(), sdp.len());
         Ok(sdp)
     }
 }

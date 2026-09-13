@@ -40,16 +40,12 @@ impl SignalingServer {
         server.default_stream_id().cloned()
     }
 
-    pub async fn run(server: Arc<WebRtcServer>) -> std::io::Result<()> {
-        let http_addr = server.http_addr();
-        let listener = TcpListener::bind(http_addr).await?;
-        println!("[signaling] 信令服务已绑定监听地址: http://{}", http_addr);
-
+    pub async fn run_with_listener(server: Arc<WebRtcServer>, listener: TcpListener) -> std::io::Result<()> {
         loop {
             let (conn, addr) = match listener.accept().await {
                 Ok(res) => res,
                 Err(e) => {
-                    println!("[signaling] 接受连接失败: {e}");
+                    eprintln!("[signaling] 接受连接失败: {e}");
                     continue;
                 }
             };
@@ -58,6 +54,12 @@ impl SignalingServer {
                 Self::handle_connection(server, conn, addr).await;
             });
         }
+    }
+
+    pub async fn run(server: Arc<WebRtcServer>) -> std::io::Result<()> {
+        let http_addr = server.http_addr();
+        let listener = TcpListener::bind(http_addr).await?;
+        Self::run_with_listener(server, listener).await
     }
 
     async fn handle_connection(
@@ -87,8 +89,6 @@ impl SignalingServer {
         let method = parts.next().unwrap_or("");
         let path = parts.next().unwrap_or("");
 
-        println!("[signaling] [{addr}] 收到信令请求: {method} {path}");
-
         let content_length = headers
             .lines()
             .find_map(|l| {
@@ -100,7 +100,6 @@ impl SignalingServer {
             .unwrap_or(0);
 
         if method == "OPTIONS" {
-            println!("[signaling] [{addr}] 响应 OPTIONS 预检请求 ({path})");
             let resp = concat!(
                 "HTTP/1.1 204 No Content\r\n",
                 "Access-Control-Allow-Origin: *\r\n",
@@ -117,7 +116,6 @@ impl SignalingServer {
         }
 
         if method == "GET" && path == "/health" {
-            println!("[signaling] [{addr}] 响应 GET /health");
             let resp = "HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\nContent-Length: 2\r\n\r\nok";
             let _ = conn.write_all(resp.as_bytes()).await;
             let _ = conn.flush().await;
@@ -130,7 +128,7 @@ impl SignalingServer {
             let stream_id = match stream_id_opt {
                 Some(id) => id,
                 None => {
-                    println!("[signaling] [{addr}] 未找到指定的流: {path}，可用流: {:?}", server.stream_order());
+                    eprintln!("[signaling] [{addr}] 未找到指定的流: {path}，可用流: {:?}", server.stream_order());
                     let msg = format!("未找到指定的流。可用流列表: {:?}", server.stream_order());
                     let resp = format!(
                         "HTTP/1.1 404 Not Found\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: {}\r\n\r\n{msg}",
@@ -144,8 +142,6 @@ impl SignalingServer {
             };
 
             if content_length > 0 && buf.len() < header_end + content_length {
-                let remaining = header_end + content_length - buf.len();
-                println!("[signaling] [{addr}] 正在读取剩余请求体 ({} 字节)...", remaining);
                 let read_res = tokio::time::timeout(std::time::Duration::from_millis(2500), async {
                     while buf.len() < header_end + content_length {
                         match conn.read(&mut tmp).await {
@@ -157,7 +153,7 @@ impl SignalingServer {
                 }).await;
 
                 if read_res != Ok(true) {
-                    println!("[signaling] [{addr}] 读取请求体超时或连接已关闭");
+                    eprintln!("[signaling] [{addr}] 读取请求体超时或连接已关闭");
                     return;
                 }
             }
@@ -168,11 +164,8 @@ impl SignalingServer {
                 String::from_utf8_lossy(&buf[header_end..]).to_string()
             };
 
-            let t_req = std::time::Instant::now();
-            println!("[signaling] [{addr}] 正在为流 '{stream_id}' 处理 Offer SDP (体长: {} 字节)", body.len());
             match server.handle_offer(&stream_id, &body).await {
                 Ok(answer_sdp) => {
-                    println!("[signaling] [{addr}] 成功为流 '{stream_id}' 生成 Answer SDP (体长: {} 字节, 耗时: {:?})", answer_sdp.len(), t_req.elapsed());
                     let resp = format!(
                         "HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: Content-Type, *\r\nAccess-Control-Allow-Methods: POST, GET, OPTIONS\r\nConnection: close\r\nContent-Type: application/sdp\r\nContent-Length: {}\r\n\r\n{}",
                         answer_sdp.len(),
@@ -181,10 +174,9 @@ impl SignalingServer {
                     let _ = conn.write_all(resp.as_bytes()).await;
                     let _ = conn.flush().await;
                     let _ = conn.shutdown().await;
-                    println!("[signaling] [{addr}] 已成功发送 HTTP 200 Answer 响应");
                 }
                 Err(e) => {
-                    println!("[signaling] [{addr}] Offer 处理失败 (stream={stream_id}): {e}");
+                    eprintln!("[signaling] [{addr}] Offer 处理失败 (stream={stream_id}): {e}");
                     let msg = format!("Offer 处理失败 (stream={stream_id}): {e}");
                     let resp = format!(
                         "HTTP/1.1 500 Internal Server Error\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: Content-Type, *\r\nConnection: close\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: {}\r\n\r\n{msg}",
@@ -196,7 +188,7 @@ impl SignalingServer {
                 }
             }
         } else {
-            println!("[signaling] [{addr}] 收到非 POST/OPTIONS/GET 请求: {method}");
+            eprintln!("[signaling] [{addr}] 收到非 POST/OPTIONS/GET 请求: {method}");
             let resp = "HTTP/1.1 404 Not Found\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\nContent-Length: 0\r\n\r\n";
             let _ = conn.write_all(resp.as_bytes()).await;
             let _ = conn.flush().await;

@@ -26,7 +26,6 @@ async fn loop_check(
     tx_broadcast: broadcast::Sender<String>,
     latest_detection: Arc<RwLock<Option<String>>>,
 ) {
-    println!("[on_detected:webrtc:{stream_id}] WebRTC 订阅协程已启动");
     loop {
         match receiver.recv().await {
             Ok(result) => {
@@ -46,5 +45,4 @@ async fn loop_check(
             }
         }
     }
-    println!("[on_detected:webrtc:{stream_id}] WebRTC 订阅协程已退出");
 }

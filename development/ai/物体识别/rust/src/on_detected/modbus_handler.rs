@@ -22,8 +22,6 @@ async fn loop_check(
     mut receiver: broadcast::Receiver<Arc<DetectionResult>>,
     rules: Option<HashMap<String, ModbusRule>>,
 ) {
-    println!("[on_detected:modbus:{stream_id}] 订阅协程已启动，等待检测目标事件...");
-
     let mut last_alarm_times: HashMap<String, Instant> = HashMap::new();
 
     loop {
@@ -66,8 +64,8 @@ async fn loop_check(
 
                     if should_alarm {
                         last_alarm_times.insert(label.clone(), Instant::now());
-                        println!(
-                            "[on_detected:modbus:{stream_id}] ⚡ 触发 Modbus 信号! 类型: {label}, 线圈(coil): {coil}, 置信度: {confidence:.2}"
+                        log::info!(
+                            "\x1b[1;35m[modbus:{stream_id}]\x1b[0m \x1b[1;33m⚡ 触发 Modbus 信号!\x1b[0m 类型: \x1b[1;32m{label}\x1b[0m, 线圈(coil): \x1b[1;36m{coil}\x1b[0m, 置信度: \x1b[1;33m{confidence:.2}\x1b[0m"
                         );
                     }
                 }
@@ -78,6 +76,4 @@ async fn loop_check(
             }
         }
     }
-
-    println!("[on_detected:modbus:{stream_id}] 订阅协程已退出");
 }

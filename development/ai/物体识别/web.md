@@ -139,11 +139,14 @@ export function drawDetections(canvas, video, detections, frameW, frameH) {
 
 export function renderDetectionList(listEl, detections) {
   if (!listEl) return;
-  listEl.innerHTML = "";
   if (!detections || !detections.length) {
+    if (listEl.dataset.emptyState === "true") return;
+    listEl.dataset.emptyState = "true";
     listEl.innerHTML = '<li class="text-zinc-400">无目标</li>';
     return;
   }
+  listEl.dataset.emptyState = "false";
+  listEl.innerHTML = "";
   for (const d of detections) {
     const li = document.createElement("li");
     li.className =
@@ -220,6 +223,13 @@ export class WebRtcPlayer {
     this.rateInterval = setInterval(async () => {
       let fps = 0;
       if (this.pc && this.isConnected) {
+        if (this.lastDataChannelRecvTime && (performance.now() - this.lastDataChannelRecvTime > 10000)) {
+          console.warn(`[WebRtcPlayer:${this.streamId}] 超过10秒未收到任何数据通道消息/心跳，自动重连恢复...`);
+          this.lastDataChannelRecvTime = performance.now();
+          this.connect();
+          return;
+        }
+
         try {
           const stats = await this.pc.getStats();
           for (const report of stats.values()) {
@@ -298,32 +308,49 @@ export class WebRtcPlayer {
     const renderLoop = () => {
       if (!this.renderLoopRunning) return;
 
-      if (this.detectionQueue.length > 0) {
-        const bestMsg = this.detectionQueue[this.detectionQueue.length - 1];
-        if (bestMsg) {
-          const detections = bestMsg.detections || [];
-          if (this.canvasEl && this.videoEl) {
-            drawDetections(
-              this.canvasEl,
-              this.videoEl,
-              detections,
-              bestMsg.frame_width,
-              bestMsg.frame_height
-            );
+      try {
+        if (this.detectionQueue.length > 0) {
+          const bestMsg = this.detectionQueue[this.detectionQueue.length - 1];
+          if (bestMsg) {
+            const now = performance.now();
+            const isStale = (now - (bestMsg.localRecvTime || 0)) > 3000;
+            const detections = isStale ? [] : (bestMsg.detections || []);
+
+            if (this.canvasEl && this.videoEl) {
+              drawDetections(
+                this.canvasEl,
+                this.videoEl,
+                detections,
+                bestMsg.frame_width,
+                bestMsg.frame_height
+              );
+            }
+            if (this.listEl) {
+              renderDetectionList(this.listEl, detections);
+            }
+            if (this.countEl) {
+              this.countEl.textContent = detections.length;
+            }
           }
-          if (this.listEl) {
-            renderDetectionList(this.listEl, detections);
+        } else {
+          if (this.canvasEl) {
+            const ctx = this.canvasEl.getContext("2d");
+            if (ctx) ctx.clearRect(0, 0, this.canvasEl.width, this.canvasEl.height);
           }
           if (this.countEl) {
-            this.countEl.textContent = detections.length;
+            this.countEl.textContent = "0";
           }
         }
-      }
-
-      if (this.videoEl && this.videoEl.requestVideoFrameCallback) {
-        this.videoEl.requestVideoFrameCallback(renderLoop);
-      } else {
-        requestAnimationFrame(renderLoop);
+      } catch (err) {
+        console.warn(`[WebRtcPlayer:${this.streamId}] renderLoop 异常:`, err);
+      } finally {
+        if (this.renderLoopRunning) {
+          if (this.videoEl && this.videoEl.requestVideoFrameCallback) {
+            this.videoEl.requestVideoFrameCallback(renderLoop);
+          } else {
+            requestAnimationFrame(renderLoop);
+          }
+        }
       }
     };
 
@@ -336,9 +363,16 @@ export class WebRtcPlayer {
 
   handleDataChannelMessage(ev) {
     this.msgCount++;
+    this.lastDataChannelRecvTime = performance.now();
     try {
       const msg = JSON.parse(ev.data);
       if (msg.id && this.streamId && msg.id !== this.streamId) {
+        return;
+      }
+      if (msg.type === "heartbeat" || msg.type === "ping") {
+        return;
+      }
+      if (!Array.isArray(msg.detections)) {
         return;
       }
       msg.localRecvTime = performance.now();
@@ -370,6 +404,32 @@ export class WebRtcPlayer {
     }
   }
 
+  bindDataChannel(dc) {
+    if (!dc) return;
+    this.dc = dc;
+    dc.onmessage = (ev) => this.handleDataChannelMessage(ev);
+    dc.onerror = (err) => console.warn(`[WebRtcPlayer:${this.streamId}] DataChannel 错误:`, err);
+    dc.onclose = () => {
+      console.log(`[WebRtcPlayer:${this.streamId}] DataChannel 已关闭，尝试自动恢复...`);
+      if (this.isConnected && this.pc && (this.pc.connectionState === "connected" || !this.pc.connectionState)) {
+        setTimeout(() => this.recreateDataChannel(), 1000);
+      }
+    };
+  }
+
+  recreateDataChannel() {
+    if (!this.isConnected || !this.pc || (this.pc.connectionState && this.pc.connectionState !== "connected")) return;
+    try {
+      const dc = this.pc.createDataChannel("detection", {
+        ordered: false,
+      });
+      this.bindDataChannel(dc);
+      console.log(`[WebRtcPlayer:${this.streamId}] 已重建并绑定新 DataChannel`);
+    } catch (e) {
+      console.warn(`[WebRtcPlayer:${this.streamId}] 重建 DataChannel 失败:`, e);
+    }
+  }
+
   async connect() {
     let targetUrl = this.url ? this.url.trim() : "";
     if (!targetUrl) {
@@ -382,6 +442,7 @@ export class WebRtcPlayer {
 
     this.disconnect();
     this.setStatus("连接中…", false);
+    this.lastDataChannelRecvTime = performance.now();
 
     try {
       this.pc = new RTCPeerConnection({
@@ -400,11 +461,13 @@ export class WebRtcPlayer {
         };
       }
 
-      const dc = this.pc.createDataChannel("detection");
-      dc.onmessage = (ev) => this.handleDataChannelMessage(ev);
+      const dc = this.pc.createDataChannel("detection", {
+        ordered: false,
+      });
+      this.bindDataChannel(dc);
 
       this.pc.ondatachannel = (e) => {
-        e.channel.onmessage = (ev) => this.handleDataChannelMessage(ev);
+        this.bindDataChannel(e.channel);
       };
 
       this.pc.onconnectionstatechange = () => {
@@ -457,6 +520,12 @@ export class WebRtcPlayer {
   disconnect() {
     this.renderLoopRunning = false;
     this.isConnected = false;
+    if (this.dc) {
+      try {
+        this.dc.close();
+      } catch (e) {}
+      this.dc = null;
+    }
     if (this.pc) {
       try {
         this.pc.close();
@@ -815,9 +884,10 @@ home.html.heex
     </div>
   </div>
 
-  <div id="stream-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <WebWeb.PlayerComponent.stream_card id="aaa" title="通道 1: aaa" />
-    <WebWeb.PlayerComponent.stream_card id="bbb" title="通道 2: bbb" />
+  <div id="stream-cards-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <WebWeb.PlayerComponent.stream_card id="aaa" title="通道 1: aaa" default_url="http://192.168.88.100:8181/aaa" />
+    <WebWeb.PlayerComponent.stream_card id="bbb" title="通道 2: bbb" default_url="http://192.168.88.100:8181/bbb" />
+    <WebWeb.PlayerComponent.stream_card id="ccc" title="通道 3: ccc" default_url="http://192.168.88.100:8181/ccc" />
   </div>
 
   <template id="stream-card-template">

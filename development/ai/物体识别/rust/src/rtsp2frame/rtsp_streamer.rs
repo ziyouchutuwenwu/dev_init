@@ -95,8 +95,8 @@ async fn run_rtsp_loop(
         let mut session = match session_res {
             Ok(s) => s,
             Err(e) => {
-                eprintln!("[rtsp:{stream_id}] describe 失败: {e}，5秒后重试");
-                tokio::time::sleep(Duration::from_secs(5)).await;
+                eprintln!("[rtsp:{stream_id}] describe 失败: {e}，2秒后重试");
+                tokio::time::sleep(Duration::from_secs(2)).await;
                 continue;
             }
         };
@@ -112,16 +112,16 @@ async fn run_rtsp_loop(
         let stream_idx = match stream_idx {
             Some(idx) => idx,
             None => {
-                eprintln!("[rtsp:{stream_id}] 未在 rtsp 中找到视频轨，5秒后重试");
-                tokio::time::sleep(Duration::from_secs(5)).await;
+                eprintln!("[rtsp:{stream_id}] 未在 rtsp 中找到视频轨，2秒后重试");
+                tokio::time::sleep(Duration::from_secs(2)).await;
                 continue;
             }
         };
 
         let setup_opts = SetupOptions::default().frame_format(FrameFormat::SIMPLE);
         if let Err(e) = session.setup(stream_idx, setup_opts).await {
-            eprintln!("[rtsp:{stream_id}] setup 失败: {e}，5秒后重试");
-            tokio::time::sleep(Duration::from_secs(5)).await;
+            eprintln!("[rtsp:{stream_id}] setup 失败: {e}，2秒后重试");
+            tokio::time::sleep(Duration::from_secs(2)).await;
             continue;
         }
 
@@ -138,8 +138,8 @@ async fn run_rtsp_loop(
         let playing_session = match session.play(PlayOptions::default()).await {
             Ok(p) => p,
             Err(e) => {
-                eprintln!("[rtsp:{stream_id}] play 失败: {e}，5秒后重试");
-                tokio::time::sleep(Duration::from_secs(5)).await;
+                eprintln!("[rtsp:{stream_id}] play 失败: {e}，2秒后重试");
+                tokio::time::sleep(Duration::from_secs(2)).await;
                 continue;
             }
         };
@@ -147,8 +147,8 @@ async fn run_rtsp_loop(
         let mut demuxed: Demuxed = match playing_session.demuxed() {
             Ok(d) => d,
             Err(e) => {
-                eprintln!("[rtsp:{stream_id}] demuxed 失败: {e}，5秒后重试");
-                tokio::time::sleep(Duration::from_secs(5)).await;
+                eprintln!("[rtsp:{stream_id}] demuxed 失败: {e}，2秒后重试");
+                tokio::time::sleep(Duration::from_secs(2)).await;
                 continue;
             }
         };

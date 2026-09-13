@@ -58,9 +58,7 @@ pub async fn setup_single_stream(
         dispatcher,
     );
 
-    println!("[stream:{stream_id}] 正在启动 RTSP 拉流任务: {input_url}");
     let handle = streamer.start_stream(video_track).await?;
-    println!("[stream:{stream_id}] RTSP 视频流与检测任务已就绪");
     Ok((stream_ctx, handle))
 }
 
