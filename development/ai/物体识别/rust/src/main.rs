@@ -3,13 +3,7 @@ use server::prepare::{init_detector, resolve_config_path, start_all_streams, sta
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut builder = pretty_env_logger::formatted_builder();
-    if let Ok(s) = std::env::var("RUST_LOG") {
-        builder.parse_filters(&s);
-    } else {
-        builder.filter_level(log::LevelFilter::Info);
-    }
-    let _ = builder.try_init();
+    let _ = env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).try_init();
 
     let config_path = resolve_config_path()?;
     let config = AppConfig::load_from_file(&config_path)?;

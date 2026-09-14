@@ -5,22 +5,18 @@ use std::collections::HashMap;
 use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use webrtc::peer_connection::RTCPeerConnection;
-use webrtc::track::track_local::track_local_static_sample::TrackLocalStaticSample;
+use webrtc::peer_connection::PeerConnection;
 
 pub struct WebRtcServer {
     http_addr: String,
     streams: Arc<HashMap<String, StreamContext>>,
     stream_order: Vec<String>,
     default_stream_id: Option<String>,
-    active_connections: Arc<Mutex<HashMap<u64, Arc<RTCPeerConnection>>>>,
+    active_connections: Arc<Mutex<HashMap<u64, Arc<dyn PeerConnection>>>>,
     next_conn_id: AtomicU64,
 }
 
 impl WebRtcServer {
-    pub fn create_video_track(stream_id: &str) -> Arc<TrackLocalStaticSample> {
-        StreamContext::create_video_track(stream_id)
-    }
 
     pub fn new(http_addr: impl Into<String>, stream_contexts: Vec<StreamContext>) -> Self {
         let mut streams = HashMap::new();

@@ -1,109 +1,102 @@
 use super::stream_context::StreamContext;
+use rtc::interceptor::Registry;
+use rtc::peer_connection::configuration::interceptor_registry::register_default_interceptors;
+use rtc::peer_connection::configuration::media_engine::MediaEngine;
+use rtc::peer_connection::configuration::RTCConfigurationBuilder;
+use rtc::peer_connection::sdp::RTCSessionDescription;
+use rtc::peer_connection::state::{RTCIceGatheringState, RTCPeerConnectionState};
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use webrtc::api::interceptor_registry::register_default_interceptors;
-use webrtc::api::media_engine::MediaEngine;
-use webrtc::api::APIBuilder;
-use webrtc::data_channel::data_channel_state::RTCDataChannelState;
-use webrtc::interceptor::registry::Registry;
-use webrtc::peer_connection::configuration::RTCConfiguration;
-use webrtc::peer_connection::peer_connection_state::RTCPeerConnectionState;
-use webrtc::peer_connection::sdp::session_description::RTCSessionDescription;
-use webrtc::peer_connection::RTCPeerConnection;
-use webrtc::track::track_local::TrackLocal;
+use webrtc::data_channel::{DataChannel, DataChannelEvent};
+use webrtc::media_stream::track_local::TrackLocal;
+use webrtc::peer_connection::{
+    PeerConnection, PeerConnectionBuilder, PeerConnectionEventHandler,
+};
 
-pub struct PeerManager;
+struct ConnectionHandler {
+    conn_id: u64,
+    active_connections: Arc<Mutex<HashMap<u64, Arc<dyn PeerConnection>>>>,
+    gather_complete_tx: tokio::sync::mpsc::Sender<()>,
+    tx_detection: tokio::sync::broadcast::Sender<String>,
+    latest_detection: Arc<tokio::sync::RwLock<Option<String>>>,
+    stream_id: String,
+}
 
-impl PeerManager {
-    pub async fn handle_offer(
-        stream_ctx: &StreamContext,
-        offer_sdp: &str,
-        active_connections: &Arc<Mutex<HashMap<u64, Arc<RTCPeerConnection>>>>,
-        next_conn_id: &AtomicU64,
-    ) -> Result<String, String> {
-        let mut m = MediaEngine::default();
-        m.register_default_codecs().map_err(|e| e.to_string())?;
-        let mut registry = Registry::new();
-        registry = register_default_interceptors(registry, &mut m).map_err(|e| e.to_string())?;
-        let api = APIBuilder::new()
-            .with_media_engine(m)
-            .with_interceptor_registry(registry)
-            .build();
+#[async_trait::async_trait]
+impl PeerConnectionEventHandler for ConnectionHandler {
+    async fn on_ice_gathering_state_change(&self, state: RTCIceGatheringState) {
+        if state == RTCIceGatheringState::Complete {
+            let _ = self.gather_complete_tx.try_send(());
+        }
+    }
 
-        let config = RTCConfiguration {
-            ice_servers: vec![],
-            ..Default::default()
-        };
-        let pc = Arc::new(
-            api.new_peer_connection(config)
-                .await
-                .map_err(|e| e.to_string())?,
-        );
+    async fn on_connection_state_change(&self, state: RTCPeerConnectionState) {
+        if matches!(
+            state,
+            RTCPeerConnectionState::Failed
+                | RTCPeerConnectionState::Closed
+                | RTCPeerConnectionState::Disconnected
+        ) {
+            let mut conns = self.active_connections.lock().await;
+            conns.remove(&self.conn_id);
+        }
+    }
 
-        let conn_id = next_conn_id.fetch_add(1, Ordering::SeqCst);
-        active_connections
-            .lock()
-            .await
-            .insert(conn_id, Arc::clone(&pc));
-        let pc_monitor = Arc::clone(&pc);
-        let connections_ref = Arc::clone(active_connections);
-
-        pc.on_peer_connection_state_change(Box::new(move |s| {
-            let pc_monitor = Arc::clone(&pc_monitor);
-            let connections_ref = Arc::clone(&connections_ref);
-            Box::pin(async move {
-                if matches!(
-                    s,
-                    RTCPeerConnectionState::Failed
-                        | RTCPeerConnectionState::Closed
-                        | RTCPeerConnectionState::Disconnected
-                ) {
-                    connections_ref
-                        .lock()
-                        .await
-                        .retain(|_, v| !Arc::ptr_eq(v, &pc_monitor));
-                }
-            })
-        }));
-
-        let sender = pc
-            .add_track(Arc::clone(&stream_ctx.video_track) as Arc<dyn TrackLocal + Send + Sync>)
-            .await
-            .map_err(|e| e.to_string())?;
+    async fn on_data_channel(&self, dc: Arc<dyn DataChannel>) {
+        let mut rx = self.tx_detection.subscribe();
+        let latest = Arc::clone(&self.latest_detection);
+        let sid = self.stream_id.clone();
 
         tokio::spawn(async move {
-            let mut b = vec![0u8; 1500];
-            while sender.read(&mut b).await.is_ok() {}
-        });
+            let mut opened = false;
+            let mut last_send = std::time::Instant::now();
 
-        let tx_for_client_dc = stream_ctx.tx_detection.clone();
-        let latest_detection_dc = Arc::clone(&stream_ctx.latest_detection);
-        let stream_id_dc = stream_ctx.stream_id.clone();
-
-        pc.on_data_channel(Box::new(move |dc| {
-            let tx = tx_for_client_dc.clone();
-            let dc_clone = Arc::clone(&dc);
-            let latest = Arc::clone(&latest_detection_dc);
-            let sid = stream_id_dc.clone();
-
-            Box::pin(async move {
-                let started = Arc::new(AtomicBool::new(false));
-                let started_clone = Arc::clone(&started);
-                let dc_task = Arc::clone(&dc_clone);
-                let tx_task = tx.clone();
-                let latest_task = Arc::clone(&latest);
-                let sid_task = sid.clone();
-
-                let spawn_sender = move || {
-                    if !started_clone.swap(true, Ordering::SeqCst) {
-                        let dc = Arc::clone(&dc_task);
-                        let mut rx = tx_task.subscribe();
-                        let latest = Arc::clone(&latest_task);
-                        let sid = sid_task.clone();
-
-                        tokio::spawn(async move {
+            loop {
+                if opened {
+                    tokio::select! {
+                        event = dc.poll() => {
+                            match event {
+                                Some(DataChannelEvent::OnClose) | None => {
+                                    break;
+                                }
+                                _ => {}
+                            }
+                        }
+                        res = rx.recv() => {
+                            match res {
+                                Ok(payload) => {
+                                    if last_send.elapsed() < std::time::Duration::from_millis(60) {
+                                        continue;
+                                    }
+                                    if dc.send_text(&payload).await.is_err() {
+                                        break;
+                                    }
+                                    last_send = std::time::Instant::now();
+                                }
+                                Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
+                                Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
+                            }
+                        }
+                        _ = tokio::time::sleep(std::time::Duration::from_millis(1000)) => {
+                            if last_send.elapsed() >= std::time::Duration::from_millis(1000) {
+                                let heartbeat = serde_json::json!({
+                                    "id": sid,
+                                    "type": "heartbeat",
+                                    "timestamp": chrono::Utc::now().timestamp_millis()
+                                }).to_string();
+                                if dc.send_text(&heartbeat).await.is_err() {
+                                    break;
+                                }
+                                last_send = std::time::Instant::now();
+                            }
+                        }
+                    }
+                } else {
+                    match dc.poll().await {
+                        Some(DataChannelEvent::OnOpen) => {
+                            opened = true;
                             let init_payload = {
                                 let cache = latest.read().await;
                                 match cache.as_ref() {
@@ -119,73 +112,93 @@ impl PeerManager {
                                     }
                                 }
                             };
-                            let _ = dc.send_text(init_payload).await;
-
-                            let mut last_send = std::time::Instant::now();
-                            loop {
-                                tokio::select! {
-                                    res = rx.recv() => {
-                                        match res {
-                                            Ok(payload) => {
-                                                if dc.ready_state() == RTCDataChannelState::Closed {
-                                                    break;
-                                                }
-                                                if dc.ready_state() != RTCDataChannelState::Open {
-                                                    continue;
-                                                }
-                                                if last_send.elapsed() < std::time::Duration::from_millis(60) {
-                                                    continue;
-                                                }
-                                                if dc.buffered_amount().await > 262144 {
-                                                    continue;
-                                                }
-                                                if dc.send_text(payload).await.is_err() {
-                                                    break;
-                                                }
-                                                last_send = std::time::Instant::now();
-                                            }
-                                            Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {
-                                                continue;
-                                            }
-                                            Err(tokio::sync::broadcast::error::RecvError::Closed) => {
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    _ = tokio::time::sleep(tokio::time::Duration::from_millis(1000)) => {
-                                        if dc.ready_state() == RTCDataChannelState::Closed {
-                                            break;
-                                        }
-                                        if dc.ready_state() == RTCDataChannelState::Open && last_send.elapsed() >= std::time::Duration::from_millis(1000) {
-                                            let heartbeat = serde_json::json!({
-                                                "id": sid,
-                                                "type": "heartbeat",
-                                                "timestamp": chrono::Utc::now().timestamp_millis()
-                                            })
-                                            .to_string();
-                                            if dc.send_text(heartbeat).await.is_err() {
-                                                break;
-                                            }
-                                            last_send = std::time::Instant::now();
-                                        }
-                                    }
-                                }
-                            }
-                        });
+                            let _ = dc.send_text(&init_payload).await;
+                            last_send = std::time::Instant::now();
+                        }
+                        Some(DataChannelEvent::OnClose) | None => {
+                            break;
+                        }
+                        _ => {}
                     }
-                };
-
-                let spawn_on_open = spawn_sender.clone();
-                dc_clone.on_open(Box::new(move || {
-                    spawn_on_open();
-                    Box::pin(async move {})
-                }));
-
-                if dc_clone.ready_state() == RTCDataChannelState::Open {
-                    spawn_sender();
                 }
-            })
-        }));
+            }
+        });
+    }
+}
+
+pub struct PeerManager;
+
+impl PeerManager {
+    pub async fn handle_offer(
+        stream_ctx: &StreamContext,
+        offer_sdp: &str,
+        active_connections: &Arc<Mutex<HashMap<u64, Arc<dyn PeerConnection>>>>,
+        next_conn_id: &AtomicU64,
+    ) -> Result<String, String> {
+        let mut media_engine = MediaEngine::default();
+        media_engine
+            .register_default_codecs()
+            .map_err(|e| e.to_string())?;
+        let registry = register_default_interceptors(Registry::new(), &mut media_engine)
+            .map_err(|e| e.to_string())?;
+
+        let conn_id = next_conn_id.fetch_add(1, Ordering::SeqCst);
+        let (gather_complete_tx, mut gather_complete_rx) = tokio::sync::mpsc::channel::<()>(1);
+
+        let handler = Arc::new(ConnectionHandler {
+            conn_id,
+            active_connections: Arc::clone(active_connections),
+            gather_complete_tx,
+            tx_detection: stream_ctx.tx_detection.clone(),
+            latest_detection: Arc::clone(&stream_ctx.latest_detection),
+            stream_id: stream_ctx.stream_id.clone(),
+        });
+
+        let config = RTCConfigurationBuilder::new().build();
+        let pc: Arc<dyn PeerConnection> = Arc::new(
+            PeerConnectionBuilder::new()
+                .with_configuration(config)
+                .with_media_engine(media_engine)
+                .with_interceptor_registry(registry)
+                .with_handler(handler)
+                .with_udp_addrs(vec!["0.0.0.0:0".to_string()])
+                .build()
+                .await
+                .map_err(|e| e.to_string())?,
+        );
+
+        active_connections
+            .lock()
+            .await
+            .insert(conn_id, Arc::clone(&pc));
+
+        let (track, ssrc, payload_type) = StreamContext::create_video_track(&stream_ctx.stream_id)
+            .map_err(|e| e.to_string())?;
+
+        pc.add_track(Arc::clone(&track) as Arc<dyn TrackLocal>)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let mut rx_video = stream_ctx.tx_video.subscribe();
+        let track_forwarder = Arc::clone(&track);
+        tokio::spawn(async move {
+            loop {
+                match rx_video.recv().await {
+                    Ok(sample) => {
+                        if track_forwarder
+                            .sample_writer(ssrc, payload_type)
+                            .write_sample(&sample)
+                            .await
+                            .is_err()
+                        {
+                            break;
+                        }
+                    }
+                    Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
+                    Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
+                }
+            }
+        });
 
         let offer =
             RTCSessionDescription::offer(offer_sdp.to_owned()).map_err(|e| e.to_string())?;
@@ -193,14 +206,13 @@ impl PeerManager {
             .await
             .map_err(|e| e.to_string())?;
         let answer = pc.create_answer(None).await.map_err(|e| e.to_string())?;
-        let mut gather_complete = pc.gathering_complete_promise().await;
         pc.set_local_description(answer)
             .await
             .map_err(|e| e.to_string())?;
 
         let _ = tokio::time::timeout(
             std::time::Duration::from_millis(600),
-            gather_complete.recv(),
+            gather_complete_rx.recv(),
         )
         .await;
 
@@ -209,6 +221,7 @@ impl PeerManager {
             .await
             .ok_or_else(|| "本地 sdp 不存在".to_string())?
             .sdp;
+
         Ok(sdp)
     }
 }

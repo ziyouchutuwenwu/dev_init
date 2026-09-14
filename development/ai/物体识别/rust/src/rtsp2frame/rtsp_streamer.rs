@@ -2,11 +2,10 @@ use bytes::Bytes;
 use futures::StreamExt;
 use retina::client::{Demuxed, PlayOptions, Session, SessionOptions, SetupOptions};
 use retina::codec::{CodecItem, FrameFormat};
+use rtc::media::Sample;
 use std::sync::Arc;
 use std::time::Duration;
 use url::Url;
-use webrtc::media::Sample;
-use webrtc::track::track_local::track_local_static_sample::TrackLocalStaticSample;
 use super::h264_utils::H264Utils;
 use crate::detector::frame_detector::FrameDetector;
 use crate::on_detected::DetectedDispatcher;
@@ -39,7 +38,7 @@ impl RtspStreamer {
 
     pub async fn start_stream(
         &self,
-        track: Arc<TrackLocalStaticSample>,
+        tx_video: tokio::sync::broadcast::Sender<Arc<Sample>>,
     ) -> Result<tokio::task::JoinHandle<()>, String> {
         let parsed_url = match Url::parse(&self.rtsp_url) {
             Ok(u) => u,
@@ -56,7 +55,7 @@ impl RtspStreamer {
             self.stream_id.clone(),
             parsed_url,
             Arc::clone(&self.detector),
-            track,
+            tx_video,
             vpu_feed_tx,
         ));
 
@@ -82,7 +81,7 @@ async fn run_rtsp_loop(
     stream_id: String,
     parsed_url: Url,
     detector: Arc<FrameDetector>,
-    track: Arc<TrackLocalStaticSample>,
+    tx_video: tokio::sync::broadcast::Sender<Arc<Sample>>,
     vpu_feed_tx: tokio::sync::mpsc::Sender<(Vec<u8>, u64, i64)>,
 ) {
     loop {
@@ -196,9 +195,7 @@ async fn run_rtsp_loop(
                         ..Default::default()
                     };
 
-                    if let Err(e) = track.write_sample(&sample).await {
-                        log::debug!("[rtsp:{stream_id}] write_sample: {e}");
-                    }
+                    let _ = tx_video.send(Arc::new(sample));
 
                     let complete_nal = H264Utils::to_annex_b(&data);
                     let _ = vpu_feed_tx

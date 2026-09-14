@@ -1,8 +1,10 @@
 use crate::config::{ModbusRule, StreamConfig};
 use crate::detector::{DetectCWrapper, FrameDetector};
-use crate::on_detected::{DetectedDispatcher, ModbusHandler, WebRtcHandler};
+use crate::on_detected::{
+    DetectedDispatcher, HttpPostHandler, ModbusHandler, WebRtcHandler,
+};
 use crate::rtsp2frame::RtspStreamer;
-use crate::web_rtc::{StreamContext, WebRtcServer};
+use crate::web_rtc::StreamContext;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::broadcast;
@@ -32,15 +34,12 @@ pub async fn setup_single_stream(
         stream_id.clone(),
     ));
 
-    let video_track = WebRtcServer::create_video_track(&stream_id);
-
-    let stream_ctx = StreamContext {
-        stream_id: stream_id.clone(),
-        input_url: input_url.clone(),
-        video_track: Arc::clone(&video_track),
-        tx_detection: tx_detection.clone(),
-        latest_detection: Arc::clone(&latest_detection),
-    };
+    let stream_ctx = StreamContext::new(
+        stream_id.clone(),
+        input_url.clone(),
+        tx_detection.clone(),
+        Arc::clone(&latest_detection),
+    );
 
     let dispatcher = Arc::new(DetectedDispatcher::new());
     WebRtcHandler::start(
@@ -50,6 +49,7 @@ pub async fn setup_single_stream(
         Arc::clone(&latest_detection),
     );
     ModbusHandler::start(&stream_id, dispatcher.subscribe(), modbus_rules);
+    HttpPostHandler::start(&stream_id, dispatcher.subscribe(), None);
 
     let streamer = RtspStreamer::new(
         stream_id.clone(),
@@ -58,7 +58,7 @@ pub async fn setup_single_stream(
         dispatcher,
     );
 
-    let handle = streamer.start_stream(video_track).await?;
+    let handle = streamer.start_stream(stream_ctx.tx_video.clone()).await?;
     Ok((stream_ctx, handle))
 }
 

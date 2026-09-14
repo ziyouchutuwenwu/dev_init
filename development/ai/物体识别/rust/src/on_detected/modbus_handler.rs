@@ -5,6 +5,10 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::broadcast;
 
+const COIL: u16 = 0;
+const FROZEN_DURATION: Duration = Duration::from_secs(3);
+const MIN_CONFIDENCE: f64 = 0.5;
+
 pub struct ModbusHandler;
 
 impl ModbusHandler {
@@ -50,7 +54,7 @@ async fn loop_check(
                             ),
                             None => continue,
                         },
-                        None => (0, Duration::from_secs(3), 0.5),
+                        None => (COIL, FROZEN_DURATION, MIN_CONFIDENCE),
                     };
 
                     if confidence < min_confidence {
@@ -65,7 +69,7 @@ async fn loop_check(
                     if should_alarm {
                         last_alarm_times.insert(label.clone(), Instant::now());
                         log::info!(
-                            "\x1b[1;35m[modbus:{stream_id}]\x1b[0m \x1b[1;33m⚡ 触发 Modbus 信号!\x1b[0m 类型: \x1b[1;32m{label}\x1b[0m, 线圈(coil): \x1b[1;36m{coil}\x1b[0m, 置信度: \x1b[1;33m{confidence:.2}\x1b[0m"
+                            "[modbus:{stream_id}] 触发 Modbus 信号! 类型: {label}, 线圈(coil): {coil}, 置信度: {confidence:.2}"
                         );
                     }
                 }
