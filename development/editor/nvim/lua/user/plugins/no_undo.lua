@@ -6,7 +6,9 @@ return {
     -- 强制覆盖撤销设置
     opts.options.opt.undofile = false
     opts.options.opt.shada = ""
-    opts.options.opt.undolevels = 1000
+    -- 禁用相对行号，始终显示普通绝对行号（对齐 VS Code 体验）
+    opts.options.opt.relativenumber = false
+    opts.options.opt.number = true
     return opts
   end,
 }
