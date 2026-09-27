@@ -1,0 +1,119 @@
+# exla
+
+## 说明
+
+用于加速推理
+
+最佳实践：打包的时候，把 cuda 的支持一起打包进去，发布的时候，通过环境变量决定以什么模式启动
+
+## 配置
+
+### 准备
+
+exla 需要 nccl, nvshmem
+
+非常的麻烦，用猥琐的办法解决
+
+```sh
+uv venv extra_libs
+uv pip install nvidia-nccl-cu12 nvidia-nvshmem-cu12 nvidia-cudnn-cu12
+```
+
+### 例子
+
+```elixir
+defmodule Demo do
+  require Logger
+
+  def demo() do
+    Logger.debug("正在初始化测试张量...")
+
+    a = Nx.broadcast(1.5, {2, 2}) |> Nx.as_type(:f32)
+    b = Nx.broadcast(2.0, {2, 2}) |> Nx.as_type(:f32)
+
+    Logger.debug("正在调用 EXLA 编译器进行矩阵乘法...")
+    result = Nx.dot(a, b)
+
+    Logger.debug("自己看是 cuda 还是 host: #{inspect(result)}")
+  end
+end
+```
+
+runtime.exs
+
+```elixir
+import Config
+
+if config_env() != :test do
+  has_nvidia? = File.exists?("/dev/nvidia0") or System.find_executable("nvidia-smi") != nil
+  runtime_target = System.get_env("EXLA_TARGET") || "auto"
+
+  platform_configs = %{
+    "cuda" => [
+      platform: :cuda
+      # preallocate: true,
+      # memory_fraction: 0.4
+    ],
+    "host" => [
+      platform: :host
+      # intra_op_parallelism_threads: 2,
+      # device_count: 4
+    ]
+  }
+
+  {client_name, client_config} =
+    case runtime_target do
+      "cpu" ->
+        {:host, platform_configs["host"]}
+
+      "cuda" when has_nvidia? ->
+        {:cuda, platform_configs["cuda"]}
+
+      "auto" when has_nvidia? ->
+        {:cuda, platform_configs["cuda"]}
+
+      _ ->
+        {:host, platform_configs["host"]}
+    end
+
+  config :exla, :clients, [{client_name, client_config}]
+  config :nx, :default_backend, {EXLA.Backend, client: client_name}
+  config :nx, :default_compiler, EXLA.Value
+end
+```
+
+编译
+
+```sh
+# 编译源码才需要 CUDA_HOME
+export EXLA_TARGET=cuda
+
+# 把 python 环境里面的 lib/python3.12/site-packages/nvidia 目录复制出来
+export BASE_PATH=nvidia
+export LIB_PATHS=$(find "$BASE_PATH" -name "*.so*" -exec dirname {} \; 2>/dev/null | sort -u | paste -sd:)
+
+# libcudart.so 位置
+export REAL_CUDA_LIB="/usr/lib/x86_64-linux-gnu"
+export LD_LIBRARY_PATH="$REAL_CUDA_LIB:$LIB_PATHS:$LD_LIBRARY_PATH"
+```
+
+```sh
+mix deps.get
+mix deps.compile
+
+mix release
+```
+
+运行
+
+除了上面的环境变量，再加上这个
+
+```sh
+# 否则会报警告找不到 libdevice
+ln -s /usr/lib/nvidia-cuda-toolkit /usr/lib/nvidia-cuda-toolkit/nvvm
+export CUDA_HOME=/usr/lib/nvidia-cuda-toolkit
+export XLA_FLAGS="--xla_gpu_cuda_data_dir=$CUDA_HOME"
+
+# 增加吞吐量
+export ELIXIR_ERL_OPTIONS="+sssdio 128"
+```

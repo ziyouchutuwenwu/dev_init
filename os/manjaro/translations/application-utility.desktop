@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=应用程序工具
+Comment=Manjaro Application Utility
+Categories=Utility;
+Exec=/usr/bin/manjaro-application-utility
+Icon=system-software-install

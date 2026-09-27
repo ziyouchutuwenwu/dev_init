@@ -1,0 +1,47 @@
+Types: deb
+URIs: https://mirrors.aliyun.com/debian/
+Suites: stable
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb-src
+URIs: https://mirrors.aliyun.com/debian/
+Suites: stable
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: https://mirrors.aliyun.com/debian/
+Suites: stable-updates
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb-src
+URIs: https://mirrors.aliyun.com/debian/
+Suites: stable-updates
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: https://mirrors.aliyun.com/debian/
+Suites: stable-backports
+Components: main contrib non-free
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb-src
+URIs: https://mirrors.aliyun.com/debian/
+Suites: stable-backports
+Components: main contrib non-free
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: https://mirrors.aliyun.com/debian-security/
+Suites: stable-security
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb-src
+URIs: https://mirrors.aliyun.com/debian-security/
+Suites: stable-security
+Components: main contrib non-free non-free-firmware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg

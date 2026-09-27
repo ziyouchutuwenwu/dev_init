@@ -1,0 +1,27 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "debug",
+      "type": "shell",
+      "command": "cargo build",
+      "group": "build"
+    },
+    {
+      "label": "release",
+      "type": "shell",
+      "command": "cargo build --release",
+      "group": "build"
+    },
+    {
+      "label": "run",
+      "type": "shell",
+      "command": "cargo run"
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "cargo clean"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "menuconfig",
+      "type": "shell",
+      "command": "west build -b esp32s3_devkitc/esp32s3/procpu -t menuconfig -d build"
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "west build -b esp32s3_devkitc/esp32s3/procpu -p always -d build"
+    },
+    {
+      "label": "release",
+      "type": "shell",
+      // --sysbuild
+      "command": "west build -b esp32s3_devkitc/esp32s3/procpu -p always -d build --sysbuild -- -DCMAKE_BUILD_TYPE=Release"
+    },
+    {
+      "label": "erase",
+      "type": "shell",
+      // west flash --erase -d debug
+      // esptool --port /dev/ttyACM0 erase-flash
+      "command": "west flash --erase -d build"
+    },
+    {
+      "label": "burn",
+      "type": "shell",
+      "command": "west flash -d build"
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "rm -rf build"
+    }
+  ]
+}

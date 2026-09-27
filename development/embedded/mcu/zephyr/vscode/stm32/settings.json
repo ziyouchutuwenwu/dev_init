@@ -1,0 +1,39 @@
+{
+  // 源码补全
+  "clangd.arguments": ["--compile-commands-dir=${workspaceFolder}/build"],
+
+  // dts 的高亮补全靠这个
+  "devicetree.contexts": [
+    {
+      "devicetree.cwd": "${workspaceFolder}",
+      "bindingType": "Zephyr",
+
+      // 需要自己手写 compatible 的器件
+      // "zephyrBindings": [
+      //   "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/bindings",
+      //   "/home/mmc/dev/embedded/zephyr/blinky/dts/bindings"
+      // ],
+
+      // 只能用绝对路径
+      "includePaths": [
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/arm",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/arm64",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/riscv",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/xtensa",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/sparc",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/x86",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/arc",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/rx",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/posix",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/vendor",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/dts/common",
+        "/home/mmc/dev/embedded/zephyr/repo/zephyr/include"
+      ],
+      // 当前板级硬件树
+      "dtsFile": "/home/mmc/dev/embedded/zephyr/repo/zephyr/boards/xxx/stm32f411ceu6/stm32f411ceu6.dts",
+      // 覆盖补丁
+      "overlays": ["./boards/stm32f411ceu6.overlay"]
+    }
+  ]
+}

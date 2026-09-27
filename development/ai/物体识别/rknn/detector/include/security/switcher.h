@@ -1,0 +1,6 @@
+#ifndef SECURITY_SWITCHER_H
+#define SECURITY_SWITCHER_H
+
+#define ENABLE_SECURITY 1
+
+#endif

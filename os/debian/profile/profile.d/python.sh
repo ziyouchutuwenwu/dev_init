@@ -1,0 +1,1 @@
+export PYTHONPYCACHEPREFIX=/dev/null
