@@ -13,3 +13,10 @@ thunar 下配置右键
 # 图标为 monitor
 ghostty --working-directory=%f
 ```
+
+有些东西要用 ghostty 打开, 比如 nvim
+
+```sh
+Exec=ghostty -e nvim %F
+Terminal=false
+```

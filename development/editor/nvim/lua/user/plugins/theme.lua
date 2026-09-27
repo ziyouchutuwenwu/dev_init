@@ -1,25 +1,36 @@
 return {
-  -- 主题：Catppuccin（配置与 AstroNvim UI 体系完全接合）
+  -- 主题：OneDarkPro（最贴近 VS Code Yi Dark / Atom One Dark 的现代主题）
   {
-    "catppuccin/nvim",
-    name = "catppuccin",
+    "olimorris/onedarkpro.nvim",
+    priority = 1000,
     opts = {
-      flavour = "mocha", -- 现代暗色调：latte, frappe, macchiato, mocha
-      transparent_background = false,
-      integrations = {
-        aerial = true,
-        blink_cmp = true,
-        gitsigns = true,
-        neotree = true,
-        treesitter = true,
-        which_key = true,
+      styles = {
+        types = "NONE",
+        methods = "NONE",
+        numbers = "NONE",
+        strings = "NONE",
+        comments = "italic",
+        keywords = "bold,italic",
+        constants = "NONE",
+        functions = "NONE",
+        operators = "NONE",
+        variables = "NONE",
+        parameters = "NONE",
+        conditionals = "italic",
+        virtual_text = "NONE",
+      },
+      options = {
+        cursorline = true,
+        transparency = false,
+        terminal_colors = true,
+        highlight_inactive_windows = true,
       },
     },
   },
   {
     "AstroNvim/astroui",
     opts = {
-      colorscheme = "catppuccin-mocha",
+      colorscheme = "onedark", -- 经典 Atom One Dark 风格；可选：onedark_vivid, onedark_dark
     },
   },
 }
