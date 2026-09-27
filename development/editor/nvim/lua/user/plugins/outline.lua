@@ -12,6 +12,8 @@ return {
       width = 30,
       default_direction = "prefer_left",
     },
+    use_icon_provider = false, -- 禁用外部 codicon 图标源，杜绝因字体不全导致的乱码方块
+    nerd_font = vim.g.icons_enabled ~= false,
     show_guides = true,
   },
   keys = {

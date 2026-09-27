@@ -46,9 +46,28 @@ vim.keymap.set({'n', 'v', 'i', 'c'}, '<C-z>', function()
 end, { noremap = true, desc = "撤销" })
 vim.keymap.set({'n', 'v'}, '<C-y>', '<C-r>', { noremap = true, desc = "重做" })
 
--- 跳转导航
-vim.keymap.set('n', '<M-,>', '<C-o>', { noremap = true, desc = "上一个位置" })
-vim.keymap.set('n', '<M-.>', '<C-i>', { noremap = true, desc = "下一个位置" })
+-- 跳转历史导航（前进 / 后退，完全对齐 VS Code：Alt+Left 返回，Alt+Right 前进）
+vim.keymap.set('n', '<M-Left>', '<C-o>', { noremap = true, desc = "跳转返回 (向后)" })
+vim.keymap.set('n', '<M-Right>', '<C-i>', { noremap = true, desc = "跳转前进" })
+vim.keymap.set({ 'v', 'i' }, '<M-Left>', '<Esc><C-o>', { noremap = true, desc = "跳转返回 (向后)" })
+vim.keymap.set({ 'v', 'i' }, '<M-Right>', '<Esc><C-i>', { noremap = true, desc = "跳转前进" })
+vim.keymap.set('n', '<M-,>', '<C-o>', { noremap = true, desc = "上一个位置 (返回)" })
+vim.keymap.set('n', '<M-.>', '<C-i>', { noremap = true, desc = "下一个位置 (前进)" })
+
+-- Ctrl + 鼠标左键：跳转到光标所在模块或方法的定义处（完全对齐 VS Code 的 Ctrl+Click 体验）
+vim.keymap.set('n', '<C-LeftMouse>', '<LeftMouse><Cmd>lua vim.lsp.buf.definition()<CR>', { noremap = true, desc = "跳转到定义 (Ctrl+单击)" })
+vim.keymap.set({ 'v', 'i' }, '<C-LeftMouse>', '<Esc><LeftMouse><Cmd>lua vim.lsp.buf.definition()<CR>', { noremap = true, desc = "跳转到定义 (Ctrl+单击)" })
+
+-- 统一搜索快捷键体系：
+-- <Space>lf (Local Find): 当前文件搜索（带右侧实时代码上下文预览框）
+vim.keymap.set({ 'n', 'v' }, '<Leader>lf', function()
+  require("snacks").picker.lines()
+end, { noremap = true, desc = "当前文件搜索 (Local Find)" })
+
+-- <Space>gf (Global Find): 全局搜索（带右侧跨文件实时代码上下文预览框）
+vim.keymap.set({ 'n', 'v' }, '<Leader>gf', function()
+  require("snacks").picker.grep()
+end, { noremap = true, desc = "全局搜索 (Global Find)" })
 
 -- 全选（普通模式、插入模式、可视模式下按 Ctrl+a 均一键全选所有行）
 vim.keymap.set({ 'n', 'v', 'x', 'i' }, '<C-a>', '<Esc>ggVG', { noremap = true, desc = "全选" })
@@ -84,3 +103,81 @@ vim.keymap.set('v', '<BS>', function()
     vim.api.nvim_feedkeys('d', 'n', false)
   end
 end, { noremap = true, desc = "可视模式下退格键删除（支持空行）" })
+
+-- 关闭其他文件 (Space + co: Close Others)，带侧边栏与未保存修改保护
+local function close_other_buffers()
+  local cur_win = vim.api.nvim_get_current_win()
+  local cur_buf = vim.api.nvim_win_get_buf(cur_win)
+  local keep_buf = nil
+
+  -- 1. 优先判断当前焦点是否在普通主编辑文件上
+  if vim.bo[cur_buf].buftype == "" and vim.bo[cur_buf].buflisted then
+    keep_buf = cur_buf
+  else
+    -- 2. 当前焦点在侧边栏（neo-tree、aerial、overseer_tasks 等），定位主编辑区窗口
+    if package.loaded["edgy"] then
+      local main_wins = require("edgy.editor").list_wins().main
+      for win, _ in pairs(main_wins) do
+        if vim.api.nvim_win_is_valid(win) then
+          local b = vim.api.nvim_win_get_buf(win)
+          if vim.bo[b].buftype == "" and vim.bo[b].buflisted then
+            keep_buf = b
+            break
+          end
+        end
+      end
+    end
+    -- 兜底：遍历所有窗口寻找普通编辑文件
+    if not keep_buf then
+      for _, win in ipairs(vim.api.nvim_list_wins()) do
+        local b = vim.api.nvim_win_get_buf(win)
+        if vim.bo[b].buftype == "" and vim.bo[b].buflisted then
+          keep_buf = b
+          break
+        end
+      end
+    end
+  end
+
+  if not keep_buf then
+    vim.notify("未找到可保留的主编辑文件", vim.log.levels.WARN)
+    return
+  end
+
+  -- 3. 安全关闭其他普通文件缓冲区，绝不误伤侧边栏
+  local closed_count = 0
+  local skipped_modified = 0
+  local abuf = require("astrocore.buffer")
+
+  for _, b in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_valid(b) and vim.bo[b].buflisted and vim.bo[b].buftype == "" then
+      if b ~= keep_buf then
+        if vim.bo[b].modified then
+          skipped_modified = skipped_modified + 1
+        else
+          abuf.close(b, false)
+          closed_count = closed_count + 1
+        end
+      end
+    end
+  end
+
+  local keep_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(keep_buf), ":t")
+  if keep_name == "" then keep_name = "[未命名]" end
+
+  if closed_count > 0 then
+    local msg = string.format("已关闭 %d 个其他文件，保留: %s", closed_count, keep_name)
+    if skipped_modified > 0 then
+      msg = msg .. string.format(" (%d 个未保存文件已跳过)", skipped_modified)
+    end
+    vim.notify(msg, vim.log.levels.INFO)
+  else
+    if skipped_modified > 0 then
+      vim.notify(string.format("其他 %d 个文件有未保存的修改，已跳过", skipped_modified), vim.log.levels.WARN)
+    else
+      vim.notify("没有其他文件需要关闭", vim.log.levels.INFO)
+    end
+  end
+end
+
+vim.keymap.set('n', '<Leader>co', close_other_buffers, { noremap = true, desc = "关闭其他文件 (Close Others)" })

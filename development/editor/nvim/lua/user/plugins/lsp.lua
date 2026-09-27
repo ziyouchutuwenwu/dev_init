@@ -10,6 +10,20 @@ return {
     "AstroNvim/astrolsp",
     opts = {
       servers = lsp_servers,
+      mappings = {
+        n = {
+          -- 解除默认占用的 <Leader>lf (格式化) 和 <Leader>lr (重命名)，让位给用户专属搜索替换体系
+          ["<Leader>lf"] = false,
+          ["<Leader>lr"] = false,
+          ["<Leader>lF"] = { function() vim.lsp.buf.format() end, desc = "格式化代码" },
+          ["<Leader>lR"] = { function() vim.lsp.buf.rename() end, desc = "重命名符号 (LSP Rename)" },
+        },
+        v = {
+          ["<Leader>lf"] = false,
+          ["<Leader>lr"] = false,
+          ["<Leader>lF"] = { function() vim.lsp.buf.format() end, desc = "格式化选中代码" },
+        },
+      },
       config = {
         rust_analyzer = {
           settings = {
