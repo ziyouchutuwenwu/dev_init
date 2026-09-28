@@ -14,9 +14,10 @@ thunar 下配置右键
 ghostty --working-directory=%f
 ```
 
-有些东西要用 ghostty 打开, 比如 nvim
+在指定的终端 ghostty 内，用 nvim 打开文件
 
 ```sh
+# .dektop 文件
 Exec=ghostty -e nvim %F
 Terminal=false
 ```
