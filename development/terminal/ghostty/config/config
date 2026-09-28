@@ -18,7 +18,7 @@ font-family = Monaco
 font-size = 12
 
 # 滚动条灵敏度，越大越灵敏
-mouse-scroll-multiplier = 6
+mouse-scroll-multiplier = 1
 
 # 退出不提示
 confirm-close-surface = false
