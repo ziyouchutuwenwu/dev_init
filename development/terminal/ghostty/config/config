@@ -8,7 +8,9 @@ theme = wombat_custom
 #gtk-titlebar = false
 
 window-theme=light
-title = 终端
+
+# 动态标题
+# title = 终端
 
 gtk-wide-tabs = false
 
