@@ -24,7 +24,12 @@ int Engine::init() {
     if (lic_ok) {
         if (!NpuInfer::shareInstance().init_engine()) {
             fprintf(stderr, "[engine] npu 初始化失败, ai 检测功能暂不可用\n");
+        } else {
+            printf("[engine] 引擎与模型加载成功并就绪\n");
+            fflush(stdout);
         }
+    } else {
+        fprintf(stderr, "[engine] 授权验证失败，未能加载模型\n");
     }
     _inited = true;
     return 0;

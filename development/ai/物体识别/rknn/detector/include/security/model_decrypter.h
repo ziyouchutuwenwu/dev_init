@@ -12,7 +12,7 @@ class ModelDecrypter {
 public:
     static ModelDecrypter& instance();
 
-    const char* const* get_labels_list();
+    const char* const* get_labels_list(const std::string& model_id = "");
 
     std::string find_model_path(const std::string& user_path = "", const std::string& default_model_name = "");
 

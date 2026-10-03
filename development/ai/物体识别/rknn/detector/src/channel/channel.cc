@@ -82,13 +82,24 @@ void Channel::on_infer_finished(uint64_t frame_idx, int64_t pts_ms, int orig_w, 
 
     for (size_t i = 0; i < result.objects.size(); i++) {
         const auto& obj = result.objects[i];
-        snprintf(tmp, sizeof(tmp),
-            "%s{\"class_id\": %d, \"label\": \"%s\", \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
-            (i > 0 ? ", " : ""),
-            obj.class_id, obj.label.c_str(), obj.score,
-            obj.rel_box[0], obj.rel_box[1], obj.rel_box[2], obj.rel_box[3],
-            obj.box[0], obj.box[1], obj.box[2], obj.box[3]
-        );
+        if (!obj.model_name.empty()) {
+            snprintf(tmp, sizeof(tmp),
+                "%s{\"model\": \"%s\", \"class_id\": %d, \"label\": \"%s\", \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
+                (i > 0 ? ", " : ""),
+                obj.model_name.c_str(),
+                obj.class_id, obj.label.c_str(), obj.score,
+                obj.rel_box[0], obj.rel_box[1], obj.rel_box[2], obj.rel_box[3],
+                obj.box[0], obj.box[1], obj.box[2], obj.box[3]
+            );
+        } else {
+            snprintf(tmp, sizeof(tmp),
+                "%s{\"class_id\": %d, \"label\": \"%s\", \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
+                (i > 0 ? ", " : ""),
+                obj.class_id, obj.label.c_str(), obj.score,
+                obj.rel_box[0], obj.rel_box[1], obj.rel_box[2], obj.rel_box[3],
+                obj.box[0], obj.box[1], obj.box[2], obj.box[3]
+            );
+        }
         json.append(tmp);
     }
     json.append("]}");

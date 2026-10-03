@@ -46,7 +46,7 @@ impl RtspStreamer {
         };
 
         let (vpu_feed_tx, vpu_feed_rx) =
-            tokio::sync::mpsc::channel::<(Bytes, u64, i64, u64)>(32);
+            tokio::sync::mpsc::channel::<(Bytes, u64, i64, u64)>(64);
 
         let running = Arc::new(AtomicBool::new(true));
 
@@ -211,6 +211,9 @@ async fn run_rtsp_loop(
         };
 
         let mut base_rtp_ts: Option<i64> = None;
+        let mut last_rtp_ts: Option<i64> = None;
+        let mut estimated_duration = Duration::from_millis(33);
+        let mut detected_fps_logged = false;
         let mut consecutive_errors: u32 = 0;
 
         while let Some(item_res) = demuxed.next().await {
@@ -236,16 +239,41 @@ async fn run_rtsp_loop(
                     if rtp_ts < base - 90000 || delta_ticks > 90000 * 3600 {
                         base = rtp_ts;
                         base_rtp_ts = Some(base);
+                        last_rtp_ts = None;
                     }
 
                     let rtp_pts_ms = ((rtp_ts.wrapping_sub(base) as u32) as u64) * 1000 / 90000;
                     let pts_ms = rtp_pts_ms;
 
+                    let sample_duration = match last_rtp_ts {
+                        Some(last) => {
+                            let diff = (rtp_ts.wrapping_sub(last) as u32) as u64;
+                            // 450 ticks (5ms, 200fps) ~ 45000 ticks (500ms, 2fps)
+                            if (450..=45000).contains(&diff) {
+                                let dur = Duration::from_secs_f64(diff as f64 / 90000.0);
+                                estimated_duration = dur;
+                                if !detected_fps_logged {
+                                    detected_fps_logged = true;
+                                    log::info!(
+                                        "[rtsp:{stream_id}] 动态自适应视频帧间隔: {:.2}ms (约 {:.1} FPS)",
+                                        dur.as_secs_f64() * 1000.0,
+                                        90000.0 / diff as f64
+                                    );
+                                }
+                                dur
+                            } else {
+                                estimated_duration
+                            }
+                        }
+                        None => estimated_duration,
+                    };
+                    last_rtp_ts = Some(rtp_ts);
+
                     let sample_data = Bytes::from(data);
 
                     let sample = Sample {
                         data: sample_data.clone(),
-                        duration: Duration::from_millis(33),
+                        duration: sample_duration,
                         ..Default::default()
                     };
 

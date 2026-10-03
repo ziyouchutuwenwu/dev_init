@@ -43,6 +43,13 @@ bool NpuChannelContext::infer(image_buffer_t& img, DetectResult& result) {
     return _pipeline->process(img, result);
 }
 
+bool NpuChannelContext::infer_frame(const std::shared_ptr<VpuDecoder::FrameBuffer>& frame, DetectResult& result) {
+    if (!_pipeline || !_pipeline->is_initialized()) {
+        return false;
+    }
+    return _pipeline->process(frame, result);
+}
+
 void NpuChannelContext::release() {
     std::lock_guard<std::recursive_mutex> lock(_mutex);
     if (_pipeline) {
@@ -379,29 +386,41 @@ int NpuInfer::detect_frame(VpuDecoder* decoder, int ch, char* out_buf, int out_b
         return 0;
     }
 
-    image_buffer_t dst_img;
-    memset(&dst_img, 0, sizeof(image_buffer_t));
-    dst_img.width = _pipeline->input_width();
-    dst_img.height = _pipeline->input_height();
-    dst_img.width_stride = _pipeline->input_width();
-    dst_img.height_stride = _pipeline->input_height();
-    dst_img.format = IMAGE_FORMAT_RGB888;
-    dst_img.virt_addr = (unsigned char*)in_buf;
-    dst_img.size = (int)(_pipeline->input_width() * _pipeline->input_height() * _pipeline->input_channel());
-    dst_img.fd = -1;
-
-    letterbox_t letter_box;
-    memset(&letter_box, 0, sizeof(letterbox_t));
+    std::shared_ptr<VpuDecoder::FrameBuffer> frame_snapshot;
+    if (decoder) {
+        frame_snapshot = decoder->get_latest_frame_snapshot();
+    }
 
     uint64_t frame_idx = 0;
     int64_t pts_ms = 0;
     int orig_w = 0, orig_h = 0;
 
-    if (!decoder->letterbox_to_dst(&dst_img, &letter_box, frame_idx, pts_ms, &orig_w, &orig_h)) {
-        if (out_frame_idx) *out_frame_idx = (frame_idx > 0 ? frame_idx : (peek_idx != UINT64_MAX ? peek_idx : 0));
-        if (out_pts_ms) *out_pts_ms = (pts_ms != 0 ? pts_ms : channel->last_pts_ms());
-        out_buf[0] = '\0';
-        return 0;
+    image_buffer_t dst_img;
+    memset(&dst_img, 0, sizeof(image_buffer_t));
+    letterbox_t letter_box;
+    memset(&letter_box, 0, sizeof(letterbox_t));
+
+    if (frame_snapshot && !frame_snapshot->data.empty()) {
+        frame_idx = frame_snapshot->frame_idx;
+        pts_ms = frame_snapshot->pts_ms;
+        orig_w = frame_snapshot->width;
+        orig_h = frame_snapshot->height;
+    } else if (decoder) {
+        dst_img.width = _pipeline->input_width();
+        dst_img.height = _pipeline->input_height();
+        dst_img.width_stride = _pipeline->input_width();
+        dst_img.height_stride = _pipeline->input_height();
+        dst_img.format = IMAGE_FORMAT_RGB888;
+        dst_img.virt_addr = (unsigned char*)in_buf;
+        dst_img.size = (int)(_pipeline->input_width() * _pipeline->input_height() * _pipeline->input_channel());
+        dst_img.fd = -1;
+
+        if (!decoder->letterbox_to_dst(&dst_img, &letter_box, frame_idx, pts_ms, &orig_w, &orig_h)) {
+            if (out_frame_idx) *out_frame_idx = (frame_idx > 0 ? frame_idx : (peek_idx != UINT64_MAX ? peek_idx : 0));
+            if (out_pts_ms) *out_pts_ms = (pts_ms != 0 ? pts_ms : channel->last_pts_ms());
+            out_buf[0] = '\0';
+            return 0;
+        }
     }
 
     if (frame_idx == channel->last_inferred_seq()) {
@@ -420,7 +439,16 @@ int NpuInfer::detect_frame(VpuDecoder* decoder, int ch, char* out_buf, int out_b
     DetectResult det_result;
     det_result.orig_width = orig_w;
     det_result.orig_height = orig_h;
-    bool infer_ok = channel->infer(dst_img, det_result);
+    det_result.frame_idx = frame_idx;
+    det_result.pts_ms = pts_ms;
+
+    bool infer_ok = false;
+    if (frame_snapshot && !frame_snapshot->data.empty()) {
+        infer_ok = channel->infer_frame(frame_snapshot, det_result);
+    } else {
+        infer_ok = channel->infer(dst_img, det_result);
+    }
+
     if (!infer_ok) {
         snprintf(out_buf, out_buf_size, "{\"frame_width\":%d,\"frame_height\":%d,\"detections\":[]}", orig_w, orig_h);
         return (int)strlen(out_buf);
@@ -439,13 +467,24 @@ int NpuInfer::detect_frame(VpuDecoder* decoder, int ch, char* out_buf, int out_b
 
     for (size_t i = 0; i < det_result.objects.size(); i++) {
         const auto& obj = det_result.objects[i];
-        snprintf(tmp, sizeof(tmp),
-            "%s{\"class_id\": %d, \"label\": \"%s\", \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
-            (i > 0 ? ", " : ""),
-            obj.class_id, obj.label.c_str(), obj.score,
-            obj.rel_box[0], obj.rel_box[1], obj.rel_box[2], obj.rel_box[3],
-            obj.box[0], obj.box[1], obj.box[2], obj.box[3]
-        );
+        if (!obj.model_name.empty()) {
+            snprintf(tmp, sizeof(tmp),
+                "%s{\"model\": \"%s\", \"class_id\": %d, \"label\": \"%s\", \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
+                (i > 0 ? ", " : ""),
+                obj.model_name.c_str(),
+                obj.class_id, obj.label.c_str(), obj.score,
+                obj.rel_box[0], obj.rel_box[1], obj.rel_box[2], obj.rel_box[3],
+                obj.box[0], obj.box[1], obj.box[2], obj.box[3]
+            );
+        } else {
+            snprintf(tmp, sizeof(tmp),
+                "%s{\"class_id\": %d, \"label\": \"%s\", \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
+                (i > 0 ? ", " : ""),
+                obj.class_id, obj.label.c_str(), obj.score,
+                obj.rel_box[0], obj.rel_box[1], obj.rel_box[2], obj.rel_box[3],
+                obj.box[0], obj.box[1], obj.box[2], obj.box[3]
+            );
+        }
         json.append(tmp);
     }
     json.append("]}");

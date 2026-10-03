@@ -4,11 +4,12 @@
 #include <string>
 
 struct YoloDetectObject {
-    int class_id;
+    std::string model_name;
+    int class_id = 0;
     std::string label;
-    float score;
-    int box[4];
-    float rel_box[4];
+    float score = 0.0f;
+    int box[4] = {0, 0, 0, 0};
+    float rel_box[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 };
 
 #endif

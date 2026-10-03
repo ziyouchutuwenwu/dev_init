@@ -12,8 +12,14 @@
 
 class Yolo11Infer : public IModelInfer, public std::enable_shared_from_this<Yolo11Infer> {
 public:
-    Yolo11Infer();
+    explicit Yolo11Infer(const std::string& model_name,
+                         const std::string& model_path,
+                         const std::string& label_path = "",
+                         float conf_thresh = -1.0f,
+                         float nms_thresh = -1.0f);
     virtual ~Yolo11Infer();
+
+    const std::string& name() const override { return _model_name; }
 
     bool init(const std::string& model_path = "", const std::string& label_path = "") override;
     void release() override;
@@ -27,6 +33,7 @@ public:
 
     void* input_buf() override { return _input_buf; }
     bool infer(image_buffer_t& img, DetectResult& result) override;
+    bool infer_frame(const std::shared_ptr<VpuDecoder::FrameBuffer>& frame, DetectResult& result) override;
 
     std::shared_ptr<IModelInfer> clone(uint32_t core_mask = 0) override;
 
@@ -40,8 +47,11 @@ private:
     void free_buffers();
 
     std::recursive_mutex _mutex;
+    std::string _model_name;
     std::string _model_path;
     std::string _label_path;
+    float _conf_thresh;
+    float _nms_thresh;
     std::shared_ptr<std::vector<std::string>> _labels;
 
     rknn_app_context_t _app_ctx;

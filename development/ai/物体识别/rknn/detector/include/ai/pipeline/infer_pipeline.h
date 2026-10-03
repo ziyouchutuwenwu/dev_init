@@ -31,6 +31,12 @@ public:
     std::shared_ptr<IModelInfer> model(size_t index = 0) const {
         return (index < _models.size()) ? _models[index] : nullptr;
     }
+    std::shared_ptr<IModelInfer> find_model(const std::string& name) const {
+        for (const auto& m : _models) {
+            if (m && m->name() == name) return m;
+        }
+        return nullptr;
+    }
     size_t model_count() const { return _models.size(); }
 
     std::shared_ptr<InferPipeline> clone(uint32_t core_mask = 0);
@@ -40,7 +46,9 @@ public:
     int input_height() const;
     int input_channel() const;
     const char* get_label_name(int cls_id) const;
+    const char* get_label_name(const std::string& model_name, int cls_id) const;
 
+    bool process(const std::shared_ptr<VpuDecoder::FrameBuffer>& frame, DetectResult& result);
     bool process(image_buffer_t& img, DetectResult& result);
 
 private:

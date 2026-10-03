@@ -268,14 +268,13 @@ int VpuDecoder::probe_codec(const unsigned char* data, size_t size) {
             unsigned char b1 = data[nal_offset + 1];
             if ((b0 & 0x80) != 0) continue;
 
-            // H.265 VPS(32: 0x40), SPS(33: 0x42), PPS(34: 0x44) with nuh_temporal_id_plus1 != 0
             if ((b0 == 0x40 || b0 == 0x42 || b0 == 0x44) && (b1 & 0x07) != 0) {
-                return 1; // H.265 / HEVC
+                return 1;
             }
 
             int h264_type = b0 & 0x1F;
-            if (h264_type == 7 /* SPS */ || h264_type == 8 /* PPS */) {
-                return 0; // H.264 / AVC
+            if (h264_type == 7 || h264_type == 8) {
+                return 0;
             }
         }
     }

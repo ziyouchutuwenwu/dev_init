@@ -14,8 +14,17 @@
 static std::mutex s_yolo11_shared_mutex;
 static std::mutex s_yolo11_core_mutexes[4];
 
-Yolo11Infer::Yolo11Infer()
-    : _is_initialized(false),
+Yolo11Infer::Yolo11Infer(const std::string& model_name,
+                         const std::string& model_path,
+                         const std::string& label_path,
+                         float conf_thresh,
+                         float nms_thresh)
+    : _model_name(model_name),
+      _model_path(model_path),
+      _label_path(label_path),
+      _conf_thresh(conf_thresh > 0.0f ? conf_thresh : BOX_THRESH),
+      _nms_thresh(nms_thresh > 0.0f ? nms_thresh : NMS_THRESH),
+      _is_initialized(false),
       _is_shared_ctx(false),
       _postprocess_inited(false),
       _core_mask(0),
@@ -30,7 +39,8 @@ Yolo11Infer::~Yolo11Infer() {
 }
 
 std::string Yolo11Infer::find_model_path(const std::string& user_path) {
-    return ModelDecrypter::instance().find_model_path(user_path, MODEL_PATH_YOLO11);
+    std::string path_to_try = !user_path.empty() ? user_path : _model_path;
+    return ModelDecrypter::instance().find_model_path(path_to_try, _model_name);
 }
 
 std::string Yolo11Infer::find_labels_path(const std::string& user_path) {
@@ -69,7 +79,7 @@ void Yolo11Infer::load_labels(const std::string& path) {
 }
 
 void Yolo11Infer::load_default_labels() {
-    const char* const* list = ModelDecrypter::instance().get_labels_list();
+    const char* const* list = ModelDecrypter::instance().get_labels_list(_model_name);
     if (list) {
         auto new_labels = std::make_shared<std::vector<std::string>>();
         for (int i = 0; list[i] != nullptr; ++i) {
@@ -159,10 +169,15 @@ bool Yolo11Infer::init(const std::string& model_path, const std::string& label_p
         return true;
     }
 
-    _model_path = find_model_path(model_path);
-    _label_path = find_labels_path(label_path);
+    std::string mp = !_model_path.empty() ? _model_path : model_path;
+    std::string lp = !_label_path.empty() ? _label_path : label_path;
+
+    _model_path = find_model_path(mp);
+    _label_path = find_labels_path(lp);
 
     if (_model_path.empty() || access(_model_path.c_str(), R_OK) != 0) {
+        fprintf(stderr, "[%s] 模型加载失败: 找不到模型文件或不可读取 (path=%s)\n",
+                _model_name.c_str(), _model_path.empty() ? mp.c_str() : _model_path.c_str());
         return false;
     }
 
@@ -176,19 +191,24 @@ bool Yolo11Infer::init(const std::string& model_path, const std::string& label_p
         _postprocess_inited = true;
     }
 
-    int ret = ModelDecrypter::instance().init_yolo11_model(_model_path, &_app_ctx);
+    int ret = ModelDecrypter::instance().init_model(_model_path, &_app_ctx, _model_name, _model_name);
     if (ret < 0) {
+        fprintf(stderr, "[%s] 模型加载失败: 模型解密或初始化失败 (ret=%d, path=%s)\n",
+                _model_name.c_str(), ret, _model_path.c_str());
         return false;
     }
 
     _ctx_mutex = std::make_shared<std::mutex>();
 
     if (!allocate_buffers()) {
+        fprintf(stderr, "[%s] 模型加载失败: 缓冲区分配失败\n", _model_name.c_str());
         release();
         return false;
     }
 
     _is_initialized = true;
+    printf("[%s] 模型加载成功: %s\n", _model_name.c_str(), _model_path.c_str());
+    fflush(stdout);
     return true;
 }
 
@@ -200,7 +220,7 @@ std::shared_ptr<IModelInfer> Yolo11Infer::clone(uint32_t core_mask) {
         return nullptr;
     }
 
-    auto cloned = std::make_shared<Yolo11Infer>();
+    auto cloned = std::make_shared<Yolo11Infer>(_model_name, _model_path, _label_path, _conf_thresh, _nms_thresh);
     cloned->_master_model = _master_model ? _master_model : shared_from_this();
     cloned->_labels = _labels;
     cloned->_model_path = _model_path;
@@ -313,9 +333,8 @@ bool Yolo11Infer::do_infer(const letterbox_t& letter_box, DetectResult& result, 
         core_lock = std::unique_lock<std::mutex>(s_yolo11_core_mutexes[0]);
     }
 
-    result.objects.clear();
-    if (orig_w > 0) result.orig_width = orig_w;
-    if (orig_h > 0) result.orig_height = orig_h;
+    if (orig_w > 0 && result.orig_width <= 0) result.orig_width = orig_w;
+    if (orig_h > 0 && result.orig_height <= 0) result.orig_height = orig_h;
 
     if (_app_ctx.io_num.n_input != 1 || _app_ctx.io_num.n_output < 6) {
         return false;
@@ -354,7 +373,7 @@ bool Yolo11Infer::do_infer(const letterbox_t& letter_box, DetectResult& result, 
         if (ret < 0) {
             return false;
         }
-        post_process(&_app_ctx, _prealloc_outputs.data(), const_cast<letterbox_t*>(&letter_box), BOX_THRESH, NMS_THRESH, &od_results);
+        post_process(&_app_ctx, _prealloc_outputs.data(), const_cast<letterbox_t*>(&letter_box), _conf_thresh, _nms_thresh, &od_results);
         rknn_outputs_release(_app_ctx.rknn_ctx, _app_ctx.io_num.n_output, _prealloc_outputs.data());
     } else {
         std::vector<rknn_output> outputs(_app_ctx.io_num.n_output);
@@ -367,7 +386,7 @@ bool Yolo11Infer::do_infer(const letterbox_t& letter_box, DetectResult& result, 
         if (ret < 0) {
             return false;
         }
-        post_process(&_app_ctx, outputs.data(), const_cast<letterbox_t*>(&letter_box), BOX_THRESH, NMS_THRESH, &od_results);
+        post_process(&_app_ctx, outputs.data(), const_cast<letterbox_t*>(&letter_box), _conf_thresh, _nms_thresh, &od_results);
         rknn_outputs_release(_app_ctx.rknn_ctx, _app_ctx.io_num.n_output, outputs.data());
     }
 
@@ -375,12 +394,13 @@ bool Yolo11Infer::do_infer(const letterbox_t& letter_box, DetectResult& result, 
     if (valid_det_count < 0) valid_det_count = 0;
     if (valid_det_count > OBJ_NUMB_MAX_SIZE) valid_det_count = OBJ_NUMB_MAX_SIZE;
 
-    result.objects.reserve(valid_det_count);
-    int rw = result.orig_width;
-    int rh = result.orig_height;
+    result.objects.reserve(result.objects.size() + valid_det_count);
+    int rw = (orig_w > 0) ? orig_w : result.orig_width;
+    int rh = (orig_h > 0) ? orig_h : result.orig_height;
 
     for (int i = 0; i < valid_det_count; ++i) {
         YoloDetectObject obj;
+        obj.model_name = _model_name;
         obj.class_id = od_results.results[i].cls_id;
         const char* lbl = get_label_name(obj.class_id);
         obj.label = (lbl ? lbl : "object");
@@ -422,6 +442,34 @@ bool Yolo11Infer::do_infer(const letterbox_t& letter_box, DetectResult& result, 
     }
 
     return true;
+}
+
+bool Yolo11Infer::infer_frame(const std::shared_ptr<VpuDecoder::FrameBuffer>& frame, DetectResult& result) {
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
+    if (!_is_initialized || !frame || frame->data.empty() || !_input_buf || _app_ctx.rknn_ctx == 0) {
+        return false;
+    }
+
+    image_buffer_t dst_img;
+    memset(&dst_img, 0, sizeof(image_buffer_t));
+    dst_img.width = _app_ctx.model_width;
+    dst_img.height = _app_ctx.model_height;
+    dst_img.width_stride = _app_ctx.model_width;
+    dst_img.height_stride = _app_ctx.model_height;
+    dst_img.format = IMAGE_FORMAT_RGB888;
+    dst_img.virt_addr = (unsigned char*)_input_buf;
+    dst_img.size = (int)(_app_ctx.model_width * _app_ctx.model_height * _app_ctx.model_channel);
+    dst_img.fd = -1;
+
+    letterbox_t letter_box;
+    memset(&letter_box, 0, sizeof(letterbox_t));
+    int orig_w = 0, orig_h = 0;
+
+    if (!VpuDecoder::letterbox_frame(frame, &dst_img, &letter_box, &orig_w, &orig_h)) {
+        return false;
+    }
+
+    return do_infer(letter_box, result, orig_w, orig_h);
 }
 
 bool Yolo11Infer::infer(image_buffer_t& img, DetectResult& result) {

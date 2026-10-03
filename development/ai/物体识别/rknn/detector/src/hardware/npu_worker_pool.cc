@@ -172,16 +172,22 @@ void NpuWorkerPool::worker_loop(int worker_id, uint32_t core_mask, std::shared_p
             continue;
         }
 
+        uint64_t f_idx = task.frame->frame_idx;
+        int64_t pts = task.frame->pts_ms;
+        task.frame.reset();
+
         DetectResult result;
         result.orig_width = orig_w;
         result.orig_height = orig_h;
+        result.frame_idx = f_idx;
+        result.pts_ms = pts;
 
         bool ok = pipeline->process(dst_img, result);
         if (task.callback) {
             if (!ok) {
                 result.objects.clear();
             }
-            task.callback(task.channel_id, task.frame->frame_idx, task.frame->pts_ms, orig_w, orig_h, result);
+            task.callback(task.channel_id, f_idx, pts, orig_w, orig_h, result);
         }
     }
 }

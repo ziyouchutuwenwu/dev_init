@@ -16,7 +16,10 @@ std::string ModelDecrypter::resolve_file_path(const std::string& path) {
     return PathUtils::resolve_path(path);
 }
 
-const char* const* ModelDecrypter::get_labels_list() {
+const char* const* ModelDecrypter::get_labels_list(const std::string& model_id) {
+    if (!model_id.empty()) {
+        return ::get_model_labels_list(model_id.c_str());
+    }
     return ::get_labels_list();
 }
 
@@ -24,6 +27,29 @@ std::string ModelDecrypter::find_model_path(const std::string& user_path, const 
     if (!user_path.empty()) {
         std::string resolved = resolve_file_path(user_path);
         if (!resolved.empty()) return resolved;
+
+        std::string filename = user_path;
+        size_t last_slash = user_path.find_last_of("/\\");
+        if (last_slash != std::string::npos) {
+            filename = user_path.substr(last_slash + 1);
+        }
+
+        std::vector<std::string> candidates = {
+            user_path,
+            filename,
+            "model/" + filename,
+            "../model/" + filename,
+            "extra/model/" + filename,
+            "../extra/model/" + filename,
+            "deploy/" + filename,
+            "../deploy/" + filename
+        };
+
+        for (const auto& c : candidates) {
+            std::string r = resolve_file_path(c);
+            if (!r.empty()) return r;
+        }
+
         return user_path;
     }
 
@@ -34,6 +60,8 @@ std::string ModelDecrypter::find_model_path(const std::string& user_path, const 
                 default_model_name,
                 "model/" + default_model_name,
                 "../model/" + default_model_name,
+                "extra/model/" + default_model_name,
+                "../extra/model/" + default_model_name,
                 "../deploy/" + default_model_name,
                 "deploy/" + default_model_name
             };
@@ -43,6 +71,8 @@ std::string ModelDecrypter::find_model_path(const std::string& user_path, const 
                 default_model_name + ext,
                 "model/" + default_model_name + ext,
                 "../model/" + default_model_name + ext,
+                "extra/model/" + default_model_name + ext,
+                "../extra/model/" + default_model_name + ext,
                 "../deploy/" + default_model_name + ext,
                 "deploy/" + default_model_name + ext
             };
@@ -62,12 +92,16 @@ std::string ModelDecrypter::find_model_path(const std::string& user_path, const 
         "../model/model.enc",
         "../model/yolo11.enc",
         "../deploy/model.enc",
-        "deploy/model.enc"
+        "deploy/model.enc",
+        "../deploy/yolo11.enc",
+        "deploy/yolo11.enc"
 #else
         "yolo11.rknn",
         "yolov8.rknn",
         "model/yolo11.rknn",
         "model/yolov8.rknn",
+        "extra/model/yolo11.rknn",
+        "../extra/model/yolo11.rknn",
         "../model/yolo11.rknn",
         "../model/yolov8.rknn",
         "../deploy/yolo11.rknn",
@@ -184,7 +218,7 @@ std::string ModelDecrypter::get_encrypted_model_id(const std::string& model_path
     if (resolved.empty()) return "";
     char id_buf[128] = {0};
     int ret = ::get_model_id(resolved.c_str(), id_buf, sizeof(id_buf));
-    if (ret == 0) {
+    if (ret >= 0) {
         return std::string(id_buf);
     }
     return "";

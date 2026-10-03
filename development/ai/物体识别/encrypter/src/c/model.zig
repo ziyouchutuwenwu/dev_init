@@ -33,12 +33,19 @@ export fn get_model_id(
     const buf = out_buf orelse return -1;
     const path_slice = std.mem.sliceTo(path, 0);
     const mid = model.read_model_id_from_file(path_slice) catch return -1;
+    const str = model.model_id_to_string(&mid);
+    if (str.len > 0) {
+        if (max_len <= str.len) return -2;
+        @memcpy(buf[0..str.len], str);
+        buf[str.len] = 0;
+        return 0;
+    }
     var hex: [model.MODEL_ID_LEN * 2]u8 = undefined;
     _ = crypto.bytes_to_hex(&mid, &hex);
     if (max_len <= hex.len) return -2;
     @memcpy(buf[0..hex.len], &hex);
     buf[hex.len] = 0;
-    return @as(c_int, @intCast(hex.len));
+    return 0;
 }
 
 export fn free_model_memory(ptr: ?[*]u8, len: usize) void {

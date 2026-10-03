@@ -8,8 +8,13 @@ use tokio::sync::broadcast;
 
 pub fn init_detector(_total_streams: usize) -> Arc<DetectWrapper> {
     let detect_wrapper = Arc::new(DetectWrapper::new());
-    if let Err(e) = detect_wrapper.init_engine() {
-        log::error!("[server] detect_wrapper.init_engine failed: {e}");
+    match detect_wrapper.init_engine() {
+        Ok(()) => {
+            log::info!("[server] 算法引擎连接就绪，模型加载成功");
+        }
+        Err(e) => {
+            log::error!("[server] 算法引擎初始化失败: {e}");
+        }
     }
     detect_wrapper
 }

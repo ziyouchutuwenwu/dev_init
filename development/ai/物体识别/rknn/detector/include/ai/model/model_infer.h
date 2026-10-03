@@ -3,6 +3,7 @@
 
 #include "image_utils.h"
 #include "rknn_api.h"
+#include "hardware/vpu_decoder.h"
 #include <string>
 #include <memory>
 #include <vector>
@@ -25,6 +26,8 @@ class IModelInfer {
 public:
     virtual ~IModelInfer() = default;
 
+    virtual const std::string& name() const = 0;
+
     virtual bool init(const std::string& model_path = "", const std::string& label_path = "") = 0;
     virtual void release() = 0;
     virtual bool is_initialized() const = 0;
@@ -37,6 +40,11 @@ public:
 
     virtual void* input_buf() = 0;
     virtual bool infer(image_buffer_t& img, DetectResult& result) = 0;
+    virtual bool infer_frame(const std::shared_ptr<VpuDecoder::FrameBuffer>& frame, DetectResult& result) {
+        (void)frame;
+        (void)result;
+        return false;
+    }
 
     virtual std::shared_ptr<IModelInfer> clone(uint32_t core_mask = 0) = 0;
 };

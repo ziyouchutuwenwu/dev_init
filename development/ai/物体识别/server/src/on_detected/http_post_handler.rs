@@ -83,7 +83,11 @@ async fn loop_check(
                             }
                         }
                         Err(e) => {
-                            log::warn!("[http_post:{stream_id_clone}] 发送告警到 {ALERT_URL} 失败: {e}");
+                            static FAILED_COUNT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+                            let count = FAILED_COUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                            if count == 0 || count % 30 == 0 {
+                                log::warn!("[http_post:{stream_id_clone}] 发送告警到 {ALERT_URL} 失败 (连续第 {count} 次): {e}");
+                            }
                         }
                     }
                 });

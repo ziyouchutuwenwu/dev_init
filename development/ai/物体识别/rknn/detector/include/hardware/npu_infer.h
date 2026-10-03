@@ -16,6 +16,7 @@ public:
     ~NpuChannelContext();
 
     bool infer(image_buffer_t& img, DetectResult& result);
+    bool infer_frame(const std::shared_ptr<VpuDecoder::FrameBuffer>& frame, DetectResult& result);
     void release();
 
     void* input_buf() const;

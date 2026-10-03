@@ -2,5 +2,5 @@
 #include "ai/yolo11/yolo11_infer.h"
 
 void register_models(InferPipeline& pipeline) {
-    pipeline.add<Yolo11Infer>();
+    pipeline.add<Yolo11Infer>("aaa", "model/aaa.enc");
 }

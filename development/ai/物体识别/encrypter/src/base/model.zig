@@ -103,14 +103,33 @@ pub fn encrypt_model_with_id(
     if (std.c.fwrite(cipher_buf.ptr, 1, cipher_buf.len, out_file) != cipher_buf.len) return error.WriteFailed;
 }
 
+pub fn string_to_model_id(name: []const u8) [MODEL_ID_LEN]u8 {
+    var id: [MODEL_ID_LEN]u8 = [_]u8{0} ** MODEL_ID_LEN;
+    const len = @min(name.len, MODEL_ID_LEN);
+    @memcpy(id[0..len], name[0..len]);
+    return id;
+}
+
+pub fn model_id_to_string(id: *const [MODEL_ID_LEN]u8) []const u8 {
+    var len: usize = 0;
+    while (len < MODEL_ID_LEN and id[len] != 0) : (len += 1) {}
+    return id[0..len];
+}
+
 pub fn encrypt_model(
     allocator: std.mem.Allocator,
     in_rknn_path: []const u8,
     out_enc_path: []const u8,
     key: [crypto.KEY_LEN]u8,
+    model_id_str: ?[]const u8,
 ) ![MODEL_ID_LEN]u8 {
     var model_id: [MODEL_ID_LEN]u8 = undefined;
-    crypto.random_bytes(&model_id);
+    if (model_id_str) |s| {
+        model_id = string_to_model_id(s);
+    } else {
+        const stem = std.fs.path.stem(in_rknn_path);
+        model_id = string_to_model_id(stem);
+    }
     try encrypt_model_with_id(allocator, in_rknn_path, out_enc_path, key, model_id);
     return model_id;
 }
@@ -120,7 +139,7 @@ pub fn encrypt_model_default(
     in_rknn_path: []const u8,
     out_enc_path: []const u8,
 ) ![MODEL_ID_LEN]u8 {
-    return encrypt_model(allocator, in_rknn_path, out_enc_path, crypto.DEFAULT_MODEL_KEY);
+    return encrypt_model(allocator, in_rknn_path, out_enc_path, crypto.DEFAULT_MODEL_KEY, null);
 }
 
 pub fn decrypt_model_to_memory_default(

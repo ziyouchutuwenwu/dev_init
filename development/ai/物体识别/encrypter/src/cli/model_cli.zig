@@ -9,7 +9,7 @@ const print_stderr = cli_print.print_stderr;
 const get_exe_name = cli_print.get_exe_name;
 
 fn print_usage(exe: []const u8) void {
-    print_stdout("usage: {s} --in <model.rknn> [--out <model.enc>]\n", .{exe});
+    print_stdout("usage: {s} --in <model.rknn> [--out <model.enc>] [--id <model_id>]\n", .{exe});
 }
 
 pub fn main() !void {
@@ -35,6 +35,7 @@ pub fn main() !void {
 
     var in_path: ?[]const u8 = null;
     var out_path: ?[]const u8 = null;
+    var id_str: ?[]const u8 = null;
 
     var i: usize = 1;
     while (i < args.len) : (i += 1) {
@@ -43,6 +44,9 @@ pub fn main() !void {
             i += 1;
         } else if ((std.mem.eql(u8, args[i], "--out") or std.mem.eql(u8, args[i], "-o")) and i + 1 < args.len) {
             out_path = args[i + 1];
+            i += 1;
+        } else if (std.mem.eql(u8, args[i], "--id") and i + 1 < args.len) {
+            id_str = args[i + 1];
             i += 1;
         } else if (!std.mem.startsWith(u8, args[i], "-")) {
             if (in_path == null) {
@@ -67,13 +71,12 @@ pub fn main() !void {
         break :blk std.fmt.bufPrint(&auto_out_buf, "{s}.enc", .{valid_in}) catch "model.enc";
     };
 
-    const mid = model.encrypt_model(allocator, valid_in, valid_out, crypto.DEFAULT_MODEL_KEY) catch |err| {
+    const mid = model.encrypt_model(allocator, valid_in, valid_out, crypto.DEFAULT_MODEL_KEY, id_str) catch |err| {
         print_stderr("error: failed to encrypt model ({s})\n", .{@errorName(err)});
         return;
     };
 
-    var mid_hex: [model.MODEL_ID_LEN * 2]u8 = undefined;
-    _ = crypto.bytes_to_hex(&mid, &mid_hex);
+    const mid_str = model.model_id_to_string(&mid);
     print_stdout("model encrypted: {s} -> {s}\n", .{ valid_in, valid_out });
-    print_stdout("model id (hex): {s}\n", .{mid_hex});
+    print_stdout("model id: {s}\n", .{mid_str});
 }
