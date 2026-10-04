@@ -10,6 +10,7 @@ return {
     layout = {
       max_width = { 40, 0.25 },
       width = 30,
+      min_width = 1,
       default_direction = "prefer_left",
     },
     use_icon_provider = false, -- 禁用外部 codicon 图标源，杜绝因字体不全导致的乱码方块

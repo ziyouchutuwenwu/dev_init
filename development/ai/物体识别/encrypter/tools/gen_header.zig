@@ -172,15 +172,10 @@ fn print_msg(msg: []const u8) void {
     _ = linux.syscall3(.write, 1, @intFromPtr(msg.ptr), msg.len);
 }
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-
+pub fn main(init: std.process.Init.Minimal) !void {
     var args_buf: [32][]const u8 = undefined;
     var args_len: usize = 0;
-    var it = try std.process.argsWithAllocator(allocator);
-    defer it.deinit();
+    var it = init.args.iterate();
     while (it.next()) |arg| {
         if (args_len < args_buf.len) {
             args_buf[args_len] = arg;

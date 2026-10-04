@@ -52,13 +52,12 @@ fn format_remaining_time(remain_sec: i64, buf: []u8) []const u8 {
     }
 }
 
-pub fn main() !void {
+pub fn main(init: std.process.Init.Minimal) !void {
     const allocator = std.heap.c_allocator;
 
     var args_buf: [32][]const u8 = undefined;
     var args_len: usize = 0;
-    var it = try std.process.argsWithAllocator(allocator);
-    defer it.deinit();
+    var it = init.args.iterate();
     while (it.next()) |arg| {
         if (args_len < args_buf.len) {
             args_buf[args_len] = arg;

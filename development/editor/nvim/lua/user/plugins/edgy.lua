@@ -20,7 +20,6 @@ return {
             return "文件资源管理器"
           end,
           ft = "neo-tree",
-          size = { width = 32 },
           pinned = false,
           open = "Neotree position=left filesystem",
         },
@@ -28,7 +27,6 @@ return {
         {
           title = "代码大纲",
           ft = "aerial",
-          size = { width = 32 },
           pinned = false,
           open = function()
             require("aerial").open()
@@ -38,7 +36,6 @@ return {
         {
           title = "任务列表 [r刷新 e编辑]",
           ft = "overseer_tasks",
-          size = { width = 32 },
           pinned = false,
           open = function()
             require("user.plugins.tasks").open_task_list()
@@ -48,7 +45,6 @@ return {
         {
           title = "任务监视器",
           ft = "OverseerList",
-          size = { width = 32 },
           pinned = false,
           open = function()
             require("overseer").open()
@@ -64,9 +60,37 @@ return {
         winfixheight = false,
       },
       keys = {
-        -- 快捷按键微调宽度 / 高度
-        ["<C-Right>"] = function(win) win:resize("width", 3) end,
-        ["<C-Left>"] = function(win) win:resize("width", -3) end,
+        -- 快捷按键微调宽度 / 高度（支持无限制缩小与放大）
+        ["<C-Right>"] = function(win)
+          local eb = win.view.edgebar
+          local new_w = math.max((eb.size or 32) + 3, 1)
+          eb.size = new_w
+          local cfg = require("edgy.config")
+          if cfg.options and cfg.options[eb.pos] then
+            cfg.options[eb.pos].size = new_w
+          end
+          for _, w in ipairs(eb.wins) do
+            if w:is_valid() then
+              vim.w[w.win].edgy_width = nil
+            end
+          end
+          require("edgy.layout").update()
+        end,
+        ["<C-Left>"] = function(win)
+          local eb = win.view.edgebar
+          local new_w = math.max((eb.size or 32) - 3, 1)
+          eb.size = new_w
+          local cfg = require("edgy.config")
+          if cfg.options and cfg.options[eb.pos] then
+            cfg.options[eb.pos].size = new_w
+          end
+          for _, w in ipairs(eb.wins) do
+            if w:is_valid() then
+              vim.w[w.win].edgy_width = nil
+            end
+          end
+          require("edgy.layout").update()
+        end,
         ["<C-Up>"] = function(win) win:resize("height", 2) end,
         ["<C-Down>"] = function(win) win:resize("height", -2) end,
       },
@@ -92,13 +116,14 @@ return {
           for _, w in ipairs(self.wins) do
             if w.visible and w:is_valid() then
               local actual_w = vim.api.nvim_win_get_width(w.win)
-              if actual_w >= 15 and actual_w ~= self.size then
+              if actual_w >= 1 and actual_w ~= self.size then
                 self.size = actual_w
                 local cfg = require("edgy.config")
                 if cfg.options and cfg.options[self.pos] then
                   cfg.options[self.pos].size = actual_w
                 end
               end
+              vim.w[w.win].edgy_width = nil
             end
           end
         end

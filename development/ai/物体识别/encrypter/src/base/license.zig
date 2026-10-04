@@ -96,7 +96,7 @@ pub fn verify_license_file_default(
 }
 
 pub const LicenseDetails = struct {
-    hwid: [128]u8 = [_]u8{0} ** 128,
+    hwid: [128]u8 = @splat(0),
     hwid_len: usize = 0,
     issue_time: i64 = 0,
     expire_time: i64 = 0,
@@ -348,7 +348,7 @@ test "full-file AEAD license generation and verification" {
     const allocator = std.testing.allocator;
     const hwid = "fdc3-cb9a-cfd0-0d31";
     const lic_path = "/tmp/test_unit_lic.key";
-    defer std.fs.deleteFileAbsolute(lic_path) catch {};
+    defer _ = std.c.unlink(lic_path);
 
     try generate_license_default(allocator, hwid, 30, lic_path);
 
@@ -365,7 +365,7 @@ test "anti-rollback rejects future issue time" {
     const allocator = std.testing.allocator;
     const hwid = "fdc3-cb9a-cfd0-0d31";
     const lic_path = "/tmp/test_future_issue.key";
-    defer std.fs.deleteFileAbsolute(lic_path) catch {};
+    defer _ = std.c.unlink(lic_path);
 
     const key_pair = try crypto.generate_key_pair(crypto.DEFAULT_LICENSE_SEED);
     const payload = "hwid=fdc3-cb9a-cfd0-0d31;issue=3000000000;expire=4000000000";
@@ -409,7 +409,7 @@ test "inspect_license_file detects expired license" {
     const allocator = std.testing.allocator;
     const hwid = "fdc3-cb9a-cfd0-0d31";
     const lic_path = "/tmp/test_expired.key";
-    defer std.fs.deleteFileAbsolute(lic_path) catch {};
+    defer _ = std.c.unlink(lic_path);
 
     const key_pair = try crypto.generate_key_pair(crypto.DEFAULT_LICENSE_SEED);
     const now: i64 = @intCast(time(null));

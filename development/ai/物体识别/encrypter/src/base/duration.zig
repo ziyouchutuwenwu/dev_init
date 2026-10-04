@@ -40,7 +40,7 @@ pub fn read_running_duration_file(path: []const u8, hwid_key: [crypto.KEY_LEN]u8
 }
 
 pub fn write_running_duration_file(path: []const u8, hwid_key: [crypto.KEY_LEN]u8, state: RunningDurationState) bool {
-    var plain = [_]u8{0} ** 32;
+    var plain: [32]u8 = @splat(0);
     @memcpy(plain[0..4], &RUNNING_DURATION_MAGIC);
     std.mem.writeInt(u32, plain[4..8], RUNNING_DURATION_VERSION, .big);
     std.mem.writeInt(i64, plain[8..16], state.total_sec, .big);
@@ -76,7 +76,7 @@ test "running duration read write encrypted file" {
     const license = @import("license.zig");
     const hwid = "fdc3-cb9a-cfd0-0d31";
     const cfg_path = "/tmp/test_duration_unit.bin";
-    defer std.fs.deleteFileAbsolute(cfg_path) catch {};
+    defer _ = std.c.unlink(cfg_path);
 
     const hwid_key = license.derive_hwid_key(hwid);
     const st1 = RunningDurationState{

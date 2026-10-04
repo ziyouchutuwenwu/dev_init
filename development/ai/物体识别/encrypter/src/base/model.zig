@@ -104,7 +104,7 @@ pub fn encrypt_model_with_id(
 }
 
 pub fn string_to_model_id(name: []const u8) [MODEL_ID_LEN]u8 {
-    var id: [MODEL_ID_LEN]u8 = [_]u8{0} ** MODEL_ID_LEN;
+    var id: [MODEL_ID_LEN]u8 = @splat(0);
     const len = @min(name.len, MODEL_ID_LEN);
     @memcpy(id[0..len], name[0..len]);
     return id;

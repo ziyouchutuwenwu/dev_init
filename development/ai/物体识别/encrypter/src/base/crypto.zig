@@ -30,8 +30,18 @@ pub const DEFAULT_LICENSE_PUBKEY: [PUBKEY_LEN]u8 = [32]u8{
     0x1d, 0x0f, 0x27, 0xee, 0x57, 0x30, 0x77, 0xd0,
 };
 
+extern "c" fn getrandom(buf: [*]u8, buflen: usize, flags: c_uint) isize;
+
 pub fn random_bytes(buf: []u8) void {
-    std.crypto.random.bytes(buf);
+    var total: usize = 0;
+    while (total < buf.len) {
+        const rc = getrandom(buf.ptr + total, buf.len - total, 0);
+        if (rc > 0) {
+            total += @as(usize, @intCast(rc));
+        } else {
+            break;
+        }
+    }
 }
 
 pub fn generate_key_pair(seed: [KEY_LEN]u8) !Ed25519.KeyPair {

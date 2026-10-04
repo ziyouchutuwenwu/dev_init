@@ -6,11 +6,11 @@ local M = {
     strategy = "terminal",
     templates = { "builtin", "vscode" },
     task_list = {
-      -- 核心设定：指定方向在左侧，与全局侧边栏宽度 32 严丝合缝
+      -- 核心设定：指定方向在左侧，默认宽度 32
       direction = "left",
       width = 32,
-      min_width = 32,
-      max_width = 32,
+      min_width = 1,
+      max_width = { 100, 0.5 },
       default_detail = 1,
     },
   },

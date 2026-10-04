@@ -12,13 +12,12 @@ fn print_usage(exe: []const u8) void {
     print_stdout("usage: {s} --in <model.rknn> [--out <model.enc>] [--id <model_id>]\n", .{exe});
 }
 
-pub fn main() !void {
+pub fn main(init: std.process.Init.Minimal) !void {
     const allocator = std.heap.c_allocator;
 
     var args_buf: [32][]const u8 = undefined;
     var args_len: usize = 0;
-    var it = try std.process.argsWithAllocator(allocator);
-    defer it.deinit();
+    var it = init.args.iterate();
     while (it.next()) |arg| {
         if (args_len < args_buf.len) {
             args_buf[args_len] = arg;
