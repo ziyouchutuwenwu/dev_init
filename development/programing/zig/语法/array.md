@@ -31,7 +31,7 @@ const std = @import("std");
 const allocator = std.heap.page_allocator;
 
 pub fn demo(list: []u8, data_list: []u8) []u8 {
-    for (list, 0..list.len) |_, index| {
+    for (list, 0..) |_, index| {
         data_list[index] = @truncate(index);
     }
 

@@ -4,8 +4,6 @@
 
 不能使用堆内存的时候用，比如写内核的时候, 如果字节用完，会报 OutOfMemory 错误
 
-不需要 deinit, alloc 出来的内存可以多次 free
-
 ## 用法
 
 ```zig
