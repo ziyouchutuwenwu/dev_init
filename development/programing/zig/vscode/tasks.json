@@ -21,7 +21,7 @@
     {
       "label": "clean",
       "type": "shell",
-      "command": "rm -rf zig-cache zig-out"
+      "command": "rm -rf .zig-cache zig-out"
     },
     {
       "label": "test",
