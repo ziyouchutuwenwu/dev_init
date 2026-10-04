@@ -5,11 +5,11 @@
 ```zig
 const std = @import("std");
 
-const ArrayList = std.ArrayListUnmanaged;
+const ArrayList = std.ArrayList;
 const allocator = std.heap.page_allocator;
 
 pub fn main() !void {
-    var array_list = ArrayList(u8){ .items = &.{}, .capacity = 0 };
+    var array_list = ArrayList(u8).empty;
     defer array_list.deinit(allocator);
 
     try array_list.append(allocator, 'H');
