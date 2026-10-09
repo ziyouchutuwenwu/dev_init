@@ -98,7 +98,6 @@ local function close_other_buffers()
   if vim.bo[cur_buf].buftype == "" and vim.bo[cur_buf].buflisted then
     keep_buf = cur_buf
   else
-
     if package.loaded["edgy"] then
       local main_wins = require("edgy.editor").list_wins().main
       for win, _ in pairs(main_wins) do
@@ -166,12 +165,14 @@ end
 vim.keymap.set('n', '<Leader>co', close_other_buffers, { noremap = true, desc = "关闭其他文件 (Close Others)" })
 
 local function toggle_bottom_terminal()
-  require("user.terminal").toggle()
+  require("plugins.modules.terminal").toggle()
 end
 
 vim.keymap.set({'n', 'i', 't', 'v'}, '<C-`>', toggle_bottom_terminal, { noremap = true, desc = "切换底部终端 (Ctrl+`)" })
 vim.keymap.set({'n', 'i', 't', 'v'}, '<C-~>', toggle_bottom_terminal, { noremap = true, desc = "切换底部终端 (Ctrl+~)" })
+vim.keymap.set({'n', 'i', 't', 'v'}, '<M-3>', function()
+  require("plugins.modules.tasks").toggle_task_list()
+end, { noremap = true, desc = "切换任务列表 (Alt+3)" })
 pcall(vim.keymap.del, 'n', '<F7>')
 pcall(vim.keymap.del, 't', '<F7>')
 pcall(vim.keymap.del, 'i', '<F7>')
-

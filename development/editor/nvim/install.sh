@@ -8,11 +8,11 @@ rm -rf ~/.config/nvim
 rm -rf ~/.local/share/nvim
 rm -rf ~/.local/state/nvim
 
+echo "cloning astronvim template..."
 git clone --depth 1 https://github.com/AstroNvim/template ~/.config/nvim
 
+echo "installing plugins and configurations (core, modules, plugins)..."
 mkdir -p ~/.config/nvim/lua/plugins/
-find "$CURRENT_DIR/lua" -maxdepth 1 -name '*.lua' -exec cp -f {} ~/.config/nvim/lua/plugins/ \;
-
-cp -rf "$CURRENT_DIR/lua/user" ~/.config/nvim/lua/
+cp -rf "$CURRENT_DIR/lua/plugins/"* ~/.config/nvim/lua/plugins/
 
 echo "install done!"

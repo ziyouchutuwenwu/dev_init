@@ -1,68 +1,4 @@
-local M = {
-  "stevearc/overseer.nvim",
-  cmd = { "OverseerToggle", "OverseerOpen", "OverseerRun", "OverseerBuild", "OverseerTaskAction" },
-  opts = {
-    strategy = "terminal",
-    templates = { "builtin", "vscode" },
-    task_list = {
-      direction = "left",
-      width = 32,
-      min_width = 1,
-      max_width = { 100, 0.5 },
-      default_detail = 1,
-    },
-  },
-  keys = {
-    {
-      "<M-3>",
-      function()
-        require("user.plugins.tasks").toggle_task_list()
-      end,
-      desc = "切换任务列表 (Alt+3)",
-    },
-    {
-      "<M-4>",
-      function()
-        require("overseer").run_template()
-      end,
-      desc = "呼出运行任务选择菜单 (Alt+4)",
-    },
-
-    {
-      "<Leader>tt",
-      function()
-        require("user.plugins.tasks").toggle_task_list()
-      end,
-      desc = "切换任务列表 (Toggle Task List)",
-    },
-    {
-      "<Leader>tr",
-      function()
-        require("overseer").run_template()
-      end,
-      desc = "运行任务 (Run Task)",
-    },
-    {
-      "<Leader>to",
-      function()
-        require("overseer").toggle()
-      end,
-      desc = "切换任务监视器 (Toggle Task Monitor)",
-    },
-    {
-      "<Leader>ta",
-      function()
-        require("overseer").task_action()
-      end,
-      desc = "任务操作 (Task Action)",
-    },
-    {
-      "<Leader>tb",
-      "<Cmd>OverseerBuild<CR>",
-      desc = "运行构建任务 (Build Task)",
-    },
-  },
-}
+local M = {}
 
 local state = {
   buf = nil,
@@ -85,7 +21,7 @@ function M.find_task_window()
 end
 
 local function get_task_status(name)
-  local ok, term_mgr = pcall(require, "user.terminal")
+  local ok, term_mgr = pcall(require, "user.plugins.terminal")
   if ok and term_mgr.task_statuses and term_mgr.task_statuses[name] then
     return term_mgr.task_statuses[name], nil
   end
@@ -165,7 +101,7 @@ function M.get_or_create_buf()
     local lnum = vim.api.nvim_win_get_cursor(0)[1]
     local item = state.line_map[lnum]
     if item and item.type == "task" then
-      local term_mgr = require("user.terminal")
+      local term_mgr = require("plugins.modules.terminal")
       for i, t in ipairs(term_mgr.terminals) do
         if t.task_name == item.task.name then
           term_mgr.switch_terminal(i)
@@ -174,7 +110,7 @@ function M.get_or_create_buf()
         end
       end
     end
-    require("user.terminal").open()
+    require("plugins.modules.terminal").open()
   end, "查看任务输出 / 监视器")
 
   map("r", function()
@@ -347,7 +283,7 @@ function M.render()
 end
 
 function M.run_task(task_item)
-  local term_mgr = require("user.terminal")
+  local term_mgr = require("plugins.modules.terminal")
   term_mgr.run_task(task_item)
   M.render()
 end
@@ -429,4 +365,9 @@ vim.api.nvim_create_autocmd("User", {
   desc = "当 Overseer 任务状态变动时更新任务列表显示",
 })
 
+package.loaded["plugins.modules.tasks"] = M
+package.loaded["plugins.tasks"] = M
+package.loaded["user.tasks"] = M
+package.loaded["user.plugins.tasks"] = M
+package.loaded["user.modules.tasks"] = M
 return M

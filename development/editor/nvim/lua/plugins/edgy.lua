@@ -38,11 +38,11 @@ return {
         },
 
         {
-          title = "[r刷新/e编辑]",
+          title = "任务[r/e]",
           ft = "overseer_tasks",
           pinned = false,
           open = function()
-            require("user.plugins.tasks").open_task_list()
+            require("plugins.modules.tasks").open_task_list()
           end,
         },
 

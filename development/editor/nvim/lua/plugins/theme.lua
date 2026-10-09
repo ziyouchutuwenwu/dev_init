@@ -24,6 +24,11 @@ return {
         terminal_colors = true,
         highlight_inactive_windows = true,
       },
+      highlights = {
+        TermCursor = { bg = "#abb2bf", fg = "#1e222a" },
+        TermCursorNC = { bg = "#5c6370", fg = "#1e222a" },
+        UserTerminalNormal = { bg = "#1e222a", fg = "#abb2bf" },
+      },
     },
   },
   {
