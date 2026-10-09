@@ -67,13 +67,7 @@ local M = {
 local state = {
   buf = nil,
   tasks_vscode = {},
-  tasks_other = {},
-  collapsed = {
-    vscode = false,
-    other = true,
-  },
   line_map = {},
-  is_loading_other = false,
 }
 
 local NS_ID = vim.api.nvim_create_namespace("user_overseer_tasks_ns")
@@ -122,14 +116,10 @@ function M.get_or_create_buf()
   map("<CR>", function()
     local lnum = vim.api.nvim_win_get_cursor(0)[1]
     local item = state.line_map[lnum]
-    if not item then return end
-    if item.type == "section" then
-      state.collapsed[item.section] = not state.collapsed[item.section]
-      M.render()
-    elseif item.type == "task" then
+    if item and item.type == "task" then
       M.run_task(item.task)
     end
-  end, "运行任务 / 展开折叠分组")
+  end, "运行任务")
 
   map("o", function()
     local lnum = vim.api.nvim_win_get_cursor(0)[1]
@@ -158,7 +148,7 @@ function M.get_or_create_buf()
 
   map("?", function()
     vim.notify(
-      "快捷键说明:\n<Enter>: 运行任务 / 折叠展开分组\no: 查看任务输出 / 监视器\nr: 刷新任务列表\ne: 编辑 tasks.json\nq: 关闭面板",
+      "快捷键说明:\n<Enter>: 运行任务\no: 查看任务输出 / 监视器\nr: 刷新任务列表\ne: 编辑 tasks.json\nq: 关闭面板",
       vim.log.levels.INFO
     )
   end, "显示帮助")
@@ -202,7 +192,6 @@ function M.edit_tasks_json()
 end
 
 function M.load_tasks(callback)
-
   local ok_vs, vs_util = pcall(require, "overseer.vscode.vs_util")
   local vs_tasks = {}
   if ok_vs then
@@ -225,36 +214,6 @@ function M.load_tasks(callback)
     end
   end
   state.tasks_vscode = vs_tasks
-
-  local ok_tmpl, template = pcall(require, "overseer.template")
-  if ok_tmpl and not state.is_loading_other then
-    state.is_loading_other = true
-    template.list({ dir = vim.fn.getcwd() }, function(templates)
-      state.is_loading_other = false
-      local other = {}
-      local vs_set = {}
-      for _, vt in ipairs(state.tasks_vscode) do
-        vs_set[vt.name] = true
-      end
-      for _, t in ipairs(templates or {}) do
-        if not t.hide and t.module ~= "vscode" and not vs_set[t.name] then
-          table.insert(other, {
-            name = t.name,
-            module = t.module or "project",
-            desc = t.desc or "",
-            template = t,
-          })
-        end
-      end
-      table.sort(other, function(a, b) return a.name < b.name end)
-      state.tasks_other = other
-      vim.schedule(function()
-        if M.find_task_window() then
-          M.render()
-        end
-      end)
-    end)
-  end
 
   if callback then
     callback()
@@ -282,100 +241,43 @@ function M.render()
     return lnum
   end
 
-  local vs_arrow = state.collapsed.vscode and "▶" or "▼"
   local vs_count = #state.tasks_vscode
-  local vs_title = string.format("%s vscode 任务%s", vs_arrow, state.collapsed.vscode and (" [" .. vs_count .. "]") or "")
-  local l_vs = add_line(vs_title, "Directory")
-  state.line_map[l_vs] = { type = "section", section = "vscode" }
+  if vs_count == 0 then
+    add_line("  (未定义任务，按 e 编辑)", "Comment")
+  else
+    for _, t in ipairs(state.tasks_vscode) do
+      local status = get_task_status(t.name)
+      local icon = "  󰐊 "
+      local icon_hl = "Directory"
+      local status_str = ""
 
-  if not state.collapsed.vscode then
-    if vs_count == 0 then
-      add_line("    (未定义任务，按 e 编辑)", "Comment")
-    else
-      for _, t in ipairs(state.tasks_vscode) do
-        local status = get_task_status(t.name)
-        local icon = "  󰐊 "
-        local icon_hl = "Directory"
-        local status_str = ""
-
-        if status == "RUNNING" then
-          icon = "  ● "
-          icon_hl = "DiagnosticWarn"
-          status_str = " (运行中...)"
-        elseif status == "SUCCESS" then
-          icon = "  ✓ "
-          icon_hl = "DiagnosticOk"
-          status_str = " (成功)"
-        elseif status == "FAILURE" then
-          icon = "  ✗ "
-          icon_hl = "DiagnosticError"
-          status_str = " (失败)"
-        elseif status == "CANCELED" then
-          icon = "  󰜺 "
-          icon_hl = "Comment"
-          status_str = " (已取消)"
-        end
-
-        local text = string.format("%s%-14s%s", icon, t.name, status_str)
-        local l = add_line(text)
-        table.insert(highlights, { lnum = l - 1, col_start = 2, col_end = #icon, hl = icon_hl })
-        table.insert(highlights, { lnum = l - 1, col_start = #icon, col_end = #icon + #t.name, hl = "Function" })
-        if status_str ~= "" then
-          table.insert(highlights, { lnum = l - 1, col_start = #icon + #t.name, col_end = -1, hl = icon_hl })
-        end
-
-        state.line_map[l] = { type = "task", task = t }
+      if status == "RUNNING" then
+        icon = "  ● "
+        icon_hl = "DiagnosticWarn"
+        status_str = " (运行中...)"
+      elseif status == "SUCCESS" then
+        icon = "  ✓ "
+        icon_hl = "DiagnosticOk"
+        status_str = " (成功)"
+      elseif status == "FAILURE" then
+        icon = "  ✗ "
+        icon_hl = "DiagnosticError"
+        status_str = " (失败)"
+      elseif status == "CANCELED" then
+        icon = "  󰜺 "
+        icon_hl = "Comment"
+        status_str = " (已取消)"
       end
-    end
-  end
 
-  add_line("")
-
-  local other_count = #state.tasks_other
-  local other_arrow = state.collapsed.other and "▶" or "▼"
-  local other_hint = ""
-  if state.is_loading_other then
-    other_hint = " (扫描中...)"
-  elseif state.collapsed.other then
-    other_hint = " [" .. other_count .. "]"
-  end
-  local other_title = string.format("%s 项目任务%s", other_arrow, other_hint)
-  local l_oth = add_line(other_title, "Directory")
-  state.line_map[l_oth] = { type = "section", section = "other" }
-
-  if not state.collapsed.other then
-    if other_count == 0 then
-      if state.is_loading_other then
-        add_line("    (扫描中...)", "Comment")
-      else
-        add_line("    (无其他项目任务)", "Comment")
+      local text = string.format("%s%-14s%s", icon, t.name, status_str)
+      local l = add_line(text)
+      table.insert(highlights, { lnum = l - 1, col_start = 2, col_end = #icon, hl = icon_hl })
+      table.insert(highlights, { lnum = l - 1, col_start = #icon, col_end = #icon + #t.name, hl = "Function" })
+      if status_str ~= "" then
+        table.insert(highlights, { lnum = l - 1, col_start = #icon + #t.name, col_end = -1, hl = icon_hl })
       end
-    else
-      for _, t in ipairs(state.tasks_other) do
-        local status = get_task_status(t.name)
-        local icon = "  󰐊 "
-        local icon_hl = "Directory"
-        local status_str = ""
 
-        if status == "RUNNING" then
-          icon = "  ● "
-          icon_hl = "DiagnosticWarn"
-          status_str = " (运行中)"
-        elseif status == "SUCCESS" then
-          icon = "  ✓ "
-          icon_hl = "DiagnosticOk"
-        elseif status == "FAILURE" then
-          icon = "  ✗ "
-          icon_hl = "DiagnosticError"
-        end
-
-        local text = string.format("%s%-18s [%s]%s", icon, t.name, t.module or "task", status_str)
-        local l = add_line(text)
-        table.insert(highlights, { lnum = l - 1, col_start = 2, col_end = #icon, hl = icon_hl })
-        table.insert(highlights, { lnum = l - 1, col_start = #icon, col_end = #icon + #t.name, hl = "Identifier" })
-        table.insert(highlights, { lnum = l - 1, col_start = #icon + #t.name, col_end = -1, hl = "Comment" })
-        state.line_map[l] = { type = "task", task = t }
-      end
+      state.line_map[l] = { type = "task", task = t }
     end
   end
 
