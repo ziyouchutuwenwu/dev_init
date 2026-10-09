@@ -1,4 +1,3 @@
--- 类似 VS Code 任务管理系统的插件 (原生支持读取 .vscode/tasks.json 及 mix/cargo/npm/make)
 local M = {
   "stevearc/overseer.nvim",
   cmd = { "OverseerToggle", "OverseerOpen", "OverseerRun", "OverseerBuild", "OverseerTaskAction" },
@@ -6,7 +5,6 @@ local M = {
     strategy = "terminal",
     templates = { "builtin", "vscode" },
     task_list = {
-      -- 核心设定：指定方向在左侧，默认宽度 32
       direction = "left",
       width = 32,
       min_width = 1,
@@ -15,7 +13,6 @@ local M = {
     },
   },
   keys = {
-    -- Alt 体系（Alt+1 文件树、Alt+2 大纲、Alt+3 任务列表、Alt+4 运行菜单）
     {
       "<M-3>",
       function()
@@ -31,7 +28,6 @@ local M = {
       desc = "呼出运行任务选择菜单 (Alt+4)",
     },
 
-    -- Leader 体系（空格键前缀）
     {
       "<Leader>tt",
       function()
@@ -68,14 +64,13 @@ local M = {
   },
 }
 
--- 任务列表状态与缓存
 local state = {
   buf = nil,
   tasks_vscode = {},
   tasks_other = {},
   collapsed = {
     vscode = false,
-    other = true, -- 项目任务通常较多，默认折叠，按 Enter 随时展开
+    other = true,
   },
   line_map = {},
   is_loading_other = false,
@@ -83,7 +78,6 @@ local state = {
 
 local NS_ID = vim.api.nvim_create_namespace("user_overseer_tasks_ns")
 
--- 查找已打开的任务列表窗口
 function M.find_task_window()
   for _, win in ipairs(vim.api.nvim_list_wins()) do
     if vim.api.nvim_win_is_valid(win) then
@@ -96,7 +90,6 @@ function M.find_task_window()
   return nil
 end
 
--- 获取任务最近运行状态
 local function get_task_status(name)
   local ok, task_list = pcall(require, "overseer.task_list")
   if not ok then return nil, nil end
@@ -111,7 +104,6 @@ local function get_task_status(name)
   return nil, nil
 end
 
--- 获取或创建任务列表缓冲区
 function M.get_or_create_buf()
   if state.buf and vim.api.nvim_buf_is_valid(state.buf) then
     return state.buf
@@ -123,7 +115,6 @@ function M.get_or_create_buf()
   vim.bo[b].filetype = "overseer_tasks"
   pcall(vim.api.nvim_buf_set_name, b, "OverseerTasks")
 
-  -- 绑定缓冲区快捷键
   local function map(lhs, rhs, desc)
     vim.keymap.set("n", lhs, rhs, { buffer = b, silent = true, desc = desc })
   end
@@ -176,7 +167,6 @@ function M.get_or_create_buf()
   return b
 end
 
--- 打开或编辑 .vscode/tasks.json
 function M.edit_tasks_json()
   local cwd = vim.fn.getcwd()
   local tasks_file = cwd .. "/.vscode/tasks.json"
@@ -211,9 +201,8 @@ function M.edit_tasks_json()
   vim.cmd("edit " .. vim.fn.fnameescape(tasks_file))
 end
 
--- 加载任务数据（VSCode 同步即时读取，项目任务异步补充）
 function M.load_tasks(callback)
-  -- 1. 即时读取 .vscode/tasks.json
+
   local ok_vs, vs_util = pcall(require, "overseer.vscode.vs_util")
   local vs_tasks = {}
   if ok_vs then
@@ -237,7 +226,6 @@ function M.load_tasks(callback)
   end
   state.tasks_vscode = vs_tasks
 
-  -- 2. 异步获取项目模板 (mix/cargo/npm/make等)
   local ok_tmpl, template = pcall(require, "overseer.template")
   if ok_tmpl and not state.is_loading_other then
     state.is_loading_other = true
@@ -273,7 +261,6 @@ function M.load_tasks(callback)
   end
 end
 
--- 渲染界面
 function M.render()
   local b = M.get_or_create_buf()
   local win = M.find_task_window()
@@ -284,7 +271,7 @@ function M.render()
 
   state.line_map = {}
   local lines = {}
-  local highlights = {} -- { lnum, col_start, col_end, hl_group }
+  local highlights = {}
 
   local function add_line(text, hl, col_s, col_e)
     table.insert(lines, text)
@@ -295,7 +282,6 @@ function M.render()
     return lnum
   end
 
-  -- 1. vscode 任务分组
   local vs_arrow = state.collapsed.vscode and "▶" or "▼"
   local vs_count = #state.tasks_vscode
   local vs_title = string.format("%s vscode 任务%s", vs_arrow, state.collapsed.vscode and (" [" .. vs_count .. "]") or "")
@@ -345,7 +331,6 @@ function M.render()
 
   add_line("")
 
-  -- 2. 项目任务分组 (mix / cargo / make / npm 等)
   local other_count = #state.tasks_other
   local other_arrow = state.collapsed.other and "▶" or "▼"
   local other_hint = ""
@@ -394,20 +379,17 @@ function M.render()
     end
   end
 
-  -- 写入缓冲区
   vim.api.nvim_set_option_value("modifiable", true, { buf = b })
   vim.api.nvim_set_option_value("readonly", false, { buf = b })
   vim.api.nvim_buf_set_lines(b, 0, -1, false, lines)
   vim.api.nvim_set_option_value("modifiable", false, { buf = b })
   vim.api.nvim_set_option_value("readonly", true, { buf = b })
 
-  -- 应用高亮
   vim.api.nvim_buf_clear_namespace(b, NS_ID, 0, -1)
   for _, h in ipairs(highlights) do
     pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, h.hl, h.lnum, h.col_start, h.col_end)
   end
 
-  -- 恢复光标
   if win and vim.api.nvim_win_is_valid(win) and cursor then
     local max_line = #lines
     local row = math.min(math.max(1, cursor[1]), max_line)
@@ -415,7 +397,6 @@ function M.render()
   end
 end
 
--- 运行指定的任务项
 function M.run_task(task_item)
   local overseer = require("overseer")
   local template = require("overseer.template")
@@ -461,7 +442,6 @@ function M.run_task(task_item)
   end)
 end
 
--- 刷新任务数据
 function M.refresh(notify_user)
   pcall(function()
     require("overseer.template").clear_cache({ dir = vim.fn.getcwd() })
@@ -474,7 +454,6 @@ function M.refresh(notify_user)
   end)
 end
 
--- 打开任务列表面板
 function M.open_task_list()
   local win = M.find_task_window()
   if win then
@@ -503,7 +482,6 @@ function M.open_task_list()
   return win
 end
 
--- 关闭任务列表面板
 function M.close_task_list()
   local win = M.find_task_window()
   if win then
@@ -511,7 +489,6 @@ function M.close_task_list()
   end
 end
 
--- 切换任务列表面板 (Alt+3)
 function M.toggle_task_list()
   local win = M.find_task_window()
   if win then
@@ -521,7 +498,6 @@ function M.toggle_task_list()
   end
 end
 
--- 注册全局自动同步：监听 tasks.json 修改保存以及 Overseer 任务状态流转
 local augroup = vim.api.nvim_create_augroup("UserOverseerTasksAutoSync", { clear = true })
 vim.api.nvim_create_autocmd({ "BufWritePost", "FileChangedShellPost" }, {
   group = augroup,

@@ -1,5 +1,4 @@
 return {
-  -- 侧边栏文件浏览 (Neo-tree 增强)
   {
     "nvim-neo-tree/neo-tree.nvim",
     opts = {
@@ -21,7 +20,7 @@ return {
       open_files_in_last_window = true,
       filesystem = {
         filtered_items = {
-          visible = true, -- 显示隐藏文件但降低对比度
+          visible = true,
           hide_dotfiles = false,
           hide_gitignored = false,
         },
@@ -34,7 +33,6 @@ return {
     },
   },
 
-  -- 窗口选择器增强：确保窗口拾取器不会误选大纲、任务监视器等侧边栏
   {
     "s1n7ax/nvim-window-picker",
     opts = {
@@ -62,11 +60,10 @@ return {
     },
   },
 
-  -- 缓冲区快速文件管理 (Oil.nvim: 像编辑普通文本一样重命名/新建文件)
   {
     "stevearc/oil.nvim",
     opts = {
-      default_file_explorer = false, -- 保留 neo-tree 为默认侧边栏
+      default_file_explorer = false,
       view_options = {
         show_hidden = true,
       },

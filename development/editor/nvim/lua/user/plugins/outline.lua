@@ -1,5 +1,4 @@
 return {
-  -- 代码大纲视图 (基于 aerial.nvim)
   "stevearc/aerial.nvim",
   cmd = { "AerialToggle", "AerialOpen", "AerialClose", "AerialNavToggle" },
   opts = {
@@ -13,7 +12,7 @@ return {
       min_width = 1,
       default_direction = "prefer_left",
     },
-    use_icon_provider = false, -- 禁用外部 codicon 图标源，杜绝因字体不全导致的乱码方块
+    use_icon_provider = false,
     nerd_font = vim.g.icons_enabled ~= false,
     show_guides = true,
   },

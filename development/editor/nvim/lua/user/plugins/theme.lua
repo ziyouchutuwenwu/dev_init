@@ -1,5 +1,4 @@
 return {
-  -- 主题：OneDarkPro（最贴近 VS Code Yi Dark / Atom One Dark 的现代主题）
   {
     "olimorris/onedarkpro.nvim",
     priority = 1000,
@@ -30,7 +29,7 @@ return {
   {
     "AstroNvim/astroui",
     opts = {
-      colorscheme = "onedark", -- 经典 Atom One Dark 风格；可选：onedark_vivid, onedark_dark
+      colorscheme = "onedark",
     },
   },
 }

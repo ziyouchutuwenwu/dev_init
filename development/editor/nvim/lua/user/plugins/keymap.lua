@@ -1,11 +1,8 @@
--- 命令行历史导航
 vim.cmd([[
   cmap <Down> <C-n>
   cmap <Up> <C-p>
 ]])
 
--- 复制粘贴（系统剪贴板通道：与外部世界无缝交互）
--- Normal 模式复制/剪切当前整行；Visual 模式复制/剪切选中内容
 vim.keymap.set('n', '<C-c>', '"+yy', { noremap = true, desc = "复制当前行到系统剪贴板" })
 vim.keymap.set('v', '<C-c>', '"+y', { noremap = true, desc = "复制到系统剪贴板" })
 vim.keymap.set('n', '<C-x>', '"+dd', { noremap = true, desc = "剪切当前行到系统剪贴板" })
@@ -26,15 +23,13 @@ local function do_paste()
   end
 end
 
--- i, c, n 模式统一使用平滑光标处粘贴系统剪贴板（不跳行、不截断）
 vim.keymap.set({'i', 'c', 'n'}, '<C-v>', do_paste, { noremap = true, desc = "平滑粘贴系统剪贴板" })
--- visual 模式替换粘贴时使用黑洞寄存器，不污染任何剪贴板
+
 vim.keymap.set('v', '<C-v>', function()
   vim.cmd('normal! "_d')
   do_paste()
 end, { noremap = true, desc = "替换粘贴系统剪贴板" })
 
--- 撤销重做
 vim.keymap.set({'n', 'v', 'i', 'c'}, '<C-z>', function()
   if vim.fn.mode() == 'i' then
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>uli', true, false, true), 'n', false)
@@ -46,7 +41,6 @@ vim.keymap.set({'n', 'v', 'i', 'c'}, '<C-z>', function()
 end, { noremap = true, desc = "撤销" })
 vim.keymap.set({'n', 'v'}, '<C-y>', '<C-r>', { noremap = true, desc = "重做" })
 
--- 跳转历史导航（前进 / 后退，完全对齐 VS Code：Alt+Left 返回，Alt+Right 前进）
 vim.keymap.set('n', '<M-Left>', '<C-o>', { noremap = true, desc = "跳转返回 (向后)" })
 vim.keymap.set('n', '<M-Right>', '<C-i>', { noremap = true, desc = "跳转前进" })
 vim.keymap.set({ 'v', 'i' }, '<M-Left>', '<Esc><C-o>', { noremap = true, desc = "跳转返回 (向后)" })
@@ -54,35 +48,27 @@ vim.keymap.set({ 'v', 'i' }, '<M-Right>', '<Esc><C-i>', { noremap = true, desc =
 vim.keymap.set('n', '<M-,>', '<C-o>', { noremap = true, desc = "上一个位置 (返回)" })
 vim.keymap.set('n', '<M-.>', '<C-i>', { noremap = true, desc = "下一个位置 (前进)" })
 
--- Ctrl + 鼠标左键：跳转到光标所在模块或方法的定义处（完全对齐 VS Code 的 Ctrl+Click 体验）
 vim.keymap.set('n', '<C-LeftMouse>', '<LeftMouse><Cmd>lua vim.lsp.buf.definition()<CR>', { noremap = true, desc = "跳转到定义 (Ctrl+单击)" })
 vim.keymap.set({ 'v', 'i' }, '<C-LeftMouse>', '<Esc><LeftMouse><Cmd>lua vim.lsp.buf.definition()<CR>', { noremap = true, desc = "跳转到定义 (Ctrl+单击)" })
 
--- 统一搜索快捷键体系：
--- <Space>lf (Local Find): 当前文件搜索（带右侧实时代码上下文预览框）
 vim.keymap.set({ 'n', 'v' }, '<Leader>lf', function()
   require("snacks").picker.lines()
 end, { noremap = true, desc = "当前文件搜索 (Local Find)" })
 
--- <Space>gf (Global Find): 全局搜索（带右侧跨文件实时代码上下文预览框）
 vim.keymap.set({ 'n', 'v' }, '<Leader>gf', function()
   require("snacks").picker.grep()
 end, { noremap = true, desc = "全局搜索 (Global Find)" })
 
--- 全选（普通模式、插入模式、可视模式下按 Ctrl+a 均一键全选所有行）
 vim.keymap.set({ 'n', 'v', 'x', 'i' }, '<C-a>', '<Esc>ggVG', { noremap = true, desc = "全选" })
 
--- 保存（注意：<C-s> 在终端中默认是 XON 流控制，需在终端配置中取消该绑定）
 vim.keymap.set({'n', 'v'}, '<C-s>', ':w<CR>', { noremap = true, desc = "保存" })
 vim.keymap.set('i', '<C-s>', '<Esc>:w<CR>a', { noremap = true, desc = "保存" })
 
--- 整行移动（使用 :move 命令，绝对不污染剪贴板）
 vim.keymap.set('n', '<M-Up>', '<Cmd>move .-2<CR>==', { noremap = true, desc = "向上移动当前行" })
 vim.keymap.set('n', '<M-Down>', '<Cmd>move .+1<CR>==', { noremap = true, desc = "向下移动当前行" })
 vim.keymap.set('v', '<M-Up>', ":move '<-2<CR>gv=gv", { noremap = true, desc = "向上移动选中行" })
 vim.keymap.set('v', '<M-Down>', ":move '>+1<CR>gv=gv", { noremap = true, desc = "向下移动选中行" })
 
--- 智能删除
 vim.keymap.set('v', '<BS>', function()
   local start_line = vim.fn.line("'<")
   local end_line = vim.fn.line("'>")
@@ -104,17 +90,15 @@ vim.keymap.set('v', '<BS>', function()
   end
 end, { noremap = true, desc = "可视模式下退格键删除（支持空行）" })
 
--- 关闭其他文件 (Space + co: Close Others)，带侧边栏与未保存修改保护
 local function close_other_buffers()
   local cur_win = vim.api.nvim_get_current_win()
   local cur_buf = vim.api.nvim_win_get_buf(cur_win)
   local keep_buf = nil
 
-  -- 1. 优先判断当前焦点是否在普通主编辑文件上
   if vim.bo[cur_buf].buftype == "" and vim.bo[cur_buf].buflisted then
     keep_buf = cur_buf
   else
-    -- 2. 当前焦点在侧边栏（neo-tree、aerial、overseer_tasks 等），定位主编辑区窗口
+
     if package.loaded["edgy"] then
       local main_wins = require("edgy.editor").list_wins().main
       for win, _ in pairs(main_wins) do
@@ -127,7 +111,7 @@ local function close_other_buffers()
         end
       end
     end
-    -- 兜底：遍历所有窗口寻找普通编辑文件
+
     if not keep_buf then
       for _, win in ipairs(vim.api.nvim_list_wins()) do
         local b = vim.api.nvim_win_get_buf(win)
@@ -144,7 +128,6 @@ local function close_other_buffers()
     return
   end
 
-  -- 3. 安全关闭其他普通文件缓冲区，绝不误伤侧边栏
   local closed_count = 0
   local skipped_modified = 0
   local abuf = require("astrocore.buffer")

@@ -2,7 +2,6 @@ return {
   "MagicDuck/grug-far.nvim",
   cmd = { "GrugFar", "GrugFarWithin" },
   keys = {
-    -- 1. 全局替换：<Space>gr (Global Replace)
     {
       "<Leader>gr",
       function()
@@ -20,7 +19,7 @@ return {
       mode = { "n", "v" },
       desc = "全局替换 (Global Replace 面板)",
     },
-    -- 2. 当前文件替换：<Space>lr (Local Replace)
+
     {
       "<Leader>lr",
       function()
@@ -42,7 +41,7 @@ return {
       mode = { "n", "v" },
       desc = "当前文件替换 (Local Replace 面板)",
     },
-    -- 兼容别名
+
     {
       "<Leader>sr",
       function()

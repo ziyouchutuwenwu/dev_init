@@ -1,14 +1,18 @@
+local function get_sidebar_width()
+  local cols = vim.o.columns
+  local w = math.floor(cols * 0.20)
+  return math.max(math.min(w, 35), 18)
+end
+
 return {
-  -- 使用 edgy.nvim 统一管理左侧边栏：实现与 VS Code 完全一致的“文件树在上、大纲居中、任务在底”
   {
     "folke/edgy.nvim",
     lazy = false,
     opts = {
       animate = {
-        enabled = false, -- 关闭动画，确保布局瞬时响应、杜绝高度泄漏与抖动
+        enabled = false,
       },
       left = {
-        -- 1. 顶部：文件资源管理器 (Neo-tree: 完美兼容 files, buffers, git 全部三种视图源自由切换)
         {
           title = function()
             local source = vim.b.neo_tree_source
@@ -23,25 +27,25 @@ return {
           pinned = false,
           open = "Neotree position=left filesystem",
         },
-        -- 2. 中间：代码大纲 (Aerial)
+
         {
-          title = "代码大纲",
+          title = "大纲",
           ft = "aerial",
           pinned = false,
           open = function()
             require("aerial").open()
           end,
         },
-        -- 3. 底部：任务列表 (所有 tasks.json 及项目任务，Alt+3)
+
         {
-          title = "任务列表 [r刷新 e编辑]",
+          title = "[r刷新/e编辑]",
           ft = "overseer_tasks",
           pinned = false,
           open = function()
             require("user.plugins.tasks").open_task_list()
           end,
         },
-        -- 4. 任务监视器 (Overseer 运行中任务监视器)
+
         {
           title = "任务监视器",
           ft = "OverseerList",
@@ -52,18 +56,18 @@ return {
         },
       },
       options = {
-        left = { size = 32 },
+        left = { size = get_sidebar_width },
       },
       wo = {
         winbar = true,
-        winfixwidth = false, -- 允许左右拖动改变宽度
+        winfixwidth = false,
         winfixheight = false,
       },
       keys = {
-        -- 快捷按键微调宽度 / 高度（支持无限制缩小与放大）
         ["<C-Right>"] = function(win)
           local eb = win.view.edgebar
-          local new_w = math.max((eb.size or 32) + 3, 1)
+          local cur_w = type(eb.size) == "function" and eb.size() or eb.size
+          local new_w = math.max((cur_w or 30) + 3, 1)
           eb.size = new_w
           local cfg = require("edgy.config")
           if cfg.options and cfg.options[eb.pos] then
@@ -78,7 +82,8 @@ return {
         end,
         ["<C-Left>"] = function(win)
           local eb = win.view.edgebar
-          local new_w = math.max((eb.size or 32) - 3, 1)
+          local cur_w = type(eb.size) == "function" and eb.size() or eb.size
+          local new_w = math.max((cur_w or 30) - 3, 1)
           eb.size = new_w
           local cfg = require("edgy.config")
           if cfg.options and cfg.options[eb.pos] then
@@ -96,7 +101,6 @@ return {
       },
     },
     config = function(_, opts)
-      -- 增强 edgy：通过精确捕获鼠标拖拽事件，支持鼠标左右拖动边框，同时杜绝新窗口打开时误拉宽侧边栏
       local Edgebar = require("edgy.edgebar")
       local orig_resize = Edgebar.resize
       local is_mouse_dragging = false
@@ -111,12 +115,12 @@ return {
       end)
 
       Edgebar.resize = function(self)
-        -- 仅当用户正在用鼠标拖动边框时，才更新 edgebar 的目标宽度
         if self.vertical and #self.wins > 0 and is_mouse_dragging then
           for _, w in ipairs(self.wins) do
             if w.visible and w:is_valid() then
               local actual_w = vim.api.nvim_win_get_width(w.win)
-              if actual_w >= 1 and actual_w ~= self.size then
+              local cur_w = type(self.size) == "function" and self.size() or self.size
+              if actual_w >= 1 and actual_w ~= cur_w then
                 self.size = actual_w
                 local cfg = require("edgy.config")
                 if cfg.options and cfg.options[self.pos] then
@@ -129,6 +133,27 @@ return {
         end
         return orig_resize(self)
       end
+
+      local augroup = vim.api.nvim_create_augroup("UserEdgyProportionalResize", { clear = true })
+      vim.api.nvim_create_autocmd("VimResized", {
+        group = augroup,
+        callback = function()
+          local cfg = require("edgy.config")
+          local eb = cfg.layout.left
+          if eb then
+            eb.size = get_sidebar_width
+            if cfg.options and cfg.options.left then
+              cfg.options.left.size = get_sidebar_width
+            end
+            for _, w in ipairs(eb.wins) do
+              if w:is_valid() then
+                vim.w[w.win].edgy_width = nil
+              end
+            end
+          end
+          require("edgy.layout").update()
+        end,
+      })
 
       require("edgy").setup(opts)
     end,
