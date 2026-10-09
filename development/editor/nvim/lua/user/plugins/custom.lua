@@ -13,5 +13,9 @@ vim.api.nvim_create_autocmd("VimEnter", {
 
     vim.opt.title = true
     vim.opt.titlestring = "%t%( %m%) - nvim"
+
+    pcall(vim.keymap.del, "n", "<F7>")
+    pcall(vim.keymap.del, "t", "<F7>")
+    pcall(vim.keymap.del, "i", "<F7>")
   end,
 })

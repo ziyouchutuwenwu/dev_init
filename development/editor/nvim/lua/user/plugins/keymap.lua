@@ -164,3 +164,14 @@ local function close_other_buffers()
 end
 
 vim.keymap.set('n', '<Leader>co', close_other_buffers, { noremap = true, desc = "关闭其他文件 (Close Others)" })
+
+local function toggle_bottom_terminal()
+  require("user.terminal").toggle()
+end
+
+vim.keymap.set({'n', 'i', 't', 'v'}, '<C-`>', toggle_bottom_terminal, { noremap = true, desc = "切换底部终端 (Ctrl+`)" })
+vim.keymap.set({'n', 'i', 't', 'v'}, '<C-~>', toggle_bottom_terminal, { noremap = true, desc = "切换底部终端 (Ctrl+~)" })
+pcall(vim.keymap.del, 'n', '<F7>')
+pcall(vim.keymap.del, 't', '<F7>')
+pcall(vim.keymap.del, 'i', '<F7>')
+

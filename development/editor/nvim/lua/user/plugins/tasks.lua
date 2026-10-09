@@ -85,8 +85,12 @@ function M.find_task_window()
 end
 
 local function get_task_status(name)
-  local ok, task_list = pcall(require, "overseer.task_list")
-  if not ok then return nil, nil end
+  local ok, term_mgr = pcall(require, "user.terminal")
+  if ok and term_mgr.task_statuses and term_mgr.task_statuses[name] then
+    return term_mgr.task_statuses[name], nil
+  end
+  local ok_ov, task_list = pcall(require, "overseer.task_list")
+  if not ok_ov then return nil, nil end
   local tasks = task_list.list_tasks({
     sort = task_list.sort_newest_first,
   })
@@ -113,25 +117,64 @@ function M.get_or_create_buf()
     vim.keymap.set("n", lhs, rhs, { buffer = b, silent = true, desc = desc })
   end
 
-  map("<CR>", function()
-    local lnum = vim.api.nvim_win_get_cursor(0)[1]
+  local function execute_task_at_cursor(from_mouse)
+    local lnum = nil
+    if from_mouse then
+      local mouse = vim.fn.getmousepos()
+      if mouse and mouse.line > 0 then
+        if mouse.winid > 0 and mouse.winid ~= vim.api.nvim_get_current_win() then
+          vim.api.nvim_set_current_win(mouse.winid)
+        end
+        pcall(vim.api.nvim_win_set_cursor, 0, { mouse.line, 0 })
+        lnum = mouse.line
+      end
+    end
+    if not lnum then
+      lnum = vim.api.nvim_win_get_cursor(0)[1]
+    end
     local item = state.line_map[lnum]
     if item and item.type == "task" then
       M.run_task(item.task)
     end
+  end
+
+  local function select_task_at_cursor()
+    local mouse = vim.fn.getmousepos()
+    if mouse and mouse.line > 0 then
+      if mouse.winid > 0 and mouse.winid ~= vim.api.nvim_get_current_win() then
+        vim.api.nvim_set_current_win(mouse.winid)
+      end
+      vim.wo.cursorline = true
+      pcall(vim.api.nvim_win_set_cursor, 0, { mouse.line, 0 })
+    end
+  end
+
+  map("<LeftMouse>", function()
+    select_task_at_cursor()
+  end, "单击选中任务")
+
+  map("<CR>", function()
+    execute_task_at_cursor(false)
   end, "运行任务")
+
+  map("<2-LeftMouse>", function()
+    execute_task_at_cursor(true)
+  end, "双击运行任务")
 
   map("o", function()
     local lnum = vim.api.nvim_win_get_cursor(0)[1]
     local item = state.line_map[lnum]
     if item and item.type == "task" then
-      local _, task = get_task_status(item.task.name)
-      if task then
-        require("overseer").run_action(task, "open")
-        return
+      local term_mgr = require("user.terminal")
+      for i, t in ipairs(term_mgr.terminals) do
+        if t.task_name == item.task.name then
+          term_mgr.switch_terminal(i)
+          term_mgr.open()
+          return
+        end
       end
     end
-    require("overseer").toggle()
+    require("user.terminal").open()
   end, "查看任务输出 / 监视器")
 
   map("r", function()
@@ -202,9 +245,13 @@ function M.load_tasks(callback)
         for _, t in ipairs(content.tasks) do
           local name = t.label or t.name
           if name then
+            local cmd = t.command or ""
+            if type(t.args) == "table" and #t.args > 0 then
+              cmd = (cmd ~= "" and (cmd .. " ") or "") .. table.concat(t.args, " ")
+            end
             table.insert(vs_tasks, {
               name = name,
-              command = t.command or (type(t.args) == "table" and table.concat(t.args, " ")) or "",
+              command = cmd,
               group = type(t.group) == "table" and t.group.kind or t.group,
               is_vscode = true,
             })
@@ -300,48 +347,9 @@ function M.render()
 end
 
 function M.run_task(task_item)
-  local overseer = require("overseer")
-  local template = require("overseer.template")
-
-  if task_item.template then
-    template.build_task(task_item.template, { params = {} }, function(err, task)
-      if err then
-        vim.notify("创建任务失败: " .. tostring(err), vim.log.levels.ERROR)
-      elseif task then
-        task:start()
-        vim.notify("已启动任务: " .. task.name, vim.log.levels.INFO)
-        M.render()
-      end
-    end)
-    return
-  end
-
-  template.get_by_name(task_item.name, { dir = vim.fn.getcwd() }, function(tmpl)
-    if tmpl then
-      template.build_task(tmpl, { params = {} }, function(err, task)
-        if err then
-          vim.notify("创建任务失败: " .. tostring(err), vim.log.levels.ERROR)
-        elseif task then
-          task:start()
-          vim.notify("已启动任务: " .. task.name, vim.log.levels.INFO)
-          M.render()
-        end
-      end)
-    else
-      if task_item.command and task_item.command ~= "" then
-        local t = overseer.new_task({
-          name = task_item.name,
-          cmd = task_item.command,
-          components = { "default" },
-        })
-        t:start()
-        vim.notify("已启动命令任务: " .. task_item.name, vim.log.levels.INFO)
-        M.render()
-      else
-        vim.notify("未找到任务模板或命令: " .. task_item.name, vim.log.levels.WARN)
-      end
-    end
-  end)
+  local term_mgr = require("user.terminal")
+  term_mgr.run_task(task_item)
+  M.render()
 end
 
 function M.refresh(notify_user)
