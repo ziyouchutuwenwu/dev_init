@@ -341,7 +341,7 @@ function M.render_list()
   table.insert(lines, plus_str)
   M.line_map[1] = { is_plus = true, plus_col = h_left + 1 }
 
-  table.insert(lines, string.rep("─", M.list_width))
+  table.insert(lines, string.rep("―", M.list_width))
   M.line_map[2] = { is_sep = true }
 
   local right_padding = 1
