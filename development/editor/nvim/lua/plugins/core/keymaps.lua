@@ -48,8 +48,128 @@ vim.keymap.set({ 'v', 'i' }, '<M-Right>', '<Esc><C-i>', { noremap = true, desc =
 vim.keymap.set('n', '<M-,>', '<C-o>', { noremap = true, desc = "上一个位置 (返回)" })
 vim.keymap.set('n', '<M-.>', '<C-i>', { noremap = true, desc = "下一个位置 (前进)" })
 
-vim.keymap.set('n', '<C-LeftMouse>', '<LeftMouse><Cmd>lua vim.lsp.buf.definition()<CR>', { noremap = true, desc = "跳转到定义 (Ctrl+单击)" })
-vim.keymap.set({ 'v', 'i' }, '<C-LeftMouse>', '<Esc><LeftMouse><Cmd>lua vim.lsp.buf.definition()<CR>', { noremap = true, desc = "跳转到定义 (Ctrl+单击)" })
+local function get_url_at_pos(line, col)
+  local patterns = {
+    "()([%a][%w+.-]+://[%w%-_.~!*%(%);:@&=+$,/?%%#%[%]]+)()",
+    "()(www%.[%w%-_.~!*%(%);:@&=+$,/?%%#%[%]]+)()",
+  }
+  for _, pat in ipairs(patterns) do
+    for s, raw_url, e in line:gmatch(pat) do
+      local url = raw_url
+      local te = e - 1
+      while #url > 0 do
+        local last_char = url:sub(-1)
+        if last_char:match("[%.,;:!%>%'\"]") then
+          url = url:sub(1, -2)
+          te = te - 1
+        elseif last_char == ")" then
+          local _, n_open = url:gsub("%(", "")
+          local _, n_close = url:gsub("%)", "")
+          if n_close > n_open then
+            url = url:sub(1, -2)
+            te = te - 1
+          else
+            break
+          end
+        elseif last_char == "]" then
+          local _, n_open = url:gsub("%[", "")
+          local _, n_close = url:gsub("%]", "")
+          if n_close > n_open then
+            url = url:sub(1, -2)
+            te = te - 1
+          else
+            break
+          end
+        else
+          break
+        end
+      end
+      if col >= s and col <= te then
+        if not url:match("^[%a][%w+.-]+://") then
+          url = "https://" .. url
+        end
+        return url
+      end
+    end
+  end
+  return nil
+end
+
+local function open_url_or_definition()
+  local mouse = vim.fn.getmousepos()
+  if mouse.winid > 0 and vim.api.nvim_win_is_valid(mouse.winid) then
+    vim.api.nvim_set_current_win(mouse.winid)
+    local bufnr = vim.api.nvim_win_get_buf(mouse.winid)
+    if mouse.line > 0 then
+      local lines = vim.api.nvim_buf_get_lines(bufnr, mouse.line - 1, mouse.line, false)
+      if lines and #lines > 0 then
+        local url = get_url_at_pos(lines[1], mouse.column)
+        if url then
+          vim.ui.open(url)
+          return
+        end
+      end
+      pcall(vim.api.nvim_win_set_cursor, mouse.winid, { mouse.line, math.max(0, mouse.column - 1) })
+    end
+  end
+  vim.lsp.buf.definition()
+end
+
+vim.keymap.set('n', '<C-LeftMouse>', open_url_or_definition, { noremap = true, desc = "打开URL或跳转到定义" })
+vim.keymap.set('v', '<C-LeftMouse>', function()
+  local mouse = vim.fn.getmousepos()
+  if mouse.winid > 0 and vim.api.nvim_win_is_valid(mouse.winid) then
+    vim.api.nvim_set_current_win(mouse.winid)
+    local bufnr = vim.api.nvim_win_get_buf(mouse.winid)
+    if mouse.line > 0 then
+      local lines = vim.api.nvim_buf_get_lines(bufnr, mouse.line - 1, mouse.line, false)
+      if lines and #lines > 0 then
+        local url = get_url_at_pos(lines[1], mouse.column)
+        if url then
+          vim.ui.open(url)
+          return
+        end
+      end
+    end
+  end
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', false)
+  open_url_or_definition()
+end, { noremap = true, desc = "打开URL或跳转到定义" })
+vim.keymap.set('i', '<C-LeftMouse>', function()
+  local mouse = vim.fn.getmousepos()
+  if mouse.winid > 0 and vim.api.nvim_win_is_valid(mouse.winid) then
+    vim.api.nvim_set_current_win(mouse.winid)
+    local bufnr = vim.api.nvim_win_get_buf(mouse.winid)
+    if mouse.line > 0 then
+      local lines = vim.api.nvim_buf_get_lines(bufnr, mouse.line - 1, mouse.line, false)
+      if lines and #lines > 0 then
+        local url = get_url_at_pos(lines[1], mouse.column)
+        if url then
+          vim.ui.open(url)
+          return
+        end
+      end
+    end
+  end
+  vim.cmd("stopinsert")
+  open_url_or_definition()
+end, { noremap = true, desc = "打开URL或跳转到定义" })
+vim.keymap.set('t', '<C-LeftMouse>', function()
+  local mouse = vim.fn.getmousepos()
+  if mouse.winid > 0 and vim.api.nvim_win_is_valid(mouse.winid) then
+    local bufnr = vim.api.nvim_win_get_buf(mouse.winid)
+    if mouse.line > 0 then
+      local lines = vim.api.nvim_buf_get_lines(bufnr, mouse.line - 1, mouse.line, false)
+      if lines and #lines > 0 then
+        local url = get_url_at_pos(lines[1], mouse.column)
+        if url then
+          vim.ui.open(url)
+          return
+        end
+      end
+    end
+  end
+end, { noremap = true, desc = "打开URL" })
 
 vim.keymap.set({ 'n', 'v' }, '<Leader>lf', function()
   require("snacks").picker.lines()

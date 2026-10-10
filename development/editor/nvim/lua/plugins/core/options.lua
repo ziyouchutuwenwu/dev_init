@@ -12,10 +12,6 @@ vim.api.nvim_set_hl(0, "TermCursor", { bg = "#abb2bf", fg = "#1e222a" })
 vim.api.nvim_set_hl(0, "TermCursorNC", { bg = "#5c6370", fg = "#1e222a" })
 vim.api.nvim_set_hl(0, "UserTerminalNormal", { bg = "#1e222a", fg = "#abb2bf" })
 
-pcall(vim.keymap.del, "n", "<F7>")
-pcall(vim.keymap.del, "t", "<F7>")
-pcall(vim.keymap.del, "i", "<F7>")
-
 vim.api.nvim_create_autocmd("VimEnter", {
   callback = function()
     vim.cmd("set wrap")
@@ -30,8 +26,5 @@ vim.api.nvim_create_autocmd("VimEnter", {
     vim.api.nvim_set_hl(0, "TermCursor", { bg = "#abb2bf", fg = "#1e222a" })
     vim.api.nvim_set_hl(0, "TermCursorNC", { bg = "#5c6370", fg = "#1e222a" })
     vim.api.nvim_set_hl(0, "UserTerminalNormal", { bg = "#1e222a", fg = "#abb2bf" })
-    pcall(vim.keymap.del, "n", "<F7>")
-    pcall(vim.keymap.del, "t", "<F7>")
-    pcall(vim.keymap.del, "i", "<F7>")
   end,
 })

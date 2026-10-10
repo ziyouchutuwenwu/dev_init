@@ -21,8 +21,11 @@ function M.find_task_window()
 end
 
 local function get_task_status(name)
-  local ok, term_mgr = pcall(require, "user.plugins.terminal")
-  if ok and term_mgr.task_statuses and term_mgr.task_statuses[name] then
+  local ok, term_mgr = pcall(require, "plugins.modules.terminal")
+  if not ok or not term_mgr or not term_mgr.task_statuses then
+    ok, term_mgr = pcall(require, "user.plugins.terminal")
+  end
+  if ok and term_mgr and term_mgr.task_statuses and term_mgr.task_statuses[name] then
     return term_mgr.task_statuses[name], nil
   end
   local ok_ov, task_list = pcall(require, "overseer.task_list")
@@ -232,33 +235,25 @@ function M.render()
       local status = get_task_status(t.name)
       local icon = "  󰐊 "
       local icon_hl = "Directory"
-      local status_str = ""
 
       if status == "RUNNING" then
         icon = "  ● "
         icon_hl = "DiagnosticWarn"
-        status_str = " (运行中...)"
       elseif status == "SUCCESS" then
         icon = "  ✓ "
         icon_hl = "DiagnosticOk"
-        status_str = " (成功)"
       elseif status == "FAILURE" then
         icon = "  ✗ "
         icon_hl = "DiagnosticError"
-        status_str = " (失败)"
       elseif status == "CANCELED" then
         icon = "  󰜺 "
         icon_hl = "Comment"
-        status_str = " (已取消)"
       end
 
-      local text = string.format("%s%-14s%s", icon, t.name, status_str)
+      local text = string.format("%s%s", icon, t.name)
       local l = add_line(text)
       table.insert(highlights, { lnum = l - 1, col_start = 2, col_end = #icon, hl = icon_hl })
       table.insert(highlights, { lnum = l - 1, col_start = #icon, col_end = #icon + #t.name, hl = "Function" })
-      if status_str ~= "" then
-        table.insert(highlights, { lnum = l - 1, col_start = #icon + #t.name, col_end = -1, hl = icon_hl })
-      end
 
       state.line_map[l] = { type = "task", task = t }
     end
@@ -323,6 +318,7 @@ function M.open_task_list()
   vim.wo[win].number = false
   vim.wo[win].relativenumber = false
   vim.wo[win].cursorline = true
+  vim.wo[win].statusline = " "
 
   M.refresh(false)
   return win

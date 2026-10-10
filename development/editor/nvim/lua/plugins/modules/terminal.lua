@@ -112,6 +112,7 @@ function M.scroll_to_prompt()
     return
   end
   vim.api.nvim_set_current_win(M.term_win)
+  vim.wo[M.term_win].virtualedit = "all"
 
   local cur_buf = vim.api.nvim_win_get_buf(M.term_win)
   local cur_lines = vim.api.nvim_buf_get_lines(cur_buf, 0, -1, false)
@@ -274,6 +275,19 @@ function M.get_or_create_list_buf()
     M.dispatch_mouse_click()
   end)
   map("<LeftDrag>", function() end)
+  map("<LeftRelease>", function()
+    if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
+      vim.schedule(function()
+        if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
+          vim.api.nvim_set_current_win(M.term_win)
+          M.scroll_to_prompt()
+        end
+      end)
+    end
+  end)
+  map("<2-LeftRelease>", function() end)
+  map("<3-LeftRelease>", function() end)
+  map("<4-LeftRelease>", function() end)
 
   map("<ScrollWheelUp>", function() end)
   map("<ScrollWheelDown>", function() end)
@@ -516,6 +530,7 @@ function M.create_terminal(opts)
   M.current_idx = #M.terminals
 
   local shell = vim.o.shell ~= "" and vim.o.shell or "/bin/bash"
+
   vim.api.nvim_buf_call(buf, function()
     local chan = vim.fn.termopen(shell, {
       on_exit = function(_, exit_code)
@@ -540,6 +555,11 @@ function M.create_terminal(opts)
   vim.keymap.set({ "n", "t" }, "<4-LeftMouse>", function()
     M.dispatch_mouse_click()
   end, { buffer = buf, silent = true })
+
+  vim.keymap.set({ "n", "t" }, "<LeftRelease>", function() end, { buffer = buf, silent = true })
+  vim.keymap.set({ "n", "t" }, "<2-LeftRelease>", function() end, { buffer = buf, silent = true })
+  vim.keymap.set({ "n", "t" }, "<3-LeftRelease>", function() end, { buffer = buf, silent = true })
+  vim.keymap.set({ "n", "t" }, "<4-LeftRelease>", function() end, { buffer = buf, silent = true })
 
   vim.keymap.set({ "n", "t" }, "<ScrollWheelUp>", function()
     M.handle_scroll("up")
@@ -573,44 +593,142 @@ function M.create_terminal(opts)
 
   if opts.cmd and opts.cmd ~= "" then
     if opts.task_name then
-      local status_file = vim.fn.tempname()
-      term_obj.status_file = status_file
       M.task_statuses[opts.task_name] = "RUNNING"
-      local uv = vim.uv or vim.loop
-      local timer = uv.new_timer()
-      timer:start(
-        200,
-        200,
-        vim.schedule_wrap(function()
-          if vim.fn.filereadable(status_file) == 1 then
-            local content = vim.fn.readfile(status_file)[1] or "1"
-            local code = tonumber(content) or 1
-            M.task_statuses[opts.task_name] = (code == 0 and "SUCCESS" or "FAILURE")
-            pcall(vim.fn.delete, status_file)
-            timer:stop()
-            if not timer:is_closing() then
-              timer:close()
-            end
-            pcall(function()
-              require("plugins.modules.tasks").render()
-            end)
-          elseif not vim.api.nvim_buf_is_valid(buf) then
-            M.task_statuses[opts.task_name] = "CANCELED"
-            timer:stop()
-            if not timer:is_closing() then
-              timer:close()
-            end
-            pcall(function()
-              require("plugins.modules.tasks").render()
-            end)
-          end
-        end)
-      )
-      local wrapped_cmd = string.format("%s; echo $? > %s\n", opts.cmd, vim.fn.shellescape(status_file))
-      vim.api.nvim_chan_send(term_obj.chan, wrapped_cmd)
-    else
-      vim.api.nvim_chan_send(term_obj.chan, opts.cmd .. "\n")
     end
+
+    local uv = vim.uv or vim.loop
+    local cmd_sent = false
+    local start_timer = uv.new_timer()
+    local start_ticks = 0
+
+    local function send_clean_cmd()
+      if cmd_sent then return end
+      cmd_sent = true
+      if start_timer and not start_timer:is_closing() then
+        start_timer:stop()
+        start_timer:close()
+      end
+
+      vim.api.nvim_chan_send(term_obj.chan, opts.cmd .. "\n")
+
+      if opts.task_name then
+        local monitor_timer = uv.new_timer()
+        local sent_ticks = 0
+        monitor_timer:start(
+          200,
+          200,
+          vim.schedule_wrap(function()
+            sent_ticks = sent_ticks + 1
+            if not vim.api.nvim_buf_is_valid(buf) then
+              M.task_statuses[opts.task_name] = "CANCELED"
+              monitor_timer:stop()
+              if not monitor_timer:is_closing() then monitor_timer:close() end
+              pcall(function() require("plugins.modules.tasks").render() end)
+              return
+            end
+
+            local pid = vim.fn.jobpid(term_obj.chan)
+            local has_children = false
+            if pid and pid > 0 then
+              local p_path = string.format("/proc/%d/task/%d/children", pid, pid)
+              local f = io.open(p_path, "r")
+              if f then
+                local c = f:read("*all") or ""
+                f:close()
+                if c:match("%S") then
+                  has_children = true
+                end
+              end
+            end
+
+            if has_children then
+              if M.task_statuses[opts.task_name] ~= "RUNNING" then
+                M.task_statuses[opts.task_name] = "RUNNING"
+                pcall(function() require("plugins.modules.tasks").render() end)
+              end
+              return
+            end
+
+            if sent_ticks >= 3 then
+              local cur_lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+              local has_end_prompt = false
+              for i = #cur_lines, math.max(1, #cur_lines - 3), -1 do
+                if cur_lines[i]:match("[$%%#]%s*$") then
+                  has_end_prompt = true
+                  break
+                end
+              end
+
+              if has_end_prompt then
+                local output_text = table.concat(cur_lines, "\n"):lower()
+                local is_failure = false
+                local error_patterns = {
+                  "error:",
+                  "failed",
+                  "command not found",
+                  "no such file or directory",
+                  "unchecked dependencies",
+                  "compilation failed",
+                  "syntaxerror",
+                  "%*%* %(exit%)",
+                  "%*%* %(compileerror%)",
+                  "1 error",
+                  "fatal:",
+                }
+                for _, pat in ipairs(error_patterns) do
+                  if output_text:find(pat) then
+                    is_failure = true
+                    break
+                  end
+                end
+
+                M.task_statuses[opts.task_name] = is_failure and "FAILURE" or "SUCCESS"
+                monitor_timer:stop()
+                if not monitor_timer:is_closing() then monitor_timer:close() end
+                pcall(function() require("plugins.modules.tasks").render() end)
+              end
+            end
+          end)
+        )
+      end
+    end
+
+    local function check_prompt_and_send()
+      if cmd_sent then return end
+      if not vim.api.nvim_buf_is_valid(buf) then return end
+      local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+      for _, l in ipairs(lines) do
+        if l:match("[$%%#]%s*$") or l:match("[$%%#]%s+") then
+          send_clean_cmd()
+          return
+        end
+      end
+    end
+
+    vim.api.nvim_buf_attach(buf, false, {
+      on_lines = function()
+        vim.schedule(check_prompt_and_send)
+      end,
+    })
+
+    start_timer:start(
+      30,
+      30,
+      vim.schedule_wrap(function()
+        start_ticks = start_ticks + 1
+        if cmd_sent or not vim.api.nvim_buf_is_valid(buf) then
+          if not start_timer:is_closing() then
+            start_timer:stop()
+            start_timer:close()
+          end
+          return
+        end
+        check_prompt_and_send()
+        if not cmd_sent and start_ticks >= 100 then
+          send_clean_cmd()
+        end
+      end)
+    )
   end
 
   local uv = vim.uv or vim.loop
@@ -865,6 +983,7 @@ function M.open()
   vim.wo[term_win].foldcolumn = "0"
   vim.wo[term_win].winbar = ""
   vim.wo[term_win].winfixheight = true
+  vim.wo[term_win].virtualedit = "all"
   vim.wo[term_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal"
   vim.w[term_win].edgy_disable = true
 

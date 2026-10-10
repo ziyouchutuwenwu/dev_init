@@ -10,14 +10,6 @@ return {
     opts.options.opt.relativenumber = false
     opts.options.opt.number = true
 
-    if not opts.mappings then opts.mappings = {} end
-    if not opts.mappings.n then opts.mappings.n = {} end
-    if not opts.mappings.t then opts.mappings.t = {} end
-    if not opts.mappings.i then opts.mappings.i = {} end
-    opts.mappings.n["<F7>"] = false
-    opts.mappings.t["<F7>"] = false
-    opts.mappings.i["<F7>"] = false
-
     return opts
   end,
 }
