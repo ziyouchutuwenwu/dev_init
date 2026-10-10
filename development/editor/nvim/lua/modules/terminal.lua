@@ -11,11 +11,12 @@ M.plus_buf = nil
 M.line_map = {}
 local function get_target_list_width()
   local cols = vim.o.columns
-  if cols <= 140 then
-    return 9
-  else
-    return 11
+  local w = math.floor(cols * 0.10)
+  w = math.max(9, math.min(w, 27))
+  if w % 2 == 0 then
+    w = w + 1
   end
+  return w
 end
 
 M.height_ratio = 0.28
@@ -76,7 +77,8 @@ function M.handle_plus_click(mouse)
   local h_left = math.floor((M.list_width - plus_w) / 2)
   local plus_col = h_left + 1
   local click_col = (mouse.wincol and mouse.wincol > 0) and mouse.wincol or mouse.column
-  if click_col and click_col >= plus_col - 2 and click_col <= plus_col + 2 then
+  local tolerance = math.max(3, math.floor(M.list_width / 3))
+  if not click_col or (click_col >= plus_col - tolerance and click_col <= plus_col + tolerance) then
     M.create_terminal()
     return
   end
@@ -248,12 +250,16 @@ function M.get_or_create_list_buf()
     vim.keymap.set({ "n", "v", "i", "t" }, lhs, rhs, { buffer = b, silent = true })
   end
 
-  map("<LeftMouse>", function()
-    local mouse = vim.fn.getmousepos()
-    if mouse and mouse.winid == M.list_win then
-      M.handle_list_click(mouse)
-    end
-  end)
+  for _, lhs in ipairs({ "<LeftMouse>", "<2-LeftMouse>", "<3-LeftMouse>", "<4-LeftMouse>" }) do
+    map(lhs, function()
+      local mouse = vim.fn.getmousepos()
+      if mouse and mouse.winid == M.list_win then
+        M.handle_list_click(mouse)
+      elseif mouse and mouse.winid == M.plus_win then
+        M.handle_plus_click(mouse)
+      end
+    end)
+  end
   map("<LeftDrag>", function() end)
   map("<LeftRelease>", function()
     if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
@@ -365,12 +371,14 @@ function M.get_or_create_plus_buf()
     vim.keymap.set({ "n", "v", "i", "t" }, lhs, rhs, { buffer = b, silent = true })
   end
 
-  map("<LeftMouse>", function()
-    local mouse = vim.fn.getmousepos()
-    if mouse and mouse.winid == M.plus_win then
-      M.handle_plus_click(mouse)
-    end
-  end)
+  for _, lhs in ipairs({ "<LeftMouse>", "<2-LeftMouse>", "<3-LeftMouse>", "<4-LeftMouse>" }) do
+    map(lhs, function()
+      local mouse = vim.fn.getmousepos()
+      if mouse and mouse.winid == M.plus_win then
+        M.handle_plus_click(mouse)
+      end
+    end)
+  end
   map("<LeftDrag>", function() end)
   map("<LeftRelease>", function()
     if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
@@ -555,9 +563,7 @@ local function enforce_list_width()
     local cur_w = vim.api.nvim_win_get_width(M.list_win)
     if cur_w ~= M.list_width then
       pcall(vim.api.nvim_win_set_width, M.list_win, M.list_width)
-    end
-    if width_changed and M.is_open() then
-      M.render_list()
+      width_changed = true
     end
   end
 
@@ -578,10 +584,13 @@ local function enforce_list_width()
     local cur_pw = vim.api.nvim_win_get_width(M.plus_win)
     if cur_pw ~= M.list_width then
       pcall(vim.api.nvim_win_set_width, M.plus_win, M.list_width)
+      width_changed = true
     end
-    if width_changed and M.is_open() then
-      M.render_plus()
-    end
+  end
+
+  if width_changed and M.is_open() then
+    M.render_plus()
+    M.render_list()
   end
 end
 
@@ -621,47 +630,28 @@ function M.create_terminal(opts)
     term_obj.chan = chan
   end)
 
-  vim.keymap.set({ "n", "t" }, "<LeftMouse>", function()
-    local mouse = vim.fn.getmousepos()
-    if not mouse or not mouse.winid or mouse.winid <= 0 then
-      return
-    end
-
-    if mouse.winid == M.term_win then
-      M.scroll_to_prompt()
-    elseif mouse.winid == M.list_win then
-      M.handle_list_click(mouse)
-    elseif mouse.winid == M.plus_win then
-      M.handle_plus_click(mouse)
-    else
-      vim.cmd("stopinsert")
-      vim.api.nvim_set_current_win(mouse.winid)
-      if mouse.line > 0 then
-        pcall(vim.api.nvim_win_set_cursor, mouse.winid, { mouse.line, math.max(0, mouse.column - 1) })
+  for _, lhs in ipairs({ "<LeftMouse>", "<2-LeftMouse>", "<3-LeftMouse>", "<4-LeftMouse>" }) do
+    vim.keymap.set({ "n", "t" }, lhs, function()
+      local mouse = vim.fn.getmousepos()
+      if not mouse or not mouse.winid or mouse.winid <= 0 then
+        return
       end
-    end
-  end, { buffer = buf, silent = true })
 
-  vim.keymap.set({ "n", "t" }, "<2-LeftMouse>", function()
-    local mouse = vim.fn.getmousepos()
-    if mouse and mouse.winid == M.term_win then
-      M.scroll_to_prompt()
-    end
-  end, { buffer = buf, silent = true })
-
-  vim.keymap.set({ "n", "t" }, "<3-LeftMouse>", function()
-    local mouse = vim.fn.getmousepos()
-    if mouse and mouse.winid == M.term_win then
-      M.scroll_to_prompt()
-    end
-  end, { buffer = buf, silent = true })
-
-  vim.keymap.set({ "n", "t" }, "<4-LeftMouse>", function()
-    local mouse = vim.fn.getmousepos()
-    if mouse and mouse.winid == M.term_win then
-      M.scroll_to_prompt()
-    end
-  end, { buffer = buf, silent = true })
+      if mouse.winid == M.term_win then
+        M.scroll_to_prompt()
+      elseif mouse.winid == M.list_win then
+        M.handle_list_click(mouse)
+      elseif mouse.winid == M.plus_win then
+        M.handle_plus_click(mouse)
+      else
+        vim.cmd("stopinsert")
+        vim.api.nvim_set_current_win(mouse.winid)
+        if mouse.line > 0 then
+          pcall(vim.api.nvim_win_set_cursor, mouse.winid, { mouse.line, math.max(0, mouse.column - 1) })
+        end
+      end
+    end, { buffer = buf, silent = true })
+  end
 
   vim.keymap.set({ "n", "t" }, "<LeftRelease>", function() end, { buffer = buf, silent = true })
   vim.keymap.set({ "n", "t" }, "<2-LeftRelease>", function() end, { buffer = buf, silent = true })
@@ -1217,7 +1207,6 @@ local augroup = vim.api.nvim_create_augroup("UserTerminalLayoutSync", { clear = 
 vim.api.nvim_create_autocmd("VimResized", {
   group = augroup,
   callback = function()
-    M.list_width = get_target_list_width()
     if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
       local target_h = get_target_height()
       pcall(vim.api.nvim_win_set_height, M.term_win, target_h)
@@ -1228,6 +1217,7 @@ vim.api.nvim_create_autocmd("VimResized", {
     vim.schedule(function()
       enforce_list_width()
       if M.is_open() then
+        M.render_plus()
         M.render_list()
       end
     end)
@@ -1240,6 +1230,10 @@ vim.api.nvim_create_autocmd({ "WinResized", "BufEnter", "WinEnter" }, {
     enforce_list_width()
     vim.schedule(function()
       enforce_list_width()
+      if M.is_open() then
+        M.render_plus()
+        M.render_list()
+      end
     end)
     if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
       local cur_h = vim.api.nvim_win_get_height(M.term_win)
