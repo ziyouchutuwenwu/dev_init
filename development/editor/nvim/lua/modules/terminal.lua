@@ -246,16 +246,22 @@ function M.get_or_create_list_buf()
       M.handle_list_click(mouse)
     end
   end)
+  map("<LeftDrag>", function() end)
   map("<LeftRelease>", function()
     if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
+      pcall(vim.api.nvim_set_current_win, M.term_win)
+      M.scroll_to_prompt()
       vim.schedule(function()
         if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
-          vim.api.nvim_set_current_win(M.term_win)
+          pcall(vim.api.nvim_set_current_win, M.term_win)
           M.scroll_to_prompt()
         end
       end)
     end
   end)
+  map("<2-LeftRelease>", function() end)
+  map("<3-LeftRelease>", function() end)
+  map("<4-LeftRelease>", function() end)
 
   map("<ScrollWheelUp>", function() end)
   map("<ScrollWheelDown>", function() end)
@@ -523,6 +529,18 @@ function M.create_terminal(opts)
       M.scroll_to_prompt()
     end
   end, { buffer = buf, silent = true })
+
+  vim.keymap.set({ "n", "t" }, "<4-LeftMouse>", function()
+    local mouse = vim.fn.getmousepos()
+    if mouse and mouse.winid == M.term_win then
+      M.scroll_to_prompt()
+    end
+  end, { buffer = buf, silent = true })
+
+  vim.keymap.set({ "n", "t" }, "<LeftRelease>", function() end, { buffer = buf, silent = true })
+  vim.keymap.set({ "n", "t" }, "<2-LeftRelease>", function() end, { buffer = buf, silent = true })
+  vim.keymap.set({ "n", "t" }, "<3-LeftRelease>", function() end, { buffer = buf, silent = true })
+  vim.keymap.set({ "n", "t" }, "<4-LeftRelease>", function() end, { buffer = buf, silent = true })
 
   vim.keymap.set({ "n", "t" }, "<ScrollWheelUp>", function()
     M.handle_scroll("up")
