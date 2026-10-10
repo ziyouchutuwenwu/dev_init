@@ -339,16 +339,10 @@ function M.render_list()
   local h_left = math.floor((M.list_width - 1) / 2)
   local h_right = M.list_width - 1 - h_left
 
-  table.insert(lines, string.rep(" ", M.list_width))
-  M.line_map[#lines] = { is_pad = true }
-
   local plus_str = string.rep(" ", h_left) .. "+" .. string.rep(" ", h_right)
   table.insert(lines, plus_str)
   local plus_line_idx = #lines
   M.line_map[plus_line_idx] = { is_plus = true, plus_col = h_left + 1 }
-
-  table.insert(lines, string.rep(" ", M.list_width))
-  M.line_map[#lines] = { is_pad = true }
 
   table.insert(lines, string.rep("─", M.list_width))
   local sep_line_idx = #lines
