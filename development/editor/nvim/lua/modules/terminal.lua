@@ -319,24 +319,9 @@ local function ensure_highlights()
   vim.api.nvim_set_hl(0, "UserTermActiveName", { fg = 16777215, bold = true })
   vim.api.nvim_set_hl(0, "UserTermInactiveName", { fg = 8357006 })
 
-  local sep_color = "#3e4452"
-  vim.api.nvim_set_hl(0, "UserTermHeaderSep", {
-    bg = normal_bg,
-    fg = sep_color,
-    underline = true,
-    cterm = { underline = true },
-    sp = sep_color,
-  })
   local ok_hl = vim.api.nvim_get_hl(0, { name = "DiagnosticOk" })
   local fg = ok_hl.fg or 10011513
-  vim.api.nvim_set_hl(0, "UserTermHeaderPlus", {
-    bg = normal_bg,
-    fg = fg,
-    bold = true,
-    underline = true,
-    cterm = { underline = true, bold = true },
-    sp = sep_color,
-  })
+  vim.api.nvim_set_hl(0, "UserTermHeaderPlus", { bg = normal_bg, fg = fg, bold = true })
 
   vim.api.nvim_set_hl(0, "TermCursor", { bg = "#abb2bf", fg = "#1e222a" })
   vim.api.nvim_set_hl(0, "TermCursorNC", { bg = "#5c6370", fg = "#1e222a" })
@@ -355,6 +340,9 @@ function M.render_list()
   local plus_str = string.rep(" ", h_left) .. "+" .. string.rep(" ", h_right)
   table.insert(lines, plus_str)
   M.line_map[1] = { is_plus = true, plus_col = h_left + 1 }
+
+  table.insert(lines, string.rep("─", M.list_width))
+  M.line_map[2] = { is_sep = true }
 
   local right_padding = 1
   local right = "x" .. string.rep(" ", right_padding)
@@ -409,9 +397,8 @@ function M.render_list()
 
   vim.api.nvim_buf_clear_namespace(b, NS_ID, 0, -1)
 
-  pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "UserTermHeaderSep", 0, 0, h_left)
   pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "UserTermHeaderPlus", 0, h_left, h_left + 1)
-  pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "UserTermHeaderSep", 0, h_left + 1, -1)
+  pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "WinSeparator", 1, 0, -1)
 
   for _, h in ipairs(hls) do
     pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, h.hl, h.lnum, h.col_s, h.col_e)
