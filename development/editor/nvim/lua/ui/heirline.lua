@@ -22,6 +22,7 @@ return {
       },
       opts.statusline,
     }
+    opts.winbar = nil
     return opts
   end,
 }
