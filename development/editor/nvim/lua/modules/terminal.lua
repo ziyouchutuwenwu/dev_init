@@ -341,9 +341,6 @@ function M.render_list()
   table.insert(lines, plus_str)
   M.line_map[1] = { is_plus = true, plus_col = h_left + 1 }
 
-  table.insert(lines, string.rep("―", M.list_width))
-  M.line_map[2] = { is_sep = true }
-
   local right_padding = 1
   local right = "x" .. string.rep(" ", right_padding)
   local right_w = vim.fn.strdisplaywidth(right)
@@ -398,7 +395,6 @@ function M.render_list()
   vim.api.nvim_buf_clear_namespace(b, NS_ID, 0, -1)
 
   pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "UserTermHeaderPlus", 0, h_left, h_left + 1)
-  pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "WinSeparator", 1, 0, -1)
 
   for _, h in ipairs(hls) do
     pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, h.hl, h.lnum, h.col_s, h.col_e)
