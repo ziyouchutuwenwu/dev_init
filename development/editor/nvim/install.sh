@@ -13,6 +13,6 @@ git clone --depth 1 https://github.com/AstroNvim/template ~/.config/nvim
 
 echo "installing plugins and configurations (core, modules, plugins)..."
 mkdir -p ~/.config/nvim/lua/plugins/
-cp -rf "$CURRENT_DIR/lua/plugins/"* ~/.config/nvim/lua/plugins/
+cp -rf "$CURRENT_DIR/lua/"* ~/.config/nvim/lua/plugins/
 
 echo "install done!"
