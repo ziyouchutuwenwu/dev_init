@@ -11,12 +11,11 @@ M.plus_buf = nil
 M.line_map = {}
 local function get_target_list_width()
   local cols = vim.o.columns
-  local w = math.floor(cols * 0.10)
-  w = math.max(9, math.min(w, 27))
-  if w % 2 == 0 then
-    w = w + 1
+  if cols <= 140 then
+    return 9
+  else
+    return 11
   end
-  return w
 end
 
 M.height_ratio = 0.28
