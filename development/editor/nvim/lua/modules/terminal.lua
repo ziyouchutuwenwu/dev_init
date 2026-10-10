@@ -73,11 +73,6 @@ function M.handle_list_click(mouse)
     return
   end
 
-  if lnum == 1 then
-    M.create_terminal()
-    return
-  end
-
   local item = M.line_map[lnum]
   if not item then
     if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
@@ -88,8 +83,18 @@ function M.handle_list_click(mouse)
     return
   end
 
-  if item.is_header then
-    M.create_terminal()
+  if item.is_plus then
+    local plus_col = item.plus_col or (math.floor((M.list_width - 1) / 2) + 1)
+    local click_col = (mouse.column and mouse.column > 0) and mouse.column or mouse.wincol
+    if click_col and click_col >= plus_col - 1 and click_col <= plus_col + 1 then
+      M.create_terminal()
+      return
+    end
+    if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
+      vim.schedule(function()
+        M.scroll_to_prompt()
+      end)
+    end
     return
   end
 
@@ -104,6 +109,13 @@ function M.handle_list_click(mouse)
         M.scroll_to_prompt()
       end)
     end
+    return
+  end
+
+  if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
+    vim.schedule(function()
+      M.scroll_to_prompt()
+    end)
   end
 end
 
@@ -112,7 +124,7 @@ function M.scroll_to_prompt()
     return
   end
   vim.api.nvim_set_current_win(M.term_win)
-  vim.wo[M.term_win].virtualedit = "all"
+  vim.wo[M.term_win].virtualedit = "none"
 
   local cur_buf = vim.api.nvim_win_get_buf(M.term_win)
   local cur_lines = vim.api.nvim_buf_get_lines(cur_buf, 0, -1, false)
@@ -244,7 +256,7 @@ function M.get_or_create_list_buf()
     local cursor = vim.api.nvim_win_get_cursor(0)
     local item = M.line_map[cursor[1]]
     if item then
-      if item.is_header then
+      if item.is_plus then
         M.create_terminal()
       elseif item.idx then
         M.switch_terminal(item.idx)
@@ -303,13 +315,10 @@ function M.get_or_create_list_buf()
 end
 
 local function ensure_highlights()
-  local visual_hl = vim.api.nvim_get_hl(0, { name = "Visual" })
-  local bg = visual_hl.bg or 4278360
-  vim.api.nvim_set_hl(0, "UserTermActiveRow", { bg = bg, bold = true })
+  local normal_bg = "#282c34"
   vim.api.nvim_set_hl(0, "UserTermActiveName", { fg = 16777215, bold = true })
   vim.api.nvim_set_hl(0, "UserTermInactiveName", { fg = 8357006 })
 
-  local normal_bg = "#282c34"
   vim.api.nvim_set_hl(0, "UserTermHeader", { bg = normal_bg })
   local ok_hl = vim.api.nvim_get_hl(0, { name = "DiagnosticOk" })
   local fg = ok_hl.fg or 10011513
@@ -329,9 +338,21 @@ function M.render_list()
 
   local h_left = math.floor((M.list_width - 1) / 2)
   local h_right = M.list_width - 1 - h_left
-  local header_str = string.rep(" ", h_left) .. "+" .. string.rep(" ", h_right)
-  table.insert(lines, header_str)
-  M.line_map[1] = { is_header = true }
+
+  table.insert(lines, string.rep(" ", M.list_width))
+  M.line_map[#lines] = { is_pad = true }
+
+  local plus_str = string.rep(" ", h_left) .. "+" .. string.rep(" ", h_right)
+  table.insert(lines, plus_str)
+  local plus_line_idx = #lines
+  M.line_map[plus_line_idx] = { is_plus = true, plus_col = h_left + 1 }
+
+  table.insert(lines, string.rep(" ", M.list_width))
+  M.line_map[#lines] = { is_pad = true }
+
+  table.insert(lines, string.rep("─", M.list_width))
+  local sep_line_idx = #lines
+  M.line_map[sep_line_idx] = { is_sep = true }
 
   local right_padding = 1
   local right = "x" .. string.rep(" ", right_padding)
@@ -367,7 +388,6 @@ function M.render_list()
     if is_active then
       table.insert(hls, { lnum = lnum, col_s = 0, col_e = prefix_len, hl = "DiagnosticOk" })
       table.insert(hls, { lnum = lnum, col_s = prefix_len, col_e = prefix_len + name_byte_len, hl = "UserTermActiveName" })
-      active_lnum = lnum
     else
       table.insert(hls, { lnum = lnum, col_s = 0, col_e = prefix_len, hl = "Normal" })
       table.insert(hls, { lnum = lnum, col_s = prefix_len, col_e = prefix_len + name_byte_len, hl = "UserTermInactiveName" })
@@ -387,16 +407,8 @@ function M.render_list()
 
   vim.api.nvim_buf_clear_namespace(b, NS_ID, 0, -1)
 
-  pcall(vim.api.nvim_buf_set_extmark, b, NS_ID, 0, 0, {
-    line_hl_group = "UserTermHeader",
-  })
-  pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "UserTermHeaderPlus", 0, h_left, h_left + 1)
-
-  if active_lnum then
-    pcall(vim.api.nvim_buf_set_extmark, b, NS_ID, active_lnum, 0, {
-      line_hl_group = "UserTermActiveRow",
-    })
-  end
+  pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "DiagnosticOk", plus_line_idx - 1, h_left, h_left + 1)
+  pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "WinSeparator", sep_line_idx - 1, 0, -1)
 
   for _, h in ipairs(hls) do
     pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, h.hl, h.lnum, h.col_s, h.col_e)
@@ -413,12 +425,8 @@ function M.render_list()
     vim.wo[M.list_win].wrap = false
     vim.wo[M.list_win].cursorline = false
     vim.wo[M.list_win].statusline = " "
-    vim.wo[M.list_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,WinSeparator:WinSeparator"
+    vim.wo[M.list_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,Cursor:UserTerminalNormal,lCursor:UserTerminalNormal,WinSeparator:WinSeparator"
     pcall(vim.api.nvim_win_set_width, M.list_win, M.list_width)
-    local target_line = M.current_idx + 1
-    if target_line <= #lines then
-      pcall(vim.api.nvim_win_set_cursor, M.list_win, { target_line, 0 })
-    end
   end
 end
 
@@ -438,7 +446,7 @@ local function enforce_list_width()
     vim.wo[M.list_win].wrap = false
     vim.wo[M.list_win].cursorline = false
     vim.wo[M.list_win].statusline = " "
-    vim.wo[M.list_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,WinSeparator:WinSeparator"
+    vim.wo[M.list_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,Cursor:UserTerminalNormal,lCursor:UserTerminalNormal,WinSeparator:WinSeparator"
     local cur_w = vim.api.nvim_win_get_width(M.list_win)
     if cur_w ~= M.list_width then
       pcall(vim.api.nvim_win_set_width, M.list_win, M.list_width)
@@ -484,6 +492,39 @@ function M.create_terminal(opts)
     })
     term_obj.chan = chan
   end)
+
+  vim.keymap.set({ "n", "t" }, "<LeftMouse>", function()
+    local mouse = vim.fn.getmousepos()
+    if not mouse or not mouse.winid or mouse.winid <= 0 then
+      return
+    end
+
+    if mouse.winid == M.term_win then
+      M.scroll_to_prompt()
+    elseif mouse.winid == M.list_win then
+      M.handle_list_click(mouse)
+    else
+      vim.cmd("stopinsert")
+      vim.api.nvim_set_current_win(mouse.winid)
+      if mouse.line > 0 then
+        pcall(vim.api.nvim_win_set_cursor, mouse.winid, { mouse.line, math.max(0, mouse.column - 1) })
+      end
+    end
+  end, { buffer = buf, silent = true })
+
+  vim.keymap.set({ "n", "t" }, "<2-LeftMouse>", function()
+    local mouse = vim.fn.getmousepos()
+    if mouse and mouse.winid == M.term_win then
+      M.scroll_to_prompt()
+    end
+  end, { buffer = buf, silent = true })
+
+  vim.keymap.set({ "n", "t" }, "<3-LeftMouse>", function()
+    local mouse = vim.fn.getmousepos()
+    if mouse and mouse.winid == M.term_win then
+      M.scroll_to_prompt()
+    end
+  end, { buffer = buf, silent = true })
 
   vim.keymap.set({ "n", "t" }, "<ScrollWheelUp>", function()
     M.handle_scroll("up")
@@ -908,7 +949,7 @@ function M.open()
   vim.wo[term_win].winbar = ""
   vim.wo[term_win].cursorline = false
   vim.wo[term_win].winfixheight = true
-  vim.wo[term_win].virtualedit = "all"
+  vim.wo[term_win].virtualedit = "none"
   vim.wo[term_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,WinSeparator:WinSeparator"
   vim.w[term_win].edgy_disable = true
 
@@ -947,7 +988,7 @@ function M.open()
   vim.wo[list_win].winfixheight = true
   vim.wo[list_win].winbar = ""
   vim.wo[list_win].statusline = " "
-  vim.wo[list_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,WinSeparator:WinSeparator"
+  vim.wo[list_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,Cursor:UserTerminalNormal,lCursor:UserTerminalNormal,WinSeparator:WinSeparator"
   vim.w[list_win].edgy_disable = true
   vim.api.nvim_win_set_width(list_win, M.list_width)
 
@@ -1037,20 +1078,7 @@ vim.api.nvim_create_autocmd({ "WinResized", "BufEnter", "WinEnter" }, {
       if vim.api.nvim_get_current_win() == M.term_win then
         local cur_buf = vim.api.nvim_get_current_buf()
         if vim.bo[cur_buf].buftype == "terminal" then
-          local cur = vim.api.nvim_win_get_cursor(M.term_win)
-          local cur_lines = vim.api.nvim_buf_get_lines(cur_buf, 0, -1, false)
-          local last_line = 1
-          local last_col = 0
-          for idx = #cur_lines, 1, -1 do
-            if cur_lines[idx]:match("%S") then
-              last_line = idx
-              last_col = #cur_lines[idx]
-              break
-            end
-          end
-          if cur[1] >= last_line then
-            M.scroll_to_prompt()
-          end
+          M.scroll_to_prompt()
         end
       end
     end
