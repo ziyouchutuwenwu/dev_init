@@ -24,7 +24,6 @@ font-family = Monaco
 font-size = 12
 
 # 处理和 nvim 的兼容问题
-window-padding-color = extend
 window-padding-balance = true
 
 # 滚动条灵敏度，越大越灵敏
