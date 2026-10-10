@@ -124,7 +124,7 @@ function M.scroll_to_prompt()
     return
   end
   vim.api.nvim_set_current_win(M.term_win)
-  vim.wo[M.term_win].virtualedit = "none"
+  vim.wo[M.term_win].virtualedit = "all"
 
   local cur_buf = vim.api.nvim_win_get_buf(M.term_win)
   local cur_lines = vim.api.nvim_buf_get_lines(cur_buf, 0, -1, false)
@@ -246,6 +246,16 @@ function M.get_or_create_list_buf()
       M.handle_list_click(mouse)
     end
   end)
+  map("<LeftRelease>", function()
+    if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
+      vim.schedule(function()
+        if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
+          vim.api.nvim_set_current_win(M.term_win)
+          M.scroll_to_prompt()
+        end
+      end)
+    end
+  end)
 
   map("<ScrollWheelUp>", function() end)
   map("<ScrollWheelDown>", function() end)
@@ -335,9 +345,11 @@ function M.render_list()
   local lines = {}
   local hls = {}
 
-  local h_left = math.floor((M.list_width - 1) / 2)
-  local h_right = M.list_width - 1 - h_left
-  local plus_str = string.rep(" ", h_left) .. "+" .. string.rep(" ", h_right)
+  local plus_char = "󰐕"
+  local plus_w = vim.fn.strdisplaywidth(plus_char)
+  local h_left = math.floor((M.list_width - plus_w) / 2)
+  local h_right = M.list_width - plus_w - h_left
+  local plus_str = string.rep(" ", h_left) .. plus_char .. string.rep(" ", h_right)
   table.insert(lines, plus_str)
   M.line_map[1] = { is_plus = true, plus_col = h_left + 1 }
 
@@ -394,7 +406,7 @@ function M.render_list()
 
   vim.api.nvim_buf_clear_namespace(b, NS_ID, 0, -1)
 
-  pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "UserTermHeaderPlus", 0, h_left, h_left + 1)
+  pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "UserTermHeaderPlus", 0, h_left, h_left + #plus_char)
 
   for _, h in ipairs(hls) do
     pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, h.hl, h.lnum, h.col_s, h.col_e)
@@ -935,7 +947,7 @@ function M.open()
   vim.wo[term_win].winbar = ""
   vim.wo[term_win].cursorline = false
   vim.wo[term_win].winfixheight = true
-  vim.wo[term_win].virtualedit = "none"
+  vim.wo[term_win].virtualedit = "all"
   vim.wo[term_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,WinSeparator:WinSeparator"
   vim.w[term_win].edgy_disable = true
 
