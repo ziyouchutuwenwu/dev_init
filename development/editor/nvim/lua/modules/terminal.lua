@@ -85,7 +85,7 @@ function M.handle_list_click(mouse)
 
   if item.is_plus then
     local plus_col = item.plus_col or (math.floor((M.list_width - 1) / 2) + 1)
-    local click_col = (mouse.column and mouse.column > 0) and mouse.column or mouse.wincol
+    local click_col = (mouse.wincol and mouse.wincol > 0) and mouse.wincol or mouse.column
     if click_col and click_col >= plus_col - 1 and click_col <= plus_col + 1 then
       M.create_terminal()
       return
@@ -336,17 +336,12 @@ function M.render_list()
   local lines = {}
   local hls = {}
 
-  local h_left = math.floor((M.list_width - 1) / 2)
-  local h_right = M.list_width - 1 - h_left
-
-  local plus_str = string.rep(" ", h_left) .. "+" .. string.rep(" ", h_right)
-  table.insert(lines, plus_str)
-  local plus_line_idx = #lines
-  M.line_map[plus_line_idx] = { is_plus = true, plus_col = h_left + 1 }
-
-  table.insert(lines, string.rep("─", M.list_width))
-  local sep_line_idx = #lines
-  M.line_map[sep_line_idx] = { is_sep = true }
+  local dash_left = math.max(1, math.floor((M.list_width - 3) / 2))
+  local dash_right = math.max(1, M.list_width - 3 - dash_left)
+  local plus_col = dash_left + 2
+  local header_str = string.rep("─", dash_left) .. " + " .. string.rep("─", dash_right)
+  table.insert(lines, header_str)
+  M.line_map[1] = { is_plus = true, plus_col = plus_col }
 
   local right_padding = 1
   local right = "x" .. string.rep(" ", right_padding)
@@ -401,8 +396,14 @@ function M.render_list()
 
   vim.api.nvim_buf_clear_namespace(b, NS_ID, 0, -1)
 
-  pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "DiagnosticOk", plus_line_idx - 1, h_left, h_left + 1)
-  pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "WinSeparator", sep_line_idx - 1, 0, -1)
+  local dash_left_bytes = dash_left * 3
+  local plus_byte_start = dash_left_bytes + 1
+  local plus_byte_end = plus_byte_start + 1
+  local dash_right_byte_start = dash_left_bytes + 3
+
+  pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "WinSeparator", 0, 0, dash_left_bytes)
+  pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "UserTermHeaderPlus", 0, plus_byte_start, plus_byte_end)
+  pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "WinSeparator", 0, dash_right_byte_start, -1)
 
   for _, h in ipairs(hls) do
     pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, h.hl, h.lnum, h.col_s, h.col_e)
