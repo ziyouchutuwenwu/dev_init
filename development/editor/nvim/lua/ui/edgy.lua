@@ -62,7 +62,7 @@ return {
         winbar = true,
         winfixwidth = false,
         winfixheight = false,
-        statusline = " ",
+        statusline = "",
       },
       keys = {
         ["<C-Right>"] = function(win)

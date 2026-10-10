@@ -536,7 +536,7 @@ function M.render_list()
     vim.wo[M.list_win].foldcolumn = "0"
     vim.wo[M.list_win].wrap = false
     vim.wo[M.list_win].cursorline = false
-    vim.wo[M.list_win].statusline = " "
+    vim.wo[M.list_win].statusline = ""
     vim.wo[M.list_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,Cursor:UserTerminalNormal,lCursor:UserTerminalNormal,WinSeparator:WinSeparator"
     pcall(vim.api.nvim_win_set_width, M.list_win, M.list_width)
   end
@@ -557,7 +557,7 @@ local function enforce_list_width()
     vim.wo[M.list_win].foldcolumn = "0"
     vim.wo[M.list_win].wrap = false
     vim.wo[M.list_win].cursorline = false
-    vim.wo[M.list_win].statusline = " "
+    vim.wo[M.list_win].statusline = ""
     vim.wo[M.list_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,Cursor:UserTerminalNormal,lCursor:UserTerminalNormal,WinSeparator:WinSeparator"
     local cur_w = vim.api.nvim_win_get_width(M.list_win)
     if cur_w ~= M.list_width then
@@ -1118,7 +1118,7 @@ function M.open()
   vim.wo[list_win].winfixwidth = true
   vim.wo[list_win].winfixheight = true
   vim.wo[list_win].winbar = ""
-  vim.wo[list_win].statusline = " "
+  vim.wo[list_win].statusline = ""
   vim.wo[list_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,Cursor:UserTerminalNormal,lCursor:UserTerminalNormal,WinSeparator:WinSeparator"
   vim.w[list_win].edgy_disable = true
   vim.api.nvim_win_set_width(list_win, M.list_width)

@@ -28,8 +28,11 @@ local function apply_highlights()
   vim.api.nvim_set_hl(0, "WinBarNC", { bg = bg, fg = "#abb2bf" })
   vim.api.nvim_set_hl(0, "WinSeparator", { bg = bg, fg = "#3e4452" })
   vim.api.nvim_set_hl(0, "VertSplit", { bg = bg, fg = "#3e4452" })
-  vim.api.nvim_set_hl(0, "StatusLine", { bg = bg, fg = "#abb2bf" })
-  vim.api.nvim_set_hl(0, "StatusLineNC", { bg = bg, fg = "#abb2bf" })
+  local st_hl = type(_G.get_statusline_hl) == "function" and _G.get_statusline_hl()
+  if st_hl then
+    vim.api.nvim_set_hl(0, "StatusLine", st_hl)
+    vim.api.nvim_set_hl(0, "StatusLineNC", st_hl)
+  end
   vim.api.nvim_set_hl(0, "EndOfBuffer", { bg = bg, fg = bg })
   vim.api.nvim_set_hl(0, "NeoTreeNormal", { bg = bg, fg = "#abb2bf" })
   vim.api.nvim_set_hl(0, "NeoTreeNormalNC", { bg = bg, fg = "#abb2bf" })

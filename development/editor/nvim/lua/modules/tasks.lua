@@ -318,7 +318,7 @@ function M.open_task_list()
   vim.wo[win].number = false
   vim.wo[win].relativenumber = false
   vim.wo[win].cursorline = true
-  vim.wo[win].statusline = " "
+  vim.wo[win].statusline = ""
 
   M.refresh(false)
   return win
