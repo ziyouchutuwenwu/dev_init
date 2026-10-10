@@ -49,6 +49,11 @@ vim.keymap.set('n', '<M-,>', '<C-o>', { noremap = true, desc = "上一个位置 
 vim.keymap.set('n', '<M-.>', '<C-i>', { noremap = true, desc = "下一个位置 (前进)" })
 
 local function get_url_at_pos(line, col)
+  for s, text, url, e in line:gmatch("()%[([^%]]+)%]%(([%a][%w+.-]+://[^%)]+)%)()") do
+    if col >= s and col <= e - 1 then
+      return url
+    end
+  end
   local patterns = {
     "()([%a][%w+.-]+://[%w%-_.~!*%(%);:@&=+$,/?%%#%[%]]+)()",
     "()(www%.[%w%-_.~!*%(%);:@&=+$,/?%%#%[%]]+)()",
@@ -170,6 +175,44 @@ vim.keymap.set('t', '<C-LeftMouse>', function()
     end
   end
 end, { noremap = true, desc = "打开URL" })
+
+local url_ns = vim.api.nvim_create_namespace("buffer_hyperlinks")
+local function update_buffer_hyperlinks(bufnr)
+  if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then return end
+  if vim.bo[bufnr].buftype == "terminal" then return end
+  vim.api.nvim_buf_clear_namespace(bufnr, url_ns, 0, -1)
+  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  if line_count > 5000 then return end
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, line_count, false)
+  for lnum, line in ipairs(lines) do
+    for s, text, url, e in line:gmatch("()%[([^%]]+)%]%(([%a][%w+.-]+://[^%)]+)%)()") do
+      pcall(vim.api.nvim_buf_set_extmark, bufnr, url_ns, lnum - 1, s - 1, {
+        end_col = e - 1,
+        url = url,
+        hl_group = "HighlightURL",
+      })
+    end
+    for s, raw_url, e in line:gmatch("()([%a][%w+.-]+://[%w%-_.~!*%(%);:@&=+$,/?%%#%[%]]+)()") do
+      local url = raw_url
+      local te = e - 1
+      while #url > 0 and url:match("[%.,;:!%>%'\"]$") do
+        url = url:sub(1, -2)
+        te = te - 1
+      end
+      pcall(vim.api.nvim_buf_set_extmark, bufnr, url_ns, lnum - 1, s - 1, {
+        end_col = te,
+        url = url,
+        hl_group = "HighlightURL",
+      })
+    end
+  end
+end
+
+vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter", "TextChanged", "TextChangedI" }, {
+  callback = function(args)
+    update_buffer_hyperlinks(args.buf)
+  end,
+})
 
 vim.keymap.set({ 'n', 'v' }, '<Leader>lf', function()
   require("snacks").picker.lines()

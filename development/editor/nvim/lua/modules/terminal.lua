@@ -211,37 +211,6 @@ function M.handle_scroll(direction)
   M.handle_term_scroll(direction)
 end
 
-function M.handle_term_click(mouse)
-  if not M.term_win or not vim.api.nvim_win_is_valid(M.term_win) then
-    return
-  end
-  vim.schedule(function()
-    if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
-      M.scroll_to_prompt()
-    end
-  end)
-end
-
-function M.dispatch_mouse_click()
-  local mouse = vim.fn.getmousepos()
-  if not mouse or not mouse.winid or mouse.winid <= 0 then
-    return
-  end
-
-  if M.list_win and vim.api.nvim_win_is_valid(M.list_win) and mouse.winid == M.list_win then
-    M.handle_list_click(mouse)
-  elseif M.term_win and vim.api.nvim_win_is_valid(M.term_win) and mouse.winid == M.term_win then
-    M.handle_term_click(mouse)
-  else
-    if vim.api.nvim_win_is_valid(mouse.winid) then
-      vim.api.nvim_set_current_win(mouse.winid)
-      if mouse.line > 0 then
-        pcall(vim.api.nvim_win_set_cursor, mouse.winid, { mouse.line, math.max(0, mouse.column - 1) })
-      end
-    end
-  end
-end
-
 function M.get_or_create_list_buf()
   if M.list_buf and vim.api.nvim_buf_is_valid(M.list_buf) then
     return M.list_buf
@@ -260,34 +229,11 @@ function M.get_or_create_list_buf()
   end
 
   map("<LeftMouse>", function()
-    M.dispatch_mouse_click()
-  end)
-
-  map("<2-LeftMouse>", function()
-    M.dispatch_mouse_click()
-  end)
-
-  map("<3-LeftMouse>", function()
-    M.dispatch_mouse_click()
-  end)
-
-  map("<4-LeftMouse>", function()
-    M.dispatch_mouse_click()
-  end)
-  map("<LeftDrag>", function() end)
-  map("<LeftRelease>", function()
-    if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
-      vim.schedule(function()
-        if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
-          vim.api.nvim_set_current_win(M.term_win)
-          M.scroll_to_prompt()
-        end
-      end)
+    local mouse = vim.fn.getmousepos()
+    if mouse and mouse.winid == M.list_win then
+      M.handle_list_click(mouse)
     end
   end)
-  map("<2-LeftRelease>", function() end)
-  map("<3-LeftRelease>", function() end)
-  map("<4-LeftRelease>", function() end)
 
   map("<ScrollWheelUp>", function() end)
   map("<ScrollWheelDown>", function() end)
@@ -363,16 +309,15 @@ local function ensure_highlights()
   vim.api.nvim_set_hl(0, "UserTermActiveName", { fg = 16777215, bold = true })
   vim.api.nvim_set_hl(0, "UserTermInactiveName", { fg = 8357006 })
 
-  local stl_nc = vim.api.nvim_get_hl(0, { name = "StatusLineNC" })
-  local header_bg = stl_nc.bg or 2961723
-  vim.api.nvim_set_hl(0, "UserTermHeader", { bg = header_bg })
+  local normal_bg = "#282c34"
+  vim.api.nvim_set_hl(0, "UserTermHeader", { bg = normal_bg })
   local ok_hl = vim.api.nvim_get_hl(0, { name = "DiagnosticOk" })
   local fg = ok_hl.fg or 10011513
-  vim.api.nvim_set_hl(0, "UserTermHeaderPlus", { bg = header_bg, fg = fg, bold = true })
+  vim.api.nvim_set_hl(0, "UserTermHeaderPlus", { bg = normal_bg, fg = fg, bold = true })
 
   vim.api.nvim_set_hl(0, "TermCursor", { bg = "#abb2bf", fg = "#1e222a" })
   vim.api.nvim_set_hl(0, "TermCursorNC", { bg = "#5c6370", fg = "#1e222a" })
-  vim.api.nvim_set_hl(0, "UserTerminalNormal", { bg = "#1e222a", fg = "#abb2bf" })
+  vim.api.nvim_set_hl(0, "UserTerminalNormal", { bg = normal_bg, fg = "#abb2bf" })
 end
 
 function M.render_list()
@@ -468,7 +413,7 @@ function M.render_list()
     vim.wo[M.list_win].wrap = false
     vim.wo[M.list_win].cursorline = false
     vim.wo[M.list_win].statusline = " "
-    vim.wo[M.list_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal"
+    vim.wo[M.list_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,WinSeparator:WinSeparator"
     pcall(vim.api.nvim_win_set_width, M.list_win, M.list_width)
     local target_line = M.current_idx + 1
     if target_line <= #lines then
@@ -493,7 +438,7 @@ local function enforce_list_width()
     vim.wo[M.list_win].wrap = false
     vim.wo[M.list_win].cursorline = false
     vim.wo[M.list_win].statusline = " "
-    vim.wo[M.list_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal"
+    vim.wo[M.list_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,WinSeparator:WinSeparator"
     local cur_w = vim.api.nvim_win_get_width(M.list_win)
     if cur_w ~= M.list_width then
       pcall(vim.api.nvim_win_set_width, M.list_win, M.list_width)
@@ -539,27 +484,6 @@ function M.create_terminal(opts)
     })
     term_obj.chan = chan
   end)
-
-  vim.keymap.set({ "n", "t" }, "<LeftMouse>", function()
-    M.dispatch_mouse_click()
-  end, { buffer = buf, silent = true })
-
-  vim.keymap.set({ "n", "t" }, "<2-LeftMouse>", function()
-    M.dispatch_mouse_click()
-  end, { buffer = buf, silent = true })
-
-  vim.keymap.set({ "n", "t" }, "<3-LeftMouse>", function()
-    M.dispatch_mouse_click()
-  end, { buffer = buf, silent = true })
-
-  vim.keymap.set({ "n", "t" }, "<4-LeftMouse>", function()
-    M.dispatch_mouse_click()
-  end, { buffer = buf, silent = true })
-
-  vim.keymap.set({ "n", "t" }, "<LeftRelease>", function() end, { buffer = buf, silent = true })
-  vim.keymap.set({ "n", "t" }, "<2-LeftRelease>", function() end, { buffer = buf, silent = true })
-  vim.keymap.set({ "n", "t" }, "<3-LeftRelease>", function() end, { buffer = buf, silent = true })
-  vim.keymap.set({ "n", "t" }, "<4-LeftRelease>", function() end, { buffer = buf, silent = true })
 
   vim.keymap.set({ "n", "t" }, "<ScrollWheelUp>", function()
     M.handle_scroll("up")
@@ -982,9 +906,10 @@ function M.open()
   vim.wo[term_win].statuscolumn = ""
   vim.wo[term_win].foldcolumn = "0"
   vim.wo[term_win].winbar = ""
+  vim.wo[term_win].cursorline = false
   vim.wo[term_win].winfixheight = true
   vim.wo[term_win].virtualedit = "all"
-  vim.wo[term_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal"
+  vim.wo[term_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,WinSeparator:WinSeparator"
   vim.w[term_win].edgy_disable = true
 
   if package.loaded["edgy"] then
@@ -1022,7 +947,7 @@ function M.open()
   vim.wo[list_win].winfixheight = true
   vim.wo[list_win].winbar = ""
   vim.wo[list_win].statusline = " "
-  vim.wo[list_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal"
+  vim.wo[list_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,WinSeparator:WinSeparator"
   vim.w[list_win].edgy_disable = true
   vim.api.nvim_win_set_width(list_win, M.list_width)
 
