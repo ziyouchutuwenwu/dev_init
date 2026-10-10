@@ -6,6 +6,8 @@ M.task_statuses = {}
 M.term_win = nil
 M.list_win = nil
 M.list_buf = nil
+M.plus_win = nil
+M.plus_buf = nil
 M.line_map = {}
 local function get_target_list_width()
   local cols = vim.o.columns
@@ -39,6 +41,8 @@ function M.is_open()
     and vim.api.nvim_win_is_valid(M.term_win)
     and M.list_win ~= nil
     and vim.api.nvim_win_is_valid(M.list_win)
+    and M.plus_win ~= nil
+    and vim.api.nvim_win_is_valid(M.plus_win)
 end
 
 function M.get_active_terminal()
@@ -58,10 +62,33 @@ function M.update_winbar(active)
   if M.list_win and vim.api.nvim_win_is_valid(M.list_win) then
     vim.wo[M.list_win].winbar = ""
   end
+  if M.plus_win and vim.api.nvim_win_is_valid(M.plus_win) then
+    vim.wo[M.plus_win].winbar = ""
+  end
 end
 
 _G.user_term_click_new = function()
   M.create_terminal()
+end
+
+function M.handle_plus_click(mouse)
+  if not mouse then
+    return
+  end
+  local plus_char = "󰐕"
+  local plus_w = vim.fn.strdisplaywidth(plus_char)
+  local h_left = math.floor((M.list_width - plus_w) / 2)
+  local plus_col = h_left + 1
+  local click_col = (mouse.wincol and mouse.wincol > 0) and mouse.wincol or mouse.column
+  if click_col and click_col >= plus_col - 1 and click_col <= plus_col + 1 then
+    M.create_terminal()
+    return
+  end
+  if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
+    vim.schedule(function()
+      M.scroll_to_prompt()
+    end)
+  end
 end
 
 function M.handle_list_click(mouse)
@@ -75,21 +102,6 @@ function M.handle_list_click(mouse)
 
   local item = M.line_map[lnum]
   if not item then
-    if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
-      vim.schedule(function()
-        M.scroll_to_prompt()
-      end)
-    end
-    return
-  end
-
-  if item.is_plus then
-    local plus_col = item.plus_col or (math.floor((M.list_width - 1) / 2) + 1)
-    local click_col = (mouse.wincol and mouse.wincol > 0) and mouse.wincol or mouse.column
-    if click_col and click_col >= plus_col - 1 and click_col <= plus_col + 1 then
-      M.create_terminal()
-      return
-    end
     if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
       vim.schedule(function()
         M.scroll_to_prompt()
@@ -271,12 +283,8 @@ function M.get_or_create_list_buf()
   map("<CR>", function()
     local cursor = vim.api.nvim_win_get_cursor(0)
     local item = M.line_map[cursor[1]]
-    if item then
-      if item.is_plus then
-        M.create_terminal()
-      elseif item.idx then
-        M.switch_terminal(item.idx)
-      end
+    if item and item.idx then
+      M.switch_terminal(item.idx)
     end
   end)
 
@@ -344,20 +352,119 @@ local function ensure_highlights()
   vim.api.nvim_set_hl(0, "UserTerminalNormal", { bg = normal_bg, fg = "#abb2bf" })
 end
 
+function M.get_or_create_plus_buf()
+  if M.plus_buf and vim.api.nvim_buf_is_valid(M.plus_buf) then
+    return M.plus_buf
+  end
+
+  local b = vim.api.nvim_create_buf(false, true)
+  vim.bo[b].buftype = "nofile"
+  vim.bo[b].bufhidden = "hide"
+  vim.bo[b].swapfile = false
+  vim.bo[b].filetype = "user_terminal_plus"
+  vim.b[b].edgy_disable = true
+  pcall(vim.api.nvim_buf_set_name, b, "TerminalPlus")
+
+  local function map(lhs, rhs)
+    vim.keymap.set({ "n", "v", "i", "t" }, lhs, rhs, { buffer = b, silent = true })
+  end
+
+  map("<LeftMouse>", function()
+    local mouse = vim.fn.getmousepos()
+    if mouse and mouse.winid == M.plus_win then
+      M.handle_plus_click(mouse)
+    end
+  end)
+  map("<LeftDrag>", function() end)
+  map("<LeftRelease>", function()
+    if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
+      pcall(vim.api.nvim_set_current_win, M.term_win)
+      M.scroll_to_prompt()
+      vim.schedule(function()
+        if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
+          pcall(vim.api.nvim_set_current_win, M.term_win)
+          M.scroll_to_prompt()
+        end
+      end)
+    end
+  end)
+  map("<2-LeftRelease>", function() end)
+  map("<3-LeftRelease>", function() end)
+  map("<4-LeftRelease>", function() end)
+
+  map("<ScrollWheelUp>", function() end)
+  map("<ScrollWheelDown>", function() end)
+  map("<ScrollWheelLeft>", function() end)
+  map("<ScrollWheelRight>", function() end)
+
+  map("<CR>", function()
+    M.create_terminal()
+  end)
+  map("+", function()
+    M.create_terminal()
+  end)
+  map("n", function()
+    M.create_terminal()
+  end)
+  map("q", function()
+    if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
+      M.scroll_to_prompt()
+    else
+      M.close()
+    end
+  end)
+  map("<Esc>", function()
+    if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
+      M.scroll_to_prompt()
+    end
+  end)
+
+  M.plus_buf = b
+  return b
+end
+
+function M.render_plus()
+  local b = M.get_or_create_plus_buf()
+  ensure_highlights()
+  local plus_char = "󰐕"
+  local plus_w = vim.fn.strdisplaywidth(plus_char)
+  local h_left = math.floor((M.list_width - plus_w) / 2)
+  local h_right = M.list_width - plus_w - h_left
+  local plus_str = string.rep(" ", h_left) .. plus_char .. string.rep(" ", h_right)
+
+  vim.api.nvim_set_option_value("modifiable", true, { buf = b })
+  vim.api.nvim_set_option_value("readonly", false, { buf = b })
+  vim.api.nvim_buf_set_lines(b, 0, -1, false, { plus_str })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = b })
+  vim.api.nvim_set_option_value("readonly", true, { buf = b })
+
+  vim.api.nvim_buf_clear_namespace(b, NS_ID, 0, -1)
+  pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "UserTermHeaderPlus", 0, h_left, h_left + #plus_char)
+
+  if M.plus_win and vim.api.nvim_win_is_valid(M.plus_win) then
+    vim.wo[M.plus_win].winfixwidth = true
+    vim.wo[M.plus_win].winfixheight = true
+    vim.wo[M.plus_win].number = false
+    vim.wo[M.plus_win].relativenumber = false
+    vim.wo[M.plus_win].signcolumn = "no"
+    vim.wo[M.plus_win].statuscolumn = ""
+    vim.wo[M.plus_win].foldcolumn = "0"
+    vim.wo[M.plus_win].wrap = false
+    vim.wo[M.plus_win].cursorline = false
+    vim.wo[M.plus_win].winbar = ""
+    vim.wo[M.plus_win].statusline = " "
+    vim.wo[M.plus_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,Cursor:UserTerminalNormal,lCursor:UserTerminalNormal,WinSeparator:WinSeparator"
+    pcall(vim.api.nvim_win_set_height, M.plus_win, 1)
+    pcall(vim.api.nvim_win_set_width, M.plus_win, M.list_width)
+  end
+end
+
 function M.render_list()
   local b = M.get_or_create_list_buf()
   ensure_highlights()
   M.line_map = {}
   local lines = {}
   local hls = {}
-
-  local plus_char = "󰐕"
-  local plus_w = vim.fn.strdisplaywidth(plus_char)
-  local h_left = math.floor((M.list_width - plus_w) / 2)
-  local h_right = M.list_width - plus_w - h_left
-  local plus_str = string.rep(" ", h_left) .. plus_char .. string.rep(" ", h_right)
-  table.insert(lines, plus_str)
-  M.line_map[1] = { is_plus = true, plus_col = h_left + 1 }
 
   local right_padding = 1
   local right = "x" .. string.rep(" ", right_padding)
@@ -412,8 +519,6 @@ function M.render_list()
 
   vim.api.nvim_buf_clear_namespace(b, NS_ID, 0, -1)
 
-  pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, "UserTermHeaderPlus", 0, h_left, h_left + #plus_char)
-
   for _, h in ipairs(hls) do
     pcall(vim.api.nvim_buf_add_highlight, b, NS_ID, h.hl, h.lnum, h.col_s, h.col_e)
   end
@@ -435,11 +540,11 @@ function M.render_list()
 end
 
 local function enforce_list_width()
-  if M.list_win and vim.api.nvim_win_is_valid(M.list_win) then
-    local target_w = get_target_list_width()
-    local width_changed = (target_w ~= M.list_width)
-    M.list_width = target_w
+  local target_w = get_target_list_width()
+  local width_changed = (target_w ~= M.list_width)
+  M.list_width = target_w
 
+  if M.list_win and vim.api.nvim_win_is_valid(M.list_win) then
     vim.wo[M.list_win].winfixwidth = true
     vim.wo[M.list_win].winfixheight = true
     vim.wo[M.list_win].number = false
@@ -457,6 +562,29 @@ local function enforce_list_width()
     end
     if width_changed and M.is_open() then
       M.render_list()
+    end
+  end
+
+  if M.plus_win and vim.api.nvim_win_is_valid(M.plus_win) then
+    vim.wo[M.plus_win].winfixwidth = true
+    vim.wo[M.plus_win].winfixheight = true
+    vim.wo[M.plus_win].number = false
+    vim.wo[M.plus_win].relativenumber = false
+    vim.wo[M.plus_win].signcolumn = "no"
+    vim.wo[M.plus_win].statuscolumn = ""
+    vim.wo[M.plus_win].foldcolumn = "0"
+    vim.wo[M.plus_win].wrap = false
+    vim.wo[M.plus_win].cursorline = false
+    vim.wo[M.plus_win].winbar = ""
+    vim.wo[M.plus_win].statusline = " "
+    vim.wo[M.plus_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,Cursor:UserTerminalNormal,lCursor:UserTerminalNormal,WinSeparator:WinSeparator"
+    pcall(vim.api.nvim_win_set_height, M.plus_win, 1)
+    local cur_pw = vim.api.nvim_win_get_width(M.plus_win)
+    if cur_pw ~= M.list_width then
+      pcall(vim.api.nvim_win_set_width, M.plus_win, M.list_width)
+    end
+    if width_changed and M.is_open() then
+      M.render_plus()
     end
   end
 end
@@ -507,6 +635,8 @@ function M.create_terminal(opts)
       M.scroll_to_prompt()
     elseif mouse.winid == M.list_win then
       M.handle_list_click(mouse)
+    elseif mouse.winid == M.plus_win then
+      M.handle_plus_click(mouse)
     else
       vim.cmd("stopinsert")
       vim.api.nvim_set_current_win(mouse.winid)
@@ -1008,13 +1138,43 @@ function M.open()
   vim.w[list_win].edgy_disable = true
   vim.api.nvim_win_set_width(list_win, M.list_width)
 
+  local pbuf = M.get_or_create_plus_buf()
+  local plus_win = vim.api.nvim_open_win(pbuf, false, {
+    win = list_win,
+    split = "above",
+    height = 1,
+  })
+  M.plus_win = plus_win
+
+  vim.wo[plus_win].number = false
+  vim.wo[plus_win].relativenumber = false
+  vim.wo[plus_win].signcolumn = "no"
+  vim.wo[plus_win].statuscolumn = ""
+  vim.wo[plus_win].foldcolumn = "0"
+  vim.wo[plus_win].wrap = false
+  vim.wo[plus_win].cursorline = false
+  vim.wo[plus_win].winfixwidth = true
+  vim.wo[plus_win].winfixheight = true
+  vim.wo[plus_win].winbar = ""
+  vim.wo[plus_win].statusline = " "
+  vim.wo[plus_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,Cursor:UserTerminalNormal,lCursor:UserTerminalNormal,WinSeparator:WinSeparator"
+  vim.w[plus_win].edgy_disable = true
+  pcall(vim.api.nvim_win_set_height, plus_win, 1)
+  pcall(vim.api.nvim_win_set_width, plus_win, M.list_width)
+
   M.update_winbar(active)
+  M.render_plus()
   M.render_list()
 
   M.scroll_to_prompt()
 end
 
 function M.close()
+  if M.plus_win and vim.api.nvim_win_is_valid(M.plus_win) then
+    local pw = M.plus_win
+    M.plus_win = nil
+    pcall(vim.api.nvim_win_close, pw, true)
+  end
   if M.list_win and vim.api.nvim_win_is_valid(M.list_win) then
     local lw = M.list_win
     M.list_win = nil
@@ -1034,7 +1194,7 @@ end
 function M.toggle()
   if M.is_open() then
     local cur_win = vim.api.nvim_get_current_win()
-    if cur_win == M.term_win or cur_win == M.list_win then
+    if cur_win == M.term_win or cur_win == M.list_win or cur_win == M.plus_win then
       M.close()
     else
       M.focus()
@@ -1107,17 +1267,36 @@ vim.api.nvim_create_autocmd("WinClosed", {
     local closed_win = tonumber(args.match)
     if closed_win == M.term_win then
       M.term_win = nil
+      if M.plus_win and vim.api.nvim_win_is_valid(M.plus_win) then
+        local pw = M.plus_win
+        M.plus_win = nil
+        pcall(vim.api.nvim_win_close, pw, true)
+      end
       if M.list_win and vim.api.nvim_win_is_valid(M.list_win) then
         local lw = M.list_win
         M.list_win = nil
         pcall(vim.api.nvim_win_close, lw, true)
       end
-    elseif closed_win == M.list_win then
-      M.list_win = nil
+    elseif closed_win == M.list_win or closed_win == M.plus_win then
+      if closed_win == M.list_win then
+        M.list_win = nil
+      else
+        M.plus_win = nil
+      end
       if M.term_win and vim.api.nvim_win_is_valid(M.term_win) then
         local tw = M.term_win
         M.term_win = nil
         pcall(vim.api.nvim_win_close, tw, true)
+      end
+      if M.plus_win and vim.api.nvim_win_is_valid(M.plus_win) then
+        local pw = M.plus_win
+        M.plus_win = nil
+        pcall(vim.api.nvim_win_close, pw, true)
+      end
+      if M.list_win and vim.api.nvim_win_is_valid(M.list_win) then
+        local lw = M.list_win
+        M.list_win = nil
+        pcall(vim.api.nvim_win_close, lw, true)
       end
     end
   end,
