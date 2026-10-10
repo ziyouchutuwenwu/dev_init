@@ -11,12 +11,8 @@ M.plus_buf = nil
 M.line_map = {}
 local function get_target_list_width()
   local cols = vim.o.columns
-  if cols <= 100 then
-    return 8
-  elseif cols <= 140 then
+  if cols <= 140 then
     return 9
-  elseif cols <= 180 then
-    return 10
   else
     return 11
   end
@@ -75,12 +71,12 @@ function M.handle_plus_click(mouse)
   if not mouse then
     return
   end
-  local plus_char = "󰐕"
+  local plus_char = "+"
   local plus_w = vim.fn.strdisplaywidth(plus_char)
   local h_left = math.floor((M.list_width - plus_w) / 2)
   local plus_col = h_left + 1
   local click_col = (mouse.wincol and mouse.wincol > 0) and mouse.wincol or mouse.column
-  if click_col and click_col >= plus_col - 1 and click_col <= plus_col + 1 then
+  if click_col and click_col >= plus_col - 2 and click_col <= plus_col + 2 then
     M.create_terminal()
     return
   end
@@ -426,7 +422,7 @@ end
 function M.render_plus()
   local b = M.get_or_create_plus_buf()
   ensure_highlights()
-  local plus_char = "󰐕"
+  local plus_char = "+"
   local plus_w = vim.fn.strdisplaywidth(plus_char)
   local h_left = math.floor((M.list_width - plus_w) / 2)
   local h_right = M.list_width - plus_w - h_left
@@ -452,7 +448,7 @@ function M.render_plus()
     vim.wo[M.plus_win].wrap = false
     vim.wo[M.plus_win].cursorline = false
     vim.wo[M.plus_win].winbar = ""
-    vim.wo[M.plus_win].statusline = " "
+    vim.wo[M.plus_win].statusline = ""
     vim.wo[M.plus_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,Cursor:UserTerminalNormal,lCursor:UserTerminalNormal,WinSeparator:WinSeparator"
     pcall(vim.api.nvim_win_set_height, M.plus_win, 1)
     pcall(vim.api.nvim_win_set_width, M.plus_win, M.list_width)
@@ -576,7 +572,7 @@ local function enforce_list_width()
     vim.wo[M.plus_win].wrap = false
     vim.wo[M.plus_win].cursorline = false
     vim.wo[M.plus_win].winbar = ""
-    vim.wo[M.plus_win].statusline = " "
+    vim.wo[M.plus_win].statusline = ""
     vim.wo[M.plus_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,Cursor:UserTerminalNormal,lCursor:UserTerminalNormal,WinSeparator:WinSeparator"
     pcall(vim.api.nvim_win_set_height, M.plus_win, 1)
     local cur_pw = vim.api.nvim_win_get_width(M.plus_win)
@@ -1156,7 +1152,7 @@ function M.open()
   vim.wo[plus_win].winfixwidth = true
   vim.wo[plus_win].winfixheight = true
   vim.wo[plus_win].winbar = ""
-  vim.wo[plus_win].statusline = " "
+  vim.wo[plus_win].statusline = ""
   vim.wo[plus_win].winhighlight = "Normal:UserTerminalNormal,NormalNC:UserTerminalNormal,SignColumn:UserTerminalNormal,FoldColumn:UserTerminalNormal,CursorLine:UserTerminalNormal,CursorLineNC:UserTerminalNormal,Cursor:UserTerminalNormal,lCursor:UserTerminalNormal,WinSeparator:WinSeparator"
   vim.w[plus_win].edgy_disable = true
   pcall(vim.api.nvim_win_set_height, plus_win, 1)
