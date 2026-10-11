@@ -10,7 +10,7 @@ impl HttpPostRule {
     pub fn from_section(section: &ConfigSection) -> Self {
         let url = section
             .get_string("url")
-            .unwrap_or_else(|| "http://127.0.0.1:4000/api/alert".to_string());
+            .unwrap_or_default();
 
         Self { url }
     }

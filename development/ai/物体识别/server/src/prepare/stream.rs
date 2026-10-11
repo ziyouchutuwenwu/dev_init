@@ -1,7 +1,10 @@
 use crate::config::StreamConfig;
 use crate::detector::{DetectWrapper, FrameDetector};
-use crate::on_detected::{DetectedDispatcher, HttpPostHandler, WebRtcHandler};
+use crate::on_detected::{
+    DetectedDispatcher, HttpPostHandler, ObjectTrackHandler, WebRtcHandler,
+};
 use crate::rtsp2frame::RtspStreamer;
+use crate::object_tracker::ZoneConfig;
 use crate::web_rtc::StreamContext;
 use std::sync::Arc;
 use tokio::sync::broadcast;
@@ -46,24 +49,62 @@ pub async fn setup_single_stream(
         Arc::clone(&latest_detection),
     );
 
-    let dispatcher = Arc::new(DetectedDispatcher::new());
+    let raw_dispatcher = Arc::new(DetectedDispatcher::new());
+    let processed_dispatcher = Arc::new(DetectedDispatcher::new());
+
+    let config_path = crate::prepare::resolve_config_path().unwrap_or_else(|_| "config.yaml".to_string());
+    let initial_zone_cfg = ZoneConfig::load_from_yaml_file(&config_path, &stream_id);
+    ObjectTrackHandler::start(
+        &stream_id,
+        raw_dispatcher.subscribe(),
+        Arc::clone(&processed_dispatcher),
+        initial_zone_cfg,
+    );
+
     WebRtcHandler::start(
         &stream_id,
-        dispatcher.subscribe(),
+        processed_dispatcher.subscribe(),
         tx_detection,
         Arc::clone(&latest_detection),
     );
-    HttpPostHandler::start(&stream_id, dispatcher.subscribe());
+    HttpPostHandler::start(&stream_id, processed_dispatcher.subscribe());
 
     let streamer = RtspStreamer::new(
         stream_id.clone(),
         input_url.clone(),
         detector,
-        dispatcher,
+        raw_dispatcher,
     );
 
     let handle = streamer.start_stream(stream_ctx.tx_video.clone()).await?;
     Ok((stream_ctx, handle))
+}
+
+pub async fn start_initial_streams(
+    streams: Vec<StreamConfig>,
+    detect_wrapper: Arc<DetectWrapper>,
+) -> Result<Vec<crate::web_rtc::RunningStream>, Box<dyn std::error::Error>> {
+    let mut running = Vec::new();
+
+    for (ch_idx, st) in streams.into_iter().enumerate() {
+        let stream_id = st.id.clone();
+        let input_url = st.input.clone();
+        let (ctx, handle) = setup_single_stream(
+            ch_idx as u32,
+            st,
+            Arc::clone(&detect_wrapper),
+        )
+        .await?;
+        running.push(crate::web_rtc::RunningStream {
+            stream_id,
+            input_url,
+            channel_id: ch_idx as u32,
+            context: ctx,
+            handle,
+        });
+    }
+
+    Ok(running)
 }
 
 pub async fn start_all_streams(

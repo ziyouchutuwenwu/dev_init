@@ -25,6 +25,8 @@ pub struct DetectionResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub frame_height: Option<i32>,
     pub detections: Vec<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub zone_config: Option<serde_json::Value>,
 }
 
 impl DetectionResult {
@@ -37,6 +39,7 @@ impl DetectionResult {
             frame_width: Some(1920),
             frame_height: Some(1080),
             detections,
+            zone_config: None,
         }
     }
 
@@ -49,6 +52,7 @@ impl DetectionResult {
             frame_width: Some(1920),
             frame_height: Some(1080),
             detections,
+            zone_config: None,
         }
     }
 }

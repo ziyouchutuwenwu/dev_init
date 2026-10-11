@@ -1,5 +1,7 @@
 use server::config::AppConfig;
-use server::prepare::{init_detector, resolve_config_path, start_all_streams, start_webrtc_server_with_listener};
+use server::prepare::{init_detector, resolve_config_path, start_initial_streams};
+use server::web_rtc::WebRtcServer;
+use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -10,6 +12,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .try_init();
     let config_path = resolve_config_path()?;
+    server::updater::init_alert_config_from_config(&config_path);
     let config = AppConfig::load_from_file(&config_path)?;
     let streams = config.input.get_streams();
     if streams.is_empty() {
@@ -37,11 +40,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let detect_wrapper = init_detector(streams.len());
-    let (stream_contexts, streamer_handles) =
-        start_all_streams(streams, std::sync::Arc::clone(&detect_wrapper)).await?;
+    let initial_streams =
+        start_initial_streams(streams, std::sync::Arc::clone(&detect_wrapper)).await?;
+    let webrtc_server = Arc::new(WebRtcServer::new(
+        &http_addr,
+        std::sync::Arc::clone(&detect_wrapper),
+        initial_streams,
+    ));
 
+    let srv_clone = Arc::clone(&webrtc_server);
     tokio::select! {
-        res = start_webrtc_server_with_listener(&http_addr, stream_contexts, listener) => {
+        res = srv_clone.run_signaling_server_with_listener(listener) => {
             if let Err(e) = res {
                 log::error!("webrtc 服务运行异常: {e}");
             }
@@ -51,10 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    for handle in streamer_handles {
-        handle.abort();
-    }
-
+    webrtc_server.stop_all_streams();
     let _ = detect_wrapper.release_all();
     std::process::exit(0);
 }

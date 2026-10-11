@@ -127,6 +127,7 @@ impl FrameDetector {
             frame_width: frame_w,
             frame_height: frame_h,
             detections,
+            zone_config: None,
         }))
     }
 }
