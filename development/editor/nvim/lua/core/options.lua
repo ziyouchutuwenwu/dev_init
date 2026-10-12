@@ -50,3 +50,17 @@ apply_highlights()
 vim.api.nvim_create_autocmd({ "VimEnter", "ColorScheme" }, {
   callback = apply_highlights,
 })
+
+return {
+  "AstroNvim/astrocore",
+  opts = function(_, opts)
+    if not opts.options then opts.options = {} end
+    if not opts.options.opt then opts.options.opt = {} end
+
+    opts.options.opt.wrap = true
+    opts.options.opt.linebreak = true
+    opts.options.opt.breakindent = true
+
+    return opts
+  end,
+}

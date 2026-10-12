@@ -339,3 +339,14 @@ end, { noremap = true, desc = "切换任务列表 (Alt+3)" })
 pcall(vim.keymap.del, 'n', '<F7>')
 pcall(vim.keymap.del, 't', '<F7>')
 pcall(vim.keymap.del, 'i', '<F7>')
+
+return {
+  "AstroNvim/astrocore",
+  opts = {
+    mappings = {
+      n = { ["<F7>"] = false },
+      t = { ["<F7>"] = false },
+      i = { ["<F7>"] = false },
+    },
+  },
+}
