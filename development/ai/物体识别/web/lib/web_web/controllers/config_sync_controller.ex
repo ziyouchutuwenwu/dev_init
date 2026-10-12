@@ -1,9 +1,10 @@
-defmodule WebWeb.ConfigController do
+defmodule WebWeb.ConfigSyncController do
   use WebWeb, :controller
 
   alias Web.Orm.Query.Settings
   alias Web.Orm.Query.Streams
   alias Web.DataSync
+
 
   def save_local(conn, params) do
     if url = params["gateway_url"] do
@@ -29,10 +30,18 @@ defmodule WebWeb.ConfigController do
 
     case save_streams_if_present(params["streams"]) do
       {:ok, streams} ->
+        Web.PageStore.put(:gateway_url, gateway_url)
+        Web.PageStore.put(:alert_callback_url, alert_callback_url)
+        Web.PageStore.put(:alert_cooldown_sec, alert_cooldown_sec)
+        Web.PageStore.put(:alert_timeout_sec, alert_timeout_sec)
+        Web.PageStore.put(:streams, streams)
+        Web.PageStore.put(:stream_list, Enum.filter(streams, &(&1.enabled != false)))
+
         Phoenix.PubSub.broadcast(
           Web.PubSub,
           "config_updated",
-          {:config_updated, gateway_url, streams, alert_callback_url, alert_cooldown_sec, alert_timeout_sec}
+          {:config_updated, gateway_url, streams, alert_callback_url, alert_cooldown_sec,
+           alert_timeout_sec}
         )
 
         json(conn, %{
@@ -76,10 +85,18 @@ defmodule WebWeb.ConfigController do
 
     case save_streams_if_present(params["streams"]) do
       {:ok, streams} ->
+        Web.PageStore.put(:gateway_url, gateway_url)
+        Web.PageStore.put(:alert_callback_url, alert_callback_url)
+        Web.PageStore.put(:alert_cooldown_sec, alert_cooldown_sec)
+        Web.PageStore.put(:alert_timeout_sec, alert_timeout_sec)
+        Web.PageStore.put(:streams, streams)
+        Web.PageStore.put(:stream_list, Enum.filter(streams, &(&1.enabled != false)))
+
         Phoenix.PubSub.broadcast(
           Web.PubSub,
           "config_updated",
-          {:config_updated, gateway_url, streams, alert_callback_url, alert_cooldown_sec, alert_timeout_sec}
+          {:config_updated, gateway_url, streams, alert_callback_url, alert_cooldown_sec,
+           alert_timeout_sec}
         )
 
         case DataSync.sync_to_gateway(
@@ -163,6 +180,14 @@ defmodule WebWeb.ConfigController do
 
     case Streams.update_zone_config(stream_id, zone_str) do
       {:ok, stream} ->
+        Web.PageStore.reload()
+
+        Phoenix.PubSub.broadcast(
+          Web.PubSub,
+          "config_updated",
+          {:zone_updated, stream_id, zone_str}
+        )
+
         gateway_url = Settings.get_gateway_url()
 
         gateway_synced =
@@ -193,14 +218,17 @@ defmodule WebWeb.ConfigController do
 
   defp save_streams_if_present(_), do: {:ok, Streams.list_streams()}
 
-  defp serialize_streams(streams) do
+  def serialize_streams(streams) do
     Enum.map(streams, fn s ->
       %{
         id: s.stream_id,
+        stream_id: s.stream_id,
         title: s.title,
         url: s.rtsp_url,
+        rtsp_url: s.rtsp_url,
         enabled: s.enabled,
-        position: s.position
+        position: s.position,
+        zone_config: s.zone_config
       }
     end)
   end

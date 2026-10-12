@@ -1,72 +1,69 @@
 defmodule WebWeb.MonitorLive do
   use WebWeb, :live_view
 
+  alias Web.PageStore
   alias Web.Orm.Query.Settings
   alias Web.Orm.Query.Streams
 
   @impl true
   def mount(_params, _session, socket) do
-    if connected?(socket) do
-      Phoenix.PubSub.subscribe(Web.PubSub, "config_updated")
-    end
+    socket =
+      socket
+      |> assign(:page_title, "视觉检测")
+      |> assign(:active_tab, :monitor)
+      |> assign_new(:gateway_url, fn ->
+        PageStore.get(:gateway_url, Settings.get_gateway_url() || "")
+      end)
+      |> assign_new(:stream_list, fn ->
+        PageStore.get(:stream_list, Streams.list_enabled_streams())
+      end)
 
-    gateway_url = Settings.get_gateway_url()
-    alert_callback_url = Settings.get_alert_callback_url()
-    alert_cooldown_sec = Settings.get_alert_cooldown_sec()
-    alert_timeout_sec = Settings.get_alert_timeout_sec()
-    streams = Streams.list_enabled_streams()
-    config_streams = Streams.list_streams()
-
-    {:ok,
-     assign(socket,
-       page_title: "视觉检测",
-       gateway_url: gateway_url,
-       alert_callback_url: alert_callback_url,
-       alert_cooldown_sec: alert_cooldown_sec,
-       alert_timeout_sec: alert_timeout_sec,
-       stream_list: streams,
-       config_stream_list: config_streams
-     )}
+    {:ok, socket}
   end
 
   @impl true
-  def handle_params(_params, _uri, socket) do
-    {:noreply, socket}
+  def handle_info({:config_updated, gateway_url, streams, _cb, _cd, _to}, socket) do
+    enabled =
+      streams
+      |> Enum.filter(fn s ->
+        case s do
+          %{enabled: en} -> en != false
+          _ -> true
+        end
+      end)
+
+    PageStore.put(:gateway_url, gateway_url)
+    PageStore.put(:streams, streams)
+    PageStore.put(:stream_list, enabled)
+
+    {:noreply,
+     socket
+     |> assign(:gateway_url, gateway_url)
+     |> assign(:stream_list, enabled)
+     |> put_flash(:info, "监控配置已实时同步更新")}
   end
 
   @impl true
-  def handle_info({:config_updated, gateway_url, streams, alert_callback_url, alert_cooldown_sec, alert_timeout_sec}, socket) do
-    {:noreply,
-     assign(socket,
-       gateway_url: gateway_url,
-       alert_callback_url: alert_callback_url,
-       alert_cooldown_sec: alert_cooldown_sec,
-       alert_timeout_sec: alert_timeout_sec,
-       stream_list: Enum.filter(streams, &(&1.enabled != false)),
-       config_stream_list: streams
-     )}
+  def handle_info({:zone_updated, stream_id, zone_str}, socket) do
+    updated_streams =
+      Enum.map(socket.assigns.stream_list, fn s ->
+        s_id =
+          Map.get(s, :stream_id) || Map.get(s, "stream_id") || Map.get(s, :id) || Map.get(s, "id")
+
+        if to_string(s_id) == to_string(stream_id) do
+          case s do
+            %Web.Orm.Entity.Stream{} -> %{s | zone_config: zone_str}
+            map when is_map(map) -> Map.put(map, :zone_config, zone_str)
+          end
+        else
+          s
+        end
+      end)
+
+    PageStore.put(:stream_list, updated_streams)
+    {:noreply, assign(socket, :stream_list, updated_streams)}
   end
 
-  def handle_info({:config_updated, gateway_url, streams, alert_callback_url}, socket) do
-    {:noreply,
-     assign(socket,
-       gateway_url: gateway_url,
-       alert_callback_url: alert_callback_url,
-       stream_list: Enum.filter(streams, &(&1.enabled != false)),
-       config_stream_list: streams
-     )}
-  end
-
-  def handle_info({:config_updated, gateway_url, streams}, socket) do
-    {:noreply,
-     assign(socket,
-       gateway_url: gateway_url,
-       stream_list: Enum.filter(streams, &(&1.enabled != false)),
-       config_stream_list: streams
-     )}
-  end
-
-  def handle_info(_other, socket) do
-    {:noreply, socket}
-  end
+  @impl true
+  def handle_info(_msg, socket), do: {:noreply, socket}
 end

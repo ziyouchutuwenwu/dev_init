@@ -17,8 +17,10 @@ defmodule WebWeb.Router do
   scope "/", WebWeb do
     pipe_through :browser
 
-    live "/", MonitorLive, :home
-    live "/config", MonitorLive, :config
+    live_session :default, on_mount: [WebWeb.LiveSessionHook] do
+      live "/", MonitorLive, :index
+      live "/config", ConfigLive, :index
+    end
   end
 
   scope "/api", WebWeb do
@@ -26,10 +28,10 @@ defmodule WebWeb.Router do
 
     post "/alert", AlertController, :create
 
-    post "/config/save-local", ConfigController, :save_local
-    post "/config/sync-to-hardware", ConfigController, :sync_to_hardware
+    post "/config/save-local", ConfigSyncController, :save_local
+    post "/config/sync-to-hardware", ConfigSyncController, :sync_to_hardware
 
-    get "/zone/:stream_id", ConfigController, :get_zone
-    post "/zone/:stream_id", ConfigController, :save_zone
+    get "/zone/:stream_id", ConfigSyncController, :get_zone
+    post "/zone/:stream_id", ConfigSyncController, :save_zone
   end
 end
