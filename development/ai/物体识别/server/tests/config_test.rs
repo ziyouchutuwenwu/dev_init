@@ -80,3 +80,84 @@ async fn test_update_alert_url_and_config() {
     assert_eq!(server::updater::get_alert_cooldown_sec(), Some(2));
     assert_eq!(server::updater::get_alert_timeout_sec(), Some(5));
 }
+
+#[test]
+fn test_yaml_config_crud_and_path_binding() {
+    use server::config::YamlConfig;
+
+    let tmp_path = "target/test_config.yaml";
+    let mut cfg = YamlConfig::new(tmp_path);
+    assert_eq!(cfg.path(), std::path::Path::new(tmp_path));
+
+    cfg.set_string("server_name", "test_app");
+    cfg.set_u64("port", 9090);
+    cfg.set_bool("debug", true);
+
+    assert_eq!(cfg.get_str("server_name"), Some("test_app"));
+    assert_eq!(cfg.get_u64("port"), Some(9090));
+    assert_eq!(cfg.get_bool("debug"), Some(true));
+
+    cfg.set_nested(&["section", "sub", "key"], serde_yaml::Value::String("val".into()));
+    assert_eq!(
+        cfg.get_nested(&["section", "sub", "key"]).and_then(|v| v.as_str()),
+        Some("val")
+    );
+
+    cfg.set_alert_url(Some("http://127.0.0.1:8080/hook"));
+    cfg.set_alert_cooldown_sec(Some(10));
+    cfg.set_alert_timeout_sec(Some(3));
+
+    assert_eq!(cfg.get_alert_url().as_deref(), Some("http://127.0.0.1:8080/hook"));
+    assert_eq!(cfg.get_alert_cooldown_sec(), Some(10));
+    assert_eq!(cfg.get_alert_timeout_sec(), Some(3));
+
+    let (url, cd, to) = cfg.get_alert();
+    assert_eq!(url.as_deref(), Some("http://127.0.0.1:8080/hook"));
+    assert_eq!(cd, Some(10));
+    assert_eq!(to, Some(3));
+
+    cfg.set_server_host("127.0.0.1");
+    cfg.set_server_port(8088);
+    assert_eq!(cfg.get_server_host().as_deref(), Some("127.0.0.1"));
+    assert_eq!(cfg.get_server_port(), Some(8088));
+
+    cfg.set_input_streams(&[
+        ("cam1".to_string(), "rtsp://127.0.0.1/live1".to_string()),
+    ]);
+    let streams = cfg.get_input_streams();
+    assert_eq!(streams.len(), 1);
+    assert_eq!(streams[0].0, "cam1");
+
+    assert!(cfg.save().is_ok());
+    let loaded = YamlConfig::load_from_file(tmp_path).unwrap();
+    assert_eq!(loaded.get_str("server_name"), Some("test_app"));
+    assert_eq!(loaded.get_u64("port"), Some(9090));
+    assert_eq!(loaded.get_server_host().as_deref(), Some("127.0.0.1"));
+    assert_eq!(loaded.get_server_port(), Some(8088));
+
+    let _ = std::fs::remove_file(tmp_path);
+}
+
+#[test]
+fn test_yaml_config_formatting_has_blank_lines() {
+    use server::config::YamlConfig;
+
+    let mut cfg = YamlConfig::new("target/format_test.yaml");
+    cfg.set_input_streams(&[
+        ("test_s1".to_string(), "rtsp://127.0.0.1:8554/live1".to_string()),
+    ]);
+    cfg.set_server_host("0.0.0.0");
+    cfg.set_server_port(8181);
+    cfg.set_alert(Some("http://127.0.0.1:4000/api/alert"), Some(2), Some(5));
+
+    let formatted = cfg.to_formatted_yaml().unwrap();
+    println!("Formatted Output:\n{}", formatted);
+
+    assert!(formatted.contains("input:\n  test_s1: rtsp://127.0.0.1:8554/live1\n\nserver:"));
+    assert!(formatted.contains("alert_url: http://127.0.0.1:4000/api/alert"));
+}
+
+
+
+
+

@@ -1,5 +1,3 @@
-pub mod parser;
-pub mod section;
+pub mod yaml_config;
 
-pub use parser::ConfigParser;
-pub use section::ConfigSection;
+pub use yaml_config::{get_global_config_path, set_global_config_path, YamlConfig};

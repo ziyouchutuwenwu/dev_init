@@ -1,5 +1,5 @@
 use super::zone::{CrossingDirection, RoiConfig, ZoneLineConfig};
-use crate::config::base::ConfigParser;
+use crate::config::YamlConfig;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
@@ -47,42 +47,53 @@ impl ZoneConfig {
     }
 
     pub fn load_from_yaml_file<P: AsRef<Path>>(path: P, stream_id: &str) -> Self {
-        let parser = match ConfigParser::from_file(&path) {
-            Ok(p) => p,
+        let cfg = match YamlConfig::load_from_file(path) {
+            Ok(c) => c,
             Err(_) => return Self::default(),
         };
 
-        let trigger_sec = match parser.get_section("trigger") {
-            Some(s) => s,
+        let stream_val = match cfg.get_nested(&[crate::config::KEY_TRIGGER, stream_id]) {
+            Some(v) => v,
             None => return Self::default(),
         };
 
-        let stream_sec = match trigger_sec.get_child(stream_id) {
-            Some(s) => s,
-            None => return Self::default(),
-        };
-
-        let enabled = stream_sec
-            .get_string("enabled")
-            .map(|s| s != "false" && s != "0")
+        let enabled = stream_val
+            .get(crate::config::KEY_ENABLED)
+            .and_then(|v| v.as_bool())
             .unwrap_or(true);
 
         let mut roi = None;
-        if let Some(roi_str) = stream_sec.get_string("roi") {
-            if let Ok(rect) = serde_json::from_str::<[f64; 4]>(&roi_str) {
+        if let Some(roi_val) = stream_val.get(crate::config::KEY_ROI) {
+            if let Ok(rect) = serde_yaml::from_value::<[f64; 4]>(roi_val.clone()) {
                 roi = Some(RoiConfig::Rect(rect));
-            } else if let Ok(poly) = serde_json::from_str::<Vec<[f64; 2]>>(&roi_str) {
+            } else if let Ok(poly) = serde_yaml::from_value::<Vec<[f64; 2]>>(roi_val.clone()) {
                 roi = Some(RoiConfig::Polygon(poly));
+            } else if let Some(roi_str) = roi_val.as_str() {
+                if let Ok(rect) = serde_json::from_str::<[f64; 4]>(roi_str) {
+                    roi = Some(RoiConfig::Rect(rect));
+                } else if let Ok(poly) = serde_json::from_str::<Vec<[f64; 2]>>(roi_str) {
+                    roi = Some(RoiConfig::Polygon(poly));
+                }
             }
         }
 
         let mut trigger_line = None;
-        let line_opt = stream_sec
-            .get_string("trigger_line")
-            .or_else(|| stream_sec.get_string("trigger_area"));
-        if let Some(line_str) = line_opt {
-            if let Ok(line) = serde_json::from_str::<[[f64; 2]; 2]>(&line_str) {
-                let dir_str = stream_sec.get_string("direction").unwrap_or_default();
+        let line_opt = stream_val
+            .get(crate::config::KEY_TRIGGER_LINE)
+            .or_else(|| stream_val.get(crate::config::KEY_TRIGGER_AREA));
+        if let Some(line_val) = line_opt {
+            let parsed_line = serde_yaml::from_value::<[[f64; 2]; 2]>(line_val.clone())
+                .ok()
+                .or_else(|| {
+                    line_val
+                        .as_str()
+                        .and_then(|s| serde_json::from_str::<[[f64; 2]; 2]>(s).ok())
+                });
+            if let Some(line) = parsed_line {
+                let dir_str = stream_val
+                    .get(crate::config::KEY_DIRECTION)
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default();
                 let direction = match dir_str.to_lowercase().as_str() {
                     "forward" => CrossingDirection::Forward,
                     "backward" => CrossingDirection::Backward,
@@ -93,9 +104,13 @@ impl ZoneConfig {
         }
 
         let mut trigger_box = None;
-        if let Some(tb_str) = stream_sec.get_string("trigger_box") {
-            if let Ok(rect) = serde_json::from_str::<[f64; 4]>(&tb_str) {
+        if let Some(tb_val) = stream_val.get(crate::config::KEY_TRIGGER_BOX) {
+            if let Ok(rect) = serde_yaml::from_value::<[f64; 4]>(tb_val.clone()) {
                 trigger_box = Some(rect);
+            } else if let Some(tb_str) = tb_val.as_str() {
+                if let Ok(rect) = serde_json::from_str::<[f64; 4]>(tb_str) {
+                    trigger_box = Some(rect);
+                }
             }
         }
         if trigger_box.is_none() {
@@ -113,18 +128,15 @@ impl ZoneConfig {
         }
     }
 
-    pub fn save_to_yaml_file<P: AsRef<Path>>(path: P, stream_id: &str, cfg: &Self) -> std::io::Result<()> {
+    pub fn save_to_yaml_file<P: AsRef<Path>>(
+        path: P,
+        stream_id: &str,
+        cfg: &Self,
+    ) -> std::io::Result<()> {
         let file_path = path.as_ref();
         let content = std::fs::read_to_string(file_path).unwrap_or_default();
         let updated = update_yaml_stream_zone(&content, stream_id, cfg);
         std::fs::write(file_path, &updated)?;
-
-        if file_path != Path::new("deploy/config.yaml") && Path::new("deploy/config.yaml").exists() {
-            let _ = std::fs::write("deploy/config.yaml", &updated);
-        }
-        if file_path != Path::new("server/config.yaml") && Path::new("server/config.yaml").exists() {
-            let _ = std::fs::write("server/config.yaml", &updated);
-        }
         Ok(())
     }
 }
@@ -145,13 +157,18 @@ fn update_yaml_stream_zone(content: &str, stream_id: &str, cfg: &ZoneConfig) -> 
 
     let roi_str = match &cfg.roi {
         Some(RoiConfig::Rect(r)) => format!("[{:.3}, {:.3}, {:.3}, {:.3}]", r[0], r[1], r[2], r[3]),
-        Some(RoiConfig::Polygon(p)) => serde_json::to_string(p).unwrap_or_else(|_| "[]".to_string()),
+        Some(RoiConfig::Polygon(p)) => {
+            serde_json::to_string(p).unwrap_or_else(|_| "[]".to_string())
+        }
         None => "null".to_string(),
     };
 
     let (line_str, dir_str) = match &cfg.trigger_line {
         Some(t) => {
-            let s = format!("[[{:.3}, {:.3}], [{:.3}, {:.3}]]", t.line[0][0], t.line[0][1], t.line[1][0], t.line[1][1]);
+            let s = format!(
+                "[[{:.3}, {:.3}], [{:.3}, {:.3}]]",
+                t.line[0][0], t.line[0][1], t.line[1][0], t.line[1][1]
+            );
             let d = match t.direction {
                 CrossingDirection::Forward => "forward",
                 CrossingDirection::Backward => "backward",
@@ -183,7 +200,9 @@ fn update_yaml_stream_zone(content: &str, stream_id: &str, cfg: &ZoneConfig) -> 
                 break;
             }
 
-            if trimmed == format!("{}:", stream_id) || trimmed.starts_with(&format!("{}:", stream_id)) {
+            if trimmed == format!("{}:", stream_id)
+                || trimmed.starts_with(&format!("{}:", stream_id))
+            {
                 stream_start = Some(i);
                 let mut j = i + 1;
                 while j < lines.len() {
@@ -363,12 +382,5 @@ pub fn save_input_streams_to_yaml_file<P: AsRef<Path>>(
     let content = std::fs::read_to_string(file_path).unwrap_or_default();
     let updated = update_yaml_input_streams(&content, streams);
     std::fs::write(file_path, &updated)?;
-
-    if file_path != Path::new("deploy/config.yaml") && Path::new("deploy/config.yaml").exists() {
-        let _ = std::fs::write("deploy/config.yaml", &updated);
-    }
-    if file_path != Path::new("server/config.yaml") && Path::new("server/config.yaml").exists() {
-        let _ = std::fs::write("server/config.yaml", &updated);
-    }
     Ok(())
 }

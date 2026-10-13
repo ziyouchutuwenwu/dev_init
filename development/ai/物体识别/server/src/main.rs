@@ -12,6 +12,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .try_init();
     let config_path = resolve_config_path()?;
+    server::config::set_global_config_path(&config_path);
     server::updater::init_alert_config_from_config(&config_path);
     let config = AppConfig::load_from_file(&config_path)?;
     let streams = config.input.get_streams();
