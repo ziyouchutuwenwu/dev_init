@@ -2,11 +2,7 @@
 
 ## 说明
 
-hook 实际上是把 dom 的生命周期和 elixir 进行绑定。
-
-场景如复杂，则 Hook 使用独立的 js
-
-phx-hook 的值不得以点开头，id 必须写
+有些东西没办法在 liveview 处理，必须要在 js 处理
 
 ## 例子
 
@@ -16,46 +12,56 @@ router.ex
 scope "/", WebDemoWeb do
   pipe_through :browser
 
-  get "/", PageController, :home
-
-  live "/live", PageLive
+  live "/", DemoLive
 end
 ```
 
-page_live.ex
+demo_live.ex
 
 ```elixir
-defmodule WebDemoWeb.PageLive do
+defmodule WebDemoWeb.DemoLive do
   use WebDemoWeb, :live_view
 
-  embed_templates "page_live.html"
-
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, msg: "aaa")}
+    {:ok, assign(socket, count: 0, show: true)}
   end
 
-  def handle_event("js_to_elixir", %{"client_data" => value}, socket) do
-    socket = push_event(socket, "server_msg", %{reply_msg: "服务端已收到: #{value}"})
-    {:noreply, socket}
+  def handle_event("inc", _params, socket) do
+    new_count = socket.assigns.count + 1
+    {:noreply, assign(socket, count: new_count)}
   end
 
-  def handle_event("elixir_to_js", _params, socket) do
-    socket = push_event(socket, "server_msg", %{reply_msg: "你点击了 elixir-to-js 按钮！"})
-    {:noreply, socket}
+  def handle_event("zero", _params, socket) do
+    {:noreply, assign(socket, count: 0)}
+  end
+
+  def handle_event("toggle", _params, socket) do
+    new_show = !socket.assigns.show
+    {:noreply, assign(socket, show: new_show)}
   end
 end
 ```
 
-page_live.html.heex
+demo_live.html.heex
 
 ```html
-<div class="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
-  <h3 class="text-xl font-bold">Demo Hook Page</h3>
-  <div id="phx-hook-must-has-unique-id-xxx" phx-hook="DemoHook" class="flex flex-col items-center space-y-3">
-    <div id="static" data-msg="{@msg}">{@msg}</div>
-    <button id="js-to-elixir" class="btn btn-primary">js 通知 elixir</button>
-    <button id="elixir-to-js" class="btn btn-secondary">elixir 发给 js</button>
-    <div id="log-msg" class="text-sm opacity-80">信息显示</div>
+<div>
+  <h2>演示</h2>
+
+  <div>
+    <button phx-click="inc">inc</button>
+    <button phx-click="zero">zero</button>
+    <button phx-click="toggle">toggle</button>
+  </div>
+
+  <%= if @show do %>
+    <div id="aaa" phx-hook="DemoHook">
+      aaa，计数: {@count}
+    </div>
+  <% end %>
+
+  <div>
+    bbb <span id="bbb"></span>
   </div>
 </div>
 ```
@@ -63,63 +69,55 @@ page_live.html.heex
 demo_hook.js
 
 ```javascript
-class DemoHook {
-  mounted() {
-    const staticEl = this.el.querySelector("#static");
-    const staticVal = staticEl ? staticEl.dataset.msg : "";
-    console.log("从服务端静态获取的 msg:", staticVal);
-
-    const logMsg = this.el.querySelector("#log-msg");
-
-    const btnJsToElixir = this.el.querySelector("#js-to-elixir");
-    if (btnJsToElixir) {
-      btnJsToElixir.addEventListener("click", () => {
-        const payload = { client_data: "来自前端 js_to_elixir 的点击" };
-        this.pushEvent("js_to_elixir", payload, (reply) => {
-          console.log(reply);
-        });
-      });
-    }
-
-    const btnElixirToJs = this.el.querySelector("#elixir-to-js");
-    if (btnElixirToJs) {
-      btnElixirToJs.addEventListener("click", () => {
-        const payload = { click_info: "点击了 elixir_to_js" };
-        this.pushEvent("elixir_to_js", payload, (reply) => {
-          console.log(reply);
-        });
-      });
-    }
-
-    this.handleEvent("server_msg", (payload) => {
-      if (logMsg) {
-        logMsg.innerText = payload.reply_msg;
-      }
-    });
-  }
-
-  beforeUpdate() {
-    console.log("DemoHook beforeUpdate", this.el);
-  }
-
-  updated() {
-    console.log("DemoHook updated", this.el);
-  }
-
-  destroyed() {
-    console.log("DemoHook destroyed", this.el);
-  }
-
-  disconnected() {
-    console.log("DemoHook disconnected", this.el);
-  }
-
-  reconnected() {
-    console.log("DemoHook reconnected", this.el);
-  }
+function log(msg) {
+  const bbb = document.getElementById("bbb");
+  if (bbb) bbb.innerText = msg;
 }
 
-export default new DemoHook();
+export const DemoHook = {
+  mounted() {
+    log("on mounted");
+    this.el.style.border = "2px solid blue";
+
+    this.seconds = 0;
+    this.timer = setInterval(() => {
+      this.seconds++;
+    }, 1000);
+
+    this.el.onclick = () => {
+      alert("元素已连续存活: " + this.seconds + " 秒");
+    };
+  },
+
+  beforeUpdate() {
+    log("on beforeUpdate");
+    this.el.style.opacity = "0.4";
+  },
+
+  updated() {
+    log("on updated");
+    this.el.style.opacity = "1";
+    this.el.style.color = "green";
+    setTimeout(() => {
+      if (this.el) this.el.style.color = "black";
+    }, 300);
+  },
+
+  destroyed() {
+    log("on destroyed");
+    clearInterval(this.timer);
+  },
+
+  disconnected() {
+    log("on disconnected");
+    this.el.style.opacity = "0.2";
+  },
+
+  reconnected() {
+    log("on reconnected");
+    this.el.style.opacity = "1";
+  }
+};
 ```
 
 app.js
@@ -132,6 +130,7 @@ import DemoHook from "./demo_hook"
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
+  // 这里注册
   hooks: {...colocatedHooks, DemoHook},
 })
 ```
