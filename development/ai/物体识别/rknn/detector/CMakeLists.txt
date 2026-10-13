@@ -46,11 +46,7 @@ set(LIBRGA    "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/rknn_model_zoo/3rdparty/libr
 set(LIBMODEL_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/model_license/lib/libmodel_license.a")
 
 if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/model_license/include/model_license.h" OR NOT EXISTS "${LIBMODEL_LICENSE}")
-    message(STATUS "未检测到 model_license 产物，正在自动通过 encrypter 构建并同步...")
-    execute_process(
-        COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/../encrypter/build.sh" aarch64
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../encrypter"
-    )
+    message(FATAL_ERROR "未检测到 model_license 产物 (libmodel_license.a / model_license.h)，请先构建 encrypter 并同步依赖产物！")
 endif()
 
 add_library(detector_static STATIC ${SRCS})

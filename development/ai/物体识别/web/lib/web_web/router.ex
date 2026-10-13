@@ -17,7 +17,7 @@ defmodule WebWeb.Router do
   scope "/", WebWeb do
     pipe_through :browser
 
-    live_session :default, on_mount: [WebWeb.LiveSessionHook] do
+    live_session :default do
       live "/", MonitorLive, :index
       live "/config", ConfigLive, :index
     end

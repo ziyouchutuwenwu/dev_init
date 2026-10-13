@@ -446,7 +446,7 @@ bool Yolo11Infer::do_infer(const letterbox_t& letter_box, DetectResult& result, 
 
 bool Yolo11Infer::infer_frame(const std::shared_ptr<VpuDecoder::FrameBuffer>& frame, DetectResult& result) {
     std::lock_guard<std::recursive_mutex> lock(_mutex);
-    if (!_is_initialized || !frame || frame->data.empty() || !_input_buf || _app_ctx.rknn_ctx == 0) {
+    if (!_is_initialized || !frame || (frame->dma_fd < 0 && frame->data.empty()) || !_input_buf || _app_ctx.rknn_ctx == 0) {
         return false;
     }
 

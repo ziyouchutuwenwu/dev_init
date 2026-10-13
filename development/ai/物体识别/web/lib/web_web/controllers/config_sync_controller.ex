@@ -30,20 +30,6 @@ defmodule WebWeb.ConfigSyncController do
 
     case save_streams_if_present(params["streams"]) do
       {:ok, streams} ->
-        Web.PageStore.put(:gateway_url, gateway_url)
-        Web.PageStore.put(:alert_callback_url, alert_callback_url)
-        Web.PageStore.put(:alert_cooldown_sec, alert_cooldown_sec)
-        Web.PageStore.put(:alert_timeout_sec, alert_timeout_sec)
-        Web.PageStore.put(:streams, streams)
-        Web.PageStore.put(:stream_list, Enum.filter(streams, &(&1.enabled != false)))
-
-        Phoenix.PubSub.broadcast(
-          Web.PubSub,
-          "config_updated",
-          {:config_updated, gateway_url, streams, alert_callback_url, alert_cooldown_sec,
-           alert_timeout_sec}
-        )
-
         json(conn, %{
           success: true,
           message: "保存成功",
@@ -85,20 +71,6 @@ defmodule WebWeb.ConfigSyncController do
 
     case save_streams_if_present(params["streams"]) do
       {:ok, streams} ->
-        Web.PageStore.put(:gateway_url, gateway_url)
-        Web.PageStore.put(:alert_callback_url, alert_callback_url)
-        Web.PageStore.put(:alert_cooldown_sec, alert_cooldown_sec)
-        Web.PageStore.put(:alert_timeout_sec, alert_timeout_sec)
-        Web.PageStore.put(:streams, streams)
-        Web.PageStore.put(:stream_list, Enum.filter(streams, &(&1.enabled != false)))
-
-        Phoenix.PubSub.broadcast(
-          Web.PubSub,
-          "config_updated",
-          {:config_updated, gateway_url, streams, alert_callback_url, alert_cooldown_sec,
-           alert_timeout_sec}
-        )
-
         case DataSync.sync_to_gateway(
                gateway_url,
                streams,
@@ -180,14 +152,6 @@ defmodule WebWeb.ConfigSyncController do
 
     case Streams.update_zone_config(stream_id, zone_str) do
       {:ok, stream} ->
-        Web.PageStore.reload()
-
-        Phoenix.PubSub.broadcast(
-          Web.PubSub,
-          "config_updated",
-          {:zone_updated, stream_id, zone_str}
-        )
-
         gateway_url = Settings.get_gateway_url()
 
         gateway_synced =

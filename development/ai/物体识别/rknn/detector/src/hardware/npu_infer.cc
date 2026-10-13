@@ -400,7 +400,7 @@ int NpuInfer::detect_frame(VpuDecoder* decoder, int ch, char* out_buf, int out_b
     letterbox_t letter_box;
     memset(&letter_box, 0, sizeof(letterbox_t));
 
-    if (frame_snapshot && !frame_snapshot->data.empty()) {
+    if (frame_snapshot && (frame_snapshot->dma_fd >= 0 || !frame_snapshot->data.empty())) {
         frame_idx = frame_snapshot->frame_idx;
         pts_ms = frame_snapshot->pts_ms;
         orig_w = frame_snapshot->width;

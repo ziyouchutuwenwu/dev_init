@@ -14,14 +14,9 @@ if [ -d "${TOOLCHAIN_DIR}/bin" ]; then
     export CXX=aarch64-none-linux-gnu-g++
 fi
 
-mkdir -p "${SCRIPT_DIR}/3rdparty/model_license/lib" "${SCRIPT_DIR}/3rdparty/model_license/include"
-if [ -f "${SCRIPT_DIR}/../encrypter/zig-out/aarch64/lib/libmodel_license.a" ]; then
-    cp -f "${SCRIPT_DIR}/../encrypter/zig-out/aarch64/lib/libmodel_license.a" "${SCRIPT_DIR}/3rdparty/model_license/lib/"
-    zig run "${SCRIPT_DIR}/../encrypter/tools/gen_header.zig" -- "${SCRIPT_DIR}/3rdparty/model_license/include/model_license.h"
-elif [ -f "${SCRIPT_DIR}/../encrypter/build.sh" ]; then
-    (cd "${SCRIPT_DIR}/../encrypter" && ./build.sh aarch64)
-    cp -f "${SCRIPT_DIR}/../encrypter/zig-out/aarch64/lib/libmodel_license.a" "${SCRIPT_DIR}/3rdparty/model_license/lib/"
-    zig run "${SCRIPT_DIR}/../encrypter/tools/gen_header.zig" -- "${SCRIPT_DIR}/3rdparty/model_license/include/model_license.h"
+if [ ! -f "${SCRIPT_DIR}/3rdparty/model_license/lib/libmodel_license.a" ] || [ ! -f "${SCRIPT_DIR}/3rdparty/model_license/include/model_license.h" ]; then
+    echo "错误: 未找到 libmodel_license.a 或 model_license.h，请先构建 encrypter 并同步依赖产物至 3rdparty/model_license"
+    exit 1
 fi
 
 BUILD_DIR="${SCRIPT_DIR}/build"
@@ -36,8 +31,3 @@ cmake "${SCRIPT_DIR}" \
     -DCMAKE_BUILD_TYPE=Release
 
 make -j$(nproc)
-
-if [ -d "${SCRIPT_DIR}/../deploy" ]; then
-    echo "同步更新可执行文件至 ../deploy/ ..."
-    cp -f "${BUILD_DIR}/detector" "${SCRIPT_DIR}/../deploy/detector"
-fi

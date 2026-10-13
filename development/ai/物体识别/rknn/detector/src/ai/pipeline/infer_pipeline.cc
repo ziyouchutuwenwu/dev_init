@@ -108,7 +108,7 @@ const char* InferPipeline::get_label_name(const std::string& model_name, int cls
 }
 
 bool InferPipeline::process(const std::shared_ptr<VpuDecoder::FrameBuffer>& frame, DetectResult& result) {
-    if (!frame || frame->data.empty() || _models.empty()) {
+    if (!frame || (frame->dma_fd < 0 && frame->data.empty()) || _models.empty()) {
         return false;
     }
 

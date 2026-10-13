@@ -1,15 +1,18 @@
-...............................
-...............................
-...............................
-...............................
-...............................
-...............................
+let hooks = { StreamCard };
 
-import { initPlayerUI } from "./player"
+const liveSocket = new LiveSocket("/live", Socket, {
+  longPollFallbackMs: 2500,
+  params: { _csrf_token: csrfToken },
+  hooks: hooks,
+});
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initPlayerUI)
-} else {
-  initPlayerUI()
-}
-window.addEventListener("phx:page-loading-stop", initPlayerUI)
+// 。。。。。。。。。。。。。。。。。。。。。。。。
+
+
+document.addEventListener("click", (e) => {
+  if (e.target.closest("#btn-connect-all")) {
+    window._players?.forEach((p) => p.connect());
+  } else if (e.target.closest("#btn-disconnect-all")) {
+    window._players?.forEach((p) => p.disconnect());
+  }
+})

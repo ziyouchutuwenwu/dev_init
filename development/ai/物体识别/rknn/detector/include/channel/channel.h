@@ -33,6 +33,7 @@ private:
 
     std::atomic<bool> _is_inferring{false};
     std::atomic<uint64_t> _last_dispatched_idx{UINT64_MAX};
+    int64_t _last_infer_pts_ms{0};
 
     std::mutex _result_mutex;
     std::condition_variable _result_cv;

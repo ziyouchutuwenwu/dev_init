@@ -11,10 +11,12 @@ defmodule WebWeb.PlayerComponent do
     ~H"""
     <div
       id={"stream-card-" <> @id}
+      phx-hook="StreamCard"
       class="stream-card flex flex-col rounded-xl border border-zinc-200 bg-white p-3 shadow-sm hover:shadow transition-shadow"
       data-stream-id={@id}
       data-stream-url={@default_url}
       data-zone-config={@zone_config}
+      data-keep-alive="true"
     >
       <div class="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-zinc-100">
         <div class="flex items-center gap-1.5 shrink-0">

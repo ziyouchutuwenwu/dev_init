@@ -43,12 +43,18 @@ void Channel::try_dispatch_inference() {
         return;
     }
     auto cur_frame = _decoder->get_latest_frame_snapshot();
-    if (!cur_frame || cur_frame->data.empty() || cur_frame->frame_idx == UINT64_MAX) {
+    if (!cur_frame || (cur_frame->dma_fd < 0 && cur_frame->data.empty()) || cur_frame->frame_idx == UINT64_MAX) {
         return;
     }
     if (cur_frame->frame_idx == _last_dispatched_idx.load()) {
         return;
     }
+
+    if (cur_frame->pts_ms - _last_infer_pts_ms < 190) {
+        return;
+    }
+    _last_infer_pts_ms = cur_frame->pts_ms;
+
     if (_is_inferring.exchange(true)) {
         return;
     }
@@ -169,6 +175,7 @@ int Channel::flush() {
         _last_reported_frame_idx = UINT64_MAX;
     }
     _last_dispatched_idx.store(UINT64_MAX);
+    _last_infer_pts_ms = 0;
     _is_inferring.store(false);
     return d_ok ? 0 : -1;
 }

@@ -1,37 +1,22 @@
 defmodule WebWeb.ConfigLive do
   use WebWeb, :live_view
 
-  alias Web.PageStore
   alias Web.Orm.Query.Settings
   alias Web.Orm.Query.Streams
   alias Web.DataSync
 
   @impl true
   def mount(_params, _session, socket) do
-    streams =
-      case PageStore.get(:streams) do
-        nil -> Streams.list_streams()
-        [] -> Streams.list_streams()
-        list when is_list(list) -> list
-      end
-      |> Enum.map(&normalize_stream/1)
+    streams = Streams.list_streams() |> Enum.map(&normalize_stream/1)
 
     socket =
       socket
       |> assign(:page_title, "视觉检测 - 系统配置")
       |> assign(:active_tab, :config)
-      |> assign_new(:gateway_url, fn ->
-        PageStore.get(:gateway_url, Settings.get_gateway_url() || "")
-      end)
-      |> assign_new(:alert_callback_url, fn ->
-        PageStore.get(:alert_callback_url, Settings.get_alert_callback_url() || "")
-      end)
-      |> assign_new(:alert_cooldown_sec, fn ->
-        PageStore.get(:alert_cooldown_sec, Settings.get_alert_cooldown_sec() || "1")
-      end)
-      |> assign_new(:alert_timeout_sec, fn ->
-        PageStore.get(:alert_timeout_sec, Settings.get_alert_timeout_sec() || "3")
-      end)
+      |> assign(:gateway_url, Settings.get_gateway_url() || "")
+      |> assign(:alert_callback_url, Settings.get_alert_callback_url() || "")
+      |> assign(:alert_cooldown_sec, Settings.get_alert_cooldown_sec() || "1")
+      |> assign(:alert_timeout_sec, Settings.get_alert_timeout_sec() || "3")
       |> assign(:config_streams, streams)
 
     {:ok, socket}
@@ -109,20 +94,6 @@ defmodule WebWeb.ConfigLive do
 
         case Streams.replace_all_streams(raw_streams) do
           {:ok, saved_streams} ->
-            PageStore.put(:gateway_url, gateway_url)
-            PageStore.put(:alert_callback_url, alert_callback_url)
-            PageStore.put(:alert_cooldown_sec, alert_cooldown_sec)
-            PageStore.put(:alert_timeout_sec, alert_timeout_sec)
-            PageStore.put(:streams, saved_streams)
-            PageStore.put(:stream_list, Enum.filter(saved_streams, &(&1.enabled != false)))
-
-            Phoenix.PubSub.broadcast(
-              Web.PubSub,
-              "config_updated",
-              {:config_updated, gateway_url, saved_streams, alert_callback_url,
-               alert_cooldown_sec, alert_timeout_sec}
-            )
-
             case DataSync.sync_to_gateway(
                    gateway_url,
                    saved_streams,
@@ -149,20 +120,6 @@ defmodule WebWeb.ConfigLive do
             {:noreply, put_flash(socket, :error, "保存失败: #{inspect(db_err)}")}
         end
     end
-  end
-
-  @impl true
-  def handle_info(
-        {:config_updated, gateway_url, streams, callback_url, cooldown, timeout},
-        socket
-      ) do
-    {:noreply,
-     socket
-     |> assign(:gateway_url, gateway_url)
-     |> assign(:alert_callback_url, callback_url)
-     |> assign(:alert_cooldown_sec, cooldown)
-     |> assign(:alert_timeout_sec, timeout)
-     |> assign(:config_streams, Enum.map(streams, &normalize_stream/1))}
   end
 
   @impl true

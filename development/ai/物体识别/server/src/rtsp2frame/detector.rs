@@ -29,8 +29,8 @@ fn run_detection(
         }
 
         let elapsed = last_detect_time.elapsed();
-        if elapsed < Duration::from_millis(15) {
-            std::thread::sleep(Duration::from_millis(15) - elapsed);
+        if elapsed < Duration::from_millis(50) {
+            std::thread::sleep(Duration::from_millis(50) - elapsed);
         }
         match detector.detect_latest() {
             Ok(Some(det_result)) => {
