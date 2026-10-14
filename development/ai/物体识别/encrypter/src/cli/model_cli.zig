@@ -9,7 +9,7 @@ const print_stderr = cli_print.print_stderr;
 const get_exe_name = cli_print.get_exe_name;
 
 fn print_usage(exe: []const u8) void {
-    print_stdout("usage: {s} --in <model.rknn> [--out <model.enc>] [--id <model_id>]\n", .{exe});
+    print_stdout("usage: {s} --in <model.rknn> [--out <model.enc>]\n", .{exe});
 }
 
 pub fn main(init: std.process.Init.Minimal) !void {
@@ -34,7 +34,6 @@ pub fn main(init: std.process.Init.Minimal) !void {
 
     var in_path: ?[]const u8 = null;
     var out_path: ?[]const u8 = null;
-    var id_str: ?[]const u8 = null;
 
     var i: usize = 1;
     while (i < args.len) : (i += 1) {
@@ -43,9 +42,6 @@ pub fn main(init: std.process.Init.Minimal) !void {
             i += 1;
         } else if ((std.mem.eql(u8, args[i], "--out") or std.mem.eql(u8, args[i], "-o")) and i + 1 < args.len) {
             out_path = args[i + 1];
-            i += 1;
-        } else if (std.mem.eql(u8, args[i], "--id") and i + 1 < args.len) {
-            id_str = args[i + 1];
             i += 1;
         } else if (!std.mem.startsWith(u8, args[i], "-")) {
             if (in_path == null) {
@@ -70,12 +66,10 @@ pub fn main(init: std.process.Init.Minimal) !void {
         break :blk std.fmt.bufPrint(&auto_out_buf, "{s}.enc", .{valid_in}) catch "model.enc";
     };
 
-    const mid = model.encrypt_model(allocator, valid_in, valid_out, crypto.DEFAULT_MODEL_KEY, id_str) catch |err| {
+    _ = model.encrypt_model_default(allocator, valid_in, valid_out) catch |err| {
         print_stderr("error: failed to encrypt model ({s})\n", .{@errorName(err)});
         return;
     };
 
-    const mid_str = model.model_id_to_string(&mid);
     print_stdout("model encrypted: {s} -> {s}\n", .{ valid_in, valid_out });
-    print_stdout("model id: {s}\n", .{mid_str});
 }

@@ -13,7 +13,7 @@ public:
     std::shared_ptr<VpuDecoder> create_decoder(int ch, int codec_type = 0);
     std::shared_ptr<VpuDecoder> get(int ch);
     std::shared_ptr<VpuDecoder> get_or_create(int ch, int codec_type = 0);
-    bool release_decoder(int ch);
+    bool release_decoder(int ch, const std::shared_ptr<VpuDecoder>& expected = nullptr);
     bool flush_decoder(int ch);
     void release_all();
 

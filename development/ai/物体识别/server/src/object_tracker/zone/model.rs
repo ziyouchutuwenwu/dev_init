@@ -1,19 +1,14 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum CrossingDirection {
     #[serde(rename = "any")]
+    #[default]
     Any,
     #[serde(rename = "forward")]
     Forward,
     #[serde(rename = "backward")]
     Backward,
-}
-
-impl Default for CrossingDirection {
-    fn default() -> Self {
-        Self::Any
-    }
 }
 
 pub type AreaTriggerDirection = CrossingDirection;

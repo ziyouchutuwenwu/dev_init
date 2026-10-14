@@ -39,6 +39,13 @@ export fn inspect_license_details(
     out_bound_hwid: ?[*]u8,
     max_hwid_len: usize,
 ) c_int {
+    if (out_status) |p| p.* = -5;
+    if (out_issue) |p| p.* = 0;
+    if (out_expire) |p| p.* = 0;
+    if (out_bound_hwid) |buf| {
+        if (max_hwid_len > 0) buf[0] = 0;
+    }
+
     const path = license_path orelse return -5;
     const lic_path_slice = std.mem.sliceTo(path, 0);
 
@@ -51,7 +58,10 @@ export fn inspect_license_details(
     }
 
     if (hwid_slice.len == 0) {
-        auto_hwid = hwid.get_hardware_id(c_allocator) catch return -2;
+        auto_hwid = hwid.get_hardware_id(c_allocator) catch {
+            if (out_status) |p| p.* = -2;
+            return -2;
+        };
         hwid_slice = auto_hwid.?;
     }
 

@@ -4,8 +4,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
+    #[serde(default)]
     pub input: InputConfig,
     pub server: ServerConfig,
+    #[serde(default)]
+    pub alert: Option<serde_yaml::Value>,
     #[serde(default)]
     pub trigger: Option<serde_yaml::Value>,
 }

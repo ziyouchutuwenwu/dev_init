@@ -15,7 +15,7 @@ Channel::Channel(int ch, int codec_type) : _ch(ch) {
 
 Channel::~Channel() {
     if (_decoder) {
-        ChannelDecoder::shareInstance().release_decoder(_ch);
+        ChannelDecoder::shareInstance().release_decoder(_ch, _decoder);
         _decoder.reset();
     }
 }
@@ -50,25 +50,26 @@ void Channel::try_dispatch_inference() {
         return;
     }
 
-    if (cur_frame->pts_ms - _last_infer_pts_ms < 190) {
+    if (_last_infer_pts_ms > 0 && cur_frame->pts_ms >= _last_infer_pts_ms && cur_frame->pts_ms - _last_infer_pts_ms < 190) {
         return;
     }
-    _last_infer_pts_ms = cur_frame->pts_ms;
 
     if (_is_inferring.exchange(true)) {
         return;
     }
 
+    _last_infer_pts_ms = cur_frame->pts_ms;
     _last_dispatched_idx.store(cur_frame->frame_idx);
 
     int ch_id = _ch;
+    uint64_t current_epoch = _flush_epoch.load();
     InferTask task;
     task.channel_id = ch_id;
     task.frame = cur_frame;
-    task.callback = [ch_id](int ch, uint64_t f_idx, int64_t pts, int orig_w, int orig_h, const DetectResult& res) {
+    task.callback = [ch_id, current_epoch](int ch, uint64_t f_idx, int64_t pts, int orig_w, int orig_h, const DetectResult& res) {
         auto channel = ChannelManager::instance().get(ch);
         if (channel) {
-            channel->on_infer_finished(f_idx, pts, orig_w, orig_h, res);
+            channel->on_infer_finished(current_epoch, f_idx, pts, orig_w, orig_h, res);
         }
     };
 
@@ -77,7 +78,20 @@ void Channel::try_dispatch_inference() {
     }
 }
 
-void Channel::on_infer_finished(uint64_t frame_idx, int64_t pts_ms, int orig_w, int orig_h, const DetectResult& result) {
+void Channel::on_infer_finished(uint64_t task_epoch, uint64_t frame_idx, int64_t pts_ms, int orig_w, int orig_h, const DetectResult& result) {
+    if (task_epoch != _flush_epoch.load()) {
+        _is_inferring.store(false);
+        try_dispatch_inference();
+        return;
+    }
+
+    if (orig_w <= 0 || orig_h <= 0) {
+        _is_inferring.store(false);
+        _result_cv.notify_one();
+        try_dispatch_inference();
+        return;
+    }
+
     std::string json;
     json.reserve(2048);
     char tmp[512];
@@ -148,6 +162,10 @@ int Channel::detect_img_bin(char* out_buf, int out_buf_size, unsigned long long*
     if (_has_new_result && !_latest_json.empty() && _latest_frame_idx != _last_reported_frame_idx) {
         if ((int)_latest_json.size() >= out_buf_size) {
             snprintf(out_buf, out_buf_size, "{\"frame_width\":0,\"frame_height\":0,\"detections\":[]}");
+            if (out_frame_idx) *out_frame_idx = _latest_frame_idx;
+            if (out_pts_ms) *out_pts_ms = _latest_pts_ms;
+            _last_reported_frame_idx = _latest_frame_idx;
+            _has_new_result = false;
             return (int)strlen(out_buf);
         }
         memcpy(out_buf, _latest_json.c_str(), _latest_json.size() + 1);
@@ -165,6 +183,7 @@ int Channel::detect_img_bin(char* out_buf, int out_buf_size, unsigned long long*
 }
 
 int Channel::flush() {
+    _flush_epoch.fetch_add(1);
     bool d_ok = ChannelDecoder::shareInstance().flush_decoder(_ch);
     {
         std::lock_guard<std::mutex> lock(_result_mutex);

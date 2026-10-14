@@ -24,22 +24,26 @@ defmodule WebWeb.ConfigLive do
 
   @impl true
   def handle_event("validate", params, socket) do
-    streams = parse_streams(params["streams"], socket.assigns.config_streams)
+    streams =
+      parse_streams(
+        params["streams"] || get_in(params, ["config", "streams"]),
+        socket.assigns.config_streams
+      )
 
     {:noreply,
      socket
-     |> assign(:gateway_url, params["gateway_url"] || socket.assigns.gateway_url)
+     |> assign(:gateway_url, params["gateway_url"] || get_in(params, ["config", "gateway_url"]) || socket.assigns.gateway_url)
      |> assign(
        :alert_callback_url,
-       params["alert_callback_url"] || socket.assigns.alert_callback_url
+       params["alert_callback_url"] || get_in(params, ["config", "alert_callback_url"]) || socket.assigns.alert_callback_url
      )
      |> assign(
        :alert_cooldown_sec,
-       params["alert_cooldown_sec"] || socket.assigns.alert_cooldown_sec
+       params["alert_cooldown_sec"] || get_in(params, ["config", "alert_cooldown_sec"]) || socket.assigns.alert_cooldown_sec
      )
      |> assign(
        :alert_timeout_sec,
-       params["alert_timeout_sec"] || socket.assigns.alert_timeout_sec
+       params["alert_timeout_sec"] || get_in(params, ["config", "alert_timeout_sec"]) || socket.assigns.alert_timeout_sec
      )
      |> assign(:config_streams, streams)}
   end
@@ -69,18 +73,27 @@ defmodule WebWeb.ConfigLive do
 
   @impl true
   def handle_event("save_global", params, socket) do
-    gateway_url = (params["gateway_url"] || socket.assigns.gateway_url || "") |> String.trim()
+    gateway_url =
+      (params["gateway_url"] || get_in(params, ["config", "gateway_url"]) || socket.assigns.gateway_url || "")
+      |> String.trim()
 
     alert_callback_url =
-      (params["alert_callback_url"] || socket.assigns.alert_callback_url || "") |> String.trim()
+      (params["alert_callback_url"] || get_in(params, ["config", "alert_callback_url"]) || socket.assigns.alert_callback_url || "")
+      |> String.trim()
 
     alert_cooldown_sec =
-      (params["alert_cooldown_sec"] || socket.assigns.alert_cooldown_sec || "1") |> String.trim()
+      (params["alert_cooldown_sec"] || get_in(params, ["config", "alert_cooldown_sec"]) || socket.assigns.alert_cooldown_sec || "1")
+      |> String.trim()
 
     alert_timeout_sec =
-      (params["alert_timeout_sec"] || socket.assigns.alert_timeout_sec || "3") |> String.trim()
+      (params["alert_timeout_sec"] || get_in(params, ["config", "alert_timeout_sec"]) || socket.assigns.alert_timeout_sec || "3")
+      |> String.trim()
 
-    raw_streams = parse_streams(params["streams"], socket.assigns.config_streams)
+    raw_streams =
+      parse_streams(
+        params["streams"] || get_in(params, ["config", "streams"]),
+        socket.assigns.config_streams
+      )
 
     case validate_streams(raw_streams) do
       {:error, reason} ->
@@ -94,27 +107,26 @@ defmodule WebWeb.ConfigLive do
 
         case Streams.replace_all_streams(raw_streams) do
           {:ok, saved_streams} ->
-            case DataSync.sync_to_gateway(
-                   gateway_url,
-                   saved_streams,
-                   alert_callback_url,
-                   alert_cooldown_sec,
-                   alert_timeout_sec
-                 ) do
-              {:ok, _} ->
-                {:noreply,
-                 socket
-                 |> assign(:gateway_url, gateway_url)
-                 |> assign(:config_streams, Enum.map(saved_streams, &normalize_stream/1))
-                 |> put_flash(:info, "保存成功，已同步到硬件网关")}
+            pid = self()
 
-              {:error, sync_err} ->
-                {:noreply,
-                 socket
-                 |> assign(:gateway_url, gateway_url)
-                 |> assign(:config_streams, Enum.map(saved_streams, &normalize_stream/1))
-                 |> put_flash(:info, "已保存到本地数据库，但硬件网关未同步: #{sync_err}")}
-            end
+            Task.start(fn ->
+              res =
+                DataSync.sync_to_gateway(
+                  gateway_url,
+                  saved_streams,
+                  alert_callback_url,
+                  alert_cooldown_sec,
+                  alert_timeout_sec
+                )
+
+              send(pid, {:gateway_sync_result, res})
+            end)
+
+            {:noreply,
+             socket
+             |> assign(:gateway_url, gateway_url)
+             |> assign(:config_streams, Enum.map(saved_streams, &normalize_stream/1))
+             |> put_flash(:info, "配置已保存至本地数据库，正在同步到硬件网关...")}
 
           {:error, db_err} ->
             {:noreply, put_flash(socket, :error, "保存失败: #{inspect(db_err)}")}
@@ -123,6 +135,20 @@ defmodule WebWeb.ConfigLive do
   end
 
   @impl true
+  def handle_info({:gateway_sync_result, {:ok, _}}, socket) do
+    Process.send_after(self(), :clear_flash, 3000)
+    {:noreply, put_flash(socket, :info, "保存成功，已同步到硬件网关")}
+  end
+
+  def handle_info({:gateway_sync_result, {:error, sync_err}}, socket) do
+    Process.send_after(self(), :clear_flash, 4000)
+    {:noreply, put_flash(socket, :info, "已保存到本地数据库，但硬件网关未同步: #{sync_err}")}
+  end
+
+  def handle_info(:clear_flash, socket) do
+    {:noreply, clear_flash(socket)}
+  end
+
   def handle_info(_msg, socket), do: {:noreply, socket}
 
   defp validate_streams([]), do: {:error, "请至少保留一路流"}
@@ -213,9 +239,18 @@ defmodule WebWeb.ConfigLive do
     title = Map.get(map, :title) || Map.get(map, "title") || "通道: #{id}"
 
     enabled =
-      if Map.has_key?(map, "enabled"),
-        do: map["enabled"] != false,
-        else: Map.get(map, :enabled, true) != false
+      cond do
+        Map.has_key?(map, "enabled") ->
+          val = map["enabled"]
+          val not in [false, "false", 0, "0"]
+
+        Map.has_key?(map, :enabled) ->
+          val = map[:enabled]
+          val not in [false, "false", 0, "0"]
+
+        true ->
+          true
+      end
 
     zone = Map.get(map, :zone_config) || Map.get(map, "zone_config")
 

@@ -443,7 +443,7 @@ int NpuInfer::detect_frame(VpuDecoder* decoder, int ch, char* out_buf, int out_b
     det_result.pts_ms = pts_ms;
 
     bool infer_ok = false;
-    if (frame_snapshot && !frame_snapshot->data.empty()) {
+    if (frame_snapshot && (frame_snapshot->dma_fd >= 0 || !frame_snapshot->data.empty())) {
         infer_ok = channel->infer_frame(frame_snapshot, det_result);
     } else {
         infer_ok = channel->infer(dst_img, det_result);

@@ -62,19 +62,18 @@
           <WebWeb.PlayerComponent.stream_card
             id={stream.stream_id}
             title={stream.title || "通道 #{idx + 1}: #{stream.stream_id}"}
-            default_url={"#{@gateway_url}/#{stream.stream_id}"}
+            enabled={stream.enabled}
+            default_url={
+              if is_binary(@gateway_url) and String.trim(@gateway_url) != "" do
+                "#{String.trim_trailing(String.trim(@gateway_url), "/")}/api/webrtc/#{stream.stream_id}"
+              else
+                ""
+              end
+            }
             zone_config={stream.zone_config}
           />
         <% end %>
       </div>
     </div>
-
-    <template id="stream-card-template">
-      <WebWeb.PlayerComponent.stream_card
-        id="__STREAM_ID__"
-        title="__STREAM_TITLE__"
-        default_url="__STREAM_URL__"
-      />
-    </template>
   </div>
 </Layouts.app>

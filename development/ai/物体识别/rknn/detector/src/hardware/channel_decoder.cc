@@ -45,19 +45,25 @@ std::shared_ptr<VpuDecoder> ChannelDecoder::get_or_create(int ch, int codec_type
     return create_decoder(ch, codec_type);
 }
 
-bool ChannelDecoder::release_decoder(int ch) {
+bool ChannelDecoder::release_decoder(int ch, const std::shared_ptr<VpuDecoder>& expected) {
     std::shared_ptr<VpuDecoder> dec;
     {
         std::lock_guard<std::mutex> lock(_map_mutex);
         auto it = _decoders.find(ch);
         if (it != _decoders.end()) {
-            dec = it->second;
-            _decoders.erase(it);
+            if (!expected || it->second == expected) {
+                dec = it->second;
+                _decoders.erase(it);
+            }
         }
     }
     if (dec) {
         dec->release_mpp();
         printf("已释放通道 %d 的 vpu 解码器及 drm 显存资源\n", ch);
+        return true;
+    }
+    if (expected) {
+        expected->release_mpp();
         return true;
     }
     return false;

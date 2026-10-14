@@ -9,7 +9,6 @@
 
 #define LICENSE_PATH "license.key"
 #define LICENSE_CHECK_INTERVAL_SEC 60
-#define RUNNING_TIME_DURATION_FILE "/etc/rk_config"
 
 class LicenseValidator {
 public:
@@ -18,9 +17,6 @@ public:
     std::string get_device_hwid();
     bool verify_license(const std::string& custom_license_path = "");
     std::string find_license_path(const std::string& user_path = "");
-
-    void set_config_path(const std::string& path);
-    std::string get_config_path();
 
     bool is_licensed() const { return _is_licensed.load(); }
     void start_monitor(const std::string& custom_license_path = "");
@@ -39,7 +35,6 @@ private:
     std::mutex _mutex;
     std::string _cached_hwid;
     std::string _license_path;
-    std::string _config_path;
     std::atomic<bool> _is_licensed{false};
     int _last_status{-999};
 

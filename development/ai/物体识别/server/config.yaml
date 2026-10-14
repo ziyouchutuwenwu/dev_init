@@ -1,3 +1,8 @@
 server:
   host: 0.0.0.0
   port: 8181
+
+alert:
+  url: http://127.0.0.1:4000/api/alert
+  cooldown_sec: 2
+  timeout_sec: 5

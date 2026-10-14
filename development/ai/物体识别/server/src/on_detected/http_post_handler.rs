@@ -8,10 +8,10 @@ static CURRENT_ALERT_COOLDOWN_SEC: std::sync::RwLock<Option<u64>> = std::sync::R
 static CURRENT_ALERT_TIMEOUT_SEC: std::sync::RwLock<Option<u64>> = std::sync::RwLock::new(None);
 
 pub fn get_alert_url() -> String {
-    if let Ok(guard) = CURRENT_ALERT_URL.read() {
-        if let Some(ref url) = *guard {
-            return url.clone();
-        }
+    if let Ok(guard) = CURRENT_ALERT_URL.read()
+        && let Some(ref url) = *guard
+    {
+        return url.clone();
     }
     String::new()
 }
@@ -82,7 +82,18 @@ async fn loop_check(
     loop {
         match receiver.recv().await {
             Ok(result) => {
-                if result.detections.is_empty() {
+                let triggered_detections: Vec<_> = result
+                    .detections
+                    .iter()
+                    .filter(|d| {
+                        d.get("triggered")
+                            .and_then(|v| v.as_bool())
+                            .unwrap_or(true)
+                    })
+                    .cloned()
+                    .collect();
+
+                if triggered_detections.is_empty() {
                     continue;
                 }
 
@@ -93,10 +104,10 @@ async fn loop_check(
 
                 if let Some(cooldown_sec) = get_alert_cooldown_sec() {
                     let cooldown = Duration::from_secs(cooldown_sec);
-                    if let Some(last_time) = last_post_time {
-                        if last_time.elapsed() < cooldown {
-                            continue;
-                        }
+                    if let Some(last_time) = last_post_time
+                        && last_time.elapsed() < cooldown
+                    {
+                        continue;
                     }
                 }
 
@@ -104,7 +115,7 @@ async fn loop_check(
 
                 log::info!(
                     "[http_post:{stream_id}] 检测到目标 (数量: {})，触发 http post 告警 -> {target_url}",
-                    result.detections.len()
+                    triggered_detections.len()
                 );
 
                 let payload = serde_json::json!({
@@ -114,7 +125,7 @@ async fn loop_check(
                     "pts_ms": result.pts_ms,
                     "frame_width": result.frame_width,
                     "frame_height": result.frame_height,
-                    "detections": result.detections,
+                    "detections": triggered_detections,
                     "zone_config": result.zone_config,
                 })
                 .to_string();
@@ -145,7 +156,7 @@ async fn loop_check(
                         Err(e) => {
                             static FAILED_COUNT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
                             let count = FAILED_COUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                            if count == 0 || count % 30 == 0 {
+                            if count == 0 || count.is_multiple_of(30) {
                                 log::warn!("[http_post:{stream_id_clone}] 发送告警到 {url_clone} 失败 (连续第 {count} 次): {e}");
                             }
                         }

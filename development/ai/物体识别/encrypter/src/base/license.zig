@@ -40,7 +40,7 @@ pub fn generate_license(
 ) !void {
     const key_pair = try crypto.generate_key_pair(priv_seed);
     const now: i64 = @intCast(time(null));
-    const expire = if (days > 0) now + days * 86400 else 0;
+    const expire = if (days > 0) now +| (days *| 86400) else 0;
 
     const trimmed_hwid = std.mem.trim(u8, hwid_str, &std.ascii.whitespace);
     const payload = try std.fmt.allocPrint(allocator, "hwid={s};issue={d};expire={d}", .{ trimmed_hwid, now, expire });
@@ -72,6 +72,7 @@ pub fn generate_license(
     path_z[out_path.len] = 0;
     const file = std.c.fopen(&path_z, "wb") orelse return error.AccessDenied;
     defer _ = std.c.fclose(file);
+    errdefer _ = std.c.unlink(&path_z);
 
     if (std.c.fwrite(&nonce, 1, crypto.NONCE_LEN, file) != crypto.NONCE_LEN) return error.WriteFailed;
     if (std.c.fwrite(&tag, 1, crypto.TAG_LEN, file) != crypto.TAG_LEN) return error.WriteFailed;
@@ -211,17 +212,26 @@ pub fn inspect_license_file(
         } else if (std.mem.startsWith(u8, item, "sn=")) {
             parsed_hwid = item[3..];
         } else if (std.mem.startsWith(u8, item, "issue=")) {
-            parsed_issue = std.fmt.parseInt(i64, item[6..], 10) catch 0;
+            parsed_issue = std.fmt.parseInt(i64, item[6..], 10) catch {
+                details.status = .invalid_format;
+                return details;
+            };
         } else if (std.mem.startsWith(u8, item, "expire=")) {
-            parsed_expire = std.fmt.parseInt(i64, item[7..], 10) catch 0;
+            parsed_expire = std.fmt.parseInt(i64, item[7..], 10) catch {
+                details.status = .invalid_format;
+                return details;
+            };
         }
     }
 
-    if (parsed_hwid) |h| {
-        const copy_len = @min(h.len, details.hwid.len);
-        @memcpy(details.hwid[0..copy_len], h[0..copy_len]);
-        details.hwid_len = copy_len;
-    }
+    const valid_hwid = parsed_hwid orelse {
+        details.status = .invalid_format;
+        return details;
+    };
+
+    const copy_len = @min(valid_hwid.len, details.hwid.len);
+    @memcpy(details.hwid[0..copy_len], valid_hwid[0..copy_len]);
+    details.hwid_len = copy_len;
     details.issue_time = parsed_issue;
     details.expire_time = parsed_expire;
 
@@ -273,7 +283,6 @@ pub fn verify_license_bytes(
     expected_hwid: []const u8,
     data: []const u8,
 ) !bool {
-    // Fully encrypted AEAD format only: [Nonce: 12] + [Tag: 16] + [Ciphertext: min 4+1+64]
     const min_len = crypto.NONCE_LEN + crypto.TAG_LEN + 4 + crypto.SIG_LEN;
     if (data.len < min_len) return false;
 
@@ -285,7 +294,6 @@ pub fn verify_license_bytes(
     const plain = allocator.alloc(u8, cipher.len) catch return false;
     defer allocator.free(plain);
 
-    // Decrypt using ChaCha20-Poly1305. Tag failure indicates wrong HWID or corrupted data
     if (!crypto.decrypt_aead(hwid_key, nonce.*, cipher, tag.*, plain)) {
         return false;
     }
@@ -352,11 +360,9 @@ test "full-file AEAD license generation and verification" {
 
     try generate_license_default(allocator, hwid, 30, lic_path);
 
-    // Verify correct HWID passes
     const ok = try verify_license_file_default(allocator, hwid, lic_path);
     try std.testing.expect(ok);
 
-    // Verify wrong HWID fails
     const ok_wrong = try verify_license_file_default(allocator, "wrong-hwid-1234", lic_path);
     try std.testing.expect(!ok_wrong);
 }
@@ -413,7 +419,6 @@ test "inspect_license_file detects expired license" {
 
     const key_pair = try crypto.generate_key_pair(crypto.DEFAULT_LICENSE_SEED);
     const now: i64 = @intCast(time(null));
-    // Issue was 10 days ago, expired 5 days ago
     const past_issue = now - 864000;
     const past_expire = now - 432000;
     const payload = try std.fmt.allocPrint(allocator, "hwid={s};issue={d};expire={d}", .{ hwid, past_issue, past_expire });

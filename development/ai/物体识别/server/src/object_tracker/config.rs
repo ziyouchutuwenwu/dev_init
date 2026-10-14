@@ -3,15 +3,36 @@ use crate::config::YamlConfig;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
+fn deserialize_optional_rect<'de, D>(deserializer: D) -> Result<Option<[f64; 4]>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let opt: Option<serde_json::Value> = serde::Deserialize::deserialize(deserializer)?;
+    match opt {
+        Some(serde_json::Value::Array(arr)) if arr.len() == 4 => {
+            let mut res = [0.0; 4];
+            for (i, val) in arr.iter().enumerate() {
+                if let Some(n) = val.as_f64() {
+                    res[i] = n;
+                } else {
+                    return Ok(None);
+                }
+            }
+            Ok(Some(res))
+        }
+        _ => Ok(None),
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ZoneConfig {
     #[serde(default = "default_true")]
     pub enabled: bool,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_rect")]
     pub trigger_box: Option<[f64; 4]>,
     #[serde(default)]
     pub roi: Option<RoiConfig>,
-    #[serde(default, alias = "trigger_area")]
+    #[serde(default, alias = "trigger_area", alias = "tripwire")]
     pub trigger_line: Option<ZoneLineConfig>,
     #[serde(default)]
     pub target_classes: Vec<String>,
@@ -37,11 +58,11 @@ impl Default for ZoneConfig {
 
 impl ZoneConfig {
     pub fn get_trigger_box(&self) -> Option<[f64; 4]> {
-        if let Some(tb) = self.trigger_box {
-            return Some(tb);
-        }
         if let Some(RoiConfig::Rect(r)) = self.roi {
             return Some(r);
+        }
+        if let Some(tb) = self.trigger_box {
+            return Some(tb);
         }
         None
     }
@@ -80,26 +101,31 @@ impl ZoneConfig {
         let mut trigger_line = None;
         let line_opt = stream_val
             .get(crate::config::KEY_TRIGGER_LINE)
-            .or_else(|| stream_val.get(crate::config::KEY_TRIGGER_AREA));
+            .or_else(|| stream_val.get(crate::config::KEY_TRIGGER_AREA))
+            .or_else(|| stream_val.get("tripwire"));
         if let Some(line_val) = line_opt {
-            let parsed_line = serde_yaml::from_value::<[[f64; 2]; 2]>(line_val.clone())
-                .ok()
-                .or_else(|| {
-                    line_val
-                        .as_str()
-                        .and_then(|s| serde_json::from_str::<[[f64; 2]; 2]>(s).ok())
-                });
-            if let Some(line) = parsed_line {
-                let dir_str = stream_val
-                    .get(crate::config::KEY_DIRECTION)
-                    .and_then(|v| v.as_str())
-                    .unwrap_or_default();
-                let direction = match dir_str.to_lowercase().as_str() {
-                    "forward" => CrossingDirection::Forward,
-                    "backward" => CrossingDirection::Backward,
-                    _ => CrossingDirection::Any,
-                };
-                trigger_line = Some(ZoneLineConfig { line, direction });
+            if let Ok(line_cfg) = serde_yaml::from_value::<ZoneLineConfig>(line_val.clone()) {
+                trigger_line = Some(line_cfg);
+            } else {
+                let parsed_line = serde_yaml::from_value::<[[f64; 2]; 2]>(line_val.clone())
+                    .ok()
+                    .or_else(|| {
+                        line_val
+                            .as_str()
+                            .and_then(|s| serde_json::from_str::<[[f64; 2]; 2]>(s).ok())
+                    });
+                if let Some(line) = parsed_line {
+                    let dir_str = stream_val
+                        .get(crate::config::KEY_DIRECTION)
+                        .and_then(|v| v.as_str())
+                        .unwrap_or_default();
+                    let direction = match dir_str.to_lowercase().as_str() {
+                        "forward" => CrossingDirection::Forward,
+                        "backward" => CrossingDirection::Backward,
+                        _ => CrossingDirection::Any,
+                    };
+                    trigger_line = Some(ZoneLineConfig { line, direction });
+                }
             }
         }
 
@@ -107,15 +133,30 @@ impl ZoneConfig {
         if let Some(tb_val) = stream_val.get(crate::config::KEY_TRIGGER_BOX) {
             if let Ok(rect) = serde_yaml::from_value::<[f64; 4]>(tb_val.clone()) {
                 trigger_box = Some(rect);
-            } else if let Some(tb_str) = tb_val.as_str() {
-                if let Ok(rect) = serde_json::from_str::<[f64; 4]>(tb_str) {
-                    trigger_box = Some(rect);
-                }
+            } else if let Some(tb_str) = tb_val.as_str()
+                && let Ok(rect) = serde_json::from_str::<[f64; 4]>(tb_str)
+            {
+                trigger_box = Some(rect);
             }
         }
-        if trigger_box.is_none() {
-            if let Some(RoiConfig::Rect(r)) = roi {
-                trigger_box = Some(r);
+        if trigger_box.is_none()
+            && let Some(RoiConfig::Rect(r)) = roi
+        {
+            trigger_box = Some(r);
+        }
+
+        let mut target_classes = Vec::new();
+        if let Some(tc_val) = stream_val
+            .get(crate::config::KEY_TARGET_CLASSES)
+            .or_else(|| stream_val.get("target_classes"))
+            .or_else(|| stream_val.get("classes"))
+        {
+            if let Ok(classes) = serde_yaml::from_value::<Vec<String>>(tc_val.clone()) {
+                target_classes = classes;
+            } else if let Some(tc_str) = tc_val.as_str()
+                && let Ok(classes) = serde_json::from_str::<Vec<String>>(tc_str)
+            {
+                target_classes = classes;
             }
         }
 
@@ -124,7 +165,7 @@ impl ZoneConfig {
             trigger_box,
             roi,
             trigger_line,
-            target_classes: Vec::new(),
+            target_classes,
         }
     }
 
@@ -133,6 +174,7 @@ impl ZoneConfig {
         stream_id: &str,
         cfg: &Self,
     ) -> std::io::Result<()> {
+        let _guard = crate::config::base::yaml_config::CONFIG_FILE_MUTEX.lock().unwrap();
         let file_path = path.as_ref();
         let content = std::fs::read_to_string(file_path).unwrap_or_default();
         let updated = update_yaml_stream_zone(&content, stream_id, cfg);
@@ -179,6 +221,7 @@ fn update_yaml_stream_zone(content: &str, stream_id: &str, cfg: &ZoneConfig) -> 
         None => ("null".to_string(), "any"),
     };
 
+    let target_classes_str = serde_json::to_string(&cfg.target_classes).unwrap_or_else(|_| "[]".to_string());
     let block_lines = vec![
         format!("  {}:", stream_id),
         format!("    enabled: {}", cfg.enabled),
@@ -186,9 +229,11 @@ fn update_yaml_stream_zone(content: &str, stream_id: &str, cfg: &ZoneConfig) -> 
         format!("    roi: {}", roi_str),
         format!("    trigger_line: {}", line_str),
         format!("    direction: {}", dir_str),
+        format!("    target_classes: {}", target_classes_str),
     ];
 
     if let Some(t_idx) = trigger_idx {
+        lines[t_idx] = "trigger:".to_string();
         let mut stream_start = None;
         let mut stream_end = None;
 
@@ -240,14 +285,51 @@ fn update_yaml_stream_zone(content: &str, stream_id: &str, cfg: &ZoneConfig) -> 
         lines.extend(block_lines);
     }
 
-    let mut result = lines.join("\n");
-    if !result.ends_with('\n') {
+    let mut cleaned_lines: Vec<String> = Vec::new();
+    let mut prev_empty = false;
+    for line in lines {
+        let trimmed = line.trim();
+        if trimmed == "input: null" || trimmed == "trigger: null" || trimmed == "alert: null" {
+            continue;
+        }
+        if trimmed.is_empty() {
+            if !prev_empty && !cleaned_lines.is_empty() {
+                cleaned_lines.push(String::new());
+            }
+            prev_empty = true;
+        } else {
+            cleaned_lines.push(line);
+            prev_empty = false;
+        }
+    }
+
+    while let Some(last) = cleaned_lines.last() {
+        if last.trim().is_empty() {
+            cleaned_lines.pop();
+        } else {
+            break;
+        }
+    }
+
+    let mut result = cleaned_lines.join("\n");
+    if !result.is_empty() {
         result.push('\n');
     }
     result
 }
 
 pub fn update_yaml_input_streams(content: &str, streams: &[(String, String)]) -> String {
+    let list: Vec<(String, String, bool)> = streams
+        .iter()
+        .map(|(id, url)| (id.clone(), url.clone(), true))
+        .collect();
+    update_yaml_input_streams_full(content, &list)
+}
+
+pub fn update_yaml_input_streams_full(
+    content: &str,
+    streams: &[(String, String, bool)],
+) -> String {
     let mut lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
 
     let input_idx = lines.iter().position(|l| {
@@ -255,27 +337,47 @@ pub fn update_yaml_input_streams(content: &str, streams: &[(String, String)]) ->
         t == "input:" || t.starts_with("input:")
     });
 
-    let input_lines: Vec<String> = streams
-        .iter()
-        .map(|(id, url)| format!("  {}: {}", id, url))
-        .collect();
-
-    if let Some(idx) = input_idx {
-        let mut end = idx + 1;
-        while end < lines.len() {
-            let line = &lines[end];
-            let trimmed = line.trim();
-            if trimmed.is_empty() || (!line.starts_with(' ') && !line.starts_with('\t')) {
-                break;
+    if streams.is_empty() {
+        if let Some(idx) = input_idx {
+            let mut end = idx + 1;
+            while end < lines.len() {
+                let line = &lines[end];
+                let trimmed = line.trim();
+                if !trimmed.is_empty() && !line.starts_with(' ') && !line.starts_with('\t') {
+                    break;
+                }
+                end += 1;
             }
-            end += 1;
+            while end < lines.len() && lines[end].trim().is_empty() {
+                end += 1;
+            }
+            lines.drain(idx..end);
         }
-        lines.splice((idx + 1)..end, input_lines);
     } else {
-        let mut new_block = vec!["input:".to_string()];
-        new_block.extend(input_lines);
-        new_block.push(String::new());
-        lines.splice(0..0, new_block);
+        let input_lines: Vec<String> = streams
+            .iter()
+            .map(|(id, url, _)| format!("  {}: {}", id, url))
+            .collect();
+
+        if let Some(idx) = input_idx {
+            let mut end = idx + 1;
+            while end < lines.len() {
+                let line = &lines[end];
+                let trimmed = line.trim();
+                if !trimmed.is_empty() && !line.starts_with(' ') && !line.starts_with('\t') {
+                    break;
+                }
+                end += 1;
+            }
+            let mut new_block = vec!["input:".to_string()];
+            new_block.extend(input_lines);
+            lines.splice(idx..end, new_block);
+        } else {
+            let mut new_block = vec!["input:".to_string()];
+            new_block.extend(input_lines);
+            new_block.push(String::new());
+            lines.splice(0..0, new_block);
+        }
     }
 
     let trigger_idx = lines.iter().position(|l| {
@@ -284,7 +386,9 @@ pub fn update_yaml_input_streams(content: &str, streams: &[(String, String)]) ->
     });
 
     let valid_ids: std::collections::HashSet<&str> =
-        streams.iter().map(|(id, _)| id.as_str()).collect();
+        streams.iter().map(|(id, _, _)| id.as_str()).collect();
+    let enabled_map: std::collections::HashMap<&str, bool> =
+        streams.iter().map(|(id, _, en)| (id.as_str(), *en)).collect();
 
     if let Some(t_idx) = trigger_idx {
         let mut t_end = t_idx + 1;
@@ -331,44 +435,90 @@ pub fn update_yaml_input_streams(content: &str, streams: &[(String, String)]) ->
             trigger_children.push(c);
         }
 
-        // 1. 保留未被删除的流以及非流配置（如 http_post）
         let mut kept_children: Vec<TriggerChild> = trigger_children
             .into_iter()
             .filter(|c| c.key == "http_post" || valid_ids.contains(c.key.as_str()))
             .collect();
 
-        // 2. 为新加入的流追加默认 trigger 配置
-        for (stream_id, _) in streams {
+        for child in kept_children.iter_mut() {
+            if let Some(&en) = enabled_map.get(child.key.as_str()) {
+                let en_str = format!("    enabled: {}", en);
+                let pos = child.lines.iter().position(|l| l.trim().starts_with("enabled:"));
+                if let Some(p) = pos {
+                    child.lines[p] = en_str;
+                } else if child.lines.len() > 1 {
+                    child.lines.insert(1, en_str);
+                } else {
+                    child.lines.push(en_str);
+                }
+            }
+        }
+
+        for (stream_id, _, en) in streams {
             let already_present = kept_children.iter().any(|c| c.key == *stream_id);
             if !already_present {
                 kept_children.push(TriggerChild {
                     key: stream_id.clone(),
                     lines: vec![
                         format!("  {}:", stream_id),
-                        "    enabled: true".to_string(),
+                        format!("    enabled: {}", en),
                         "    trigger_box: [0.050, 0.050, 0.950, 0.950]".to_string(),
                     ],
                 });
             }
         }
 
-        let mut new_trigger_lines = leading_lines;
-        for child in kept_children {
-            new_trigger_lines.extend(child.lines);
+        if kept_children.is_empty() {
+            while t_end < lines.len() && lines[t_end].trim().is_empty() {
+                t_end += 1;
+            }
+            lines.drain(t_idx..t_end);
+        } else {
+            let mut new_trigger_lines = vec!["trigger:".to_string()];
+            new_trigger_lines.extend(leading_lines);
+            for child in kept_children {
+                new_trigger_lines.extend(child.lines);
+            }
+            lines.splice(t_idx..t_end, new_trigger_lines);
         }
-        lines.splice((t_idx + 1)..t_end, new_trigger_lines);
-    } else {
+    } else if !streams.is_empty() {
         lines.push(String::new());
         lines.push("trigger:".to_string());
-        for (stream_id, _) in streams {
+        for (stream_id, _, en) in streams {
             lines.push(format!("  {}:", stream_id));
-            lines.push("    enabled: true".to_string());
+            lines.push(format!("    enabled: {}", en));
             lines.push("    trigger_box: [0.050, 0.050, 0.950, 0.950]".to_string());
         }
     }
 
-    let mut result = lines.join("\n");
-    if !result.ends_with('\n') {
+    let mut cleaned_lines: Vec<String> = Vec::new();
+    let mut prev_empty = false;
+    for line in lines {
+        let trimmed = line.trim();
+        if trimmed == "input: null" || trimmed == "trigger: null" || trimmed == "alert: null" {
+            continue;
+        }
+        if trimmed.is_empty() {
+            if !prev_empty && !cleaned_lines.is_empty() {
+                cleaned_lines.push(String::new());
+            }
+            prev_empty = true;
+        } else {
+            cleaned_lines.push(line);
+            prev_empty = false;
+        }
+    }
+
+    while let Some(last) = cleaned_lines.last() {
+        if last.trim().is_empty() {
+            cleaned_lines.pop();
+        } else {
+            break;
+        }
+    }
+
+    let mut result = cleaned_lines.join("\n");
+    if !result.is_empty() {
         result.push('\n');
     }
     result
@@ -376,11 +526,12 @@ pub fn update_yaml_input_streams(content: &str, streams: &[(String, String)]) ->
 
 pub fn save_input_streams_to_yaml_file<P: AsRef<Path>>(
     path: P,
-    streams: &[(String, String)],
+    streams: &[(String, String, bool)],
 ) -> std::io::Result<()> {
+    let _guard = crate::config::base::yaml_config::CONFIG_FILE_MUTEX.lock().unwrap();
     let file_path = path.as_ref();
     let content = std::fs::read_to_string(file_path).unwrap_or_default();
-    let updated = update_yaml_input_streams(&content, streams);
+    let updated = update_yaml_input_streams_full(&content, streams);
     std::fs::write(file_path, &updated)?;
     Ok(())
 }

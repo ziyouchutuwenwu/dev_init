@@ -1,8 +1,9 @@
 use crate::config::app::r#const::*;
 use serde_yaml::{Mapping, Value};
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
+use std::sync::{Mutex, OnceLock};
 
+pub static CONFIG_FILE_MUTEX: Mutex<()> = Mutex::new(());
 static GLOBAL_CONFIG_PATH: OnceLock<String> = OnceLock::new();
 
 pub fn set_global_config_path(path: impl Into<String>) {
@@ -174,44 +175,42 @@ impl YamlConfig {
     }
 
     pub fn get_alert_url(&self) -> Option<String> {
-        self.get_str(KEY_ALERT_URL).map(|s| s.to_string())
+        self.get_nested(&[KEY_ALERT, KEY_URL])
+            .or_else(|| self.get_nested(&["alert", "url"]))
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string())
+            .or_else(|| self.get_str(KEY_ALERT_URL).map(|s| s.to_string()))
+            .or_else(|| self.get_str(KEY_ALERT_CALLBACK_URL).map(|s| s.to_string()))
+            .filter(|s| !s.trim().is_empty())
     }
 
     pub fn set_alert_url(&mut self, url: Option<&str>) {
-        if let Some(u) = url {
-            let trimmed = u.trim();
-            if trimmed.is_empty() {
-                self.remove(KEY_ALERT_URL);
-            } else {
-                self.set_string(KEY_ALERT_URL, trimmed);
-            }
-        } else {
-            self.remove(KEY_ALERT_URL);
-        }
+        let (_, cd, to) = self.get_alert();
+        self.set_alert(url, cd, to);
     }
 
     pub fn get_alert_cooldown_sec(&self) -> Option<u64> {
-        self.get_u64(KEY_ALERT_COOLDOWN_SEC)
+        self.get_nested(&[KEY_ALERT, KEY_COOLDOWN_SEC])
+            .or_else(|| self.get_nested(&["alert", "cooldown_sec"]))
+            .and_then(|v| v.as_u64())
+            .or_else(|| self.get_u64(KEY_ALERT_COOLDOWN_SEC))
     }
 
     pub fn set_alert_cooldown_sec(&mut self, sec: Option<u64>) {
-        if let Some(cd) = sec {
-            self.set_u64(KEY_ALERT_COOLDOWN_SEC, cd);
-        } else {
-            self.remove(KEY_ALERT_COOLDOWN_SEC);
-        }
+        let (url, _, to) = self.get_alert();
+        self.set_alert(url.as_deref(), sec, to);
     }
 
     pub fn get_alert_timeout_sec(&self) -> Option<u64> {
-        self.get_u64(KEY_ALERT_TIMEOUT_SEC)
+        self.get_nested(&[KEY_ALERT, KEY_TIMEOUT_SEC])
+            .or_else(|| self.get_nested(&["alert", "timeout_sec"]))
+            .and_then(|v| v.as_u64())
+            .or_else(|| self.get_u64(KEY_ALERT_TIMEOUT_SEC))
     }
 
     pub fn set_alert_timeout_sec(&mut self, sec: Option<u64>) {
-        if let Some(to) = sec {
-            self.set_u64(KEY_ALERT_TIMEOUT_SEC, to);
-        } else {
-            self.remove(KEY_ALERT_TIMEOUT_SEC);
-        }
+        let (url, cd, _) = self.get_alert();
+        self.set_alert(url.as_deref(), cd, sec);
     }
 
     pub fn get_alert(&self) -> (Option<String>, Option<u64>, Option<u64>) {
@@ -228,15 +227,32 @@ impl YamlConfig {
         cooldown_sec: Option<u64>,
         timeout_sec: Option<u64>,
     ) {
-        if alert_url.is_some() {
-            self.set_alert_url(alert_url);
+        self.remove(KEY_ALERT_URL);
+        self.remove(KEY_ALERT_CALLBACK_URL);
+        self.remove(KEY_ALERT_COOLDOWN_SEC);
+        self.remove(KEY_ALERT_TIMEOUT_SEC);
+
+        let curr_url = alert_url.map(|s| s.trim().to_string()).or_else(|| self.get_alert_url());
+        let curr_cd = cooldown_sec.or_else(|| self.get_alert_cooldown_sec());
+        let curr_to = timeout_sec.or_else(|| self.get_alert_timeout_sec());
+
+        let url_clean = curr_url.as_deref().filter(|s| !s.trim().is_empty());
+        if url_clean.is_none() && curr_cd.is_none() && curr_to.is_none() {
+            self.remove(KEY_ALERT);
+            return;
         }
-        if cooldown_sec.is_some() {
-            self.set_alert_cooldown_sec(cooldown_sec);
+
+        let mut alert_map = Mapping::new();
+        if let Some(u) = url_clean {
+            alert_map.insert(Value::String(KEY_URL.to_string()), Value::String(u.to_string()));
         }
-        if timeout_sec.is_some() {
-            self.set_alert_timeout_sec(timeout_sec);
+        if let Some(cd) = curr_cd {
+            alert_map.insert(Value::String(KEY_COOLDOWN_SEC.to_string()), Value::Number((cd as u64).into()));
         }
+        if let Some(to) = curr_to {
+            alert_map.insert(Value::String(KEY_TIMEOUT_SEC.to_string()), Value::Number((to as u64).into()));
+        }
+        self.set_value(KEY_ALERT, Value::Mapping(alert_map));
     }
 
     pub fn get_input_streams(&self) -> Vec<(String, String)> {
@@ -252,11 +268,15 @@ impl YamlConfig {
     }
 
     pub fn set_input_streams(&mut self, streams: &[(String, String)]) {
-        let mut map = Mapping::new();
-        for (id, url) in streams {
-            map.insert(Value::String(id.clone()), Value::String(url.clone()));
+        if streams.is_empty() {
+            self.remove(KEY_INPUT);
+        } else {
+            let mut map = Mapping::new();
+            for (id, url) in streams {
+                map.insert(Value::String(id.clone()), Value::String(url.clone()));
+            }
+            self.set_value(KEY_INPUT, Value::Mapping(map));
         }
-        self.set_value(KEY_INPUT, Value::Mapping(map));
     }
 
     pub fn get_server_host(&self) -> Option<String> {
@@ -288,19 +308,50 @@ impl YamlConfig {
     }
 
     pub fn to_formatted_yaml(&self) -> Result<String, serde_yaml::Error> {
-        let raw = serde_yaml::to_string(&self.root)?;
+        let mut root_clone = self.root.clone();
+        if let Value::Mapping(ref mut map) = root_clone {
+            let input_empty = match map.get(&Value::String(KEY_INPUT.to_string())) {
+                Some(Value::Null) => true,
+                Some(Value::Mapping(m)) => m.is_empty(),
+                _ => false,
+            };
+            if input_empty {
+                map.remove(&Value::String(KEY_INPUT.to_string()));
+            }
+
+            let trigger_empty = match map.get(&Value::String(KEY_TRIGGER.to_string())) {
+                Some(Value::Null) => true,
+                Some(Value::Mapping(m)) => m.is_empty(),
+                _ => false,
+            };
+            if trigger_empty {
+                map.remove(&Value::String(KEY_TRIGGER.to_string()));
+            }
+
+            let alert_empty = match map.get(&Value::String(KEY_ALERT.to_string())) {
+                Some(Value::Null) => true,
+                Some(Value::Mapping(m)) => m.is_empty(),
+                _ => false,
+            };
+            if alert_empty {
+                map.remove(&Value::String(KEY_ALERT.to_string()));
+            }
+        }
+        let raw = serde_yaml::to_string(&root_clone)?;
         Ok(prettify_yaml_sections(&raw))
     }
 
     pub fn save(&self) -> Result<(), std::io::Error> {
+        let _guard = CONFIG_FILE_MUTEX.lock().unwrap();
         let formatted = self
             .to_formatted_yaml()
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
 
-        if let Some(parent) = self.path.parent() {
-            if !parent.as_os_str().is_empty() && !parent.exists() {
-                std::fs::create_dir_all(parent)?;
-            }
+        if let Some(parent) = self.path.parent()
+            && !parent.as_os_str().is_empty()
+            && !parent.exists()
+        {
+            std::fs::create_dir_all(parent)?;
         }
 
         std::fs::write(&self.path, formatted)
@@ -314,6 +365,20 @@ pub fn prettify_yaml_sections(yaml: &str) -> String {
     let mut prev_was_indented = false;
 
     for (i, &line) in lines.iter().enumerate() {
+        let trimmed = line.trim();
+        if trimmed == "input: null" || trimmed == "trigger: null" || trimmed == "alert: null" {
+            continue;
+        }
+        if trimmed == "input:" || trimmed == "trigger:" || trimmed == "alert:" {
+            let next_is_indented = lines
+                .get(i + 1)
+                .map(|l| l.starts_with("  ") || l.starts_with('\t'))
+                .unwrap_or(false);
+            if !next_is_indented {
+                continue;
+            }
+        }
+
         let is_top_level = !line.starts_with(' ')
             && !line.starts_with('\t')
             && !line.starts_with('-')
@@ -321,10 +386,8 @@ pub fn prettify_yaml_sections(yaml: &str) -> String {
 
         if i > 0 && is_top_level {
             let next_is_indented = lines.get(i + 1).map(|l| l.starts_with("  ")).unwrap_or(false);
-            if prev_was_indented || next_is_indented {
-                if !out.ends_with("\n\n") {
-                    out.push('\n');
-                }
+            if (prev_was_indented || next_is_indented) && !out.ends_with("\n\n") {
+                out.push('\n');
             }
         }
 

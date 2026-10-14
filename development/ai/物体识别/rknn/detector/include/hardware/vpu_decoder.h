@@ -50,6 +50,7 @@ public:
     static MPP_RET mpp_buf_inc_ref(MppBuffer buf);
     static MPP_RET mpp_buf_put(MppBuffer buf);
     static int mpp_buf_get_fd(MppBuffer buf);
+    static void* mpp_buf_get_ptr(MppBuffer buf);
 
     std::shared_ptr<FrameBuffer> get_latest_frame_snapshot();
     static bool letterbox_frame(const std::shared_ptr<FrameBuffer>& cur_frame, image_buffer_t* dst_img, letterbox_t* letter_box, int* orig_w = nullptr, int* orig_h = nullptr);

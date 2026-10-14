@@ -13,9 +13,9 @@ use crate::detector::frame_detector::FrameDetector;
 pub async fn run_rtsp_loop(
     stream_id: String,
     parsed_url: Url,
-    detector: Arc<FrameDetector>,
+    detector: Option<Arc<FrameDetector>>,
     tx_video: tokio::sync::broadcast::Sender<Arc<Sample>>,
-    vpu_feed_tx: tokio::sync::mpsc::Sender<(Bytes, u64, i64, u64)>,
+    vpu_feed_tx: Option<tokio::sync::mpsc::Sender<(Bytes, u64, i64, u64)>>,
 ) {
     loop {
         let mut frame_seq: u64 = 0;
@@ -31,7 +31,7 @@ pub async fn run_rtsp_loop(
             Ok(s) => s,
             Err(e) => {
                 eprintln!("[rtsp:{stream_id}] describe 失败: {e}，2秒后重试");
-                let _ = detector.flush();
+                async_flush(&detector).await;
                 tokio::time::sleep(Duration::from_secs(2)).await;
                 continue;
             }
@@ -49,35 +49,35 @@ pub async fn run_rtsp_loop(
             Some(idx) => idx,
             None => {
                 eprintln!("[rtsp:{stream_id}] 未在 rtsp 中找到视频轨，2秒后重试");
-                let _ = detector.flush();
+                async_flush(&detector).await;
                 tokio::time::sleep(Duration::from_secs(2)).await;
                 continue;
             }
         };
 
         let encoding = session.streams()[stream_idx].encoding_name().to_ascii_lowercase();
-        log::info!("[rtsp:{stream_id}] 视频轨编码识别 (SDP): {encoding}");
-        if let Err(e) = detector.create_channel_with_codec(&encoding) {
-            eprintln!("[rtsp:{stream_id}] warning: create_channel_with_codec failed: {e}");
-        }
+        log::info!("[rtsp:{stream_id}] 视频轨编码识别 (sdp): {encoding}");
+        async_create_channel(&detector, &encoding).await;
 
         let setup_opts = SetupOptions::default()
             .transport(Transport::Tcp(TcpTransportOptions::default()))
             .frame_format(FrameFormat::SIMPLE);
         if let Err(e) = session.setup(stream_idx, setup_opts).await {
             eprintln!("[rtsp:{stream_id}] setup 失败: {e}，2秒后重试");
-            let _ = detector.flush();
+            async_flush(&detector).await;
             tokio::time::sleep(Duration::from_secs(2)).await;
             continue;
         }
 
-        let current_epoch = detector.flush_epoch();
-        if let Some(retina::codec::ParametersRef::Video(v)) =
-            session.streams()[stream_idx].parameters()
-        {
-            let extra = v.extra_data();
-            if !extra.is_empty() {
-                let _ = vpu_feed_tx.send((Bytes::copy_from_slice(extra), u64::MAX, -1, current_epoch)).await;
+        let current_epoch = detector.as_ref().map(|d| d.flush_epoch()).unwrap_or(0);
+        if let Some(ref feed_tx) = vpu_feed_tx {
+            if let Some(retina::codec::ParametersRef::Video(v)) =
+                session.streams()[stream_idx].parameters()
+            {
+                let extra = v.extra_data();
+                if !extra.is_empty() {
+                    let _ = feed_tx.send((Bytes::copy_from_slice(extra), u64::MAX, -1, current_epoch)).await;
+                }
             }
         }
 
@@ -85,7 +85,7 @@ pub async fn run_rtsp_loop(
             Ok(p) => p,
             Err(e) => {
                 eprintln!("[rtsp:{stream_id}] play 失败: {e}，2秒后重试");
-                let _ = detector.flush();
+                async_flush(&detector).await;
                 tokio::time::sleep(Duration::from_secs(2)).await;
                 continue;
             }
@@ -95,7 +95,7 @@ pub async fn run_rtsp_loop(
             Ok(d) => d,
             Err(e) => {
                 eprintln!("[rtsp:{stream_id}] demuxed 失败: {e}，2秒后重试");
-                let _ = detector.flush();
+                async_flush(&detector).await;
                 tokio::time::sleep(Duration::from_secs(2)).await;
                 continue;
             }
@@ -126,19 +126,22 @@ pub async fn run_rtsp_loop(
                         }
                     };
 
-                    let delta_ticks = (rtp_ts.wrapping_sub(base) as u32) as u64;
-                    if rtp_ts < base - 90000 || delta_ticks > 90000 * 3600 {
+                    if rtp_ts < base || rtp_ts - base > 90000 * 86400 * 365 {
                         base = rtp_ts;
                         base_rtp_ts = Some(base);
                         last_rtp_ts = None;
                     }
 
-                    let rtp_pts_ms = ((rtp_ts.wrapping_sub(base) as u32) as u64) * 1000 / 90000;
-                    let pts_ms = rtp_pts_ms;
+                    let delta_ticks = (rtp_ts - base) as u64;
+                    let pts_ms = (delta_ticks * 1000 / 90000) as i64;
 
                     let sample_duration = match last_rtp_ts {
                         Some(last) => {
-                            let diff = (rtp_ts.wrapping_sub(last) as u32) as u64;
+                            let diff = if rtp_ts > last {
+                                (rtp_ts - last) as u64
+                            } else {
+                                0
+                            };
 
                             if (450..=45000).contains(&diff) {
                                 let dur = Duration::from_secs_f64(diff as f64 / 90000.0);
@@ -146,7 +149,7 @@ pub async fn run_rtsp_loop(
                                 if !detected_fps_logged {
                                     detected_fps_logged = true;
                                     log::info!(
-                                        "[rtsp:{stream_id}] 动态自适应视频帧间隔: {:.2}ms (约 {:.1} FPS)",
+                                        "[rtsp:{stream_id}] 动态自适应视频帧间隔: {:.2}ms (约 {:.1} fps)",
                                         dur.as_secs_f64() * 1000.0,
                                         90000.0 / diff as f64
                                     );
@@ -170,30 +173,32 @@ pub async fn run_rtsp_loop(
 
                     let _ = tx_video.send(Arc::new(sample));
 
-                    if waiting_for_keyframe {
-                        if is_key {
-                            waiting_for_keyframe = false;
-                            log::info!("[rtsp:{stream_id}] 捕获到新关键帧，恢复 vpu 解码送流");
-                        } else {
-                            frame_seq += 1;
-                            continue;
-                        }
-                    }
-
-                    let to_send = sample_data.clone();
-
-                    match vpu_feed_tx.try_send((to_send, frame_seq, pts_ms as i64, current_epoch)) {
-                        Ok(()) => {}
-                        Err(tokio::sync::mpsc::error::TrySendError::Full(_)) => {
-                            dropped_feed_frames += 1;
-                            waiting_for_keyframe = true;
-                            if dropped_feed_frames % 60 == 1 {
-                                log::warn!("[rtsp:{stream_id}] vpu 解码队列积压 (已跳过 {dropped_feed_frames} 帧)，等待下一个关键帧以防花屏");
+                    if let Some(ref feed_tx) = vpu_feed_tx {
+                        if waiting_for_keyframe {
+                            if is_key {
+                                waiting_for_keyframe = false;
+                                log::info!("[rtsp:{stream_id}] 捕获到新关键帧，恢复 vpu 解码送流");
+                            } else {
+                                frame_seq += 1;
+                                continue;
                             }
                         }
-                        Err(tokio::sync::mpsc::error::TrySendError::Closed(_)) => {
-                            log::error!("[rtsp:{stream_id}] vpu 送流通道已关闭");
-                            break;
+
+                        let to_send = sample_data.clone();
+
+                        match feed_tx.try_send((to_send, frame_seq, pts_ms as i64, current_epoch)) {
+                            Ok(()) => {}
+                            Err(tokio::sync::mpsc::error::TrySendError::Full(_)) => {
+                                dropped_feed_frames += 1;
+                                waiting_for_keyframe = true;
+                                if dropped_feed_frames % 60 == 1 {
+                                    log::warn!("[rtsp:{stream_id}] vpu 解码队列积压 (已跳过 {dropped_feed_frames} 帧)，等待下一个关键帧以防花屏");
+                                }
+                            }
+                            Err(tokio::sync::mpsc::error::TrySendError::Closed(_)) => {
+                                log::error!("[rtsp:{stream_id}] vpu 送流通道已关闭");
+                                break;
+                            }
                         }
                     }
 
@@ -225,7 +230,26 @@ pub async fn run_rtsp_loop(
         }
 
         log::info!("[rtsp:{stream_id}] rtsp 流断开或切流，立即重连...");
-        let _ = detector.flush();
+        async_flush(&detector).await;
         tokio::time::sleep(Duration::from_millis(500)).await;
+    }
+}
+
+async fn async_flush(detector: &Option<Arc<FrameDetector>>) {
+    if let Some(d) = detector {
+        let d = Arc::clone(d);
+        let _ = tokio::task::spawn_blocking(move || d.flush()).await;
+    }
+}
+
+async fn async_create_channel(detector: &Option<Arc<FrameDetector>>, encoding: &str) {
+    if let Some(d) = detector {
+        let d = Arc::clone(d);
+        let enc = encoding.to_string();
+        let _ = tokio::task::spawn_blocking(move || {
+            if let Err(e) = d.create_channel_with_codec(&enc) {
+                eprintln!("[rtsp:{}] warning: create_channel_with_codec failed: {e}", d.stream_id());
+            }
+        }).await;
     }
 }

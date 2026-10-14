@@ -33,15 +33,23 @@ defmodule Web.Orm.Query.Settings do
   def set_gateway_url(url) when is_binary(url) do
     trimmed = String.trim(url)
 
-    cleaned =
-      if String.starts_with?(trimmed, "http://") or String.starts_with?(trimmed, "https://") do
-        trimmed
-      else
-        "http://" <> trimmed
-      end
-      |> String.trim_trailing("/")
+    if trimmed == "" do
+      set_setting("gateway_url", "")
+    else
+      cleaned =
+        if String.starts_with?(trimmed, "http://") or String.starts_with?(trimmed, "https://") do
+          trimmed
+        else
+          "http://" <> trimmed
+        end
+        |> String.trim_trailing("/")
 
-    set_setting("gateway_url", cleaned)
+      set_setting("gateway_url", cleaned)
+    end
+  end
+
+  def set_gateway_url(nil) do
+    set_setting("gateway_url", "")
   end
 
   def get_alert_callback_url do

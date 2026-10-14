@@ -13,16 +13,16 @@ use super::vpu_feeder::spawn_vpu_feeder;
 pub struct RtspStreamer {
     stream_id: String,
     rtsp_url: String,
-    detector: Arc<FrameDetector>,
-    dispatcher: Arc<DetectedDispatcher>,
+    detector: Option<Arc<FrameDetector>>,
+    dispatcher: Option<Arc<DetectedDispatcher>>,
 }
 
 impl RtspStreamer {
     pub fn new(
         stream_id: impl Into<String>,
         rtsp_url: impl Into<String>,
-        detector: Arc<FrameDetector>,
-        dispatcher: Arc<DetectedDispatcher>,
+        detector: Option<Arc<FrameDetector>>,
+        dispatcher: Option<Arc<DetectedDispatcher>>,
     ) -> Self {
         Self {
             stream_id: stream_id.into(),
@@ -45,20 +45,23 @@ impl RtspStreamer {
             Err(e) => return Err(format!("无效 rtsp url ({}): {e}", self.rtsp_url)),
         };
 
-        let (vpu_feed_tx, vpu_feed_rx) =
-            tokio::sync::mpsc::channel::<(Bytes, u64, i64, u64)>(64);
-
         let running = Arc::new(AtomicBool::new(true));
 
-        spawn_vpu_feeder(vpu_feed_rx, Arc::clone(&self.detector), Arc::clone(&running));
-        spawn_detection(Arc::clone(&self.detector), Arc::clone(&self.dispatcher), Arc::clone(&running));
+        let (vpu_feed_tx, session_epoch) = if let (Some(det), Some(disp)) = (&self.detector, &self.dispatcher) {
+            let (tx, rx) = tokio::sync::mpsc::channel::<(Bytes, u64, i64, u64)>(64);
+            spawn_vpu_feeder(rx, Arc::clone(det), Arc::clone(&running));
+            spawn_detection(Arc::clone(det), Arc::clone(disp), Arc::clone(&running));
+            let epoch = det.next_session_epoch();
+            (Some(tx), epoch)
+        } else {
+            (None, 0)
+        };
 
         let running_cleanup = Arc::clone(&running);
-        let detector_cleanup = Arc::clone(&self.detector);
+        let detector_cleanup = self.detector.clone();
         let stream_id = self.stream_id.clone();
-        let detector = Arc::clone(&self.detector);
+        let detector = self.detector.clone();
 
-        let session_epoch = self.detector.next_session_epoch();
         let handle = tokio::spawn(async move {
             let _guard = StreamCleanGuard {
                 epoch: session_epoch,

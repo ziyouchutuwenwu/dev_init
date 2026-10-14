@@ -52,6 +52,11 @@ defmodule Web.DataSync do
         end
 
       payload = %{
+        alert: %{
+          url: to_string(callback_url || ""),
+          cooldown_sec: parsed_cooldown,
+          timeout_sec: parsed_timeout
+        },
         alert_callback_url: to_string(callback_url || ""),
         alert_cooldown_sec: parsed_cooldown,
         alert_timeout_sec: parsed_timeout,
@@ -65,7 +70,19 @@ defmodule Web.DataSync do
               Map.get(s, :rtsp_url) || Map.get(s, "rtsp_url") || Map.get(s, :url) ||
                 Map.get(s, "url")
 
-            %{id: to_string(id), url: to_string(url)}
+            enabled =
+              case Map.get(s, :enabled) do
+                nil ->
+                  case Map.get(s, "enabled") do
+                    nil -> true
+                    val -> val not in [false, "false", 0, "0"]
+                  end
+
+                val ->
+                  val not in [false, "false", 0, "0"]
+              end
+
+            %{id: to_string(id), url: to_string(url), enabled: enabled}
           end)
       }
 
@@ -135,8 +152,29 @@ defmodule Web.DataSync do
 
       zone_cfg = Map.get(s, :zone_config) || Map.get(s, "zone_config")
 
+      enabled =
+        case Map.get(s, :enabled) do
+          nil ->
+            case Map.get(s, "enabled") do
+              nil -> true
+              val -> val not in [false, "false", 0, "0"]
+            end
+
+          val ->
+            val not in [false, "false", 0, "0"]
+        end
+
       if id && zone_cfg && is_binary(zone_cfg) && String.trim(zone_cfg) != "" do
-        sync_zone_to_gateway(gateway_url, id, zone_cfg)
+        synced_cfg =
+          case Jason.decode(zone_cfg) do
+            {:ok, map} when is_map(map) ->
+              Jason.encode!(Map.put(map, "enabled", enabled))
+
+            _ ->
+              zone_cfg
+          end
+
+        sync_zone_to_gateway(gateway_url, id, synced_cfg)
       end
     end)
   end

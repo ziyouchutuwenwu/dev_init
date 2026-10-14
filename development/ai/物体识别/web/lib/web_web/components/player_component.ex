@@ -6,6 +6,7 @@ defmodule WebWeb.PlayerComponent do
   attr :default_url, :string, default: ""
   attr :removable, :boolean, default: true
   attr :zone_config, :string, default: nil
+  attr :enabled, :boolean, default: true
 
   def stream_card(assigns) do
     ~H"""
@@ -16,6 +17,7 @@ defmodule WebWeb.PlayerComponent do
       data-stream-id={@id}
       data-stream-url={@default_url}
       data-zone-config={@zone_config}
+      data-enabled={to_string(@enabled)}
       data-keep-alive="true"
     >
       <div class="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-zinc-100">
@@ -42,6 +44,20 @@ defmodule WebWeb.PlayerComponent do
             class="rounded-full bg-zinc-200 px-2 py-0.5 font-medium text-zinc-700 transition-colors whitespace-nowrap"
           >
             未连接
+          </span>
+          <label class="inline-flex items-center gap-1.5 cursor-pointer select-none text-xs text-zinc-700 font-medium whitespace-nowrap">
+            <input
+              type="checkbox"
+              id={"check-enabled-" <> @id}
+              checked={@enabled}
+              phx-click="toggle_stream_enabled"
+              phx-value-stream_id={@id}
+              class="checkbox checkbox-sm checkbox-success cursor-pointer"
+            />
+            <span>检测</span>
+          </label>
+          <span class="text-zinc-500 whitespace-nowrap">
+            帧率: <b id={"rate-" <> @id} class="font-mono text-blue-600">0</b> fps
           </span>
           <span class="text-zinc-500 whitespace-nowrap">
             实时目标: <b id={"count-" <> @id} class="font-mono text-green-600">0</b>

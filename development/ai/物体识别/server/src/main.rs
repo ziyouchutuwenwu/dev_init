@@ -16,10 +16,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     server::updater::init_alert_config_from_config(&config_path);
     let config = AppConfig::load_from_file(&config_path)?;
     let streams = config.input.get_streams();
-    if streams.is_empty() {
-        return Err("配置文件未包含有效视频流".into());
-    }
-
     let http_addr = config.server.http_addr();
     let listener = match tokio::net::TcpListener::bind(&http_addr).await {
         Ok(l) => l,
@@ -34,11 +30,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let stream_ids: Vec<&str> = streams.iter().map(|s| s.id.as_str()).collect();
-    log::info!(
-        "启动成功: http://{} (通道: {})",
-        http_addr,
-        stream_ids.join(", ")
-    );
+    if streams.is_empty() {
+        log::info!("配置文件暂无初始视频流，等待通过 web 端或 api 动态添加: http://{}", http_addr);
+    } else {
+        log::info!(
+            "启动成功: http://{} (通道: {})",
+            http_addr,
+            stream_ids.join(", ")
+        );
+    }
 
     let detect_wrapper = init_detector(streams.len());
     let initial_streams =
@@ -50,6 +50,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ));
 
     let srv_clone = Arc::clone(&webrtc_server);
+    #[cfg(unix)]
+    let mut sigterm = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()).ok();
+
     tokio::select! {
         res = srv_clone.run_signaling_server_with_listener(listener) => {
             if let Err(e) = res {
@@ -58,6 +61,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         _ = tokio::signal::ctrl_c() => {
             log::info!("接收到退出信号，释放硬件资源并退出");
+        }
+        _ = async {
+            #[cfg(unix)]
+            if let Some(s) = &mut sigterm {
+                s.recv().await;
+                return;
+            }
+            std::future::pending::<()>().await;
+        } => {
+            log::info!("接收到 sigterm 信号，释放硬件资源并退出");
         }
     }
 

@@ -4,9 +4,10 @@ defmodule WebWeb.AlertController do
 
   def create(conn, params) do
     stream_id = params["stream_id"] || "unknown"
-    detections = params["detections"] || []
+    detections = params["detections"]
+    count = if is_list(detections), do: length(detections), else: 0
 
-    Logger.info("[alert_controller] 收到来自通道 #{stream_id} 的告警事件通知，当前检测目标数: #{length(detections)}")
+    Logger.info("[alert_controller] 收到来自通道 #{stream_id} 的告警事件通知，当前检测目标数: #{count}")
 
     conn
     |> put_status(:ok)

@@ -68,10 +68,9 @@ impl IpcConnection {
         if resp_cmd == RESP_PONG {
             Ok(())
         } else {
-            Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("意外的 ping 响应: {resp_cmd:#x}"),
-            ))
+            Err(std::io::Error::other(format!(
+                "意外的 ping 响应: {resp_cmd:#x}"
+            )))
         }
     }
 }

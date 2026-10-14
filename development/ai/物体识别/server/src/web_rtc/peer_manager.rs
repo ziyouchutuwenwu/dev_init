@@ -335,6 +335,8 @@ impl PeerManager {
 
             tokio::time::sleep(std::time::Duration::from_millis(60)).await;
 
+            let mut received_keyframe = false;
+            let stream_start_time = std::time::Instant::now();
             let mut video_errors = 0;
             loop {
                 tokio::select! {
@@ -347,6 +349,14 @@ impl PeerManager {
                             Ok(sample) => {
                                 if !is_connected_video.load(Ordering::Relaxed) {
                                     continue;
+                                }
+                                if !received_keyframe {
+                                    if is_video_keyframe(&sample.data) || stream_start_time.elapsed() > std::time::Duration::from_secs(3) {
+                                        received_keyframe = true;
+                                        log::info!("[peer_manager:{conn_id}] 捕获到首个视频关键帧，开始推流");
+                                    } else {
+                                        continue;
+                                    }
                                 }
                                 if let Err(e) = track_forwarder
                                     .sample_writer(ssrc, payload_type)
@@ -377,5 +387,82 @@ impl PeerManager {
         });
 
         Ok(sdp)
+    }
+}
+
+fn is_h264_keyframe(data: &[u8]) -> bool {
+    use h264_reader::annexb::AnnexBReader;
+    use h264_reader::nal::{Nal, RefNal, UnitType};
+    use h264_reader::push::NalInterest;
+
+    let mut is_key = false;
+    let mut reader = AnnexBReader::accumulate(|nal: RefNal<'_>| {
+        if let Ok(header) = nal.header() {
+            let t = header.nal_unit_type();
+            if t == UnitType::SeqParameterSet || t == UnitType::SliceLayerWithoutPartitioningIdr {
+                is_key = true;
+            }
+        }
+        NalInterest::Ignore
+    });
+    reader.push(data);
+    reader.push(&[0, 0, 0, 1]);
+    is_key
+}
+
+fn is_h265_keyframe(data: &[u8]) -> bool {
+    let len = data.len();
+    if len < 5 {
+        return false;
+    }
+    let mut i = 0;
+    while i + 4 <= len {
+        let mut nal_offset = 0;
+        if data[i] == 0 && data[i + 1] == 0 && data[i + 2] == 1 {
+            nal_offset = i + 3;
+        } else if data[i] == 0 && data[i + 1] == 0 && data[i + 2] == 0 && data[i + 3] == 1 {
+            nal_offset = i + 4;
+        }
+        if nal_offset > 0 && nal_offset < len {
+            let b0 = data[nal_offset];
+            if (b0 & 0x80) == 0 {
+                let nal_type = (b0 >> 1) & 0x3F;
+                if matches!(nal_type, 19 | 20 | 21 | 32 | 33 | 34) {
+                    return true;
+                }
+            }
+            i = nal_offset;
+            continue;
+        }
+        i += 1;
+    }
+    false
+}
+
+fn is_video_keyframe(data: &[u8]) -> bool {
+    if is_h264_keyframe(data) {
+        return true;
+    }
+    is_h265_keyframe(data)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_h264_keyframe() {
+        assert!(is_h264_keyframe(&[0, 0, 0, 1, 0x67, 0x42, 0x00, 0x1e]));
+        assert!(is_h264_keyframe(&[0, 0, 1, 0x65, 0x88, 0x84, 0x00]));
+        assert!(!is_h264_keyframe(&[0, 0, 0, 1, 0x61, 0x9a, 0x00, 0x00]));
+        assert!(!is_h264_keyframe(&[1, 2, 3, 4, 5]));
+    }
+
+    #[test]
+    fn test_is_h265_keyframe() {
+        assert!(is_h265_keyframe(&[0, 0, 0, 1, 0x40, 0x01]));
+        assert!(is_h265_keyframe(&[0, 0, 1, 0x26, 0x01]));
+        assert!(!is_h265_keyframe(&[0, 0, 0, 1, 0x02, 0x01]));
+        assert!(is_video_keyframe(&[0, 0, 0, 1, 0x40, 0x01]));
     }
 }

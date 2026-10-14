@@ -130,6 +130,7 @@
                     <th class="py-2.5 px-3 w-16 text-center">序号</th>
                     <th class="py-2.5 px-4 w-36">流标识</th>
                     <th class="py-2.5 px-4">rtsp 流地址</th>
+                    <th class="py-2.5 px-4 w-28 text-center">AI 检测</th>
                     <th class="py-2.5 px-4 w-32 text-center">操作</th>
                   </tr>
                 </thead>
@@ -154,6 +155,19 @@
                           class="input-stream-url w-full rounded-md border border-zinc-300 px-3 py-1.5 font-mono text-xs text-zinc-800 bg-white shadow-inner focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                           value={stream.rtsp_url}
                         />
+                      </td>
+                      <td class="py-3 px-4 text-center">
+                        <input type="hidden" name={"streams[#{idx}][enabled]"} value="false" />
+                        <label class="inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            name={"streams[#{idx}][enabled]"}
+                            value="true"
+                            checked={stream.enabled}
+                            class="sr-only peer"
+                          />
+                          <div class="relative w-9 h-5 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                        </label>
                       </td>
                       <td class="py-3 px-4 text-center">
                         <button

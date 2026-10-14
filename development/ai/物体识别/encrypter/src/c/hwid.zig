@@ -6,6 +6,7 @@ const c_allocator = std.heap.c_allocator;
 
 export fn get_hwid(out_buf: ?[*]u8, max_len: usize) c_int {
     const buf = out_buf orelse return -1;
+    if (max_len > 0) buf[0] = 0;
     const id = hwid.get_hardware_id(c_allocator) catch return -2;
     defer c_allocator.free(id);
 

@@ -97,6 +97,106 @@ export function clientToRelCoords(video, canvas, clientX, clientY) {
   return [rx, ry];
 }
 
+function isPointInPolygon(x, y, vs) {
+  if (!vs || vs.length < 3) return false;
+  let inside = false;
+  for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+    const xi = vs[i][0], yi = vs[i][1];
+    const xj = vs[j][0], yj = vs[j][1];
+    const intersect = ((yi > y) !== (yj > y)) && (x < ((xj - xi) * (y - yi)) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function normalizeZoneConfig(cfg) {
+  if (!cfg) return null;
+  if (typeof cfg === "object") return cfg;
+  if (typeof cfg === "string") {
+    try {
+      return JSON.parse(cfg);
+    } catch (e) {
+      return null;
+    }
+  }
+  return null;
+}
+
+export function isDetectionInZone(d, zoneConfig = null, overrideBox = null, rx1 = null, ry1 = null, rx2 = null, ry2 = null) {
+  if (!d) return false;
+
+  const cfg = normalizeZoneConfig(zoneConfig);
+  if (cfg && cfg.enabled === false) {
+    return false;
+  }
+
+  let zBox = overrideBox;
+  if (!zBox && cfg) {
+    zBox = cfg.trigger_box || null;
+    if (!zBox && cfg.roi) {
+      if (cfg.roi.type === "rect" && Array.isArray(cfg.roi.coords)) {
+        zBox = cfg.roi.coords;
+      } else if (Array.isArray(cfg.roi) && cfg.roi.length >= 4) {
+        zBox = cfg.roi;
+      }
+    }
+  }
+
+  if (zBox && Array.isArray(zBox) && zBox.length >= 4) {
+    const minX = Math.min(zBox[0], zBox[2]);
+    const maxX = Math.max(zBox[0], zBox[2]);
+    const minY = Math.min(zBox[1], zBox[3]);
+    const maxY = Math.max(zBox[1], zBox[3]);
+
+    let cx = null, cy = null;
+    let x1 = rx1, y1 = ry1, x2 = rx2, y2 = ry2;
+    if (x1 === null || y1 === null || x2 === null || y2 === null) {
+      if (d.rel_box && Array.isArray(d.rel_box) && d.rel_box.length >= 4) {
+        [x1, y1, x2, y2] = d.rel_box;
+      } else if (d.box && Array.isArray(d.box) && d.box.length >= 4) {
+        [x1, y1, x2, y2] = d.box;
+      }
+    }
+
+    if (x1 !== null && y1 !== null && x2 !== null && y2 !== null) {
+      cx = (x1 + x2) / 2;
+      cy = (y1 + y2) / 2;
+    } else if (d.center && Array.isArray(d.center) && d.center.length >= 2) {
+      cx = d.center[0];
+      cy = d.center[1];
+    }
+
+    if (cx !== null && cy !== null) {
+      return cx >= minX && cx <= maxX && cy >= minY && cy <= maxY;
+    }
+
+    return false;
+  }
+
+  if (cfg?.roi?.type === "polygon" && Array.isArray(cfg.roi.coords)) {
+    const pts = cfg.roi.coords;
+    let cx = null, cy = null;
+    if (d.center && Array.isArray(d.center) && d.center.length >= 2) {
+      cx = d.center[0];
+      cy = d.center[1];
+    } else if (d.rel_box && Array.isArray(d.rel_box) && d.rel_box.length >= 4) {
+      cx = (d.rel_box[0] + d.rel_box[2]) / 2;
+      cy = (d.rel_box[1] + d.rel_box[3]) / 2;
+    }
+    if (cx !== null && cy !== null) {
+      return isPointInPolygon(cx, cy, pts);
+    }
+    return false;
+  }
+
+  // 若没有配置标定区域或标定区域未就绪，仅按触发状态判定（不在标定区内的一律不画框）
+  if (d.triggered !== undefined || d.crossed !== undefined) {
+    return Boolean(d.triggered || d.crossed);
+  }
+
+  return false;
+}
+
 export function drawDetections(canvas, video, detections, frameW, frameH, zoneConfig = null, drawingState = null) {
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
@@ -110,6 +210,8 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
   }
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  const parsedZone = normalizeZoneConfig(zoneConfig);
+
   const isDraggingNow = Boolean(
     drawingState &&
     drawingState.active &&
@@ -118,35 +220,69 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
     drawingState.p2
   );
 
-  let triggerBox = null;
+  let origBox = null;
+  if (parsedZone) {
+    origBox = parsedZone.trigger_box || null;
+    if (!origBox && parsedZone.roi) {
+      if (parsedZone.roi.type === "rect" && Array.isArray(parsedZone.roi.coords)) {
+        origBox = parsedZone.roi.coords;
+      } else if (Array.isArray(parsedZone.roi)) {
+        origBox = parsedZone.roi;
+      }
+    }
+  }
+
+  const isDrawingActive = Boolean(drawingState && drawingState.active);
+
+  // 1. 若处于标定模式（无论是刚点击“重新标定”还是正在拖拽），原区域边框都立即显示为高辨识度的天蓝色虚线参考框
+  if (isDrawingActive && origBox && origBox.length >= 4) {
+    ctx.save();
+    const rx = offsetX + Math.min(origBox[0], origBox[2]) * renderW;
+    const ry = offsetY + Math.min(origBox[1], origBox[3]) * renderH;
+    const rw = Math.abs(origBox[2] - origBox[0]) * renderW;
+    const rh = Math.abs(origBox[3] - origBox[1]) * renderH;
+
+    ctx.fillStyle = "rgba(56, 189, 248, 0.10)";
+    ctx.fillRect(rx, ry, rw, rh);
+
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.85)";
+    ctx.lineWidth = 1.8;
+    ctx.setLineDash([6, 4]);
+    ctx.strokeRect(rx, ry, rw, rh);
+
+    const labelText = "原区域参考";
+    ctx.font = "bold 10px sans-serif";
+    const txtWidth = ctx.measureText(labelText).width + 12;
+    ctx.fillStyle = "rgba(2, 132, 199, 0.90)";
+    ctx.fillRect(rx, ry, txtWidth, 18);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(labelText, rx + 6, ry + 13);
+    ctx.restore();
+  }
+
+  // 2. 确定当前需要高亮显示的区域（拖拽中的新区域，或非标定模式下的当前区域）
+  let activeHighlightBox = null;
   if (isDraggingNow) {
     const p1 = drawingState.p1;
     const p2 = drawingState.p2;
-    triggerBox = [
+    activeHighlightBox = [
       Math.min(p1[0], p2[0]),
       Math.min(p1[1], p2[1]),
       Math.max(p1[0], p2[0]),
       Math.max(p1[1], p2[1]),
     ];
-  } else if (zoneConfig) {
-    triggerBox = zoneConfig.trigger_box || null;
-    if (!triggerBox && zoneConfig.roi) {
-      if (zoneConfig.roi.type === "rect" && Array.isArray(zoneConfig.roi.coords)) {
-        triggerBox = zoneConfig.roi.coords;
-      } else if (Array.isArray(zoneConfig.roi)) {
-        triggerBox = zoneConfig.roi;
-      }
-    }
+  } else if (!isDrawingActive) {
+    activeHighlightBox = origBox;
   }
 
-  if (triggerBox && triggerBox.length >= 4 && (zoneConfig?.enabled !== false || isDraggingNow)) {
+  if (activeHighlightBox && activeHighlightBox.length >= 4) {
     ctx.save();
-    const rx = offsetX + Math.min(triggerBox[0], triggerBox[2]) * renderW;
-    const ry = offsetY + Math.min(triggerBox[1], triggerBox[3]) * renderH;
-    const rw = Math.abs(triggerBox[2] - triggerBox[0]) * renderW;
-    const rh = Math.abs(triggerBox[3] - triggerBox[1]) * renderH;
+    const rx = offsetX + Math.min(activeHighlightBox[0], activeHighlightBox[2]) * renderW;
+    const ry = offsetY + Math.min(activeHighlightBox[1], activeHighlightBox[3]) * renderH;
+    const rw = Math.abs(activeHighlightBox[2] - activeHighlightBox[0]) * renderW;
+    const rh = Math.abs(activeHighlightBox[3] - activeHighlightBox[1]) * renderH;
 
-    const isUnsaved = Boolean(drawingState?.hasUnsavedChanges || zoneConfig?._hasUnsaved);
+    const isUnsaved = Boolean(drawingState?.hasUnsavedChanges || parsedZone?._hasUnsaved);
 
     if (isDraggingNow) {
       ctx.fillStyle = "rgba(245, 158, 11, 0.18)";
@@ -197,9 +333,13 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
       ctx.moveTo(rx + rw - cLen, ry + rh); ctx.lineTo(rx + rw, ry + rh); ctx.lineTo(rx + rw, ry + rh - cLen);
       ctx.stroke();
 
+      let defaultLabel = "触发区域";
+      if (parsedZone && parsedZone.enabled === false) {
+        defaultLabel = "触发区域 (未开启检测)";
+      }
       const labelText = isUnsaved
         ? "触发区域 (待保存)"
-        : "触发区域";
+        : defaultLabel;
       ctx.font = "bold 11px sans-serif";
       const txtWidth = ctx.measureText(labelText).width + 16;
       ctx.fillStyle = isUnsaved ? "rgba(234, 88, 12, 0.95)" : "rgba(245, 158, 11, 0.95)";
@@ -210,9 +350,12 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
     ctx.restore();
   }
 
-  if (!isDraggingNow && !triggerBox && zoneConfig && zoneConfig.enabled && zoneConfig.tripwire && zoneConfig.tripwire.line) {
+  const activeDetectionBox = isDraggingNow ? activeHighlightBox : origBox;
+
+  const tripwireObj = zoneConfig?.tripwire || zoneConfig?.trigger_line || zoneConfig?.trigger_area;
+  if (!isDraggingNow && !activeDetectionBox && zoneConfig && zoneConfig.enabled && tripwireObj && tripwireObj.line) {
     ctx.save();
-    const l = zoneConfig.tripwire.line;
+    const l = tripwireObj.line;
     if (Array.isArray(l) && l.length >= 2) {
       const p1x = offsetX + l[0][0] * renderW;
       const p1y = offsetY + l[0][1] * renderH;
@@ -275,30 +418,6 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
     ctx.restore();
   }
 
-  if (drawingState && drawingState.active && !isDraggingNow) {
-    ctx.save();
-    const promptText = "请在画面中按住鼠标左键并拖拽，以设定触发区域 (ESC取消)";
-    ctx.font = "bold 12px sans-serif";
-    const pWidth = ctx.measureText(promptText).width + 24;
-    const px = Math.max(10, (displayW - pWidth) / 2);
-    const py = 12;
-
-    ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
-    ctx.strokeStyle = "#f59e0b";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(px, py, pWidth, 26, 6);
-    } else {
-      ctx.rect(px, py, pWidth, 26);
-    }
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = "#fbbf24";
-    ctx.fillText(promptText, px + 12, py + 17);
-    ctx.restore();
-  }
 
   if (!detections || detections.length === 0) return;
 
@@ -335,6 +454,11 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
 
     if (!hasCoords) continue;
 
+    // 仅在标定/触发区域内的目标才画框，标定区域之外的不画框！
+    if (!isDetectionInZone(d, parsedZone, activeDetectionBox, rx1, ry1, rx2, ry2)) {
+      continue;
+    }
+
     rx1 = Math.max(0, Math.min(1, rx1));
     ry1 = Math.max(0, Math.min(1, ry1));
     rx2 = Math.max(0, Math.min(1, rx2));
@@ -347,9 +471,11 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
 
     if (bw <= 0 || bh <= 0) continue;
 
-    const mainColor = getColorForClass(d.class_id, d.label);
+    // 标定触发区域内的目标统一使用绿色框显示
+    const mainColor = "#22c55e";
 
     ctx.strokeStyle = mainColor;
+    ctx.lineWidth = 2.0;
     ctx.strokeRect(bx, by, bw, bh);
 
     const confStr = d.confidence !== undefined ? (Number(d.confidence) * 100).toFixed(0) + "%" : "";
@@ -418,7 +544,7 @@ export function renderDetectionList(listEl, detections) {
     }
 
     if (dot) {
-      const color = getColorForClass(d.class_id, d.label);
+      const color = "#22c55e";
       if (dot.style.backgroundColor !== color) {
         dot.style.backgroundColor = color;
       }

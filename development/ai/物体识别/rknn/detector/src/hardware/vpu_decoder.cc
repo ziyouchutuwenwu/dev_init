@@ -18,6 +18,8 @@ static MPP_RET (*s_p_mpp_buffer_put_with_caller)(MppBuffer, const char *) = null
 static MPP_RET (*s_p_mpp_buffer_put_legacy)(MppBuffer) = nullptr;
 static int (*s_p_mpp_buffer_get_fd_with_caller)(MppBuffer, const char *) = nullptr;
 static int (*s_p_mpp_buffer_get_fd_legacy)(MppBuffer) = nullptr;
+static void* (*s_p_mpp_buffer_get_ptr_with_caller)(MppBuffer, const char *) = nullptr;
+static void* (*s_p_mpp_buffer_get_ptr_legacy)(MppBuffer) = nullptr;
 
 VpuDecoder::FrameBuffer::~FrameBuffer() {
     if (mpp_buf) {
@@ -59,6 +61,17 @@ int VpuDecoder::mpp_buf_get_fd(MppBuffer buf) {
     return -1;
 }
 
+void* VpuDecoder::mpp_buf_get_ptr(MppBuffer buf) {
+    if (!buf) return nullptr;
+    if (s_p_mpp_buffer_get_ptr_with_caller) {
+        return s_p_mpp_buffer_get_ptr_with_caller(buf, "VpuDecoder");
+    }
+    if (s_p_mpp_buffer_get_ptr_legacy) {
+        return s_p_mpp_buffer_get_ptr_legacy(buf);
+    }
+    return nullptr;
+}
+
 extern "C" MPP_RET mpp_buffer_put_with_caller(MppBuffer buffer, const char *caller) {
     (void)caller;
     return VpuDecoder::mpp_buf_put(buffer);
@@ -92,7 +105,6 @@ VpuDecoder::VpuDecoder(int codec_type)
       _p_mpp_buffer_get_size_legacy(nullptr) {
     _feed_buf.reserve(1 * 1024 * 1024);
     _write_frame = std::make_shared<FrameBuffer>();
-    _write_frame->data.reserve(4 * 1024 * 1024);
 }
 
 VpuDecoder::~VpuDecoder() {
@@ -194,6 +206,8 @@ bool VpuDecoder::init_mpp(int codec_type) {
     s_p_mpp_buffer_put_legacy = (MPP_RET (*)(MppBuffer))dlsym(_mpp_handle, "mpp_buffer_put");
     s_p_mpp_buffer_get_fd_with_caller = _p_mpp_buffer_get_fd_with_caller;
     s_p_mpp_buffer_get_fd_legacy = _p_mpp_buffer_get_fd_legacy;
+    s_p_mpp_buffer_get_ptr_with_caller = _p_mpp_buffer_get_ptr_with_caller;
+    s_p_mpp_buffer_get_ptr_legacy = _p_mpp_buffer_get_ptr_legacy;
 
     _p_mpp_buffer_group_get = (MPP_RET (*)(MppBufferGroup *, MppBufferType, MppBufferMode, const char *, const char *))dlsym(_mpp_handle, "mpp_buffer_group_get");
     _p_mpp_buffer_group_limit_config = (MPP_RET (*)(MppBufferGroup, size_t, RK_S32))dlsym(_mpp_handle, "mpp_buffer_group_limit_config");
@@ -276,13 +290,22 @@ void VpuDecoder::release_mpp_internal() {
     if (_is_released) {
         return;
     }
+    {
+        std::lock_guard<std::mutex> lock(_frame_mutex);
+        _latest_frame.reset();
+        _write_frame.reset();
+    }
     if (_is_mpp_inited && _ctx && _mpi) {
         if (_mpi->reset) {
             _mpi->reset(_ctx);
         }
+        MppFrame frame = nullptr;
+        while (_mpi->decode_get_frame(_ctx, &frame) == MPP_OK && frame) {
+            if (_p_mpp_frame_deinit) {
+                _p_mpp_frame_deinit(&frame);
+            }
+        }
     }
-    bool tmp_got = false;
-    drain_frames(tmp_got);
 
     if (_packet && _p_mpp_packet_deinit) {
         _p_mpp_packet_deinit(&_packet);
@@ -309,11 +332,6 @@ void VpuDecoder::release_mpp_internal() {
     _is_released = true;
     if (_mpp_handle) {
         _mpp_handle = nullptr;
-    }
-    {
-        std::lock_guard<std::mutex> lock(_frame_mutex);
-        _latest_frame.reset();
-        _write_frame.reset();
     }
     _raw_decode_buf.clear();
     _raw_decode_buf.shrink_to_fit();
@@ -390,6 +408,10 @@ void VpuDecoder::drain_frames(bool& got_new_frame) {
                    _frame_poll_count, width, height, hor_stride, ver_stride, buf_size);
 
             if (_frm_grp != nullptr && buf_size != _current_buf_size) {
+                {
+                    std::lock_guard<std::mutex> lock(_frame_mutex);
+                    _latest_frame.reset();
+                }
                 if (_p_mpp_buffer_group_clear) {
                     _p_mpp_buffer_group_clear(_frm_grp);
                 }
@@ -487,18 +509,17 @@ void VpuDecoder::drain_frames(bool& got_new_frame) {
         }
 
         if (buffer && width > 0 && height > 0) {
-            mpp_buffer_inc_ref(buffer);
-            int dma_fd = mpp_buffer_get_fd(buffer);
-
             auto new_frame = std::make_shared<FrameBuffer>();
+            mpp_buffer_inc_ref(buffer);
+            new_frame->mpp_buf = buffer;
             new_frame->width = (int)width;
             new_frame->height = (int)height;
             new_frame->hor_stride = (int)hor_stride;
             new_frame->ver_stride = (int)ver_stride;
             new_frame->frame_idx = actual_frame_idx;
             new_frame->pts_ms = actual_pts_ms;
+            int dma_fd = mpp_buffer_get_fd(buffer);
             new_frame->dma_fd = dma_fd;
-            new_frame->mpp_buf = buffer;
 
             {
                 std::lock_guard<std::mutex> lock(_frame_mutex);
@@ -657,6 +678,7 @@ bool VpuDecoder::letterbox_frame(const std::shared_ptr<FrameBuffer>& cur_frame, 
 
     memset(dst_img->virt_addr, 114, (size_t)dst_w * dst_h * 3);
 
+    static std::mutex s_rga_mutex;
     int rga_ok = 0;
     if (cur_frame->dma_fd >= 0) {
         rga_buffer_t rga_src = wrapbuffer_fd(cur_frame->dma_fd, src_w, src_h, RK_FORMAT_YCbCr_420_SP, src_hor_stride, src_ver_stride);
@@ -667,6 +689,7 @@ bool VpuDecoder::letterbox_frame(const std::shared_ptr<FrameBuffer>& cur_frame, 
         memset(&pat, 0, sizeof(rga_buffer_t));
         im_rect prect = {0, 0, 0, 0};
         if (imcheck(rga_src, rga_dst, srect, drect) == IM_STATUS_NOERROR) {
+            std::lock_guard<std::mutex> rga_lock(s_rga_mutex);
             int ret_rga = improcess(rga_src, rga_dst, pat, srect, drect, prect, 0);
             if (ret_rga == IM_STATUS_SUCCESS || ret_rga > 0) {
                 rga_ok = 1;
@@ -681,6 +704,7 @@ bool VpuDecoder::letterbox_frame(const std::shared_ptr<FrameBuffer>& cur_frame, 
         memset(&pat, 0, sizeof(rga_buffer_t));
         im_rect prect = {0, 0, 0, 0};
         if (imcheck(rga_src, rga_dst, srect, drect) == IM_STATUS_NOERROR) {
+            std::lock_guard<std::mutex> rga_lock(s_rga_mutex);
             int ret_rga = improcess(rga_src, rga_dst, pat, srect, drect, prect, 0);
             if (ret_rga == IM_STATUS_SUCCESS || ret_rga > 0) {
                 rga_ok = 1;
@@ -689,10 +713,15 @@ bool VpuDecoder::letterbox_frame(const std::shared_ptr<FrameBuffer>& cur_frame, 
     }
 
     if (!rga_ok) {
-        if (cur_frame->data.empty()) {
+        const unsigned char* y_plane = nullptr;
+        if (!cur_frame->data.empty()) {
+            y_plane = cur_frame->data.data();
+        } else if (cur_frame->mpp_buf) {
+            y_plane = static_cast<const unsigned char*>(mpp_buf_get_ptr(cur_frame->mpp_buf));
+        }
+        if (!y_plane) {
             return false;
         }
-        const unsigned char* y_plane = cur_frame->data.data();
         const unsigned char* uv_plane = y_plane + (size_t)src_hor_stride * src_ver_stride;
         unsigned char* dst_rgb = dst_img->virt_addr;
 
@@ -761,17 +790,26 @@ bool VpuDecoder::get_latest_frame(std::vector<unsigned char>& out_buffer, image_
         std::lock_guard<std::mutex> lock(_frame_mutex);
         cur = _latest_frame;
     }
-    if (!cur || cur->data.empty() || cur->width <= 0 || cur->height <= 0) {
+    if (!cur || cur->width <= 0 || cur->height <= 0) {
+        return false;
+    }
+    const void* src_ptr = nullptr;
+    if (!cur->data.empty()) {
+        src_ptr = cur->data.data();
+    } else if (cur->mpp_buf) {
+        src_ptr = get_buf_ptr(cur->mpp_buf, "get_latest_frame");
+    }
+    if (!src_ptr) {
         return false;
     }
     size_t cur_sz = (size_t)cur->hor_stride * cur->ver_stride * 3 / 2;
-    if (cur_sz == 0 || cur_sz > cur->data.size()) {
-        cur_sz = cur->data.size();
+    if (cur_sz == 0) {
+        cur_sz = (size_t)cur->width * cur->height * 3 / 2;
     }
     if (out_buffer.size() < cur_sz) {
         out_buffer.resize(cur_sz);
     }
-    memcpy(out_buffer.data(), cur->data.data(), cur_sz);
+    memcpy(out_buffer.data(), src_ptr, cur_sz);
 
     memset(&frame, 0, sizeof(image_buffer_t));
     frame.width = cur->width;
@@ -780,7 +818,7 @@ bool VpuDecoder::get_latest_frame(std::vector<unsigned char>& out_buffer, image_
     frame.height_stride = cur->ver_stride > 0 ? cur->ver_stride : cur->height;
     frame.format = IMAGE_FORMAT_YUV420SP_NV12;
     frame.virt_addr = out_buffer.data();
-    frame.fd = -1;
+    frame.fd = cur->dma_fd;
     frame.size = (int)cur_sz;
     out_frame_idx = cur->frame_idx;
     out_pts_ms = cur->pts_ms;
@@ -796,17 +834,26 @@ bool VpuDecoder::get_latest_frame(void* out_buffer, size_t out_buf_capacity, ima
         std::lock_guard<std::mutex> lock(_frame_mutex);
         cur = _latest_frame;
     }
-    if (!cur || cur->data.empty() || cur->width <= 0 || cur->height <= 0) {
+    if (!cur || cur->width <= 0 || cur->height <= 0) {
+        return false;
+    }
+    const void* src_ptr = nullptr;
+    if (!cur->data.empty()) {
+        src_ptr = cur->data.data();
+    } else if (cur->mpp_buf) {
+        src_ptr = get_buf_ptr(cur->mpp_buf, "get_latest_frame");
+    }
+    if (!src_ptr) {
         return false;
     }
     size_t cur_sz = (size_t)cur->hor_stride * cur->ver_stride * 3 / 2;
-    if (cur_sz == 0 || cur_sz > cur->data.size()) {
-        cur_sz = cur->data.size();
+    if (cur_sz == 0) {
+        cur_sz = (size_t)cur->width * cur->height * 3 / 2;
     }
     if (out_buf_capacity < cur_sz) {
         return false;
     }
-    memcpy(out_buffer, cur->data.data(), cur_sz);
+    memcpy(out_buffer, src_ptr, cur_sz);
 
     memset(&frame, 0, sizeof(image_buffer_t));
     frame.width = cur->width;
@@ -815,7 +862,7 @@ bool VpuDecoder::get_latest_frame(void* out_buffer, size_t out_buf_capacity, ima
     frame.height_stride = cur->ver_stride > 0 ? cur->ver_stride : cur->height;
     frame.format = IMAGE_FORMAT_YUV420SP_NV12;
     frame.virt_addr = (unsigned char*)out_buffer;
-    frame.fd = -1;
+    frame.fd = cur->dma_fd;
     frame.size = (int)cur_sz;
     out_frame_idx = cur->frame_idx;
     out_pts_ms = cur->pts_ms;

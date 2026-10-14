@@ -3,11 +3,8 @@ use std::sync::Arc;
 
 pub async fn update_streams(
     server: &Arc<WebRtcServer>,
-    streams_list: Vec<(String, String)>,
-) -> Result<Vec<(String, String)>, String> {
-    if streams_list.is_empty() {
-        return Err("未包含任何有效的直播流定义 (需包含 id 和 url)".to_string());
-    }
+    streams_list: Vec<(String, String, bool)>,
+) -> Result<Vec<(String, String, bool)>, String> {
 
     let cfg_path = crate::config::get_global_config_path();
     crate::object_tracker::save_input_streams_to_yaml_file(&cfg_path, &streams_list)

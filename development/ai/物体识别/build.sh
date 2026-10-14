@@ -26,6 +26,13 @@ build_encrypter() {
     elif [ -f "${ENCRYPTER_DIR}/tools/gen_header.zig" ]; then
         zig run "${ENCRYPTER_DIR}/tools/gen_header.zig" -- "${DETECTOR_DIR}/3rdparty/model_license/include/model_license.h"
     fi
+
+    echo ">> 复制 aarch64 hwid_tool 至 deploy/ ..."
+    mkdir -p "${DEPLOY_DIR}"
+    if [ -f "${ENCRYPTER_DIR}/zig-out/aarch64/bin/hwid_tool" ]; then
+        cp -f "${ENCRYPTER_DIR}/zig-out/aarch64/bin/hwid_tool" "${DEPLOY_DIR}/hwid_tool"
+        chmod +x "${DEPLOY_DIR}/hwid_tool"
+    fi
 }
 
 build_detector() {
@@ -88,13 +95,13 @@ package_deploy() {
         cp -f "${SERVER_DIR}/config.yaml" "${DEPLOY_DIR}/config.yaml"
     fi
 
-    if [ ! -f "${DEPLOY_DIR}/license.key" ] && [ -f "${ROOT_DIR}/license.key" ]; then
-        cp -f "${ROOT_DIR}/license.key" "${DEPLOY_DIR}/license.key"
+    if [ -f "${ENCRYPTER_DIR}/zig-out/aarch64/bin/hwid_tool" ]; then
+        cp -f "${ENCRYPTER_DIR}/zig-out/aarch64/bin/hwid_tool" "${DEPLOY_DIR}/hwid_tool"
+        chmod +x "${DEPLOY_DIR}/hwid_tool"
     fi
 
     rm -f "${DEPLOY_DIR}/README.md"
     rm -f "${DEPLOY_DIR}/detect_cli"
-    rm -f "${DEPLOY_DIR}/model.enc"
     rm -f "${DEPLOY_DIR}"/.*.stamp "${DEPLOY_DIR}"/*.stamp "${DEPLOY_DIR}"/????-????-????-???? 2>/dev/null || true
 
     cd "${ROOT_DIR}"
@@ -113,9 +120,39 @@ package_deploy() {
     echo "========================================================="
 }
 
-TARGET="${1:-all}"
+show_usage() {
+    echo "用法: $0 <target>"
+    echo ""
+    echo "目标 (Targets):"
+    echo "  all        执行完整流程构建并打包 (encrypter -> detector -> server -> web -> package)"
+    echo "  encrypter  构建加密工具、授权静态库及 hwid_tool"
+    echo "  detector   交叉编译 C++ 检测核心 (生成 deploy/detector)"
+    echo "  server     交叉编译 Rust 服务端 (生成 deploy/server)"
+    echo "  web        构建 Web 静态前端资源"
+    echo "  package    组装 deploy/ 目录依赖并打包生成 deploy.tar.gz"
+    echo "  help       显示此帮助信息"
+    echo ""
+    echo "示例:"
+    echo "  $0 all       # 完整构建所有模块并打包"
+    echo "  $0 detector  # 仅重新编译 detector"
+    echo "  $0 package   # 仅组装依赖并打包"
+}
+
+TARGET="${1:-}"
+
+if [ -z "${TARGET}" ] || [ "${TARGET}" = "-h" ] || [ "${TARGET}" = "--help" ] || [ "${TARGET}" = "help" ]; then
+    show_usage
+    exit 0
+fi
 
 case "${TARGET}" in
+    all)
+        build_encrypter
+        build_detector
+        build_server
+        build_web
+        package_deploy
+        ;;
     encrypter)
         build_encrypter
         ;;
@@ -131,11 +168,10 @@ case "${TARGET}" in
     package)
         package_deploy
         ;;
-    all|*)
-        build_encrypter
-        build_detector
-        build_server
-        build_web
-        package_deploy
+    *)
+        echo "错误: 未知目标 '${TARGET}'"
+        echo ""
+        show_usage
+        exit 1
         ;;
 esac

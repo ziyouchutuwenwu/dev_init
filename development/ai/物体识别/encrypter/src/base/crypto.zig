@@ -38,8 +38,19 @@ pub fn random_bytes(buf: []u8) void {
         const rc = getrandom(buf.ptr + total, buf.len - total, 0);
         if (rc > 0) {
             total += @as(usize, @intCast(rc));
+        } else if (rc < 0 and std.c._errno().* == @intFromEnum(std.c.E.INTR)) {
+            continue;
         } else {
             break;
+        }
+    }
+    if (total < buf.len) {
+        const file = std.c.fopen("/dev/urandom", "rb") orelse return;
+        defer _ = std.c.fclose(file);
+        while (total < buf.len) {
+            const rd = std.c.fread(buf.ptr + total, 1, buf.len - total, file);
+            if (rd == 0) break;
+            total += rd;
         }
     }
 }

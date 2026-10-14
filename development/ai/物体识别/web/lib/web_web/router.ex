@@ -33,5 +33,6 @@ defmodule WebWeb.Router do
 
     get "/zone/:stream_id", ConfigSyncController, :get_zone
     post "/zone/:stream_id", ConfigSyncController, :save_zone
+    post "/stream/:stream_id/toggle", ConfigSyncController, :toggle_stream
   end
 end

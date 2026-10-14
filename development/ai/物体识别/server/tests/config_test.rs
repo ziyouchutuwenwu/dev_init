@@ -67,6 +67,31 @@ trigger:
     assert!(!updated.contains("[0.462, 0.616, 0.805, 0.803]"));
 }
 
+#[test]
+fn test_update_yaml_input_streams_full_with_enabled_toggle() {
+    let original = r#"input:
+  cam0: rtsp://192.168.88.20:8554/live0
+  cam1: rtsp://192.168.88.20:8554/live1
+
+trigger:
+  cam0:
+    enabled: true
+    trigger_box: [0.050, 0.050, 0.950, 0.950]
+  cam1:
+    enabled: true
+    trigger_box: [0.100, 0.100, 0.900, 0.900]
+"#;
+
+    let new_streams = vec![
+        ("cam0".to_string(), "rtsp://192.168.88.20:8554/live0".to_string(), false),
+        ("cam1".to_string(), "rtsp://192.168.88.20:8554/live1".to_string(), true),
+    ];
+
+    let updated = server::object_tracker::update_yaml_input_streams_full(original, &new_streams);
+    assert!(updated.contains("  cam0:\n    enabled: false"));
+    assert!(updated.contains("  cam1:\n    enabled: true"));
+}
+
 #[tokio::test]
 async fn test_update_alert_url_and_config() {
     let test_url = "http://192.168.88.1:4000/api/alert";
@@ -151,10 +176,41 @@ fn test_yaml_config_formatting_has_blank_lines() {
     cfg.set_alert(Some("http://127.0.0.1:4000/api/alert"), Some(2), Some(5));
 
     let formatted = cfg.to_formatted_yaml().unwrap();
-    println!("Formatted Output:\n{}", formatted);
+    println!("formatted output:\n{}", formatted);
 
     assert!(formatted.contains("input:\n  test_s1: rtsp://127.0.0.1:8554/live1\n\nserver:"));
-    assert!(formatted.contains("alert_url: http://127.0.0.1:4000/api/alert"));
+    assert!(formatted.contains("alert:\n  url: http://127.0.0.1:4000/api/alert\n  cooldown_sec: 2\n  timeout_sec: 5"));
+    assert!(!formatted.contains("input: null"));
+    assert!(!formatted.contains("trigger: null"));
+}
+
+#[test]
+fn test_update_yaml_empty_streams_removes_input_and_trigger() {
+    let original = r#"input:
+  aaa: rtsp://192.168.88.20:8554/file_01
+
+server:
+  host: "0.0.0.0"
+  port: 8181
+
+alert:
+  url: http://127.0.0.1:4000/api/alert
+  cooldown_sec: 2
+  timeout_sec: 5
+
+trigger:
+  aaa:
+    enabled: true
+    trigger_box: [0.050, 0.050, 0.950, 0.950]
+"#;
+
+    let updated = server::object_tracker::update_yaml_input_streams_full(original, &[]);
+    assert!(!updated.contains("input:"));
+    assert!(!updated.contains("input: null"));
+    assert!(!updated.contains("trigger:"));
+    assert!(!updated.contains("trigger: null"));
+    assert!(updated.contains("server:\n  host: \"0.0.0.0\""));
+    assert!(updated.contains("alert:\n  url: http://127.0.0.1:4000/api/alert"));
 }
 
 

@@ -10,6 +10,7 @@ export fn decrypt_model(
     out_ptr: ?*[*]u8,
     out_len: ?*usize,
 ) c_int {
+    if (out_len) |p| p.* = 0;
     const path = enc_path orelse return -1;
     const p_ptr = out_ptr orelse return -1;
     const p_len = out_len orelse return -1;
@@ -29,8 +30,9 @@ export fn get_model_id(
     out_buf: ?[*]u8,
     max_len: usize,
 ) c_int {
-    const path = enc_path orelse return -1;
     const buf = out_buf orelse return -1;
+    if (max_len > 0) buf[0] = 0;
+    const path = enc_path orelse return -1;
     const path_slice = std.mem.sliceTo(path, 0);
     const mid = model.read_model_id_from_file(path_slice) catch return -1;
     const str = model.model_id_to_string(&mid);

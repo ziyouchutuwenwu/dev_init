@@ -21,7 +21,7 @@ int NpuWorkerPool::worker_count() const {
 }
 
 bool NpuWorkerPool::init(std::shared_ptr<InferPipeline> master_pipeline, int core_count) {
-    std::lock_guard<std::mutex> lock(_pool_mutex);
+    std::lock_guard<std::recursive_mutex> lock(_pool_mutex);
     if (_is_initialized.load()) {
         return true;
     }
@@ -66,7 +66,7 @@ bool NpuWorkerPool::init(std::shared_ptr<InferPipeline> master_pipeline, int cor
 }
 
 void NpuWorkerPool::shutdown() {
-    std::lock_guard<std::mutex> lock(_pool_mutex);
+    std::lock_guard<std::recursive_mutex> lock(_pool_mutex);
     if (!_is_initialized.load() && !_running.load()) {
         return;
     }
@@ -85,15 +85,18 @@ void NpuWorkerPool::shutdown() {
     }
     _workers.clear();
 
+    std::vector<InferTask> remaining_tasks;
     {
         std::lock_guard<std::mutex> q_lock(_queue_mutex);
         while (!_queue.empty()) {
-            auto task = std::move(_queue.front());
+            remaining_tasks.push_back(std::move(_queue.front()));
             _queue.pop();
-            if (task.frame && task.frame->mpp_buf) {
-                mpp_buffer_put(task.frame->mpp_buf);
-                task.frame->mpp_buf = nullptr;
-            }
+        }
+    }
+    for (auto& t : remaining_tasks) {
+        if (t.callback) {
+            DetectResult empty_res;
+            t.callback(t.channel_id, t.frame ? t.frame->frame_idx : 0, t.frame ? t.frame->pts_ms : 0, 0, 0, empty_res);
         }
     }
 
@@ -102,23 +105,22 @@ void NpuWorkerPool::shutdown() {
 
 bool NpuWorkerPool::push_task(InferTask task) {
     if (!_running.load() || !_is_initialized.load()) {
-        if (task.frame && task.frame->mpp_buf) {
-            mpp_buffer_put(task.frame->mpp_buf);
-            task.frame->mpp_buf = nullptr;
-        }
         return false;
     }
+    InferTask dropped;
+    bool has_dropped = false;
     {
         std::lock_guard<std::mutex> lock(_queue_mutex);
         if (_queue.size() > 64) {
-            auto dropped = std::move(_queue.front());
+            dropped = std::move(_queue.front());
             _queue.pop();
-            if (dropped.frame && dropped.frame->mpp_buf) {
-                mpp_buffer_put(dropped.frame->mpp_buf);
-                dropped.frame->mpp_buf = nullptr;
-            }
+            has_dropped = true;
         }
         _queue.push(std::move(task));
+    }
+    if (has_dropped && dropped.callback) {
+        DetectResult empty_res;
+        dropped.callback(dropped.channel_id, dropped.frame ? dropped.frame->frame_idx : 0, dropped.frame ? dropped.frame->pts_ms : 0, 0, 0, empty_res);
     }
     _cv.notify_one();
     return true;
@@ -144,14 +146,11 @@ void NpuWorkerPool::worker_loop(int worker_id, uint32_t core_mask, std::shared_p
         }
 
         if (!task.frame || (task.frame->dma_fd < 0 && task.frame->data.empty()) || !pipeline || !pipeline->is_initialized()) {
-            if (task.frame && task.frame->mpp_buf) {
-                mpp_buffer_put(task.frame->mpp_buf);
-                task.frame->mpp_buf = nullptr;
-            }
             if (task.callback) {
                 DetectResult empty_res;
                 task.callback(task.channel_id, task.frame ? task.frame->frame_idx : 0, task.frame ? task.frame->pts_ms : 0, 0, 0, empty_res);
             }
+            task.frame.reset();
             continue;
         }
 
@@ -160,14 +159,11 @@ void NpuWorkerPool::worker_loop(int worker_id, uint32_t core_mask, std::shared_p
         int in_h = pipeline->input_height();
         int in_c = pipeline->input_channel();
         if (!in_buf || in_w <= 0 || in_h <= 0) {
-            if (task.frame && task.frame->mpp_buf) {
-                mpp_buffer_put(task.frame->mpp_buf);
-                task.frame->mpp_buf = nullptr;
-            }
             if (task.callback) {
                 DetectResult empty_res;
                 task.callback(task.channel_id, task.frame->frame_idx, task.frame->pts_ms, 0, 0, empty_res);
             }
+            task.frame.reset();
             continue;
         }
 
@@ -187,20 +183,16 @@ void NpuWorkerPool::worker_loop(int worker_id, uint32_t core_mask, std::shared_p
         int orig_w = 0, orig_h = 0;
 
         if (!VpuDecoder::letterbox_frame(task.frame, &dst_img, &letter_box, &orig_w, &orig_h)) {
-            if (task.frame && task.frame->mpp_buf) {
-                mpp_buffer_put(task.frame->mpp_buf);
-                task.frame->mpp_buf = nullptr;
-            }
             if (task.callback) {
                 DetectResult empty_res;
                 task.callback(task.channel_id, task.frame->frame_idx, task.frame->pts_ms, 0, 0, empty_res);
             }
+            task.frame.reset();
             continue;
         }
 
         uint64_t f_idx = task.frame->frame_idx;
         int64_t pts = task.frame->pts_ms;
-        MppBuffer mpp_buf = task.frame->mpp_buf;
 
         DetectResult result;
         result.orig_width = orig_w;
@@ -209,13 +201,6 @@ void NpuWorkerPool::worker_loop(int worker_id, uint32_t core_mask, std::shared_p
         result.pts_ms = pts;
 
         bool ok = pipeline->process(dst_img, result);
-
-        if (mpp_buf) {
-            mpp_buffer_put(mpp_buf);
-            if (task.frame) {
-                task.frame->mpp_buf = nullptr;
-            }
-        }
         task.frame.reset();
 
         if (task.callback) {

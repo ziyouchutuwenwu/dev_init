@@ -153,6 +153,8 @@ impl DetectWrapper {
     }
 
     pub fn create_channel_with_codec(&self, ch: u32, codec: &str) -> Result<(), String> {
+        self.feed_clients.lock().unwrap().remove(&ch);
+        self.detect_clients.lock().unwrap().remove(&ch);
         let mut ctrl = self.control_client.lock().unwrap();
         let conn = match ctrl.as_mut() {
             Some(c) => c,
@@ -401,20 +403,41 @@ impl DetectWrapper {
                         return Err(format!("算法检测执行失败 (ch={ch}): {status}"));
                     }
 
-                    if json_len == 0 || resp_payload.len() < 24 + json_len {
+                    if json_len == 0 {
                         return Ok((None, out_frame_idx, out_pts_ms));
                     }
 
+                    if resp_payload.len() < 24 + json_len {
+                        drop(conn);
+                        self.detect_clients.lock().unwrap().remove(&ch);
+                        return Err(format!(
+                            "检测响应数据截断 (ch={ch}): expected {}, got {}",
+                            24 + json_len,
+                            resp_payload.len()
+                        ));
+                    }
+
                     let json_bytes = &resp_payload[24..24 + json_len];
-                    let json_str = String::from_utf8_lossy(json_bytes).into_owned();
-                    return Ok((Some(json_str), out_frame_idx, out_pts_ms));
+                    let json_str = String::from_utf8_lossy(json_bytes)
+                        .trim_end_matches('\0')
+                        .trim()
+                        .to_string();
+                    let opt_json = if json_str.is_empty() {
+                        None
+                    } else {
+                        Some(json_str)
+                    };
+                    return Ok((opt_json, out_frame_idx, out_pts_ms));
                 }
                 Err(e) => {
                     drop(conn);
                     self.detect_clients.lock().unwrap().remove(&ch);
-                    if attempt == 1 {
-                        return Err(format!("读取检测响应失败 (ch={ch}): {e}"));
+                    if attempt == 0 {
+                        try_spawn_detector();
+                        std::thread::sleep(Duration::from_millis(150));
+                        continue;
                     }
+                    return Err(format!("读取检测响应失败 (ch={ch}): {e}"));
                 }
             }
         }

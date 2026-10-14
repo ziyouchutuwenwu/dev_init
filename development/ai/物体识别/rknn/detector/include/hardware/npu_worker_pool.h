@@ -54,7 +54,7 @@ private:
         std::thread thread;
     };
     std::vector<WorkerContext> _workers;
-    std::mutex _pool_mutex;
+    std::recursive_mutex _pool_mutex;
 };
 
-#endif // NPU_WORKER_POOL_H
+#endif

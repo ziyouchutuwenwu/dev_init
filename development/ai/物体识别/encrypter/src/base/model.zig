@@ -17,32 +17,22 @@ pub fn read_model_id_from_file(path: []const u8) ![MODEL_ID_LEN]u8 {
     defer _ = std.c.fclose(file);
     var header_buf: [HEADER_LEN]u8 = undefined;
     const rd = std.c.fread(&header_buf, 1, HEADER_LEN, file);
-    if (rd < 8 + MODEL_ID_LEN) return error.InvalidFileFormat;
-    var magic_len: usize = 0;
-    if (rd >= MAGIC.len + MODEL_ID_LEN and std.mem.startsWith(u8, header_buf[0..rd], MAGIC)) {
-        magic_len = MAGIC.len;
-    } else if (std.mem.startsWith(u8, header_buf[0..rd], "rkmod02\x00")) {
-        magic_len = 8;
-    } else {
+    if (rd < MAGIC.len + MODEL_ID_LEN) return error.InvalidFileFormat;
+    if (!std.mem.startsWith(u8, header_buf[0..rd], MAGIC)) {
         return error.InvalidMagic;
     }
     var id: [MODEL_ID_LEN]u8 = undefined;
-    @memcpy(&id, header_buf[magic_len .. magic_len + MODEL_ID_LEN]);
+    @memcpy(&id, header_buf[MAGIC.len .. MAGIC.len + MODEL_ID_LEN]);
     return id;
 }
 
 pub fn read_model_id_from_buffer(data: []const u8) ![MODEL_ID_LEN]u8 {
-    if (data.len < 8 + MODEL_ID_LEN) return error.InvalidFileFormat;
-    var magic_len: usize = 0;
-    if (data.len >= MAGIC.len + MODEL_ID_LEN and std.mem.startsWith(u8, data, MAGIC)) {
-        magic_len = MAGIC.len;
-    } else if (std.mem.startsWith(u8, data, "rkmod02\x00")) {
-        magic_len = 8;
-    } else {
+    if (data.len < MAGIC.len + MODEL_ID_LEN) return error.InvalidFileFormat;
+    if (!std.mem.startsWith(u8, data, MAGIC)) {
         return error.InvalidMagic;
     }
     var id: [MODEL_ID_LEN]u8 = undefined;
-    @memcpy(&id, data[magic_len .. magic_len + MODEL_ID_LEN]);
+    @memcpy(&id, data[MAGIC.len .. MAGIC.len + MODEL_ID_LEN]);
     return id;
 }
 
@@ -91,6 +81,7 @@ pub fn encrypt_model_with_id(
     out_path_z[out_enc_path.len] = 0;
     const out_file = std.c.fopen(&out_path_z, "wb") orelse return error.AccessDenied;
     defer _ = std.c.fclose(out_file);
+    errdefer _ = std.c.unlink(&out_path_z);
 
     if (std.c.fwrite(MAGIC.ptr, 1, MAGIC.len, out_file) != MAGIC.len) return error.WriteFailed;
     if (std.c.fwrite(&model_id, 1, model_id.len, out_file) != model_id.len) return error.WriteFailed;
@@ -112,7 +103,9 @@ pub fn string_to_model_id(name: []const u8) [MODEL_ID_LEN]u8 {
 
 pub fn model_id_to_string(id: *const [MODEL_ID_LEN]u8) []const u8 {
     var len: usize = 0;
-    while (len < MODEL_ID_LEN and id[len] != 0) : (len += 1) {}
+    while (len < MODEL_ID_LEN and id[len] != 0) : (len += 1) {
+        if (!std.ascii.isPrint(id[len])) return "";
+    }
     return id[0..len];
 }
 
@@ -179,16 +172,9 @@ pub fn decrypt_model_buffer(
     enc_data: []const u8,
     key: [crypto.KEY_LEN]u8,
 ) ![]u8 {
-    if (enc_data.len < 8) return error.InvalidFileFormat;
-
-    var offset: usize = 0;
-    if (enc_data.len >= MAGIC.len and std.mem.startsWith(u8, enc_data, MAGIC)) {
-        offset = MAGIC.len + MODEL_ID_LEN;
-    } else if (std.mem.startsWith(u8, enc_data, "rkmod02\x00")) {
-        offset = 8 + MODEL_ID_LEN;
-    } else if (std.mem.startsWith(u8, enc_data, "rkmod01\x00")) {
-        offset = 8;
-    } else {
+    var offset: usize = MAGIC.len + MODEL_ID_LEN;
+    if (enc_data.len < offset + crypto.NONCE_LEN + crypto.TAG_LEN + 8) return error.InvalidFileFormat;
+    if (!std.mem.startsWith(u8, enc_data, MAGIC)) {
         return error.InvalidMagic;
     }
 

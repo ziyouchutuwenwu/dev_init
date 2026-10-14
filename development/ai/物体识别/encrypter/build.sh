@@ -20,6 +20,7 @@ build_target() {
     echo "========================================================="
     zig build -Dtarget=aarch64-linux-gnu -Doptimize=ReleaseSafe --prefix zig-out/aarch64
 }
+
 case "${TARGET}" in
     x64|x86_64)
         build_x64
@@ -38,4 +39,3 @@ echo "全部构建成功！"
 echo "  • x64 工具/静态库     : zig-out/x86_64/"
 echo "  • aarch64 工具/静态库 : zig-out/aarch64/"
 echo "========================================================="
-

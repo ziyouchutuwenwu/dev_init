@@ -10,6 +10,7 @@ pub struct FrameDetector {
     default_height: i32,
     flush_epoch: std::sync::atomic::AtomicU64,
     session_epoch: std::sync::atomic::AtomicU64,
+    channel_released: std::sync::atomic::AtomicBool,
 }
 
 impl FrameDetector {
@@ -26,6 +27,7 @@ impl FrameDetector {
             default_height: 1080,
             flush_epoch: std::sync::atomic::AtomicU64::new(0),
             session_epoch: std::sync::atomic::AtomicU64::new(0),
+            channel_released: std::sync::atomic::AtomicBool::new(false),
         }
     }
 
@@ -58,6 +60,9 @@ impl FrameDetector {
     }
 
     pub fn release_channel(&self) -> Result<(), String> {
+        if self.channel_released.swap(true, std::sync::atomic::Ordering::SeqCst) {
+            return Ok(());
+        }
         self.detect_wrapper.release_channel(self.channel_id)
     }
 
@@ -77,45 +82,20 @@ impl FrameDetector {
             _ => return Ok(None),
         };
 
-        let parsed = match serde_json::from_str::<serde_json::Value>(&raw_json) {
+        let mut parsed = match serde_json::from_str::<RawDetectResponse>(&raw_json) {
             Ok(v) => v,
             Err(_) => return Ok(None),
         };
 
-        let mut frame_w = Some(self.default_width);
-        let mut frame_h = Some(self.default_height);
-        let mut f_idx = out_frame_idx;
-        let mut f_pts = out_pts_ms;
-        let mut detections = Vec::new();
+        let frame_w = parsed.frame_width.filter(|&w| w > 0).or(Some(self.default_width));
+        let frame_h = parsed.frame_height.filter(|&h| h > 0).or(Some(self.default_height));
+        let f_idx = parsed.frame_idx.unwrap_or(out_frame_idx);
+        let f_pts = parsed.pts_ms.unwrap_or(out_pts_ms);
 
-        if let serde_json::Value::Object(mut map) = parsed {
-            if let Some(w) = parse_dimension(map.get("frame_width")) {
-                frame_w = Some(w);
-            }
-            if let Some(h) = parse_dimension(map.get("frame_height")) {
-                frame_h = Some(h);
-            }
-            if let Some(idx) = parse_u64(map.get("frame_idx")) {
-                f_idx = idx;
-            }
-            if let Some(pts) = parse_i64(map.get("pts_ms")) {
-                f_pts = pts;
-            }
-            if let Some(serde_json::Value::Array(arr)) = map.remove("detections") {
-                detections = arr;
-            }
-        }
+        let fw_f = frame_w.unwrap_or(self.default_width) as f64;
+        let fh_f = frame_h.unwrap_or(self.default_height) as f64;
 
-        let fw_f = match frame_w {
-            Some(w) => w as f64,
-            None => self.default_width as f64,
-        };
-        let fh_f = match frame_h {
-            Some(h) => h as f64,
-            None => self.default_height as f64,
-        };
-
-        for detection in &mut detections {
+        for detection in &mut parsed.detections {
             normalize_detection_box(detection, fw_f, fh_f);
         }
 
@@ -126,37 +106,20 @@ impl FrameDetector {
             pts_ms: Some(f_pts),
             frame_width: frame_w,
             frame_height: frame_h,
-            detections,
+            detections: parsed.detections,
             zone_config: None,
         }))
     }
 }
 
-fn parse_dimension(val: Option<&serde_json::Value>) -> Option<i32> {
-    let num = match val {
-        Some(serde_json::Value::Number(n)) => n,
-        _ => return None,
-    };
-    match num.as_i64() {
-        Some(v) if v > 0 => Some(v as i32),
-        _ => None,
-    }
-}
-
-fn parse_u64(val: Option<&serde_json::Value>) -> Option<u64> {
-    let num = match val {
-        Some(serde_json::Value::Number(n)) => n,
-        _ => return None,
-    };
-    num.as_u64()
-}
-
-fn parse_i64(val: Option<&serde_json::Value>) -> Option<i64> {
-    let num = match val {
-        Some(serde_json::Value::Number(n)) => n,
-        _ => return None,
-    };
-    num.as_i64()
+#[derive(serde::Deserialize)]
+struct RawDetectResponse {
+    frame_width: Option<i32>,
+    frame_height: Option<i32>,
+    frame_idx: Option<u64>,
+    pts_ms: Option<i64>,
+    #[serde(default)]
+    detections: Vec<serde_json::Value>,
 }
 
 fn normalize_detection_box(detection: &mut serde_json::Value, fw_f: f64, fh_f: f64) {
@@ -173,34 +136,30 @@ fn normalize_detection_box(detection: &mut serde_json::Value, fw_f: f64, fh_f: f
         Some(serde_json::Value::Array(arr)) if arr.len() >= 4 => arr,
         _ => return,
     };
+    let x1 = box_arr[0].as_f64().unwrap_or(0.0);
+    let y1 = box_arr[1].as_f64().unwrap_or(0.0);
+    let x2 = box_arr[2].as_f64().unwrap_or(0.0);
+    let y2 = box_arr[3].as_f64().unwrap_or(0.0);
 
-    let x1 = match box_arr[0].as_f64() {
-        Some(v) => v,
-        None => 0.0,
-    };
-    let y1 = match box_arr[1].as_f64() {
-        Some(v) => v,
-        None => 0.0,
-    };
-    let x2 = match box_arr[2].as_f64() {
-        Some(v) => v,
-        None => 0.0,
-    };
-    let y2 = match box_arr[3].as_f64() {
-        Some(v) => v,
-        None => 0.0,
-    };
+    let x_min = x1.min(x2);
+    let x_max = x1.max(x2);
+    let y_min = y1.min(y2);
+    let y_max = y1.max(y2);
 
-    if x1 <= 1.0 && y1 <= 1.0 && x2 <= 1.0 && y2 <= 1.0 && (x2 > 0.0 || y2 > 0.0) {
-        det_obj.insert("rel_box".to_string(), serde_json::json!([x1, y1, x2, y2]));
+    if x_max <= 1.0 && y_max <= 1.0 && (x_max > 0.0 || y_max > 0.0) {
+        let rx1 = x_min.clamp(0.0, 1.0);
+        let ry1 = y_min.clamp(0.0, 1.0);
+        let rx2 = x_max.clamp(0.0, 1.0);
+        let ry2 = y_max.clamp(0.0, 1.0);
+        det_obj.insert("rel_box".to_string(), serde_json::json!([rx1, ry1, rx2, ry2]));
         return;
     }
 
     if fw_f > 0.0 && fh_f > 0.0 {
-        let rx1 = (x1 / fw_f).clamp(0.0, 1.0);
-        let ry1 = (y1 / fh_f).clamp(0.0, 1.0);
-        let rx2 = (x2 / fw_f).clamp(0.0, 1.0);
-        let ry2 = (y2 / fh_f).clamp(0.0, 1.0);
+        let rx1 = (x_min / fw_f).clamp(0.0, 1.0);
+        let ry1 = (y_min / fh_f).clamp(0.0, 1.0);
+        let rx2 = (x_max / fw_f).clamp(0.0, 1.0);
+        let ry2 = (y_max / fh_f).clamp(0.0, 1.0);
         det_obj.insert("rel_box".to_string(), serde_json::json!([rx1, ry1, rx2, ry2]));
     }
 }

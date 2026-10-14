@@ -2,7 +2,6 @@ const std = @import("std");
 const base = @import("base");
 const crypto = base.crypto;
 const license = base.license;
-const duration = base.duration;
 
 const cli_print = @import("print.zig");
 const print_stdout = cli_print.print_stdout;
@@ -14,7 +13,6 @@ fn print_usage(exe: []const u8) void {
     print_stdout("用法说明 (Usage):\n", .{});
     print_stdout("  签发授权: {s} sign --hwid <机器码> --lic <证书路径> [--days <天数>]\n", .{exe});
     print_stdout("  校验授权: {s} verify --hwid <机器码> --lic <证书路径>\n", .{exe});
-    print_stdout("  读取时长: {s} read-duration --hwid <机器码> --path <文件路径>\n", .{exe});
     print_stdout("=========================================================\n", .{});
 }
 
@@ -123,7 +121,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
         print_stdout("  • 证书创建时间: {s}\n", .{issue_str});
         if (days > 0) {
             var expire_buf: [64]u8 = undefined;
-            const expire_time = now + days * 86400;
+            const expire_time = now +| (days *| 86400);
             const expire_str = license.format_timestamp(expire_time, &expire_buf);
             print_stdout("  • 证书到期时间: {s} (有效时长: {d} 天)\n", .{ expire_str, days });
         } else {
@@ -213,67 +211,6 @@ pub fn main(init: std.process.Init.Minimal) !void {
             .io_error => {
                 print_stdout("  • 校验状态    : \x1b[31m[FAIL] 无法打开或读取证书文件: {s}\x1b[0m\n", .{lic_file});
             },
-        }
-        print_stdout("=========================================================\n", .{});
-        return;
-    } else if (std.mem.eql(u8, cmd, "read-duration")) {
-        var hwid_arg: ?[]const u8 = null;
-        var cfg_file: ?[]const u8 = null;
-
-        var i: usize = 2;
-        while (i < args.len) : (i += 1) {
-            if ((std.mem.eql(u8, args[i], "--hwid") or std.mem.eql(u8, args[i], "--sn")) and i + 1 < args.len) {
-                hwid_arg = args[i + 1];
-                i += 1;
-            } else if ((std.mem.eql(u8, args[i], "--path") or std.mem.eql(u8, args[i], "--file")) and i + 1 < args.len) {
-                cfg_file = args[i + 1];
-                i += 1;
-            } else if (!std.mem.startsWith(u8, args[i], "-")) {
-                if (hwid_arg == null) {
-                    hwid_arg = args[i];
-                } else {
-                    cfg_file = args[i];
-                }
-            }
-        }
-
-        const valid_hwid = hwid_arg orelse {
-            print_stderr("错误: 缺少 --hwid 参数\n", .{});
-            print_usage(exe);
-            return;
-        };
-
-        const cfg_path = cfg_file orelse {
-            print_stderr("错误: 缺少 --path 参数指定文件路径\n", .{});
-            print_usage(exe);
-            return;
-        };
-
-        const key = license.derive_hwid_key(valid_hwid);
-        const state_opt = duration.read_running_duration_file(cfg_path, key);
-
-        print_stdout("=========================================================\n", .{});
-        print_stdout("  运行工时解密读取 (Running Duration): {s}\n", .{cfg_path});
-        print_stdout("=========================================================\n", .{});
-        if (state_opt) |state| {
-            var time_buf: [64]u8 = undefined;
-            const last_time_str = license.format_timestamp(state.last_active_time, &time_buf);
-
-            const days = @divFloor(state.total_sec, 86400);
-            const rem_d = @mod(state.total_sec, 86400);
-            const hours = @divFloor(rem_d, 3600);
-            const rem_h = @mod(rem_d, 3600);
-            const mins = @divFloor(rem_h, 60);
-            const secs = @mod(rem_h, 60);
-
-            print_stdout("  • 解密状态    : \x1b[32m[PASS] 解密读取成功\x1b[0m\n", .{});
-            print_stdout("  • 绑定机器码  : {s}\n", .{valid_hwid});
-            print_stdout("  • 累计工作时长: {d}天 {d}小时 {d}分钟 {d}秒 (共 {d} 秒)\n", .{
-                days, hours, mins, secs, state.total_sec,
-            });
-            print_stdout("  • 上次活跃时间: {s}\n", .{last_time_str});
-        } else {
-            print_stdout("  • 解密状态    : \x1b[31m[FAIL] 解密失败或文件不存在/机器码不匹配\x1b[0m\n", .{});
         }
         print_stdout("=========================================================\n", .{});
         return;

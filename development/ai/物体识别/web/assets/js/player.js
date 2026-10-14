@@ -1,4 +1,4 @@
-import { drawDetections, renderDetectionList, clientToRelCoords } from "./ui_render";
+import { drawDetections, renderDetectionList, clientToRelCoords, isDetectionInZone } from "./ui_render";
 
 function showGlobalToast(msg, type = "info") {
   const toast = document.getElementById("global-feedback-toast") || document.getElementById("stream-config-feedback");
@@ -38,6 +38,34 @@ window.switchOrOpenTab = function (url, targetName) {
   return true;
 };
 
+const STORAGE_KEY_CONNECTED = "web_stream_connected_state_map";
+
+export function getStreamConnectedState(streamId) {
+  if (!streamId) return false;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_CONNECTED);
+    if (!raw) return false;
+    const map = JSON.parse(raw);
+    return !!map[streamId];
+  } catch (e) {
+    return false;
+  }
+}
+
+export function setStreamConnectedState(streamId, isConnected) {
+  if (!streamId) return;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_CONNECTED);
+    const map = raw ? JSON.parse(raw) : {};
+    if (isConnected) {
+      map[streamId] = true;
+    } else {
+      delete map[streamId];
+    }
+    localStorage.setItem(STORAGE_KEY_CONNECTED, JSON.stringify(map));
+  } catch (e) {}
+}
+
 export class Player {
   constructor({
     streamId,
@@ -48,9 +76,12 @@ export class Player {
     statusEl,
     countEl,
     rateEl,
+    zoneConfig = null,
+    iceServers = [],
   }) {
     this.streamId = streamId;
     this.url = url || "";
+    this.iceServers = iceServers || [];
 
     this.videoEl = null;
     this.canvasEl = null;
@@ -60,7 +91,16 @@ export class Player {
     this.rateEl = null;
     this.connectBtnEl = null;
 
-    this._zoneConfig = null;
+    this.enabled = true;
+    if (typeof zoneConfig === "string") {
+      try {
+        this._zoneConfig = JSON.parse(zoneConfig);
+      } catch (e) {
+        this._zoneConfig = zoneConfig;
+      }
+    } else {
+      this._zoneConfig = zoneConfig || null;
+    }
     this.hasUnsavedChanges = false;
     this.drawingState = { active: false, mode: null, isDragging: false, p1: null, p2: null };
 
@@ -85,15 +125,35 @@ export class Player {
     this._onGlobalKeyDown = null;
 
     this.bindElements({ videoEl, canvasEl, connectBtnEl, statusEl, countEl, rateEl });
-    this.connect();
+    if (getStreamConnectedState(this.streamId)) {
+      this.connect();
+    } else {
+      this.setStatus("未连接", false);
+    }
   }
 
   get zoneConfig() {
+    if (typeof this._zoneConfig === "string") {
+      try {
+        this._zoneConfig = JSON.parse(this._zoneConfig);
+      } catch (e) {}
+    }
+    if (this._zoneConfig && typeof this._zoneConfig === "object" && this.enabled !== undefined) {
+      this._zoneConfig.enabled = this.enabled;
+    }
     return this._zoneConfig;
   }
 
   set zoneConfig(cfg) {
-    this._zoneConfig = cfg;
+    if (typeof cfg === "string") {
+      try {
+        this._zoneConfig = JSON.parse(cfg);
+      } catch (e) {
+        this._zoneConfig = cfg;
+      }
+    } else {
+      this._zoneConfig = cfg;
+    }
     if (!this.renderLoopRunning) {
       this.renderOverlay();
     }
@@ -109,6 +169,9 @@ export class Player {
 
     const cardEl = this.videoEl?.closest(".stream-card") || this.canvasEl?.closest(".stream-card");
     this._cardEl = cardEl;
+    if (cardEl && cardEl.dataset.enabled !== undefined) {
+      this.enabled = cardEl.dataset.enabled !== "false";
+    }
     this.listEl = cardEl?.querySelector(`#det-list-${this.streamId}`) || null;
 
     if (this.videoEl) {
@@ -161,7 +224,9 @@ export class Player {
     }
 
     if (this.isConnected && this.mediaStream && this.videoEl) {
-      this.videoEl.srcObject = this.mediaStream;
+      if (this.videoEl.srcObject !== this.mediaStream) {
+        this.videoEl.srcObject = this.mediaStream;
+      }
       this.videoEl.muted = true;
       this.videoEl.autoplay = true;
       this.videoEl.playsInline = true;
@@ -210,7 +275,10 @@ export class Player {
     if (grid && grid.getAttribute("data-gateway-url")) {
       base = grid.getAttribute("data-gateway-url").trim().replace(/\/+$/, "");
     }
-    return base ? `${base}/${inputVal}` : inputVal;
+    if (!base && typeof window !== "undefined") {
+      base = `http://${window.location.hostname}:8181`;
+    }
+    return base ? `${base}/api/webrtc/${inputVal}` : inputVal;
   }
 
   initRateTimer() {
@@ -289,8 +357,9 @@ export class Player {
 
   renderOverlay() {
     if (!this.canvasEl) return;
+    this.lastRenderTime = performance.now();
     try {
-      if (this.detectionQueue.length > 0) {
+      if (this.enabled !== false && this.detectionQueue.length > 0) {
         const bestMsg = this.detectionQueue[this.detectionQueue.length - 1];
         if (bestMsg) {
           const now = performance.now();
@@ -383,7 +452,14 @@ export class Player {
       }
 
       if (msg.zone_config && !this.drawingState.active && !this.hasUnsavedChanges) {
-        this._zoneConfig = msg.zone_config;
+        this.zoneConfig = msg.zone_config;
+      }
+
+      if (this.enabled === false) {
+        if (this.countEl && this.countEl.textContent !== "0") {
+          this.countEl.textContent = "0";
+        }
+        return;
       }
 
       if (!Array.isArray(msg.detections)) {
@@ -408,25 +484,29 @@ export class Player {
         this.detectionQueue.shift();
       }
 
+      const activeZone = this.zoneConfig;
+      let currentTriggerBox = null;
+      if (this.drawingState.active && this.drawingState.isDragging && this.drawingState.p1 && this.drawingState.p2) {
+        const p1 = this.drawingState.p1;
+        const p2 = this.drawingState.p2;
+        currentTriggerBox = [
+          Math.min(p1[0], p2[0]),
+          Math.min(p1[1], p2[1]),
+          Math.max(p1[0], p2[0]),
+          Math.max(p1[1], p2[1]),
+        ];
+      }
+      const validDetections = msg.detections.filter((d) => isDetectionInZone(d, activeZone, currentTriggerBox));
+
       if (this.listEl) {
-        renderDetectionList(this.listEl, msg.detections);
+        renderDetectionList(this.listEl, validDetections);
       }
       if (this.countEl) {
-        this.countEl.textContent = msg.detections.length;
+        this.countEl.textContent = validDetections.length;
       }
 
-      if (!this.renderLoopRunning) {
-        if (this.canvasEl && this.videoEl) {
-          drawDetections(
-            this.canvasEl,
-            this.videoEl,
-            msg.detections,
-            msg.frame_width,
-            msg.frame_height,
-            this.zoneConfig,
-            this.drawingState
-          );
-        }
+      if (!this.renderLoopRunning || (now - (this.lastRenderTime || 0)) > 100) {
+        this.renderOverlay();
       }
     } catch (e) {}
   }
@@ -444,15 +524,24 @@ export class Player {
   }
 
   async connect() {
+    setStreamConnectedState(this.streamId, true);
     let targetUrl = this.url ? this.url.trim() : "";
-    if (!targetUrl) {
-      targetUrl = `http://192.168.88.100:8181/${this.streamId}`;
-    }
-    if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
+    if (!targetUrl || targetUrl.startsWith("/api/webrtc/")) {
+      const streamPath = targetUrl.startsWith("/api/webrtc/") ? targetUrl : `/api/webrtc/${this.streamId}`;
+      let base = "";
+      const grid = document.getElementById("stream-cards-grid");
+      if (grid && grid.getAttribute("data-gateway-url")) {
+        base = grid.getAttribute("data-gateway-url").trim().replace(/\/+$/, "");
+      }
+      if (!base && typeof window !== "undefined") {
+        base = `http://${window.location.hostname}:8181`;
+      }
+      targetUrl = `${base}${streamPath}`;
+    } else if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
       targetUrl = "http://" + targetUrl;
     }
 
-    this.disconnect();
+    this.disconnect(false);
     this.manualDisconnect = false;
     this.setStatus("连接中…", false);
     this.lastDataChannelRecvTime = performance.now();
@@ -461,7 +550,7 @@ export class Player {
 
     try {
       this.pc = new RTCPeerConnection({
-        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+        iceServers: this.iceServers,
       });
 
       this.pc.addTransceiver("video", { direction: "recvonly" });
@@ -469,7 +558,9 @@ export class Player {
       this.pc.ontrack = (e) => {
         this.mediaStream = e.streams[0];
         if (this.videoEl) {
-          this.videoEl.srcObject = e.streams[0];
+          if (this.videoEl.srcObject !== e.streams[0]) {
+            this.videoEl.srcObject = e.streams[0];
+          }
           this.videoEl.muted = true;
           this.videoEl.autoplay = true;
           this.videoEl.playsInline = true;
@@ -556,8 +647,11 @@ export class Player {
     }
   }
 
-  disconnect() {
-    this.manualDisconnect = true;
+  disconnect(isManual = true) {
+    if (isManual) {
+      this.manualDisconnect = true;
+      setStreamConnectedState(this.streamId, false);
+    }
     if (this.rateInterval) {
       clearInterval(this.rateInterval);
       this.rateInterval = null;
@@ -604,9 +698,22 @@ export class Player {
     this.setStatus("未连接", false);
   }
 
+  clearDetections() {
+    this.detectionQueue = [];
+    if (this.listEl) {
+      this.listEl.innerHTML = '<li class="text-zinc-400">AI 已关闭</li>';
+    }
+    if (this.countEl) {
+      this.countEl.textContent = "0";
+    }
+    if (this.canvasEl) {
+      this.renderOverlay();
+    }
+  }
+
   toggleConnect() {
     if (this.isConnected) {
-      this.disconnect();
+      this.disconnect(true);
     } else {
       this.connect();
     }
@@ -739,6 +846,18 @@ export class Player {
     }
   }
 
+  setCalibrationButtonActive(active) {
+    const btn = (this._cardEl || document).querySelector(`#btn-draw-roi-${this.streamId}`);
+    if (!btn) return;
+    if (active) {
+      btn.classList.remove("bg-amber-500", "hover:bg-amber-600");
+      btn.classList.add("bg-amber-800", "hover:bg-amber-900", "shadow-inner", "ring-2", "ring-amber-400");
+    } else {
+      btn.classList.remove("bg-amber-800", "hover:bg-amber-900", "shadow-inner", "ring-2", "ring-amber-400");
+      btn.classList.add("bg-amber-500", "hover:bg-amber-600");
+    }
+  }
+
   startDrawing(mode) {
     this.drawingState.active = true;
     this.drawingState.mode = mode || "trigger_box";
@@ -750,10 +869,7 @@ export class Player {
       this.canvasEl.style.pointerEvents = "auto";
       this.canvasEl.style.cursor = "crosshair";
     }
-    const btn = this._cardEl?.querySelector(`#btn-draw-roi-${this.streamId}`);
-    if (btn) {
-      btn.classList.add("ring-2", "ring-amber-400");
-    }
+    this.setCalibrationButtonActive(true);
     this.renderOverlay();
   }
 
@@ -768,10 +884,7 @@ export class Player {
       this.canvasEl.style.pointerEvents = "none";
       this.canvasEl.style.cursor = "default";
     }
-    const btn = this._cardEl?.querySelector(`#btn-draw-roi-${this.streamId}`);
-    if (btn) {
-      btn.classList.remove("ring-2", "ring-amber-400");
-    }
+    this.setCalibrationButtonActive(false);
     this.renderOverlay();
   }
 
@@ -810,6 +923,9 @@ export class Player {
       roi: { type: "rect", coords: [0.05, 0.05, 0.95, 0.95] },
       target_classes: [],
     };
+    if (this._cardEl && this._cardEl.dataset.enabled !== undefined) {
+      cfg.enabled = this._cardEl.dataset.enabled !== "false";
+    }
     if (!cfg.trigger_box && cfg.roi && cfg.roi.coords) {
       cfg.trigger_box = cfg.roi.coords;
     }
@@ -838,247 +954,6 @@ export class Player {
       }
     } catch (err) {
       showGlobalToast("保存失败", "error");
-    }
-  }
-}
-
-export class StreamConfigManager {
-  constructor(gridManager) {
-    this.gridManager = gridManager;
-    this.initElements();
-  }
-
-  initElements() {
-    this.panelEl = document.getElementById("stream-config-panel");
-    this.serverUrlInputEl = document.getElementById("server-base-url");
-    this.alertCallbackUrlInputEl = document.getElementById("alert-callback-url");
-    this.alertCooldownSecInputEl = document.getElementById("alert-cooldown-sec");
-    this.alertTimeoutSecInputEl = document.getElementById("alert-timeout-sec");
-    this.rowsContainerEl = document.getElementById("stream-rows-container");
-    this.btnAddRowEl = document.getElementById("btn-add-stream-row");
-    this.btnSaveEl = document.getElementById("btn-save-streams");
-    this.btnSyncGatewayEl = document.getElementById("btn-sync-gateway");
-    this.btnGlobalSaveEl = document.getElementById("btn-global-save");
-    this.feedbackEl = document.getElementById("stream-config-feedback");
-
-    try {
-      localStorage.removeItem("saved_stream_configs");
-    } catch (e) {}
-
-    if (!this.rowsContainerEl) return;
-
-    this.bindEvents();
-    this.bindExistingRowEvents();
-  }
-
-  getServerBaseUrl() {
-    let url = this.serverUrlInputEl?.value?.trim() || "";
-    if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
-      url = "http://" + url;
-    }
-    return url.replace(/\/+$/, "");
-  }
-
-  getAlertCallbackUrl() {
-    return this.alertCallbackUrlInputEl?.value?.trim() || "";
-  }
-
-  getAlertCooldownSec() {
-    const val = parseInt(this.alertCooldownSecInputEl?.value?.trim() || "1", 10);
-    return isNaN(val) ? 1 : val;
-  }
-
-  getAlertTimeoutSec() {
-    const val = parseInt(this.alertTimeoutSecInputEl?.value?.trim() || "3", 10);
-    return isNaN(val) ? 3 : val;
-  }
-
-  bindEvents() {
-    if (this.btnAddRowEl && !this.btnAddRowEl.hasAttribute("phx-click")) {
-      this.btnAddRowEl.onclick = () => {
-        const count = this.rowsContainerEl ? this.rowsContainerEl.querySelectorAll("tr.stream-row").length : 0;
-        const newId = `stream_${count + 1}`;
-        this.addStreamRow(newId, "rtsp://192.168.88.20:8554/live");
-      };
-    }
-
-    if (this.btnGlobalSaveEl && !document.getElementById("config-form")) {
-      this.btnGlobalSaveEl.onclick = () => this.saveGlobal();
-    }
-
-    if (this.btnSaveEl) {
-      this.btnSaveEl.onclick = () => this.saveToLocal();
-    }
-
-    if (this.btnSyncGatewayEl) {
-      this.btnSyncGatewayEl.onclick = () => this.syncToGateway();
-    }
-  }
-
-  bindExistingRowEvents() {
-    if (!this.rowsContainerEl) return;
-    const rows = this.rowsContainerEl.querySelectorAll("tr.stream-row");
-    rows.forEach((row) => this.bindRowActions(row));
-  }
-
-  bindRowActions(row) {
-    const btnRemove = row.querySelector(".btn-remove-row");
-    if (btnRemove) {
-      btnRemove.onclick = () => {
-        row.remove();
-        this.reindexRows();
-      };
-    }
-  }
-
-  reindexRows() {
-    if (!this.rowsContainerEl) return;
-    const rows = this.rowsContainerEl.querySelectorAll("tr.stream-row");
-    rows.forEach((row, idx) => {
-      const idxCell = row.querySelector(".row-index");
-      if (idxCell) idxCell.textContent = idx + 1;
-    });
-  }
-
-  addStreamRow(streamId = "", rtspUrl = "") {
-    if (!this.rowsContainerEl) return;
-    const count = this.rowsContainerEl.querySelectorAll("tr.stream-row").length;
-    const tr = document.createElement("tr");
-    tr.className = "stream-row hover:bg-zinc-50 transition-colors";
-    tr.innerHTML = `
-      <td class="py-3 px-3 text-center font-mono text-zinc-400 font-semibold row-index">${count + 1}</td>
-      <td class="py-3 px-4 w-36">
-        <input type="text" class="input-stream-id w-28 sm:w-32 rounded-md border border-zinc-300 px-2.5 py-1.5 font-mono text-xs text-zinc-800 bg-white shadow-inner focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" value="${streamId}" placeholder="stream_1">
-      </td>
-      <td class="py-3 px-4">
-        <input type="text" class="input-stream-url w-full rounded-md border border-zinc-300 px-3 py-1.5 font-mono text-xs text-zinc-800 bg-white shadow-inner focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" value="${rtspUrl}" placeholder="rtsp://192.168.88.20:8554/live">
-      </td>
-      <td class="py-3 px-4 w-32 text-center">
-        <button type="button" class="btn-remove-row inline-flex items-center gap-1 rounded-md bg-red-50 text-red-600 hover:bg-red-100 px-2.5 py-1 font-semibold transition-colors cursor-pointer text-xs">
-          删除
-        </button>
-      </td>
-    `;
-    this.rowsContainerEl.appendChild(tr);
-    this.bindRowActions(tr);
-  }
-
-  getStreamsFromDOM() {
-    if (!this.rowsContainerEl) return [];
-    const rows = this.rowsContainerEl.querySelectorAll("tr.stream-row");
-    const list = [];
-    rows.forEach((row) => {
-      const idInput = row.querySelector(".input-stream-id");
-      const urlInput = row.querySelector(".input-stream-url");
-      const sId = idInput?.value?.trim() || "";
-      const sUrl = urlInput?.value?.trim() || "";
-      if (sId && sUrl) {
-        list.push({ stream_id: sId, url: sUrl });
-      }
-    });
-    return list;
-  }
-
-  showFeedback(msg, type = "info") {
-    showGlobalToast(msg, type);
-  }
-
-  async saveToLocal() {
-    const streams = this.getStreamsFromDOM();
-    try {
-      const res = await fetch("/api/streams", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ streams }),
-      });
-      const data = await res.json().catch(() => null);
-      if (res.ok && data && data.success) {
-        this.showFeedback("已保存到本地配置", "success");
-      } else {
-        this.showFeedback("保存失败", "error");
-      }
-    } catch (err) {
-      this.showFeedback("保存失败", "error");
-    }
-  }
-
-  async syncToGateway() {
-    const streams = this.getStreamsFromDOM();
-    const gatewayUrl = this.getServerBaseUrl();
-    if (!gatewayUrl) {
-      this.showFeedback("网关地址不能为空", "error");
-      return;
-    }
-
-    try {
-      const res = await fetch("/api/streams/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          gateway_url: gatewayUrl,
-          streams,
-        }),
-      });
-      const data = await res.json().catch(() => null);
-      if (res.ok && data && data.success) {
-        this.showFeedback("已同步至硬件网关", "success");
-      } else {
-        const errorMsg = data && data.message ? data.message : "网关同步失败";
-        this.showFeedback(errorMsg, "error");
-      }
-    } catch (err) {
-      this.showFeedback("网关同步失败", "error");
-    }
-  }
-
-  async saveGlobal() {
-    const streams = this.getStreamsFromDOM();
-    const gatewayUrl = this.getServerBaseUrl();
-    const alertCallbackUrl = this.getAlertCallbackUrl();
-    const alertCooldownSec = this.getAlertCooldownSec();
-    const alertTimeoutSec = this.getAlertTimeoutSec();
-
-    if (!gatewayUrl) {
-      this.showFeedback("网关地址不能为空", "error");
-      return;
-    }
-
-    if (this.btnGlobalSaveEl) {
-      this.btnGlobalSaveEl.disabled = true;
-      this.btnGlobalSaveEl.textContent = "保存中...";
-    }
-
-    try {
-      const res = await fetch("/api/config/sync-to-hardware", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          gateway_url: gatewayUrl,
-          alert_callback_url: alertCallbackUrl,
-          alert_cooldown_sec: alertCooldownSec,
-          alert_timeout_sec: alertTimeoutSec,
-          streams,
-        }),
-      });
-      const data = await res.json().catch(() => null);
-
-      if (res.ok && data && data.success) {
-        if (data.hardware_synced) {
-          this.showFeedback(data.message || "保存成功，已同步到硬件网关", "success");
-        } else {
-          this.showFeedback(data.message || "已保存到本地数据库，但硬件网关未同步", "warning");
-        }
-      } else {
-        const errorMsg = data && data.message ? data.message : "保存失败";
-        this.showFeedback(errorMsg, "error");
-      }
-    } catch (err) {
-      this.showFeedback("保存失败 (网络异常)", "error");
-    } finally {
-      if (this.btnGlobalSaveEl) {
-        this.btnGlobalSaveEl.disabled = false;
-        this.btnGlobalSaveEl.textContent = "保存";
-      }
     }
   }
 }

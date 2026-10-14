@@ -393,7 +393,7 @@ int run_detector(const char* socket_name) {
         return 1;
     }
 
-    if (listen(server_fd, 64) < 0) {
+    if (listen(server_fd, 256) < 0) {
         perror("listen 失败");
         close(server_fd);
         Engine::instance().deinit();

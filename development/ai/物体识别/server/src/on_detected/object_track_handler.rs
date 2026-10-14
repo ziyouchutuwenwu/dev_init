@@ -33,6 +33,10 @@ impl ObjectTrackHandler {
         GLOBAL_ZONE_HANDLERS.lock().unwrap().get(stream_id).cloned()
     }
 
+    pub fn remove_context(stream_id: &str) -> Option<Arc<StreamTrackContext>> {
+        GLOBAL_ZONE_HANDLERS.lock().unwrap().remove(stream_id)
+    }
+
     pub fn get_or_create_context(stream_id: &str, default_config: ZoneConfig) -> Arc<StreamTrackContext> {
         let mut map = GLOBAL_ZONE_HANDLERS.lock().unwrap();
         map.entry(stream_id.to_string())
@@ -97,27 +101,6 @@ async fn process_frame(
 
     for val in &raw_result.detections {
         if let Some(obj) = parse_detection_item(val, fw, fh) {
-            let center = [
-                (obj.rel_box[0] + obj.rel_box[2]) / 2.0,
-                (obj.rel_box[1] + obj.rel_box[3]) / 2.0,
-            ];
-
-            if zone_cfg.enabled {
-                if let Some(rect) = zone_cfg.get_trigger_box() {
-                    let x_min = rect[0].min(rect[2]);
-                    let x_max = rect[0].max(rect[2]);
-                    let y_min = rect[1].min(rect[3]);
-                    let y_max = rect[1].max(rect[3]);
-                    if center[0] < x_min || center[0] > x_max || center[1] < y_min || center[1] > y_max {
-                        continue;
-                    }
-                } else if let Some(roi) = &zone_cfg.roi {
-                    if !roi.contains_point(center) {
-                        continue;
-                    }
-                }
-            }
-
             detection_inputs.push(obj);
         }
     }
@@ -129,6 +112,83 @@ async fn process_frame(
 
     let mut enriched_detections = Vec::with_capacity(tracked_objects.len());
     for track in &tracked_objects {
+        let center = track.center;
+        let class_matched = if zone_cfg.target_classes.is_empty() {
+            true
+        } else {
+            match (&track.label, track.class_id) {
+                (Some(label), _) => zone_cfg
+                    .target_classes
+                    .iter()
+                    .any(|c| c.eq_ignore_ascii_case(label)),
+                (None, Some(cid)) => {
+                    let cid_str = cid.to_string();
+                    zone_cfg.target_classes.iter().any(|c| c == &cid_str)
+                }
+                _ => false,
+            }
+        };
+
+        let in_roi = if let Some(roi) = &zone_cfg.roi {
+            roi.contains_point(center)
+        } else if let Some(rect) = zone_cfg.get_trigger_box() {
+            let x_min = rect[0].min(rect[2]);
+            let x_max = rect[0].max(rect[2]);
+            let y_min = rect[1].min(rect[3]);
+            let y_max = rect[1].max(rect[3]);
+            center[0] >= x_min && center[0] <= x_max && center[1] >= y_min && center[1] <= y_max
+        } else {
+            true
+        };
+
+        let crossed = if let Some(line_cfg) = &zone_cfg.trigger_line {
+            if track.trajectory.len() >= 2 {
+                let prev = track.trajectory[track.trajectory.len() - 2];
+                let curr = track.center;
+                if crate::object_tracker::zone::math::segments_intersect(
+                    prev,
+                    curr,
+                    line_cfg.line[0],
+                    line_cfg.line[1],
+                ) {
+                    let dir_val = crate::object_tracker::zone::math::compute_crossing_direction(
+                        prev,
+                        curr,
+                        line_cfg.line[0],
+                        line_cfg.line[1],
+                    );
+                    match line_cfg.direction {
+                        crate::object_tracker::CrossingDirection::Any => true,
+                        crate::object_tracker::CrossingDirection::Forward => dir_val > 0.0,
+                        crate::object_tracker::CrossingDirection::Backward => dir_val < 0.0,
+                    }
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        } else {
+            false
+        };
+
+        let triggered = if !zone_cfg.enabled {
+            false
+        } else if !class_matched {
+            false
+        } else if crossed {
+            true
+        } else if zone_cfg.trigger_line.is_some() && zone_cfg.roi.is_none() && zone_cfg.trigger_box.is_none() {
+            false
+        } else {
+            in_roi
+        };
+
+        // 仅向外部输出在标定区域内 / 触发告警的目标，区域之外的目标从底层直接过滤
+        if !triggered {
+            continue;
+        }
+
         let item_json = serde_json::json!({
             "track_id": track.track_id,
             "class_id": track.class_id,
@@ -140,6 +200,9 @@ async fn process_frame(
             "trajectory": track.trajectory,
             "hits": track.hits,
             "age": track.age,
+            "in_roi": in_roi,
+            "crossed": crossed,
+            "triggered": triggered,
         });
         enriched_detections.push(item_json);
     }
@@ -166,13 +229,11 @@ fn parse_detection_item(val: &serde_json::Value, fw: f64, fh: f64) -> Option<Det
     let mut rel_box = [0.0, 0.0, 0.0, 0.0];
     let mut box_coord = Vec::new();
 
-    if let Some(r_arr) = obj.get("rel_box").and_then(|v| v.as_array()) {
-        if r_arr.len() >= 4 {
-            rel_box[0] = r_arr[0].as_f64().unwrap_or(0.0).clamp(0.0, 1.0);
-            rel_box[1] = r_arr[1].as_f64().unwrap_or(0.0).clamp(0.0, 1.0);
-            rel_box[2] = r_arr[2].as_f64().unwrap_or(0.0).clamp(0.0, 1.0);
-            rel_box[3] = r_arr[3].as_f64().unwrap_or(0.0).clamp(0.0, 1.0);
-        }
+    if let Some(r_arr) = obj.get("rel_box").and_then(|v| v.as_array()).filter(|a| a.len() >= 4) {
+        rel_box[0] = r_arr[0].as_f64().unwrap_or(0.0).clamp(0.0, 1.0);
+        rel_box[1] = r_arr[1].as_f64().unwrap_or(0.0).clamp(0.0, 1.0);
+        rel_box[2] = r_arr[2].as_f64().unwrap_or(0.0).clamp(0.0, 1.0);
+        rel_box[3] = r_arr[3].as_f64().unwrap_or(0.0).clamp(0.0, 1.0);
     }
 
     if let Some(b_arr) = obj.get("box").and_then(|v| v.as_array()) {

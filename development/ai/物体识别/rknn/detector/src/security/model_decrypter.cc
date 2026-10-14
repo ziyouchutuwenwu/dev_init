@@ -178,8 +178,6 @@ bool ModelDecrypter::load_model_memory(const std::string& model_path, ModelMemor
         size_t n = fread(magic, 1, sizeof(magic), fp);
         if (n >= 16 && memcmp(magic, "model_encrypted\0", 16) == 0) {
             is_encrypted = true;
-        } else if (n >= 8 && (memcmp(magic, "rkmod02\0", 8) == 0 || memcmp(magic, "rkmod01\0", 8) == 0)) {
-            is_encrypted = true;
         }
     }
     fclose(fp);

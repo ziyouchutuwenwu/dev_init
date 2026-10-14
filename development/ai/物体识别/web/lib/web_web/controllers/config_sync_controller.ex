@@ -142,36 +142,107 @@ defmodule WebWeb.ConfigSyncController do
 
   def save_zone(conn, %{"stream_id" => stream_id} = params) do
     raw_cfg = params["config"] || params["zone_config"] || Map.drop(params, ["stream_id"])
+    stream = Streams.get_stream_by_stream_id(stream_id)
+    target_enabled = if stream, do: stream.enabled, else: true
 
-    zone_str =
+    zone_res =
       case raw_cfg do
-        str when is_binary(str) -> str
-        map when is_map(map) -> Jason.encode!(map)
-        _ -> "{}"
-      end
+        str when is_binary(str) ->
+          case Jason.decode(str) do
+            {:ok, map} when is_map(map) ->
+              synced = if Map.has_key?(map, "enabled"), do: Map.put(map, "enabled", target_enabled), else: map
+              {:ok, Jason.encode!(synced)}
 
-    case Streams.update_zone_config(stream_id, zone_str) do
-      {:ok, stream} ->
-        gateway_url = Settings.get_gateway_url()
+            {:ok, _} ->
+              {:ok, str}
 
-        gateway_synced =
-          if is_binary(gateway_url) && String.trim(gateway_url) != "" do
-            DataSync.sync_zone_to_gateway(gateway_url, stream_id, zone_str) == :ok
-          else
-            false
+            {:error, err} ->
+              {:error, "非法 JSON 格式: #{inspect(err)}"}
           end
 
-        json(conn, %{
-          success: true,
-          stream_id: stream.stream_id,
-          zone_config: stream.zone_config,
-          gateway_synced: gateway_synced
-        })
+        map when is_map(map) ->
+          synced = if Map.has_key?(map, "enabled") or Map.has_key?(map, :enabled), do: Map.put(map, "enabled", target_enabled), else: map
+          case Jason.encode(synced) do
+            {:ok, encoded} ->
+              {:ok, encoded}
 
-      {:error, reason} ->
+            {:error, err} ->
+              {:error, "JSON 序列化失败: #{inspect(err)}"}
+          end
+
+        _ ->
+          {:ok, "{}"}
+      end
+
+    case zone_res do
+      {:error, msg} ->
         conn
         |> put_status(:bad_request)
-        |> json(%{success: false, error: inspect(reason)})
+        |> json(%{success: false, error: msg})
+
+      {:ok, zone_str} ->
+        case Streams.update_zone_config(stream_id, zone_str) do
+          {:ok, stream} ->
+            gateway_url = Settings.get_gateway_url()
+
+            gateway_synced =
+              if is_binary(gateway_url) && String.trim(gateway_url) != "" do
+                gateway_payload =
+                  case Jason.decode(zone_str) do
+                    {:ok, m} when is_map(m) -> Jason.encode!(Map.put(m, "enabled", target_enabled))
+                    _ -> zone_str
+                  end
+
+                DataSync.sync_zone_to_gateway(gateway_url, stream_id, gateway_payload) == :ok
+              else
+                false
+              end
+
+            json(conn, %{
+              success: true,
+              stream_id: stream.stream_id,
+              zone_config: stream.zone_config,
+              gateway_synced: gateway_synced
+            })
+
+          {:error, reason} ->
+            conn
+            |> put_status(:bad_request)
+            |> json(%{success: false, error: inspect(reason)})
+        end
+    end
+  end
+
+  def toggle_stream(conn, %{"stream_id" => stream_id}) do
+    case Streams.get_stream_by_stream_id(stream_id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{success: false, error: "流不存在"})
+
+      stream ->
+        new_enabled = !stream.enabled
+        case Streams.update_stream_enabled(stream_id, new_enabled) do
+          {:ok, updated} ->
+            gateway_url = Settings.get_gateway_url()
+            if is_binary(gateway_url) and String.trim(gateway_url) != "" do
+              Task.start(fn ->
+                DataSync.sync_to_gateway(
+                  gateway_url,
+                  Streams.list_streams(),
+                  Settings.get_alert_callback_url() || "",
+                  Settings.get_alert_cooldown_sec() || "1",
+                  Settings.get_alert_timeout_sec() || "3"
+                )
+              end)
+            end
+            json(conn, %{success: true, stream_id: stream_id, enabled: updated.enabled})
+
+          {:error, err} ->
+            conn
+            |> put_status(:bad_request)
+            |> json(%{success: false, error: inspect(err)})
+        end
     end
   end
 

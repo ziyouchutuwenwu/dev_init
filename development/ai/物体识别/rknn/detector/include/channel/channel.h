@@ -23,7 +23,7 @@ public:
 
     bool is_valid() const;
 
-    void on_infer_finished(uint64_t frame_idx, int64_t pts_ms, int orig_w, int orig_h, const DetectResult& result);
+    void on_infer_finished(uint64_t task_epoch, uint64_t frame_idx, int64_t pts_ms, int orig_w, int orig_h, const DetectResult& result);
 
 private:
     void try_dispatch_inference();
@@ -33,6 +33,7 @@ private:
 
     std::atomic<bool> _is_inferring{false};
     std::atomic<uint64_t> _last_dispatched_idx{UINT64_MAX};
+    std::atomic<uint64_t> _flush_epoch{0};
     int64_t _last_infer_pts_ms{0};
 
     std::mutex _result_mutex;

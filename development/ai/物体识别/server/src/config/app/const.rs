@@ -1,7 +1,11 @@
+pub const KEY_ALERT: &str = "alert";
 pub const KEY_ALERT_URL: &str = "alert_url";
 pub const KEY_ALERT_CALLBACK_URL: &str = "alert_callback_url";
 pub const KEY_ALERT_COOLDOWN_SEC: &str = "alert_cooldown_sec";
 pub const KEY_ALERT_TIMEOUT_SEC: &str = "alert_timeout_sec";
+pub const KEY_URL: &str = "url";
+pub const KEY_COOLDOWN_SEC: &str = "cooldown_sec";
+pub const KEY_TIMEOUT_SEC: &str = "timeout_sec";
 pub const KEY_INPUT: &str = "input";
 pub const KEY_SERVER: &str = "server";
 pub const KEY_TRIGGER: &str = "trigger";
@@ -16,3 +20,4 @@ pub const KEY_DIRECTION: &str = "direction";
 pub const KEY_FORWARD: &str = "forward";
 pub const KEY_BACKWARD: &str = "backward";
 pub const KEY_ANY: &str = "any";
+pub const KEY_TARGET_CLASSES: &str = "target_classes";

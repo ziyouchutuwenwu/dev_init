@@ -189,29 +189,15 @@ pub fn main(init: std.process.Init.Minimal) !void {
 
     var file_buf: [32768]u8 = undefined;
 
-    const candidate_prefixes = [_][]const u8{
-        "src/c/",
-        "encrypter/src/c/",
-        "../encrypter/src/c/",
-    };
+    // C 接口源文件目录（由 build.zig 设置工作目录为 encrypter 根目录）
+    const base_prefix: []const u8 = "src/c/";
 
-    var base_prefix: []const u8 = "src/c/";
-    for (candidate_prefixes) |prefix| {
-        var test_path: [128]u8 = undefined;
-        @memcpy(test_path[0..prefix.len], prefix);
-        @memcpy(test_path[prefix.len .. prefix.len + 8], "hwid.zig");
-        if (read_file_to_buf(test_path[0 .. prefix.len + 8], &file_buf) != null) {
-            base_prefix = prefix;
-            break;
-        }
-    }
-
+    // 需要提取并导出 C 接口函数（export fn）的 Zig 源码文件列表（对应 src/c/mod.zig）
     const file_names = [_][]const u8{
-        "duration.zig",
-        "hwid.zig",
-        "label.zig",
-        "license.zig",
-        "model.zig",
+        "hwid.zig",     // 硬件设备指纹获取接口 (get_hwid)
+        "label.zig",    // 模型目标类别标签读取接口 (get_model_labels_list, get_labels_list)
+        "license.zig",  // 授权证书校验与详情解析接口 (verify_license, inspect_license_details)
+        "model.zig",    // 模型解密与内存管理接口 (decrypt_model, get_model_id, free_model_memory)
     };
 
     for (file_names) |fname| {

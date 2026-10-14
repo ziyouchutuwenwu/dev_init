@@ -7,6 +7,7 @@
 #include <ctime>
 #include <unistd.h>
 #include <chrono>
+#include <vector>
 
 LicenseValidator& LicenseValidator::instance() {
     static LicenseValidator s_instance;
@@ -21,18 +22,6 @@ LicenseValidator::~LicenseValidator() {
     stop_monitor();
 }
 
-void LicenseValidator::set_config_path(const std::string& path) {
-    std::lock_guard<std::mutex> lock(_mutex);
-    _config_path = path;
-}
-
-std::string LicenseValidator::get_config_path() {
-    std::lock_guard<std::mutex> lock(_mutex);
-    if (!_config_path.empty()) {
-        return _config_path;
-    }
-    return RUNNING_TIME_DURATION_FILE;
-}
 
 std::string LicenseValidator::get_device_hwid() {
 #if !ENABLE_SECURITY
@@ -87,63 +76,12 @@ bool LicenseValidator::do_check_license(bool print_on_change) {
 #else
     std::string lic_path = find_license_path(_license_path);
     std::string hwid = get_device_hwid();
-    std::string cfg_path = get_config_path();
 
     int status = LICENSE_STATUS_OK;
-    int64_t issue_time = 0;
-    int64_t expire_time = 0;
-    char bound_hwid[128] = {0};
-
     if (lic_path.empty() || access(lic_path.c_str(), R_OK) != 0) {
         status = LICENSE_STATUS_IO_ERROR;
     } else {
-        status = ::inspect_license_details(
-            lic_path.c_str(),
-            hwid.c_str(),
-            &status,
-            &issue_time,
-            &expire_time,
-            bound_hwid,
-            sizeof(bound_hwid)
-        );
-    }
-
-    int64_t total_runtime_sec = 0;
-    int64_t last_active_time = 0;
-    bool runtime_exhausted = false;
-
-    if (status == LICENSE_STATUS_OK) {
-        time_t now_ts = time(nullptr);
-        int64_t now_sec = static_cast<int64_t>(now_ts);
-        int cfg_ret = ::read_running_duration(cfg_path.c_str(), hwid.c_str(), &total_runtime_sec, &last_active_time);
-
-        if (cfg_ret == 0) {
-            if (last_active_time > 0 && now_sec < (last_active_time - 300)) {
-                status = LICENSE_STATUS_TIME_ROLLBACK;
-            } else if (expire_time > issue_time) {
-                int64_t max_runtime = expire_time - issue_time;
-                if (total_runtime_sec >= max_runtime) {
-                    status = LICENSE_STATUS_EXPIRED;
-                    runtime_exhausted = true;
-                }
-            }
-        } else {
-            if (access(cfg_path.c_str(), F_OK) == 0) {
-                status = LICENSE_STATUS_INVALID_FORMAT;
-            }
-        }
-    }
-
-    if (status == LICENSE_STATUS_OK && _last_status == -999) {
-        time_t now_ts = time(nullptr);
-        int64_t now_sec = static_cast<int64_t>(now_ts);
-        if (last_active_time <= 0 || now_sec >= (last_active_time - 300)) {
-            int w_ret = ::write_running_duration(cfg_path.c_str(), hwid.c_str(), total_runtime_sec, now_sec);
-            if (w_ret != 0) {
-                fprintf(stderr, "[license] 写入工时文件失败 (%s, 错误码: %d)\n", cfg_path.c_str(), w_ret);
-                fflush(stderr);
-            }
-        }
+        status = ::verify_license(lic_path.c_str(), hwid.c_str());
     }
 
     bool is_ok = (status == LICENSE_STATUS_OK);
@@ -166,42 +104,25 @@ bool LicenseValidator::do_check_license(bool print_on_change) {
         }
         fflush(stdout);
     } else {
-        time_t now_ts = time(nullptr);
-        char now_buf[32] = {0};
-        strftime(now_buf, sizeof(now_buf), "%Y-%m-%d %H:%M:%S", localtime(&now_ts));
-
-        if (status == LICENSE_STATUS_EXPIRED) {
-            if (runtime_exhausted) {
-                fprintf(stderr, "[license] 授权未通过: 授权工作时长已耗尽 (累计运行: %lld 秒, hwid: %s)\n",
-                        (long long)total_runtime_sec, hwid.c_str());
-            } else {
-                char expire_buf[32] = {0};
-                if (expire_time > 0) {
-                    time_t t = static_cast<time_t>(expire_time);
-                    strftime(expire_buf, sizeof(expire_buf), "%Y-%m-%d %H:%M:%S", localtime(&t));
-                }
-                fprintf(stderr, "[license] 授权未通过: 授权已过期 (到期: %s, 当前: %s, hwid: %s)\n",
-                        expire_buf, now_buf, hwid.c_str());
-            }
-        } else if (status == LICENSE_STATUS_HWID_MISMATCH) {
-            fprintf(stderr, "[license] 授权未通过: 机器码不匹配 (当前 hwid: %s)\n", hwid.c_str());
-        } else if (status == LICENSE_STATUS_TIME_ROLLBACK) {
-            char issue_buf[32] = {0};
-            if (issue_time > 0) {
-                time_t t = static_cast<time_t>(issue_time);
-                strftime(issue_buf, sizeof(issue_buf), "%Y-%m-%d %H:%M:%S", localtime(&t));
-            }
-            if (now_ts < (issue_time - 300)) {
-                fprintf(stderr, "[license] 授权未通过: 系统时钟早于签发时间 (签发: %s, 当前: %s)\n",
-                        issue_buf, now_buf);
-            } else {
-                fprintf(stderr, "[license] 授权未通过: 检测到系统时钟往前回拨异常 (当前: %s)\n", now_buf);
-            }
-        } else if (status == LICENSE_STATUS_IO_ERROR) {
-            fprintf(stderr, "[license] 授权未通过: 未找到证书文件 (%s)\n", lic_path.c_str());
-        } else {
-            fprintf(stderr, "[license] 授权未通过: 证书损坏或签名无效 (status=%d)\n", status);
+        const char* reason = "证书损坏或签名无效";
+        switch (status) {
+            case LICENSE_STATUS_EXPIRED:
+                reason = "授权已过期";
+                break;
+            case LICENSE_STATUS_HWID_MISMATCH:
+                reason = "机器码不匹配";
+                break;
+            case LICENSE_STATUS_TIME_ROLLBACK:
+                reason = "系统时钟早于签发时间";
+                break;
+            case LICENSE_STATUS_IO_ERROR:
+                reason = "未找到证书文件";
+                break;
+            default:
+                break;
         }
+        fprintf(stderr, "[license] 授权未通过: %s (status=%d, hwid: %s)\n",
+                reason, status, hwid.c_str());
         fprintf(stderr, "[license] ai 检测已降级: 纯推流正常, 不吐数据 (后台每 %ds 复检)\n",
                 LICENSE_CHECK_INTERVAL_SEC);
         fflush(stderr);
@@ -221,25 +142,6 @@ void LicenseValidator::monitor_worker() {
             });
         }
         if (_stop_flag.load()) break;
-
-        if (_is_licensed.load()) {
-            std::string cfg_path = get_config_path();
-            std::string hwid = get_device_hwid();
-            int64_t total_sec = 0;
-            int64_t last_active = 0;
-            int ret = ::read_running_duration(cfg_path.c_str(), hwid.c_str(), &total_sec, &last_active);
-            if (ret == 0 || access(cfg_path.c_str(), F_OK) != 0) {
-                time_t now_ts = time(nullptr);
-                int64_t now_sec = static_cast<int64_t>(now_ts);
-                if (last_active <= 0 || now_sec >= (last_active - 300)) {
-                    int w_ret = ::write_running_duration(cfg_path.c_str(), hwid.c_str(), total_sec + LICENSE_CHECK_INTERVAL_SEC, now_sec);
-                    if (w_ret != 0) {
-                        fprintf(stderr, "[license] 写入工时文件失败 (%s, 错误码: %d)\n", cfg_path.c_str(), w_ret);
-                        fflush(stderr);
-                    }
-                }
-            }
-        }
 
         do_check_license(true);
     }

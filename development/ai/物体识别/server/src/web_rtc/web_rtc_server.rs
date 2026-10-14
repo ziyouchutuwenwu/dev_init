@@ -12,6 +12,7 @@ pub struct RunningStream {
     pub stream_id: String,
     pub input_url: String,
     pub channel_id: u32,
+    pub ai_enabled: bool,
     pub context: StreamContext,
     pub handle: tokio::task::JoinHandle<()>,
 }
@@ -99,6 +100,11 @@ impl WebRtcServer {
         .await
     }
 
+    pub fn get_stream_ai_enabled(&self, stream_id: &str) -> Option<bool> {
+        let running = self.running_streams.read().unwrap();
+        running.get(stream_id).map(|s| s.ai_enabled)
+    }
+
     pub fn stop_all_streams(&self) {
         let mut map = self.running_streams.write().unwrap();
         for (_, s) in map.drain() {
@@ -110,24 +116,24 @@ impl WebRtcServer {
 
     pub async fn update_streams(
         &self,
-        new_streams_list: Vec<(String, String)>,
+        new_streams_list: Vec<(String, String, bool)>,
     ) -> Result<(), String> {
         let mut to_stop = Vec::new();
         let mut to_start = Vec::new();
 
         {
             let running = self.running_streams.read().unwrap();
-            let new_map: HashMap<&str, &str> = new_streams_list
+            let new_map: HashMap<&str, (&str, bool)> = new_streams_list
                 .iter()
-                .map(|(id, url)| (id.as_str(), url.as_str()))
+                .map(|(id, url, en)| (id.as_str(), (url.as_str(), *en)))
                 .collect();
 
             for (id, stream) in running.iter() {
                 match new_map.get(id.as_str()) {
-                    Some(&new_url) => {
-                        if stream.input_url != new_url {
+                    Some(&(new_url, new_en)) => {
+                        if stream.input_url != new_url || stream.ai_enabled != new_en {
                             to_stop.push(id.clone());
-                            to_start.push((id.clone(), new_url.to_string()));
+                            to_start.push((id.clone(), new_url.to_string(), new_en));
                         }
                     }
                     None => {
@@ -136,14 +142,13 @@ impl WebRtcServer {
                 }
             }
 
-            for (id, url) in &new_streams_list {
+            for (id, url, en) in &new_streams_list {
                 if !running.contains_key(id) {
-                    to_start.push((id.clone(), url.clone()));
+                    to_start.push((id.clone(), url.clone(), *en));
                 }
             }
         }
 
-        // 1. 停止已被删除或 URL 已变更的旧流
         for id in to_stop {
             let removed = {
                 let mut running = self.running_streams.write().unwrap();
@@ -152,6 +157,8 @@ impl WebRtcServer {
             if let Some(stream) = removed {
                 log::info!("[stream_manager] 热更新停止流 [{}] (ch={})", stream.stream_id, stream.channel_id);
                 stream.handle.abort();
+                let _ = self.detect_wrapper.release_channel(stream.channel_id);
+                crate::on_detected::ObjectTrackHandler::remove_context(&stream.stream_id);
             }
         }
 
@@ -159,8 +166,7 @@ impl WebRtcServer {
             tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
         }
 
-        // 2. 动态启动新流或变更后的流
-        for (id, url) in to_start {
+        for (id, url, en) in to_start {
             let ch_idx = {
                 let running = self.running_streams.read().unwrap();
                 let used: std::collections::HashSet<u32> =
@@ -172,10 +178,11 @@ impl WebRtcServer {
                 c
             };
 
-            log::info!("[stream_manager] 热更新启动流 [{}] (ch={}, url={})", id, ch_idx, url);
+            log::info!("[stream_manager] 热更新启动流 [{}] (ch={}, url={}, ai={})", id, ch_idx, url, en);
             let stream_cfg = crate::config::StreamConfig {
                 id: id.clone(),
                 input: url.clone(),
+                enabled: en,
             };
 
             match crate::prepare::setup_single_stream(
@@ -190,6 +197,7 @@ impl WebRtcServer {
                         stream_id: id.clone(),
                         input_url: url,
                         channel_id: ch_idx,
+                        ai_enabled: en,
                         context: stream_ctx,
                         handle,
                     };
@@ -202,11 +210,10 @@ impl WebRtcServer {
             }
         }
 
-        // 3. 更新流顺序
         {
             let mut order = self.stream_order.write().unwrap();
             order.clear();
-            for (id, _) in &new_streams_list {
+            for (id, _, _) in &new_streams_list {
                 order.push(id.clone());
             }
         }

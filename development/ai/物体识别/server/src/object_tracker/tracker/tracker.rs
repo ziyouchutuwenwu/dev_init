@@ -35,11 +35,15 @@ impl ObjectTracker {
         let mut matched_dets: HashMap<usize, u64> = HashMap::new();
 
         if track_count > 0 && det_count > 0 {
-            let mut matches: Vec<(f64, u64, usize)> = Vec::new();
+            let dim = track_count.max(det_count);
+            let mut weights = pathfinding::matrix::Matrix::new(dim, dim, 0i64);
 
-            for &t_id in &track_ids {
+            for (t_idx, &t_id) in track_ids.iter().enumerate() {
                 let track = &self.tracks[&t_id];
                 for (d_idx, det) in detections.iter().enumerate() {
+                    if track.class_id.is_some() && det.class_id.is_some() && track.class_id != det.class_id {
+                        continue;
+                    }
                     let iou = calculate_iou(&track.rel_box, &det.rel_box);
                     let center_d = [
                         (det.rel_box[0] + det.rel_box[2]) / 2.0,
@@ -53,15 +57,15 @@ impl ObjectTracker {
                     }
 
                     if score >= 0.20 {
-                        matches.push((score, t_id, d_idx));
+                        weights[(t_idx, d_idx)] = (score * 10000.0) as i64;
                     }
                 }
             }
 
-            matches.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
-
-            for (_score, t_id, d_idx) in matches {
-                if !matched_tracks.contains_key(&t_id) && !matched_dets.contains_key(&d_idx) {
+            let (_, assignment) = pathfinding::kuhn_munkres::kuhn_munkres(&weights);
+            for (t_idx, &d_idx) in assignment.iter().enumerate() {
+                if t_idx < track_count && d_idx < det_count && weights[(t_idx, d_idx)] > 0 {
+                    let t_id = track_ids[t_idx];
                     matched_tracks.insert(t_id, d_idx);
                     matched_dets.insert(d_idx, t_id);
                 }
