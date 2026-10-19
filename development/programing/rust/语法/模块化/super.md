@@ -2,13 +2,7 @@
 
 ## 说明
 
-super 相当于从父模块中引用
-
-```rust
-use super::bbb;
-```
-
-表明从当前模块的父模块中引入 bbb
+类似于 `import "../xxx"`，但跨的是 module
 
 ## 例子
 
@@ -23,8 +17,6 @@ src
     └── mod.rs
 ```
 
-内容
-
 mod.rs
 
 ```rust
@@ -38,7 +30,7 @@ aaa.rs
 use super::bbb;
 
 pub fn demo(){
-  println!("demo in aaa");
+  println!("in aaa");
 }
 
 pub fn aaa(){
@@ -52,7 +44,7 @@ bbb.rs
 use super::aaa;
 
 pub fn demo(){
-  println!("demo in bbb");
+  println!("in bbb");
 }
 
 pub fn bbb(){
