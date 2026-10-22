@@ -93,18 +93,20 @@ fn make_entries() [consts.model_label_map.len]Entry {
 
 const entries = make_entries();
 
-export fn get_model_labels_list(model_id: ?[*:0]const u8) [*]const ?[*:0]const u8 {
+export fn get_model_labels_list(model_id: ?[*:0]const u8) ?[*]const ?[*:0]const u8 {
     if (model_id) |mid| {
         const id_slice = std.mem.sliceTo(mid, 0);
-        for (entries) |entry| {
-            if (std.mem.eql(u8, id_slice, entry.name)) {
-                return entry.ptrs;
+        if (id_slice.len > 0) {
+            for (entries) |entry| {
+                if (std.mem.eql(u8, id_slice, entry.name)) {
+                    return entry.ptrs;
+                }
             }
         }
     }
-    return entries[0].ptrs;
+    return null;
 }
 
-export fn get_labels_list() [*]const ?[*:0]const u8 {
-    return get_model_labels_list(null);
+export fn get_labels_list() ?[*]const ?[*:0]const u8 {
+    return null;
 }

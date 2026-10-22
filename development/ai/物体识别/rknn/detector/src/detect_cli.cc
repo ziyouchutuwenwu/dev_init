@@ -1,6 +1,6 @@
 #include "detect_cli.h"
 #include "hardware/npu_infer.h"
-#include "ai/pipeline/detect_result.h"
+#include "ai/infer_manager/detect_result.h"
 #include "security/license_validator.h"
 #include "image_utils.h"
 #include "image_drawing.h"
@@ -51,20 +51,27 @@ int detect_file(const char* image_path, const char* out_json_path, const char* o
 
     for (size_t i = 0; i < results.objects.size(); i++) {
         const auto& obj = results.objects[i];
+        std::string text_field;
+        if (!obj.text.empty()) {
+            char text_tmp[256];
+            snprintf(text_tmp, sizeof(text_tmp), ", \"text\": \"%s\"", obj.text.c_str());
+            text_field = text_tmp;
+        }
+
         if (!obj.model_name.empty()) {
             snprintf(tmp, sizeof(tmp),
-                "%s{\"model\": \"%s\", \"class_id\": %d, \"label\": \"%s\", \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
+                "%s{\"model\": \"%s\", \"class_id\": %d, \"label\": \"%s\"%s, \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
                 (i > 0 ? ", " : ""),
                 obj.model_name.c_str(),
-                obj.class_id, obj.label.c_str(), obj.score,
+                obj.class_id, obj.label.c_str(), text_field.c_str(), obj.score,
                 obj.rel_box[0], obj.rel_box[1], obj.rel_box[2], obj.rel_box[3],
                 obj.box[0], obj.box[1], obj.box[2], obj.box[3]
             );
         } else {
             snprintf(tmp, sizeof(tmp),
-                "%s{\"class_id\": %d, \"label\": \"%s\", \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
+                "%s{\"class_id\": %d, \"label\": \"%s\"%s, \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
                 (i > 0 ? ", " : ""),
-                obj.class_id, obj.label.c_str(), obj.score,
+                obj.class_id, obj.label.c_str(), text_field.c_str(), obj.score,
                 obj.rel_box[0], obj.rel_box[1], obj.rel_box[2], obj.rel_box[3],
                 obj.box[0], obj.box[1], obj.box[2], obj.box[3]
             );
@@ -99,7 +106,11 @@ int detect_file(const char* image_path, const char* out_json_path, const char* o
             }
             int ty = y1 - 20;
             if (ty < 0) ty = y1 + 5;
-            snprintf(text, sizeof(text), "%s %.1f%%", det.label.c_str(), det.score * 100.0f);
+            if (!det.text.empty()) {
+                snprintf(text, sizeof(text), "%s [%s] %.1f%%", det.label.c_str(), det.text.c_str(), det.score * 100.0f);
+            } else {
+                snprintf(text, sizeof(text), "%s %.1f%%", det.label.c_str(), det.score * 100.0f);
+            }
             draw_text(&img, text, x1, ty, COLOR_RED, 10);
         }
         write_image(out_image_path, &img);

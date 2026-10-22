@@ -82,4 +82,21 @@ defmodule Web.Orm.Query.Settings do
     val = to_string(sec || "3") |> String.trim()
     set_setting("alert_timeout_sec", if(val == "", do: "3", else: val))
   end
+
+  def get_selected_classes do
+    case get_setting("selected_classes") do
+      nil ->
+        Web.ModelLoader.default_classes_for_model("industry")
+
+      str when is_binary(str) ->
+        case Jason.decode(str) do
+          {:ok, list} when is_list(list) -> list
+          _ -> Web.ModelLoader.default_classes_for_model("industry")
+        end
+    end
+  end
+
+  def set_selected_classes(classes) when is_list(classes) do
+    set_setting("selected_classes", Jason.encode!(classes))
+  end
 end

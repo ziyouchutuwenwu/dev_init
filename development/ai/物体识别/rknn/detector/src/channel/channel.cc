@@ -4,12 +4,13 @@
 #include "hardware/vpu_decoder.h"
 #include "hardware/channel_decoder.h"
 #include "hardware/npu_worker_pool.h"
-#include "ai/pipeline/detect_result.h"
+#include "ai/infer_manager/detect_result.h"
 #include <cstdio>
 #include <cstring>
 #include <chrono>
 
-Channel::Channel(int ch, int codec_type) : _ch(ch) {
+Channel::Channel(int ch, int codec_type, const std::string& model_name)
+    : _ch(ch), _model_name(model_name) {
     _decoder = ChannelDecoder::shareInstance().create_decoder(ch, codec_type);
 }
 
@@ -65,6 +66,7 @@ void Channel::try_dispatch_inference() {
     uint64_t current_epoch = _flush_epoch.load();
     InferTask task;
     task.channel_id = ch_id;
+    task.model_name = _model_name;
     task.frame = cur_frame;
     task.callback = [ch_id, current_epoch](int ch, uint64_t f_idx, int64_t pts, int orig_w, int orig_h, const DetectResult& res) {
         auto channel = ChannelManager::instance().get(ch);
@@ -96,26 +98,39 @@ void Channel::on_infer_finished(uint64_t task_epoch, uint64_t frame_idx, int64_t
     json.reserve(2048);
     char tmp[512];
 
-    snprintf(tmp, sizeof(tmp), "{\"frame_width\": %d, \"frame_height\": %d, \"frame_idx\": %llu, \"pts_ms\": %lld, \"detections\": [",
-             orig_w, orig_h, (unsigned long long)frame_idx, (long long)pts_ms);
+    std::string active_model = !_model_name.empty() ? _model_name : (result.objects.empty() ? "" : result.objects[0].model_name);
+    if (!active_model.empty()) {
+        snprintf(tmp, sizeof(tmp), "{\"model\": \"%s\", \"frame_width\": %d, \"frame_height\": %d, \"frame_idx\": %llu, \"pts_ms\": %lld, \"detections\": [",
+                 active_model.c_str(), orig_w, orig_h, (unsigned long long)frame_idx, (long long)pts_ms);
+    } else {
+        snprintf(tmp, sizeof(tmp), "{\"frame_width\": %d, \"frame_height\": %d, \"frame_idx\": %llu, \"pts_ms\": %lld, \"detections\": [",
+                 orig_w, orig_h, (unsigned long long)frame_idx, (long long)pts_ms);
+    }
     json.append(tmp);
 
     for (size_t i = 0; i < result.objects.size(); i++) {
         const auto& obj = result.objects[i];
+        std::string text_field;
+        if (!obj.text.empty()) {
+            char text_tmp[256];
+            snprintf(text_tmp, sizeof(text_tmp), ", \"text\": \"%s\"", obj.text.c_str());
+            text_field = text_tmp;
+        }
+
         if (!obj.model_name.empty()) {
             snprintf(tmp, sizeof(tmp),
-                "%s{\"model\": \"%s\", \"class_id\": %d, \"label\": \"%s\", \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
+                "%s{\"model\": \"%s\", \"class_id\": %d, \"label\": \"%s\"%s, \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
                 (i > 0 ? ", " : ""),
                 obj.model_name.c_str(),
-                obj.class_id, obj.label.c_str(), obj.score,
+                obj.class_id, obj.label.c_str(), text_field.c_str(), obj.score,
                 obj.rel_box[0], obj.rel_box[1], obj.rel_box[2], obj.rel_box[3],
                 obj.box[0], obj.box[1], obj.box[2], obj.box[3]
             );
         } else {
             snprintf(tmp, sizeof(tmp),
-                "%s{\"class_id\": %d, \"label\": \"%s\", \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
+                "%s{\"class_id\": %d, \"label\": \"%s\"%s, \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
                 (i > 0 ? ", " : ""),
-                obj.class_id, obj.label.c_str(), obj.score,
+                obj.class_id, obj.label.c_str(), text_field.c_str(), obj.score,
                 obj.rel_box[0], obj.rel_box[1], obj.rel_box[2], obj.rel_box[3],
                 obj.box[0], obj.box[1], obj.box[2], obj.box[3]
             );

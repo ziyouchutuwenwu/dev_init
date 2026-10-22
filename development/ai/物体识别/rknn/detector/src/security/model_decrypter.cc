@@ -17,10 +17,48 @@ std::string ModelDecrypter::resolve_file_path(const std::string& path) {
 }
 
 const char* const* ModelDecrypter::get_labels_list(const std::string& model_id) {
-    if (!model_id.empty()) {
-        return ::get_model_labels_list(model_id.c_str());
+    if (model_id.empty()) {
+        fprintf(stderr, "[ModelDecrypter] 错误: 未指定 model_id，拒绝提供默认标签 (严禁错位回退)！\n");
+        return nullptr;
     }
-    return ::get_labels_list();
+
+    // 1. 优先尝试原样直连内置库
+    const char* const* direct_list = ::get_model_labels_list(model_id.c_str());
+    if (direct_list) {
+        return direct_list;
+    }
+
+    // 2. 动态规范化匹配 (不依赖阶段死板命名，识别语义模式)
+    std::string lower = model_id;
+    for (char& c : lower) c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+
+    const char* canonical_id = nullptr;
+    if (lower.find("industry") != std::string::npos || lower.find("industrial") != std::string::npos) {
+        canonical_id = "industry";
+    } else if (lower.find("ppe") != std::string::npos || lower.find("safety") != std::string::npos) {
+        canonical_id = "safety_ppe";
+    } else if (lower.find("forklift") != std::string::npos) {
+        canonical_id = "forklift_collision";
+    } else if (lower.find("steel") != std::string::npos) {
+        canonical_id = "steel_defect";
+    } else if (lower.find("tile") != std::string::npos) {
+        canonical_id = "tile_defect";
+    } else if (lower.find("yolo_raw") != std::string::npos || lower.find("coco") != std::string::npos || lower.find("yolo11") != std::string::npos) {
+        canonical_id = "yolo_raw";
+    } else if (lower.find("plate") != std::string::npos) {
+        canonical_id = "license_plate";
+    } else if (lower.find("lpr") != std::string::npos) {
+        canonical_id = "lprnet";
+    } else {
+        canonical_id = model_id.c_str();
+    }
+
+    const char* const* list = ::get_model_labels_list(canonical_id);
+    if (!list) {
+        fprintf(stderr, "[ModelDecrypter] 错误: 模型 [%s] 找不到对应的内置标签库 (严禁错位回退)！\n", model_id.c_str());
+        return nullptr;
+    }
+    return list;
 }
 
 std::string ModelDecrypter::find_model_path(const std::string& user_path, const std::string& default_model_name) {
@@ -34,20 +72,34 @@ std::string ModelDecrypter::find_model_path(const std::string& user_path, const 
             filename = user_path.substr(last_slash + 1);
         }
 
-        std::vector<std::string> candidates = {
-            user_path,
-            filename,
-            "model/" + filename,
-            "../model/" + filename,
-            "extra/model/" + filename,
-            "../extra/model/" + filename,
-            "deploy/" + filename,
-            "../deploy/" + filename
-        };
+        std::vector<std::string> names_to_check = { filename };
+        if (filename == "industrial_master_30cls.enc") names_to_check.push_back("industry.enc");
+        if (filename == "industry.enc") names_to_check.push_back("industrial_master_30cls.enc");
+        if (filename == "ppe_yolo11s.enc") names_to_check.push_back("safety_ppe.enc");
+        if (filename == "forklift_yolo11s.enc") names_to_check.push_back("forklift.enc");
+        if (filename == "steel_defect_yolo11n.enc") names_to_check.push_back("steel_defect.enc");
+        if (filename == "tile_defect_yolo11l.enc") names_to_check.push_back("tile_defect.enc");
+        if (filename == "license_plate.enc") names_to_check.push_back("plate_yolo11n.enc");
+        if (filename == "plate_yolo11n.enc") names_to_check.push_back("license_plate.enc");
 
-        for (const auto& c : candidates) {
-            std::string r = resolve_file_path(c);
-            if (!r.empty()) return r;
+        for (const auto& fn : names_to_check) {
+            std::vector<std::string> candidates = {
+                user_path,
+                fn,
+                "model/" + fn,
+                "../model/" + fn,
+                "deploy/model/" + fn,
+                "../deploy/model/" + fn,
+                "extra/model/" + fn,
+                "../extra/model/" + fn,
+                "deploy/" + fn,
+                "../deploy/" + fn
+            };
+
+            for (const auto& c : candidates) {
+                std::string r = resolve_file_path(c);
+                if (!r.empty()) return r;
+            }
         }
 
         return user_path;
@@ -60,6 +112,8 @@ std::string ModelDecrypter::find_model_path(const std::string& user_path, const 
                 default_model_name,
                 "model/" + default_model_name,
                 "../model/" + default_model_name,
+                "deploy/model/" + default_model_name,
+                "../deploy/model/" + default_model_name,
                 "extra/model/" + default_model_name,
                 "../extra/model/" + default_model_name,
                 "../deploy/" + default_model_name,
@@ -71,6 +125,8 @@ std::string ModelDecrypter::find_model_path(const std::string& user_path, const 
                 default_model_name + ext,
                 "model/" + default_model_name + ext,
                 "../model/" + default_model_name + ext,
+                "deploy/model/" + default_model_name + ext,
+                "../deploy/model/" + default_model_name + ext,
                 "extra/model/" + default_model_name + ext,
                 "../extra/model/" + default_model_name + ext,
                 "../deploy/" + default_model_name + ext,
@@ -81,6 +137,7 @@ std::string ModelDecrypter::find_model_path(const std::string& user_path, const 
             std::string r = resolve_file_path(c);
             if (!r.empty()) return r;
         }
+        return default_model_name;
     }
 
     std::string fallback_list[] = {

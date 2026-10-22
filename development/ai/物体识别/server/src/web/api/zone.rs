@@ -10,9 +10,10 @@ use crate::web_rtc::WebRtcServer;
 pub async fn get_zone(Path(stream_id): Path<String>) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     if let Some(ctx) = crate::on_detected::ObjectTrackHandler::get_context(&stream_id) {
         let cfg = ctx.config.read().await.clone();
+        let resp_obj = super::objects::ZoneObject::from(cfg);
         Ok(Json(json!({
             "stream_id": stream_id,
-            "config": cfg,
+            "config": resp_obj,
         })))
     } else {
         Err((StatusCode::NOT_FOUND, Json(json!({"error": "stream not found"}))))
@@ -35,25 +36,37 @@ pub async fn post_zone(
         server.get_stream_ai_enabled(&stream_id).unwrap_or(true)
     };
 
-    let mut new_cfg: crate::object_tracker::ZoneConfig = match serde_json::from_value(val) {
+    let mut zone_obj: super::objects::ZoneObject = match serde_json::from_value(val) {
         Ok(c) => c,
         Err(e) => return Err((StatusCode::BAD_REQUEST, Json(json!({"error": format!("invalid zone config: {e}")})))),
     };
-    new_cfg.enabled = target_enabled;
+    zone_obj.enabled = target_enabled;
+
+    let new_cfg = match crate::config::ZoneConfig::try_from(zone_obj) {
+        Ok(c) => c,
+        Err(e) => return Err((StatusCode::BAD_REQUEST, Json(json!({"error": e})))),
+    };
 
     match crate::updater::update_zone(&stream_id, new_cfg.clone()).await {
         Ok(saved_cfg) => {
-            if let Some(current_ai) = server.get_stream_ai_enabled(&stream_id) {
-                if current_ai != new_cfg.enabled {
-                    let streams: Vec<(String, String, bool)> = server.stream_order().into_iter().map(|id| {
-                        let url = server.get_stream_context(&id).map(|c| c.input_url).unwrap_or_default();
-                        let en = if id == stream_id { new_cfg.enabled } else { server.get_stream_ai_enabled(&id).unwrap_or(true) };
-                        (id, url, en)
-                    }).collect();
-                    let _ = server.update_streams(streams).await;
-                }
+            if let Some(current_ai) = server.get_stream_ai_enabled(&stream_id)
+                && current_ai != new_cfg.enabled
+            {
+                let streams: Vec<crate::config::StreamConfig> = server.stream_order().into_iter().map(|id| {
+                    let url = server.get_stream_context(&id).map(|c| c.input_url).unwrap_or_default();
+                    let en = if id == stream_id { new_cfg.enabled } else { server.get_stream_ai_enabled(&id).unwrap_or(true) };
+                    let model = server.get_stream_model(&id).unwrap_or_else(|| crate::config::DEFAULT_MODEL.to_string());
+                    crate::config::StreamConfig {
+                        id,
+                        input: url,
+                        enabled: en,
+                        model,
+                    }
+                }).collect();
+                let _ = server.update_streams(streams).await;
             }
-            Ok(Json(json!({"status": "ok", "config": saved_cfg})))
+            let resp_obj = super::objects::ZoneObject::from(saved_cfg);
+            Ok(Json(json!({"status": "ok", "config": resp_obj})))
         }
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e})))),
     }

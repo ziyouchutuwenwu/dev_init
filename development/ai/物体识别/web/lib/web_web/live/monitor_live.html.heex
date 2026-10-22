@@ -57,12 +57,20 @@
         id="stream-cards-grid"
         class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
         data-gateway-url={@gateway_url}
+        data-selected-classes={Jason.encode!(@selected_classes)}
       >
         <%= for {stream, idx} <- Enum.with_index(@stream_list) do %>
+          <% stream_classes =
+               case Jason.decode(stream.zone_config || "{}") do
+                 {:ok, %{"target_classes" => tc}} when is_list(tc) and length(tc) > 0 -> tc
+                 _ -> Web.ModelLoader.default_classes_for_model(stream.model || "industry")
+               end
+          %>
           <WebWeb.PlayerComponent.stream_card
             id={stream.stream_id}
             title={stream.title || "通道 #{idx + 1}: #{stream.stream_id}"}
             enabled={stream.enabled}
+            model={stream.model || "industry"}
             default_url={
               if is_binary(@gateway_url) and String.trim(@gateway_url) != "" do
                 "#{String.trim_trailing(String.trim(@gateway_url), "/")}/api/webrtc/#{stream.stream_id}"
@@ -71,6 +79,7 @@
               end
             }
             zone_config={stream.zone_config}
+            selected_classes={stream_classes}
           />
         <% end %>
       </div>

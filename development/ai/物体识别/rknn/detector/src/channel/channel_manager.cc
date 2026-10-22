@@ -29,7 +29,7 @@ std::shared_ptr<Channel> ChannelManager::get(int ch) {
     return nullptr;
 }
 
-std::shared_ptr<Channel> ChannelManager::create_one(int ch, int codec_type) {
+std::shared_ptr<Channel> ChannelManager::create_one(int ch, int codec_type, const std::string& model_name) {
     if (ch < 0 || ch >= 128) {
         return nullptr;
     }
@@ -39,17 +39,35 @@ std::shared_ptr<Channel> ChannelManager::create_one(int ch, int codec_type) {
         if (it->second && it->second->is_valid()) {
             auto dec = ChannelDecoder::shareInstance().get(ch);
             if (dec && dec->codec_type() == codec_type) {
+                if (!model_name.empty() && it->second->model_name() != model_name) {
+                    it->second->set_model_name(model_name);
+                    printf("[ChannelManager] 通道 %d 热更新模型: %s\n", ch, model_name.c_str());
+                }
                 return it->second;
             }
         }
         _channels.erase(it);
     }
-    auto channel = std::make_shared<Channel>(ch, codec_type);
+    auto channel = std::make_shared<Channel>(ch, codec_type, model_name);
     if (!channel->is_valid()) {
         return nullptr;
     }
     _channels[ch] = channel;
     return channel;
+}
+
+int ChannelManager::set_channel_model(int ch, const std::string& model_name) {
+    if (ch < 0 || ch >= 128) {
+        return -1;
+    }
+    std::lock_guard<std::mutex> lock(_mutex);
+    auto it = _channels.find(ch);
+    if (it != _channels.end() && it->second) {
+        it->second->set_model_name(model_name);
+        printf("[ChannelManager] 通道 %d 绑定模型: %s\n", ch, model_name.c_str());
+        return 0;
+    }
+    return -1;
 }
 
 int ChannelManager::release_one(int ch) {

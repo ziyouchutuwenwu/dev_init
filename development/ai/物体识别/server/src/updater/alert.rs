@@ -1,4 +1,4 @@
-use crate::config::YamlConfig;
+use crate::config;
 
 pub async fn update_alert_config(
     alert_url: Option<&str>,
@@ -16,14 +16,11 @@ pub async fn update_alert_config(
         crate::on_detected::set_alert_timeout_sec(Some(to));
     }
 
-    let cfg_path = crate::config::get_global_config_path();
-    let mut config = YamlConfig::load_or_default(&cfg_path);
-    config.set_alert(alert_url, cooldown_sec, timeout_sec);
-    if let Err(e) = config.save() {
-        log::warn!("[updater:alert] 保存告警配置到 {cfg_path} 异常: {e}");
+    if let Err(e) = config::alert::save_config(alert_url, cooldown_sec, timeout_sec) {
+        log::warn!("[updater:alert] 保存告警配置异常: {e}");
         return Err(format!("保存告警配置失败: {e}"));
     } else {
-        log::info!("[updater:alert] 成功热更新告警配置并持久化至 {cfg_path}");
+        log::info!("[updater:alert] 成功热更新告警配置并持久化");
     }
 
     Ok(())
@@ -47,18 +44,17 @@ pub fn get_alert_timeout_sec() -> Option<u64> {
     crate::on_detected::get_alert_timeout_sec()
 }
 
-pub fn init_alert_config_from_config(config_path: &str) {
-    let config = YamlConfig::load_or_default(config_path);
-    let (url, cooldown, timeout) = config.get_alert();
-    if let Some(url) = url {
+pub fn init_alert_config_from_config(_config_path: &str) {
+    let alert_cfg = config::alert::load_config();
+    if let Some(url) = alert_cfg.url {
         log::info!("[updater:alert] 从配置文件载入告警回调地址: '{url}'");
         crate::on_detected::set_alert_url(url);
     }
-    if let Some(cooldown) = cooldown {
+    if let Some(cooldown) = alert_cfg.cooldown_sec {
         log::info!("[updater:alert] 从配置文件载入告警最少间隔时间: {cooldown}s");
         crate::on_detected::set_alert_cooldown_sec(Some(cooldown));
     }
-    if let Some(timeout) = timeout {
+    if let Some(timeout) = alert_cfg.timeout_sec {
         log::info!("[updater:alert] 从配置文件载入告警请求超时: {timeout}s");
         crate::on_detected::set_alert_timeout_sec(Some(timeout));
     }

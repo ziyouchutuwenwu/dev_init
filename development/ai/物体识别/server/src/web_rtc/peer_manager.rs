@@ -18,12 +18,35 @@ use webrtc::peer_connection::{
     PeerConnection, PeerConnectionBuilder, PeerConnectionEventHandler,
 };
 
+static ACTIVE_STREAM_CONNECTIONS: std::sync::LazyLock<std::sync::Mutex<HashMap<String, usize>>> =
+    std::sync::LazyLock::new(|| std::sync::Mutex::new(HashMap::new()));
+
+pub fn is_stream_connected(stream_id: &str) -> bool {
+    let map = ACTIVE_STREAM_CONNECTIONS.lock().unwrap();
+    map.get(stream_id).copied().unwrap_or(0) > 0
+}
+
+pub fn add_stream_connection(stream_id: &str) {
+    let mut map = ACTIVE_STREAM_CONNECTIONS.lock().unwrap();
+    *map.entry(stream_id.to_string()).or_insert(0) += 1;
+}
+
+pub fn remove_stream_connection(stream_id: &str) {
+    let mut map = ACTIVE_STREAM_CONNECTIONS.lock().unwrap();
+    if let Some(count) = map.get_mut(stream_id) {
+        if *count > 0 {
+            *count -= 1;
+        }
+    }
+}
+
 struct ConnectionHandler {
     conn_id: u64,
     active_connections: Arc<Mutex<HashMap<u64, Arc<dyn PeerConnection>>>>,
     gather_complete_tx: tokio::sync::mpsc::Sender<()>,
     connected_notify: Arc<tokio::sync::Notify>,
     is_connected: Arc<std::sync::atomic::AtomicBool>,
+    conn_counted: Arc<std::sync::atomic::AtomicBool>,
     stop_tx: tokio::sync::broadcast::Sender<()>,
     tx_detection: tokio::sync::broadcast::Sender<String>,
     latest_detection: Arc<tokio::sync::RwLock<Option<String>>>,
@@ -41,6 +64,9 @@ impl PeerConnectionEventHandler for ConnectionHandler {
     async fn on_connection_state_change(&self, state: RTCPeerConnectionState) {
         if state == RTCPeerConnectionState::Connected {
             self.is_connected.store(true, Ordering::SeqCst);
+            if !self.conn_counted.swap(true, Ordering::SeqCst) {
+                add_stream_connection(&self.stream_id);
+            }
             self.connected_notify.notify_waiters();
         } else if matches!(
             state,
@@ -49,6 +75,9 @@ impl PeerConnectionEventHandler for ConnectionHandler {
                 | RTCPeerConnectionState::Disconnected
         ) {
             self.is_connected.store(false, Ordering::SeqCst);
+            if self.conn_counted.swap(false, Ordering::SeqCst) {
+                remove_stream_connection(&self.stream_id);
+            }
             let _ = self.stop_tx.send(());
             let active_conns = Arc::clone(&self.active_connections);
             let conn_id = self.conn_id;
@@ -189,6 +218,8 @@ impl PeerManager {
         let connected_notify = Arc::new(tokio::sync::Notify::new());
         let is_connected = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let is_connected_video = Arc::clone(&is_connected);
+        let conn_counted = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let conn_counted_video = Arc::clone(&conn_counted);
 
         let handler = Arc::new(ConnectionHandler {
             conn_id,
@@ -196,6 +227,7 @@ impl PeerManager {
             gather_complete_tx,
             connected_notify: Arc::clone(&connected_notify),
             is_connected,
+            conn_counted,
             stop_tx: stop_tx.clone(),
             tx_detection: stream_ctx.tx_detection.clone(),
             latest_detection: Arc::clone(&stream_ctx.latest_detection),
@@ -311,6 +343,7 @@ impl PeerManager {
         let connected_notify_clone = Arc::clone(&connected_notify);
         let active_connections_video = Arc::clone(active_connections);
         let pc_video_cleanup = Arc::clone(&pc);
+        let stream_id_video = stream_ctx.stream_id.clone();
 
         tokio::spawn(async move {
             let notified = connected_notify_clone.notified();
@@ -328,6 +361,9 @@ impl PeerManager {
 
             if !connected {
                 let _ = pc_video_cleanup.close().await;
+                if conn_counted_video.swap(false, Ordering::SeqCst) {
+                    remove_stream_connection(&stream_id_video);
+                }
                 let mut conns = active_connections_video.lock().await;
                 conns.remove(&conn_id);
                 return;
@@ -382,6 +418,9 @@ impl PeerManager {
             }
 
             let _ = pc_video_cleanup.close().await;
+            if conn_counted_video.swap(false, Ordering::SeqCst) {
+                remove_stream_connection(&stream_id_video);
+            }
             let mut conns = active_connections_video.lock().await;
             conns.remove(&conn_id);
         });
@@ -390,7 +429,7 @@ impl PeerManager {
     }
 }
 
-fn is_h264_keyframe(data: &[u8]) -> bool {
+pub fn is_h264_keyframe(data: &[u8]) -> bool {
     use h264_reader::annexb::AnnexBReader;
     use h264_reader::nal::{Nal, RefNal, UnitType};
     use h264_reader::push::NalInterest;
@@ -410,7 +449,7 @@ fn is_h264_keyframe(data: &[u8]) -> bool {
     is_key
 }
 
-fn is_h265_keyframe(data: &[u8]) -> bool {
+pub fn is_h265_keyframe(data: &[u8]) -> bool {
     let len = data.len();
     if len < 5 {
         return false;
@@ -439,30 +478,9 @@ fn is_h265_keyframe(data: &[u8]) -> bool {
     false
 }
 
-fn is_video_keyframe(data: &[u8]) -> bool {
+pub fn is_video_keyframe(data: &[u8]) -> bool {
     if is_h264_keyframe(data) {
         return true;
     }
     is_h265_keyframe(data)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_is_h264_keyframe() {
-        assert!(is_h264_keyframe(&[0, 0, 0, 1, 0x67, 0x42, 0x00, 0x1e]));
-        assert!(is_h264_keyframe(&[0, 0, 1, 0x65, 0x88, 0x84, 0x00]));
-        assert!(!is_h264_keyframe(&[0, 0, 0, 1, 0x61, 0x9a, 0x00, 0x00]));
-        assert!(!is_h264_keyframe(&[1, 2, 3, 4, 5]));
-    }
-
-    #[test]
-    fn test_is_h265_keyframe() {
-        assert!(is_h265_keyframe(&[0, 0, 0, 1, 0x40, 0x01]));
-        assert!(is_h265_keyframe(&[0, 0, 1, 0x26, 0x01]));
-        assert!(!is_h265_keyframe(&[0, 0, 0, 1, 0x02, 0x01]));
-        assert!(is_video_keyframe(&[0, 0, 0, 1, 0x40, 0x01]));
-    }
 }

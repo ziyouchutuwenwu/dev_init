@@ -1,4 +1,4 @@
-import { Player, getStreamConnectedState } from "./player";
+import { Player } from "./player";
 
 export const StreamCard = {
   mounted() {
@@ -39,22 +39,29 @@ export const StreamCard = {
         player.zoneConfig = zoneConfig;
       }
       player.enabled = this.el.dataset.enabled !== "false";
-      const shouldConnect = getStreamConnectedState(streamId);
-      if (shouldConnect) {
-        if (!player.isConnected) {
-          player.connect();
-        } else {
-          player.wakeUp();
-        }
+      if (player.isConnected) {
+        player.wakeUp();
       } else {
-        if (player.isConnected) {
-          player.disconnect(false);
-        }
+        player.setStatus("未连接", false);
+      }
+      if (!player.isDetectionActive) {
+        player.clearDetections();
       }
     } else {
       player = new Player({ streamId, url: streamUrl, videoEl, canvasEl, connectBtnEl, statusEl, countEl, rateEl, zoneConfig });
+      player.enabled = this.el.dataset.enabled !== "false";
+      player.setStatus("未连接", false);
       window._players.set(streamId, player);
     }
+
+    player.onConnectionChange = (isConnected) => {
+      this.pushEvent("stream_connected_state", { stream_id: streamId, connected: isConnected });
+    };
+
+    if (player.isConnected) {
+      this.pushEvent("stream_connected_state", { stream_id: streamId, connected: true });
+    }
+
     this.player = player;
 
     this.handleEvent(`zone_updated:${streamId}`, (payload) => {

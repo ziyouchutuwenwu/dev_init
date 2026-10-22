@@ -84,7 +84,7 @@ async fn test_post_streams_hot_update() {
     let res_zone = client
         .post(format!("http://{addr}/api/zone/test_s1"))
         .header("Content-Type", "application/json")
-        .body(r#"{"enabled":true,"trigger_box":[0.1,0.2,0.8,0.9]}"#)
+        .body(r#"{"enabled":true,"roi":{"type":"rect","coords":[0.1,0.2,0.8,0.9]}}"#)
         .send()
         .await
         .unwrap();
@@ -173,4 +173,41 @@ async fn test_webrtc_offer_query_routing() {
         .unwrap();
     assert_eq!(res_legacy.status(), reqwest::StatusCode::NOT_FOUND);
 }
+
+#[tokio::test]
+async fn test_api_detection() {
+    let detect_wrapper = Arc::new(server::detector::DetectWrapper::new());
+    let server = Arc::new(WebRtcServer::new("0.0.0.0:8181", detect_wrapper, vec![]));
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+
+    let srv_clone = Arc::clone(&server);
+    tokio::spawn(async move {
+        let _ = WebServer::run_with_listener(srv_clone, listener).await;
+    });
+
+    let client = reqwest::Client::new();
+
+    // 1. POST /api/detection
+    let res = client
+        .post(format!("http://{addr}/api/detection"))
+        .header("Content-Type", "application/json")
+        .body(r#"{"target_classes":["smoking","fire"],"rules":[]}"#)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(res.status(), reqwest::StatusCode::OK);
+
+    // 2. GET /api/detection
+    let get_res = client
+        .get(format!("http://{addr}/api/detection"))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(get_res.status(), reqwest::StatusCode::OK);
+    let body_str = get_res.text().await.unwrap();
+    let val: serde_json::Value = serde_json::from_str(&body_str).unwrap();
+    assert_eq!(val["target_classes"], serde_json::json!(["smoking", "fire"]));
+}
+
 

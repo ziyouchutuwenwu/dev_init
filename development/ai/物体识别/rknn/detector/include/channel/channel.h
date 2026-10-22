@@ -13,10 +13,13 @@ struct DetectResult;
 
 class Channel {
 public:
-    explicit Channel(int ch, int codec_type = 0);
+    explicit Channel(int ch, int codec_type = 0, const std::string& model_name = "");
     ~Channel();
 
     int id() const { return _ch; }
+    const std::string& model_name() const { return _model_name; }
+    void set_model_name(const std::string& name) { _model_name = name; }
+
     int bin_to_img_stream(const unsigned char* packet_data, int packet_size, unsigned long long frame_idx, long long pts_ms);
     int detect_img_bin(char* out_buf, int out_buf_size, unsigned long long* out_frame_idx, long long* out_pts_ms);
     int flush();
@@ -29,6 +32,7 @@ private:
     void try_dispatch_inference();
 
     int _ch;
+    std::string _model_name;
     std::shared_ptr<VpuDecoder> _decoder;
 
     std::atomic<bool> _is_inferring{false};

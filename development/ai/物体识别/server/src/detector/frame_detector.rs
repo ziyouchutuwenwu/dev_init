@@ -6,6 +6,7 @@ pub struct FrameDetector {
     detect_wrapper: Arc<DetectWrapper>,
     channel_id: u32,
     stream_id: String,
+    model_name: String,
     default_width: i32,
     default_height: i32,
     flush_epoch: std::sync::atomic::AtomicU64,
@@ -19,16 +20,30 @@ impl FrameDetector {
         channel_id: u32,
         stream_id: impl Into<String>,
     ) -> Self {
+        Self::with_channel_and_model(detect_wrapper, channel_id, stream_id, crate::config::DEFAULT_MODEL)
+    }
+
+    pub fn with_channel_and_model(
+        detect_wrapper: Arc<DetectWrapper>,
+        channel_id: u32,
+        stream_id: impl Into<String>,
+        model_name: impl Into<String>,
+    ) -> Self {
         Self {
             detect_wrapper,
             channel_id,
             stream_id: stream_id.into(),
+            model_name: model_name.into(),
             default_width: 1920,
             default_height: 1080,
             flush_epoch: std::sync::atomic::AtomicU64::new(0),
             session_epoch: std::sync::atomic::AtomicU64::new(0),
             channel_released: std::sync::atomic::AtomicBool::new(false),
         }
+    }
+
+    pub fn model_name(&self) -> &str {
+        &self.model_name
     }
 
     pub fn next_session_epoch(&self) -> u64 {
@@ -52,11 +67,13 @@ impl FrameDetector {
     }
 
     pub fn create_channel(&self) -> Result<(), String> {
-        self.detect_wrapper.create_channel(self.channel_id)
+        let codec_and_model = format!("h264:{}", self.model_name);
+        self.detect_wrapper.create_channel_with_codec(self.channel_id, &codec_and_model)
     }
 
     pub fn create_channel_with_codec(&self, codec: &str) -> Result<(), String> {
-        self.detect_wrapper.create_channel_with_codec(self.channel_id, codec)
+        let codec_and_model = format!("{}:{}", codec, self.model_name);
+        self.detect_wrapper.create_channel_with_codec(self.channel_id, &codec_and_model)
     }
 
     pub fn release_channel(&self) -> Result<(), String> {

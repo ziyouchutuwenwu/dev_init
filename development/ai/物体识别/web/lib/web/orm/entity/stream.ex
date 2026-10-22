@@ -9,13 +9,14 @@ defmodule Web.Orm.Entity.Stream do
     field(:enabled, :boolean, default: true)
     field(:position, :integer, default: 0)
     field(:zone_config, :string)
+    field(:model, :string, default: "industry")
 
     timestamps(type: :utc_datetime)
   end
 
   def changeset(stream, attrs) do
     stream
-    |> cast(attrs, [:stream_id, :title, :rtsp_url, :enabled, :position, :zone_config])
+    |> cast(attrs, [:stream_id, :title, :rtsp_url, :enabled, :position, :zone_config, :model])
     |> validate_required([:stream_id, :rtsp_url])
     |> validate_format(:stream_id, ~r/^[a-zA-Z0-9_\-]+$/, message: "只允许字母、数字、下划线和短横线")
     |> unique_constraint(:stream_id)

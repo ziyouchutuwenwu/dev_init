@@ -1,10 +1,13 @@
 pub mod alert;
+pub mod detection;
 pub mod health;
+pub mod objects;
 pub mod streams;
 pub mod webrtc;
 pub mod zone;
 
 pub use alert::{get_alert, post_alert};
+pub use detection::{get_detection, post_detection};
 pub use health::health_check;
 pub use streams::{get_streams, post_streams};
 pub use webrtc::{handle_offer, handle_offer_no_path, resolve_stream_id};

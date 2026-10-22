@@ -4,7 +4,6 @@ use crate::on_detected::{
     DetectedDispatcher, HttpPostHandler, ObjectTrackHandler, WebRtcHandler,
 };
 use crate::rtsp2frame::RtspStreamer;
-use crate::object_tracker::ZoneConfig;
 use crate::web_rtc::StreamContext;
 use std::sync::Arc;
 use tokio::sync::broadcast;
@@ -30,6 +29,7 @@ pub async fn setup_single_stream(
     let stream_id = stream_cfg.id;
     let input_url = stream_cfg.input;
     let ai_enabled = stream_cfg.enabled;
+    let model = stream_cfg.model;
     let (tx_detection, _rx) = broadcast::channel::<String>(64);
     let latest_detection = Arc::new(tokio::sync::RwLock::new(None));
 
@@ -41,21 +41,21 @@ pub async fn setup_single_stream(
     );
 
     let (detector, raw_dispatcher) = if ai_enabled {
-        let detector = Arc::new(FrameDetector::with_channel(
+        let detector = Arc::new(FrameDetector::with_channel_and_model(
             detect_wrapper,
             ch_idx,
             stream_id.clone(),
+            model.clone(),
         ));
 
         if let Err(e) = detector.create_channel() {
-            eprintln!("[server:{stream_id}] warning: create_channel (ch={ch_idx}) failed: {e}");
+            eprintln!("[server:{stream_id}] warning: create_channel (ch={ch_idx}, model={model}) failed: {e}");
         }
 
         let raw_dispatcher = Arc::new(DetectedDispatcher::new());
         let processed_dispatcher = Arc::new(DetectedDispatcher::new());
 
-        let config_path = crate::prepare::resolve_config_path().unwrap_or_else(|_| "config.yaml".to_string());
-        let initial_zone_cfg = ZoneConfig::load_from_yaml_file(&config_path, &stream_id);
+        let initial_zone_cfg = crate::config::channel::load_config(&stream_id);
         ObjectTrackHandler::start(
             &stream_id,
             raw_dispatcher.subscribe(),
@@ -97,6 +97,7 @@ pub async fn start_initial_streams(
         let stream_id = st.id.clone();
         let input_url = st.input.clone();
         let ai_enabled = st.enabled;
+        let model = st.model.clone();
         let (ctx, handle) = setup_single_stream(
             ch_idx as u32,
             st,
@@ -108,6 +109,7 @@ pub async fn start_initial_streams(
             input_url,
             channel_id: ch_idx as u32,
             ai_enabled,
+            model,
             context: ctx,
             handle,
         });

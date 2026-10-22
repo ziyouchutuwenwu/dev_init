@@ -1,9 +1,7 @@
 #include "hardware/npu_infer.h"
 #include "hardware/npu_worker_pool.h"
 #include "hardware/vpu_decoder.h"
-#include "ai/pipeline/detect_result.h"
-#include "ai/pipeline/infer_pipeline.h"
-#include "rknn_api.h"
+#include "ai/infer_manager/detect_result.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -13,10 +11,10 @@
 #include <ctime>
 #include <atomic>
 
-NpuChannelContext::NpuChannelContext(int ch, uint32_t core_mask, std::shared_ptr<InferPipeline> pipeline)
+NpuChannelContext::NpuChannelContext(int ch, uint32_t core_mask, std::shared_ptr<InferManager> manager)
     : _ch(ch),
       _core_mask(core_mask),
-      _pipeline(pipeline),
+      _manager(manager),
       _last_inferred_seq(UINT64_MAX),
       _last_pts_ms(0) {
 }
@@ -26,35 +24,37 @@ NpuChannelContext::~NpuChannelContext() {
 }
 
 void* NpuChannelContext::input_buf() const {
-    if (_pipeline) {
-        return _pipeline->input_buf();
+    if (_manager) {
+        return _manager->input_buf();
     }
     return nullptr;
 }
 
 bool NpuChannelContext::is_valid() const {
-    return _pipeline && _pipeline->is_initialized();
+    return _manager && _manager->is_initialized();
 }
 
 bool NpuChannelContext::infer(image_buffer_t& img, DetectResult& result) {
-    if (!_pipeline || !_pipeline->is_initialized()) {
+    if (!_manager || !_manager->is_initialized()) {
         return false;
     }
-    return _pipeline->process(img, result);
+    auto m = _manager->get_model();
+    return m ? m->infer(img, result) : false;
 }
 
 bool NpuChannelContext::infer_frame(const std::shared_ptr<VpuDecoder::FrameBuffer>& frame, DetectResult& result) {
-    if (!_pipeline || !_pipeline->is_initialized()) {
+    if (!_manager || !_manager->is_initialized()) {
         return false;
     }
-    return _pipeline->process(frame, result);
+    auto m = _manager->get_model();
+    return m ? m->infer_frame(frame, result) : false;
 }
 
 void NpuChannelContext::release() {
     std::lock_guard<std::recursive_mutex> lock(_mutex);
-    if (_pipeline) {
-        _pipeline->release();
-        _pipeline.reset();
+    if (_manager) {
+        _manager->release();
+        _manager.reset();
     }
     _last_json_cache.clear();
     _last_json_cache.shrink_to_fit();
@@ -69,16 +69,16 @@ NpuInfer& NpuInfer::shareInstance() {
 NpuInfer::NpuInfer()
     : _configured_streams(0),
       _core_num(0),
-      _pipeline(nullptr) {
+      _manager(nullptr) {
 }
 
 NpuInfer::~NpuInfer() {
     deinit_engine();
 }
 
-void NpuInfer::set_pipeline(std::shared_ptr<InferPipeline> pipeline) {
+void NpuInfer::set_model_manager(std::shared_ptr<InferManager> manager) {
     std::lock_guard<std::recursive_mutex> lock(_channels_mutex);
-    _pipeline = pipeline;
+    _manager = manager;
 }
 
 int NpuInfer::detect_npu_core_num() {
@@ -209,24 +209,24 @@ bool NpuInfer::init_engine(const std::string& model_path, const std::string& lab
         _core_num = detect_npu_core_num();
     }
 
-    if (!_pipeline) {
-        _pipeline = std::make_shared<InferPipeline>();
+    if (!_manager) {
+        _manager = std::make_shared<InferManager>();
     }
 
-    if (_pipeline->is_initialized()) {
-        NpuWorkerPool::instance().init(_pipeline, _core_num);
+    if (_manager->is_initialized()) {
+        NpuWorkerPool::instance().init(_manager, _core_num);
         return true;
     }
 
     _model_path = model_path;
     _label_path = label_path;
 
-    bool ok = _pipeline->init(_model_path, _label_path);
+    bool ok = _manager->init(_model_path, _label_path);
     if (!ok) {
         return false;
     }
 
-    NpuWorkerPool::instance().init(_pipeline, _core_num);
+    NpuWorkerPool::instance().init(_manager, _core_num);
     return true;
 }
 
@@ -241,9 +241,9 @@ void NpuInfer::deinit_engine() {
     }
     _channels.clear();
 
-    if (_pipeline) {
-        _pipeline->release();
-        _pipeline.reset();
+    if (_manager) {
+        _manager->release();
+        _manager.reset();
     }
 }
 
@@ -271,7 +271,7 @@ bool NpuInfer::init_with_stream_count(int stream_count) {
 
 std::shared_ptr<NpuChannelContext> NpuInfer::create_channel(int ch) {
     std::lock_guard<std::recursive_mutex> lock(_channels_mutex);
-    if (!_pipeline || !_pipeline->is_initialized()) {
+    if (!_manager || !_manager->is_initialized()) {
         if (!init_engine(_model_path, _label_path)) {
             return nullptr;
         }
@@ -290,12 +290,12 @@ std::shared_ptr<NpuChannelContext> NpuInfer::create_channel(int ch) {
     }
 
     uint32_t mask = select_core_mask(ch);
-    auto ch_pipeline = _pipeline->clone(mask);
-    if (!ch_pipeline) {
+    auto ch_manager = _manager->clone(mask);
+    if (!ch_manager) {
         return nullptr;
     }
 
-    auto channel = std::make_shared<NpuChannelContext>(ch, mask, ch_pipeline);
+    auto channel = std::make_shared<NpuChannelContext>(ch, mask, ch_manager);
     _channels[ch] = channel;
     return channel;
 }
@@ -339,12 +339,13 @@ bool NpuInfer::flush_channel(int ch) {
 }
 
 bool NpuInfer::infer(image_buffer_t& img, DetectResult& result) {
-    if (!_pipeline || !_pipeline->is_initialized()) {
+    if (!_manager || !_manager->is_initialized()) {
         if (!init_engine(_model_path, _label_path)) {
             return false;
         }
     }
-    return _pipeline->process(img, result);
+    auto m = _manager->get_model();
+    return m ? m->infer(img, result) : false;
 }
 
 int NpuInfer::detect_frame(VpuDecoder* decoder, int ch, char* out_buf, int out_buf_size, unsigned long long* out_frame_idx, long long* out_pts_ms) {
@@ -354,7 +355,7 @@ int NpuInfer::detect_frame(VpuDecoder* decoder, int ch, char* out_buf, int out_b
     if (!channel) {
         channel = create_channel(ch);
     }
-    if (!channel || !_pipeline || !_pipeline->is_initialized()) {
+    if (!channel || !_manager || !_manager->is_initialized()) {
         if (out_frame_idx) *out_frame_idx = 0;
         if (out_pts_ms) *out_pts_ms = 0;
         snprintf(out_buf, out_buf_size, "{\"frame_width\":0,\"frame_height\":0,\"detections\":[]}");
@@ -364,7 +365,7 @@ int NpuInfer::detect_frame(VpuDecoder* decoder, int ch, char* out_buf, int out_b
     std::lock_guard<std::recursive_mutex> lock(channel->mutex());
 
     void* in_buf = channel->input_buf();
-    if (!in_buf || _pipeline->input_width() <= 0 || _pipeline->input_height() <= 0) {
+    if (!in_buf || _manager->input_width() <= 0 || _manager->input_height() <= 0) {
         if (out_frame_idx) *out_frame_idx = 0;
         if (out_pts_ms) *out_pts_ms = 0;
         snprintf(out_buf, out_buf_size, "{\"frame_width\":0,\"frame_height\":0,\"detections\":[]}");
@@ -406,13 +407,13 @@ int NpuInfer::detect_frame(VpuDecoder* decoder, int ch, char* out_buf, int out_b
         orig_w = frame_snapshot->width;
         orig_h = frame_snapshot->height;
     } else if (decoder) {
-        dst_img.width = _pipeline->input_width();
-        dst_img.height = _pipeline->input_height();
-        dst_img.width_stride = _pipeline->input_width();
-        dst_img.height_stride = _pipeline->input_height();
+        dst_img.width = _manager->input_width();
+        dst_img.height = _manager->input_height();
+        dst_img.width_stride = _manager->input_width();
+        dst_img.height_stride = _manager->input_height();
         dst_img.format = IMAGE_FORMAT_RGB888;
         dst_img.virt_addr = (unsigned char*)in_buf;
-        dst_img.size = (int)(_pipeline->input_width() * _pipeline->input_height() * _pipeline->input_channel());
+        dst_img.size = (int)(_manager->input_width() * _manager->input_height() * _manager->input_channel());
         dst_img.fd = -1;
 
         if (!decoder->letterbox_to_dst(&dst_img, &letter_box, frame_idx, pts_ms, &orig_w, &orig_h)) {
@@ -467,20 +468,27 @@ int NpuInfer::detect_frame(VpuDecoder* decoder, int ch, char* out_buf, int out_b
 
     for (size_t i = 0; i < det_result.objects.size(); i++) {
         const auto& obj = det_result.objects[i];
+        std::string text_field;
+        if (!obj.text.empty()) {
+            char text_tmp[256];
+            snprintf(text_tmp, sizeof(text_tmp), ", \"text\": \"%s\"", obj.text.c_str());
+            text_field = text_tmp;
+        }
+
         if (!obj.model_name.empty()) {
             snprintf(tmp, sizeof(tmp),
-                "%s{\"model\": \"%s\", \"class_id\": %d, \"label\": \"%s\", \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
+                "%s{\"model\": \"%s\", \"class_id\": %d, \"label\": \"%s\"%s, \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
                 (i > 0 ? ", " : ""),
                 obj.model_name.c_str(),
-                obj.class_id, obj.label.c_str(), obj.score,
+                obj.class_id, obj.label.c_str(), text_field.c_str(), obj.score,
                 obj.rel_box[0], obj.rel_box[1], obj.rel_box[2], obj.rel_box[3],
                 obj.box[0], obj.box[1], obj.box[2], obj.box[3]
             );
         } else {
             snprintf(tmp, sizeof(tmp),
-                "%s{\"class_id\": %d, \"label\": \"%s\", \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
+                "%s{\"class_id\": %d, \"label\": \"%s\"%s, \"confidence\": %.2f, \"rel_box\": [%.4f, %.4f, %.4f, %.4f], \"box\": [%d, %d, %d, %d]}",
                 (i > 0 ? ", " : ""),
-                obj.class_id, obj.label.c_str(), obj.score,
+                obj.class_id, obj.label.c_str(), text_field.c_str(), obj.score,
                 obj.rel_box[0], obj.rel_box[1], obj.rel_box[2], obj.rel_box[3],
                 obj.box[0], obj.box[1], obj.box[2], obj.box[3]
             );
@@ -512,8 +520,8 @@ int NpuInfer::detect_frame(VpuDecoder* decoder, int ch, char* out_buf, int out_b
 }
 
 const char* NpuInfer::get_label_name(int cls_id) {
-    if (_pipeline) {
-        return _pipeline->get_label_name(cls_id);
+    if (_manager) {
+        return _manager->get_label_name(cls_id);
     }
     return "object";
 }

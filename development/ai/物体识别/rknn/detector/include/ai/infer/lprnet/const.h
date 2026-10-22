@@ -1,0 +1,12 @@
+#ifndef LPRNET_CONST_H
+#define LPRNET_CONST_H
+
+#define LPRNET_INPUT_WIDTH   94
+#define LPRNET_INPUT_HEIGHT  24
+#define LPRNET_INPUT_CHANNEL 3
+
+#define LPRNET_OUT_ROWS      68
+#define LPRNET_OUT_COLS      18
+#define LPRNET_BLANK_INDEX   67
+
+#endif // LPRNET_CONST_H

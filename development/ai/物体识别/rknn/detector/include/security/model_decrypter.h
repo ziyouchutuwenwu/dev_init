@@ -3,8 +3,7 @@
 
 #include <string>
 #include <mutex>
-#include "rknn_api.h"
-#include "ai/model/model_infer.h"
+#include "ai/infer_manager/model_infer.h"
 #include "security/switcher.h"
 #include "security/model_memory.h"
 

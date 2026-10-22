@@ -5,6 +5,7 @@ pub struct TrackedObject {
     pub track_id: u64,
     pub class_id: Option<i32>,
     pub label: Option<String>,
+    pub text: Option<String>,
     pub confidence: f64,
     pub rel_box: [f64; 4],
     pub box_coord: Vec<f64>,
@@ -19,6 +20,7 @@ pub struct TrackedObject {
 pub struct DetectionInput {
     pub class_id: Option<i32>,
     pub label: Option<String>,
+    pub text: Option<String>,
     pub confidence: f64,
     pub rel_box: [f64; 4],
     pub box_coord: Vec<f64>,

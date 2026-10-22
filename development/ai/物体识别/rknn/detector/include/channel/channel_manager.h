@@ -13,7 +13,8 @@ public:
     ~ChannelManager();
 
     std::shared_ptr<Channel> get(int ch);
-    std::shared_ptr<Channel> create_one(int ch, int codec_type = 0);
+    std::shared_ptr<Channel> create_one(int ch, int codec_type = 0, const std::string& model_name = "");
+    int set_channel_model(int ch, const std::string& model_name);
     int release_one(int ch);
     int flush_one(int ch);
     int create_all(int total_streams);

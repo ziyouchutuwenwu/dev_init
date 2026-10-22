@@ -13,6 +13,7 @@ pub struct RunningStream {
     pub input_url: String,
     pub channel_id: u32,
     pub ai_enabled: bool,
+    pub model: String,
     pub context: StreamContext,
     pub handle: tokio::task::JoinHandle<()>,
 }
@@ -105,6 +106,11 @@ impl WebRtcServer {
         running.get(stream_id).map(|s| s.ai_enabled)
     }
 
+    pub fn get_stream_model(&self, stream_id: &str) -> Option<String> {
+        let running = self.running_streams.read().unwrap();
+        running.get(stream_id).map(|s| s.model.clone())
+    }
+
     pub fn stop_all_streams(&self) {
         let mut map = self.running_streams.write().unwrap();
         for (_, s) in map.drain() {
@@ -116,24 +122,27 @@ impl WebRtcServer {
 
     pub async fn update_streams(
         &self,
-        new_streams_list: Vec<(String, String, bool)>,
+        new_streams_list: Vec<crate::config::StreamConfig>,
     ) -> Result<(), String> {
         let mut to_stop = Vec::new();
         let mut to_start = Vec::new();
 
         {
             let running = self.running_streams.read().unwrap();
-            let new_map: HashMap<&str, (&str, bool)> = new_streams_list
+            let new_map: HashMap<&str, &crate::config::StreamConfig> = new_streams_list
                 .iter()
-                .map(|(id, url, en)| (id.as_str(), (url.as_str(), *en)))
+                .map(|s| (s.id.as_str(), s))
                 .collect();
 
             for (id, stream) in running.iter() {
                 match new_map.get(id.as_str()) {
-                    Some(&(new_url, new_en)) => {
-                        if stream.input_url != new_url || stream.ai_enabled != new_en {
+                    Some(&new_cfg) => {
+                        if stream.input_url != new_cfg.input
+                            || stream.ai_enabled != new_cfg.enabled
+                            || stream.model != new_cfg.model
+                        {
                             to_stop.push(id.clone());
-                            to_start.push((id.clone(), new_url.to_string(), new_en));
+                            to_start.push(new_cfg.clone());
                         }
                     }
                     None => {
@@ -142,9 +151,9 @@ impl WebRtcServer {
                 }
             }
 
-            for (id, url, en) in &new_streams_list {
-                if !running.contains_key(id) {
-                    to_start.push((id.clone(), url.clone(), *en));
+            for s in &new_streams_list {
+                if !running.contains_key(&s.id) {
+                    to_start.push(s.clone());
                 }
             }
         }
@@ -155,7 +164,7 @@ impl WebRtcServer {
                 running.remove(&id)
             };
             if let Some(stream) = removed {
-                log::info!("[stream_manager] 热更新停止流 [{}] (ch={})", stream.stream_id, stream.channel_id);
+                log::info!("[stream_manager] 热更新停止流 [{}] (ch={}, model={})", stream.stream_id, stream.channel_id, stream.model);
                 stream.handle.abort();
                 let _ = self.detect_wrapper.release_channel(stream.channel_id);
                 crate::on_detected::ObjectTrackHandler::remove_context(&stream.stream_id);
@@ -166,7 +175,7 @@ impl WebRtcServer {
             tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
         }
 
-        for (id, url, en) in to_start {
+        for stream_cfg in to_start {
             let ch_idx = {
                 let running = self.running_streams.read().unwrap();
                 let used: std::collections::HashSet<u32> =
@@ -178,12 +187,12 @@ impl WebRtcServer {
                 c
             };
 
-            log::info!("[stream_manager] 热更新启动流 [{}] (ch={}, url={}, ai={})", id, ch_idx, url, en);
-            let stream_cfg = crate::config::StreamConfig {
-                id: id.clone(),
-                input: url.clone(),
-                enabled: en,
-            };
+            let id = stream_cfg.id.clone();
+            let url = stream_cfg.input.clone();
+            let en = stream_cfg.enabled;
+            let model = stream_cfg.model.clone();
+
+            log::info!("[stream_manager] 热更新启动流 [{}] (ch={}, url={}, ai={}, model={})", id, ch_idx, url, en, model);
 
             match crate::prepare::setup_single_stream(
                 ch_idx,
@@ -198,6 +207,7 @@ impl WebRtcServer {
                         input_url: url,
                         channel_id: ch_idx,
                         ai_enabled: en,
+                        model,
                         context: stream_ctx,
                         handle,
                     };
@@ -213,8 +223,8 @@ impl WebRtcServer {
         {
             let mut order = self.stream_order.write().unwrap();
             order.clear();
-            for (id, _, _) in &new_streams_list {
-                order.push(id.clone());
+            for s in &new_streams_list {
+                order.push(s.id.clone());
             }
         }
 

@@ -7,6 +7,8 @@ defmodule WebWeb.PlayerComponent do
   attr :removable, :boolean, default: true
   attr :zone_config, :string, default: nil
   attr :enabled, :boolean, default: true
+  attr :selected_classes, :list, default: []
+  attr :model, :string, default: "industry"
 
   def stream_card(assigns) do
     ~H"""
@@ -17,9 +19,12 @@ defmodule WebWeb.PlayerComponent do
       data-stream-id={@id}
       data-stream-url={@default_url}
       data-zone-config={@zone_config}
+      data-selected-classes={Jason.encode!(@selected_classes || [])}
       data-enabled={to_string(@enabled)}
+      data-model={@model}
       data-keep-alive="true"
     >
+      <% model_meta = Web.ModelLoader.get_model(@model) %>
       <div class="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-zinc-100">
         <div class="flex items-center gap-1.5 shrink-0">
           <label class="text-xs font-semibold text-zinc-600 whitespace-nowrap">流标识:</label>
@@ -36,6 +41,12 @@ defmodule WebWeb.PlayerComponent do
           >
             连接
           </button>
+          <span
+            class="hidden sm:inline-flex items-center gap-1 rounded bg-blue-50 border border-blue-200/80 px-2 py-0.5 text-[11px] font-semibold text-blue-700 whitespace-nowrap"
+            title={model_meta.desc}
+          >
+            <span>{model_meta.name}</span>
+          </span>
         </div>
 
         <div class="flex flex-1 items-center justify-between gap-2.5 text-xs w-full sm:w-auto min-w-[270px]">

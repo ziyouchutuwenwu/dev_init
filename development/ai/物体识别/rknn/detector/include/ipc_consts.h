@@ -15,6 +15,8 @@ enum IpcCmdType : uint8_t {
     CMD_FEED_PACKET     = 0x04,
     CMD_DETECT_LATEST   = 0x05,
     CMD_RELEASE_ALL     = 0x06,
+    CMD_SET_CHANNEL_MODEL = 0x07,
+    CMD_LIST_MODELS       = 0x08,
 
     RESP_PONG           = 0x80,
     RESP_STATUS         = 0x81,

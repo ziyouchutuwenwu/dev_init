@@ -3,6 +3,7 @@
 #include "engine/engine.h"
 #include "channel/channel.h"
 #include "channel/channel_manager.h"
+#include "hardware/npu_infer.h"
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
@@ -172,7 +173,15 @@ static void handle_client(int client_fd) {
                     memcpy(&ch, payload_buf.data(), 4);
                     ch = be32toh(ch);
 
-                    std::string codec_name(reinterpret_cast<char*>(payload_buf.data() + 4), payload_len - 4);
+                    std::string raw_cfg(reinterpret_cast<char*>(payload_buf.data() + 4), payload_len - 4);
+                    std::string codec_name = raw_cfg;
+                    std::string model_name = "industry"; // 默认主模型
+                    size_t colon_pos = raw_cfg.find(':');
+                    if (colon_pos != std::string::npos) {
+                        codec_name = raw_cfg.substr(0, colon_pos);
+                        model_name = raw_cfg.substr(colon_pos + 1);
+                    }
+
                     std::string lower_codec = codec_name;
                     std::transform(lower_codec.begin(), lower_codec.end(), lower_codec.begin(), ::tolower);
 
@@ -187,8 +196,8 @@ static void handle_client(int client_fd) {
 
                     int ret = -1;
                     if (codec_type >= 0) {
-                        printf("[detector] 收到创建通道指令: 通道=%u, 编码格式=%s\n", ch, codec_name.c_str());
-                        auto channel = ChannelManager::instance().create_one(static_cast<int>(ch), codec_type);
+                        printf("[detector] 收到创建通道指令: 通道=%u, 编码格式=%s, 绑定模型=%s\n", ch, codec_name.c_str(), model_name.c_str());
+                        auto channel = ChannelManager::instance().create_one(static_cast<int>(ch), codec_type, model_name);
                         ret = channel ? 0 : -1;
                     }
 
@@ -327,6 +336,46 @@ static void handle_client(int client_fd) {
                     resp[4] = RESP_STATUS;
                     memcpy(resp + 5, &status_val, 4);
                     if (!write_exact(client_fd, resp, 9)) goto exit_loop;
+                    break;
+                }
+
+                case CMD_SET_CHANNEL_MODEL: {
+                    if (payload_len <= 4) goto err_resp;
+                    uint32_t ch = 0;
+                    memcpy(&ch, payload_buf.data(), 4);
+                    ch = be32toh(ch);
+                    std::string model_name(reinterpret_cast<char*>(payload_buf.data() + 4), payload_len - 4);
+                    int ret = ChannelManager::instance().set_channel_model(static_cast<int>(ch), model_name);
+
+                    uint8_t resp[9];
+                    uint32_t resp_len = htobe32(4);
+                    int32_t status_val = htobe32(ret);
+                    memcpy(resp, &resp_len, 4);
+                    resp[4] = RESP_STATUS;
+                    memcpy(resp + 5, &status_val, 4);
+                    if (!write_exact(client_fd, resp, 9)) goto exit_loop;
+                    break;
+                }
+
+                case CMD_LIST_MODELS: {
+                    auto manager = NpuInfer::shareInstance().get_infer_manager();
+                    std::string json = "[";
+                    if (manager) {
+                        auto models = manager->get_loaded_models();
+                        for (size_t i = 0; i < models.size(); ++i) {
+                            if (i > 0) json += ", ";
+                            json += "\"" + models[i] + "\"";
+                        }
+                    }
+                    json += "]";
+
+                    uint32_t json_len = static_cast<uint32_t>(json.size());
+                    std::vector<uint8_t> m_resp(5 + json_len);
+                    uint32_t net_len = htobe32(json_len);
+                    memcpy(m_resp.data(), &net_len, 4);
+                    m_resp[4] = RESP_DETECT_RESULT;
+                    memcpy(m_resp.data() + 5, json.data(), json_len);
+                    if (!write_exact(client_fd, m_resp.data(), m_resp.size())) goto exit_loop;
                     break;
                 }
 

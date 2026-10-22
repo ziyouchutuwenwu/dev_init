@@ -76,12 +76,15 @@ defmodule Web.Orm.Query.Streams do
                 nil
             end
 
+          model = item["model"] || item[:model] || "industry"
+
           attrs = %{
             stream_id: String.trim(to_string(id)),
             rtsp_url: String.trim(to_string(url)),
             title: String.trim(to_string(title)),
             enabled: enabled,
-            position: idx
+            position: idx,
+            model: String.trim(to_string(model))
           }
 
           if synced_zone_config do

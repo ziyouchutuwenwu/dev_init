@@ -1,4 +1,4 @@
-import { drawDetections, renderDetectionList, clientToRelCoords, isDetectionInZone } from "./ui_render";
+import { drawDetections, renderDetectionList, clientToRelCoords, isDetectionInZone, isDetectionTargetMatched } from "./ui_render";
 
 function showGlobalToast(msg, type = "info") {
   const toast = document.getElementById("global-feedback-toast") || document.getElementById("stream-config-feedback");
@@ -39,31 +39,15 @@ window.switchOrOpenTab = function (url, targetName) {
 };
 
 const STORAGE_KEY_CONNECTED = "web_stream_connected_state_map";
+try {
+  localStorage.removeItem(STORAGE_KEY_CONNECTED);
+} catch (e) {}
 
-export function getStreamConnectedState(streamId) {
-  if (!streamId) return false;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_CONNECTED);
-    if (!raw) return false;
-    const map = JSON.parse(raw);
-    return !!map[streamId];
-  } catch (e) {
-    return false;
-  }
+export function getStreamConnectedState(_streamId) {
+  return false;
 }
 
-export function setStreamConnectedState(streamId, isConnected) {
-  if (!streamId) return;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_CONNECTED);
-    const map = raw ? JSON.parse(raw) : {};
-    if (isConnected) {
-      map[streamId] = true;
-    } else {
-      delete map[streamId];
-    }
-    localStorage.setItem(STORAGE_KEY_CONNECTED, JSON.stringify(map));
-  } catch (e) {}
+export function setStreamConnectedState(_streamId, _isConnected) {
 }
 
 export class Player {
@@ -91,7 +75,7 @@ export class Player {
     this.rateEl = null;
     this.connectBtnEl = null;
 
-    this.enabled = true;
+    this._enabled = true;
     if (typeof zoneConfig === "string") {
       try {
         this._zoneConfig = JSON.parse(zoneConfig);
@@ -123,12 +107,42 @@ export class Player {
     this._onGlobalMouseMove = null;
     this._onGlobalMouseUp = null;
     this._onGlobalKeyDown = null;
+    this.onConnectionChange = null;
 
     this.bindElements({ videoEl, canvasEl, connectBtnEl, statusEl, countEl, rateEl });
-    if (getStreamConnectedState(this.streamId)) {
-      this.connect();
-    } else {
-      this.setStatus("未连接", false);
+    this.setStatus("未连接", false);
+  }
+
+  get enabled() {
+    return this._enabled !== false;
+  }
+
+  set enabled(val) {
+    const boolVal = !!val;
+    const changed = this._enabled !== boolVal;
+    this._enabled = boolVal;
+    if (changed && !this.isDetectionActive) {
+      this.clearDetections();
+    }
+  }
+
+  get isDetectionActive() {
+    return this.isConnected === true && this.enabled === true;
+  }
+
+  setConnectionState(connected, statusText = null) {
+    const changed = this.isConnected !== connected;
+    this.isConnected = connected;
+    if (statusText) {
+      this.setStatus(statusText, connected);
+    }
+    if (changed) {
+      if (!this.isDetectionActive) {
+        this.clearDetections();
+      }
+      if (typeof this.onConnectionChange === "function") {
+        this.onConnectionChange(connected);
+      }
     }
   }
 
@@ -142,6 +156,27 @@ export class Player {
       this._zoneConfig.enabled = this.enabled;
     }
     return this._zoneConfig;
+  }
+
+  get targetClasses() {
+    const cfg = this.zoneConfig;
+    if (cfg && Array.isArray(cfg.target_classes) && cfg.target_classes.length > 0) {
+      return cfg.target_classes;
+    }
+    if (this._cardEl && this._cardEl.dataset.selectedClasses) {
+      try {
+        const parsed = JSON.parse(this._cardEl.dataset.selectedClasses);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {}
+    }
+    const grid = document.getElementById("stream-cards-grid");
+    if (grid && grid.dataset.selectedClasses) {
+      try {
+        const parsed = JSON.parse(grid.dataset.selectedClasses);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {}
+    }
+    return null;
   }
 
   set zoneConfig(cfg) {
@@ -359,7 +394,8 @@ export class Player {
     if (!this.canvasEl) return;
     this.lastRenderTime = performance.now();
     try {
-      if (this.enabled !== false && this.detectionQueue.length > 0) {
+      // 什么时候画框？在触发区域内，勾选了检测，并且已经连接以后
+      if (this.isConnected && this.isDetectionActive && this.detectionQueue.length > 0) {
         const bestMsg = this.detectionQueue[this.detectionQueue.length - 1];
         if (bestMsg) {
           const now = performance.now();
@@ -372,7 +408,9 @@ export class Player {
             bestMsg.frame_width || 1920,
             bestMsg.frame_height || 1080,
             this.zoneConfig,
-            this.drawingState
+            this.drawingState,
+            this.isConnected,
+            this.isDetectionActive
           );
           return;
         }
@@ -384,7 +422,9 @@ export class Player {
         1920,
         1080,
         this.zoneConfig,
-        this.drawingState
+        this.drawingState,
+        this.isConnected,
+        this.isDetectionActive
       );
     } catch (err) {}
   }
@@ -455,7 +495,8 @@ export class Player {
         this.zoneConfig = msg.zone_config;
       }
 
-      if (this.enabled === false) {
+      if (!this.isDetectionActive) {
+        this.detectionQueue = [];
         if (this.countEl && this.countEl.textContent !== "0") {
           this.countEl.textContent = "0";
         }
@@ -496,7 +537,11 @@ export class Player {
           Math.max(p1[1], p2[1]),
         ];
       }
-      const validDetections = msg.detections.filter((d) => isDetectionInZone(d, activeZone, currentTriggerBox));
+      const targetClasses = this.targetClasses;
+      const validDetections = msg.detections.filter((d) =>
+        isDetectionInZone(d, activeZone, currentTriggerBox) &&
+        isDetectionTargetMatched(d, targetClasses)
+      );
 
       if (this.listEl) {
         renderDetectionList(this.listEl, validDetections);
@@ -567,8 +612,7 @@ export class Player {
           this.videoEl.play().catch(() => {});
           this.startSyncRenderer();
         }
-        this.setStatus("已连接", true);
-        this.isConnected = true;
+        this.setConnectionState(true, "已连接");
       };
 
       const dc = this.pc.createDataChannel("detection", {
@@ -583,11 +627,9 @@ export class Player {
       this.pc.onconnectionstatechange = () => {
         const st = this.pc.connectionState;
         if (st === "connected") {
-          this.setStatus("已连接", true);
-          this.isConnected = true;
+          this.setConnectionState(true, "已连接");
         } else if (st === "disconnected" || st === "failed") {
-          this.setStatus("连接断开", false);
-          this.isConnected = false;
+          this.setConnectionState(false, "连接断开");
           this.renderLoopRunning = false;
           if (!this.manualDisconnect && !this.reconnectTimer) {
             this.reconnectTimer = setTimeout(() => {
@@ -598,8 +640,7 @@ export class Player {
             }, 3000);
           }
         } else if (st === "closed") {
-          this.setStatus("已断开", false);
-          this.isConnected = false;
+          this.setConnectionState(false, "已断开");
           this.renderLoopRunning = false;
         }
       };
@@ -630,11 +671,9 @@ export class Player {
 
       const answerSdp = await res.text();
       await this.pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
-      this.setStatus("已连接", true);
-      this.isConnected = true;
+      this.setConnectionState(true, "已连接");
     } catch (err) {
-      this.setStatus("连接失败", false);
-      this.isConnected = false;
+      this.setConnectionState(false, "连接失败");
       console.error(`[player:${this.streamId}] 连接异常:`, err);
       if (!this.manualDisconnect && !this.reconnectTimer) {
         this.reconnectTimer = setTimeout(() => {
@@ -650,7 +689,6 @@ export class Player {
   disconnect(isManual = true) {
     if (isManual) {
       this.manualDisconnect = true;
-      setStreamConnectedState(this.streamId, false);
     }
     if (this.rateInterval) {
       clearInterval(this.rateInterval);
@@ -661,7 +699,6 @@ export class Player {
       this.reconnectTimer = null;
     }
     this.renderLoopRunning = false;
-    this.isConnected = false;
     this.detectionQueue = [];
     this.lastFrameIdx = null;
 
@@ -695,13 +732,13 @@ export class Player {
     }
     this.mediaStream = null;
     this.currentFps = 0;
-    this.setStatus("未连接", false);
+    this.setConnectionState(false, "未连接");
   }
 
   clearDetections() {
     this.detectionQueue = [];
     if (this.listEl) {
-      this.listEl.innerHTML = '<li class="text-zinc-400">AI 已关闭</li>';
+      this.listEl.innerHTML = '<li class="text-zinc-400">' + (this.isConnected ? '检测未开启' : '未连接') + '</li>';
     }
     if (this.countEl) {
       this.countEl.textContent = "0";
@@ -931,6 +968,7 @@ export class Player {
     }
     delete cfg._hasUnsaved;
 
+    showGlobalToast("正在保存...", "info");
     try {
       const res = await fetch(`/api/zone/${this.streamId}`, {
         method: "POST",
@@ -947,8 +985,7 @@ export class Player {
         this.setSaveButtonAlert(false);
         this.renderOverlay();
 
-        const hintMsg = data.gateway_synced === false ? "已保存至本地 (网关未响应)" : "保存成功";
-        showGlobalToast(hintMsg, "success");
+        showGlobalToast("保存成功", "success");
       } else {
         showGlobalToast("保存失败", "error");
       }

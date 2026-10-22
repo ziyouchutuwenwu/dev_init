@@ -82,7 +82,10 @@ defmodule Web.DataSync do
                   val not in [false, "false", 0, "0"]
               end
 
-            %{id: to_string(id), url: to_string(url), enabled: enabled}
+            model =
+              Map.get(s, :model) || Map.get(s, "model") || "industry"
+
+            %{id: to_string(id), url: to_string(url), enabled: enabled, model: to_string(model)}
           end)
       }
 
@@ -151,6 +154,7 @@ defmodule Web.DataSync do
         Map.get(s, :stream_id) || Map.get(s, "stream_id") || Map.get(s, :id) || Map.get(s, "id")
 
       zone_cfg = Map.get(s, :zone_config) || Map.get(s, "zone_config")
+      model = Map.get(s, :model) || Map.get(s, "model") || "industry"
 
       enabled =
         case Map.get(s, :enabled) do
@@ -164,14 +168,31 @@ defmodule Web.DataSync do
             val not in [false, "false", 0, "0"]
         end
 
-      if id && zone_cfg && is_binary(zone_cfg) && String.trim(zone_cfg) != "" do
+      if id do
+        base_cfg =
+          if zone_cfg && is_binary(zone_cfg) && String.trim(zone_cfg) != "" do
+            zone_cfg
+          else
+            nil
+          end
+
         synced_cfg =
-          case Jason.decode(zone_cfg) do
+          case Jason.decode(base_cfg || "{}") do
             {:ok, map} when is_map(map) ->
-              Jason.encode!(Map.put(map, "enabled", enabled))
+              map
+              |> Map.put("enabled", enabled)
+              |> Map.put("model", model)
+              |> Map.put_new("target_classes", Web.ModelLoader.default_classes_for_model(model))
+              |> Map.put_new("rules", [])
+              |> Jason.encode!()
 
             _ ->
-              zone_cfg
+              Jason.encode!(%{
+                "enabled" => enabled,
+                "model" => model,
+                "target_classes" => Web.ModelLoader.default_classes_for_model(model),
+                "rules" => []
+              })
           end
 
         sync_zone_to_gateway(gateway_url, id, synced_cfg)

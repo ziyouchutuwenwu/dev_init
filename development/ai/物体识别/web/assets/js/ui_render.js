@@ -197,7 +197,60 @@ export function isDetectionInZone(d, zoneConfig = null, overrideBox = null, rx1 
   return false;
 }
 
-export function drawDetections(canvas, video, detections, frameW, frameH, zoneConfig = null, drawingState = null) {
+export function getSelectedClassesFromDom(canvas, video) {
+  const card = canvas?.closest(".stream-card") || video?.closest(".stream-card");
+  if (card && card.dataset.selectedClasses) {
+    try {
+      const parsed = JSON.parse(card.dataset.selectedClasses);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {}
+  }
+  const grid = document.getElementById("stream-cards-grid");
+  if (grid && grid.dataset.selectedClasses) {
+    try {
+      const parsed = JSON.parse(grid.dataset.selectedClasses);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {}
+  }
+  return null;
+}
+
+export const TARGET_CLASS_ALIASES = {};
+
+export function getLabelDisplayName(label) {
+  if (!label) return "";
+  const dict = window.LABEL_TRANSLATIONS;
+  return dict?.[label] || dict?.[label.toLowerCase().trim()] || label;
+}
+
+export function isDetectionTargetMatched(d, targetClasses) {
+  if (!d) return false;
+  if (targetClasses === null || targetClasses === undefined) return true;
+  if (!Array.isArray(targetClasses)) return true;
+  if (targetClasses.length === 0) return false;
+
+  const label = (d.label || "").toString().toLowerCase().trim();
+  const displayLabel = getLabelDisplayName(label).toLowerCase();
+  const alertType = (d.alert_type || "").toString().toLowerCase().trim();
+  const displayAlert = getLabelDisplayName(alertType).toLowerCase();
+  const ruleName = (d.rule_name || "").toString().toLowerCase().trim();
+  const ruleId = (d.rule_id || "").toString().toLowerCase().trim();
+
+  for (const tc of targetClasses) {
+    if (!tc) continue;
+    const target = tc.toString().toLowerCase().trim();
+    const displayTarget = getLabelDisplayName(target).toLowerCase();
+
+    if (label && (label === target || displayLabel === target || label === displayTarget || displayLabel === displayTarget)) return true;
+    if (alertType && (alertType === target || displayAlert === target || alertType === displayTarget || displayAlert === displayTarget)) return true;
+    if (ruleName && (ruleName === target || ruleName === displayTarget || ruleName.includes(target) || target.includes(ruleName))) return true;
+    if (ruleId && (ruleId === target || ruleId.includes(target))) return true;
+  }
+
+  return false;
+}
+
+export function drawDetections(canvas, video, detections, frameW, frameH, zoneConfig = null, drawingState = null, isConnected = null, isDetectionActive = null) {
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
 
@@ -211,6 +264,9 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const parsedZone = normalizeZoneConfig(zoneConfig);
+  const targetClasses = (parsedZone && Array.isArray(parsedZone.target_classes) && parsedZone.target_classes.length > 0)
+    ? parsedZone.target_classes
+    : getSelectedClassesFromDom(canvas, video);
 
   const isDraggingNow = Boolean(
     drawingState &&
@@ -419,12 +475,18 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
   }
 
 
-  if (!detections || detections.length === 0) return;
+  // 什么时候画框？在触发区域内，勾选了检测，并且已经连接以后
+  const canDraw =
+    (isConnected === null || isConnected === undefined || isConnected) &&
+    (isDetectionActive === null || isDetectionActive === undefined || isDetectionActive) &&
+    (!parsedZone || parsedZone.enabled !== false);
+
+  if (!canDraw || !detections || detections.length === 0) return;
 
   const intrinsicW = (video && video.videoWidth) || frameW || 1920;
   const intrinsicH = (video && video.videoHeight) || frameH || 1080;
 
-  ctx.lineWidth = 2.5;
+  ctx.lineWidth = 2.0;
   ctx.font = "bold 12px sans-serif";
 
   for (const d of detections) {
@@ -459,6 +521,11 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
       continue;
     }
 
+    // 如果触发区域内，识别出来的，不是勾选的目标，不要画框！！！
+    if (!isDetectionTargetMatched(d, targetClasses)) {
+      continue;
+    }
+
     rx1 = Math.max(0, Math.min(1, rx1));
     ry1 = Math.max(0, Math.min(1, ry1));
     rx2 = Math.max(0, Math.min(1, rx2));
@@ -471,20 +538,28 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
 
     if (bw <= 0 || bh <= 0) continue;
 
-    // 标定触发区域内的目标统一使用绿色框显示
-    const mainColor = "#22c55e";
+    // 正常画框统一使用浅绿色，不再使用红色
+    const boxColor = "#22c55e";
 
-    ctx.strokeStyle = mainColor;
+    ctx.strokeStyle = boxColor;
     ctx.lineWidth = 2.0;
     ctx.strokeRect(bx, by, bw, bh);
 
     const confStr = d.confidence !== undefined ? (Number(d.confidence) * 100).toFixed(0) + "%" : "";
-    const trackPrefix = d.track_id !== undefined ? `ID:#${d.track_id} ` : "";
-    const labelText = trackPrefix + (d.label || ("class_" + d.class_id)) + (confStr ? " " + confStr : "");
+    const trackPrefix = (d.track_id !== undefined && d.track_id !== null) ? `ID:#${d.track_id} ` : "";
+    const rawLabel = d.label || ("class_" + d.class_id);
+    const displayLabel = getLabelDisplayName(rawLabel);
+    const textExtra = (d.text && typeof d.text === "string" && d.text.trim())
+      ? ` [${d.text.trim()}]`
+      : ((d.plate_text && typeof d.plate_text === "string" && d.plate_text.trim()) ? ` [${d.plate_text.trim()}]` : "");
+    const alertPrefix = (d.alert_type && d.alert_type !== d.label && d.alert_type !== "person" && d.alert_type !== "人员目标" && d.alert_type !== "target_detected")
+      ? `[${d.alert_type}] `
+      : "";
+    const labelText = alertPrefix + trackPrefix + displayLabel + textExtra + (confStr ? " " + confStr : "");
     const textWidth = ctx.measureText(labelText).width + 8;
     const labelHeight = 18;
 
-    ctx.fillStyle = mainColor;
+    ctx.fillStyle = boxColor;
     ctx.fillRect(bx, by - labelHeight >= 0 ? by - labelHeight : by, textWidth, labelHeight);
 
     ctx.fillStyle = "#ffffff";
@@ -544,18 +619,23 @@ export function renderDetectionList(listEl, detections) {
     }
 
     if (dot) {
-      const color = "#22c55e";
-      if (dot.style.backgroundColor !== color) {
-        dot.style.backgroundColor = color;
+      if (dot.style.backgroundColor !== "#22c55e") {
+        dot.style.backgroundColor = "#22c55e";
       }
     }
 
     if (text) {
-      const trackStr = d.track_id !== undefined ? `[#${d.track_id}] ` : "";
-      const labelVal = trackStr + (d.label || ("class_" + d.class_id));
+      const trackStr = (d.track_id !== undefined && d.track_id !== null) ? `[#${d.track_id}] ` : "";
+      const rawLabel = d.label || ("class_" + d.class_id);
+      const displayLabel = getLabelDisplayName(rawLabel);
+      const alertPrefix = (d.alert_type && d.alert_type !== d.label && d.alert_type !== "person" && d.alert_type !== "人员目标" && d.alert_type !== "target_detected")
+        ? `[${d.alert_type}] `
+        : "";
+      const labelVal = alertPrefix + trackStr + displayLabel;
       if (text.textContent !== labelVal) {
         text.textContent = labelVal;
       }
+      text.className = "font-medium text-zinc-800";
     }
 
     if (right) {

@@ -7,6 +7,7 @@ fn test_tracker_assigns_and_maintains_id() {
     let frame1 = vec![DetectionInput {
         class_id: Some(0),
         label: Some("defect".to_string()),
+        text: None,
         confidence: 0.9,
         rel_box: [0.1, 0.1, 0.2, 0.2],
         box_coord: vec![100.0, 100.0, 200.0, 200.0],
@@ -19,6 +20,7 @@ fn test_tracker_assigns_and_maintains_id() {
     let frame2 = vec![DetectionInput {
         class_id: Some(0),
         label: Some("defect".to_string()),
+        text: None,
         confidence: 0.92,
         rel_box: [0.12, 0.12, 0.22, 0.22],
         box_coord: vec![120.0, 120.0, 220.0, 220.0],
@@ -32,6 +34,7 @@ fn test_tracker_assigns_and_maintains_id() {
         DetectionInput {
             class_id: Some(0),
             label: Some("defect".to_string()),
+            text: None,
             confidence: 0.95,
             rel_box: [0.14, 0.14, 0.24, 0.24],
             box_coord: vec![140.0, 140.0, 240.0, 240.0],
@@ -39,6 +42,7 @@ fn test_tracker_assigns_and_maintains_id() {
         DetectionInput {
             class_id: Some(1),
             label: Some("part".to_string()),
+            text: None,
             confidence: 0.88,
             rel_box: [0.5, 0.5, 0.6, 0.6],
             box_coord: vec![500.0, 500.0, 600.0, 600.0],
@@ -59,6 +63,7 @@ fn test_tracker_different_class_id_does_not_match() {
     let frame1 = vec![DetectionInput {
         class_id: Some(0),
         label: Some("person".to_string()),
+        text: None,
         confidence: 0.9,
         rel_box: [0.1, 0.1, 0.2, 0.2],
         box_coord: vec![100.0, 100.0, 200.0, 200.0],
@@ -69,6 +74,7 @@ fn test_tracker_different_class_id_does_not_match() {
     let frame2 = vec![DetectionInput {
         class_id: Some(1),
         label: Some("car".to_string()),
+        text: None,
         confidence: 0.9,
         rel_box: [0.1, 0.1, 0.2, 0.2],
         box_coord: vec![100.0, 100.0, 200.0, 200.0],
@@ -76,4 +82,35 @@ fn test_tracker_different_class_id_does_not_match() {
     let tracked2 = tracker.update(frame2);
     assert_ne!(tracked2[0].track_id, id1);
     assert_eq!(tracked2[0].class_id, Some(1));
+}
+
+#[test]
+fn test_tracker_preserves_text_attribute() {
+    let mut tracker = ObjectTracker::new();
+
+    let frame1 = vec![DetectionInput {
+        class_id: Some(1),
+        label: Some("license_plate".to_string()),
+        text: Some("粤B12345".to_string()),
+        confidence: 0.95,
+        rel_box: [0.1, 0.1, 0.2, 0.2],
+        box_coord: vec![100.0, 100.0, 200.0, 200.0],
+    }];
+    let tracked1 = tracker.update(frame1);
+    assert_eq!(tracked1.len(), 1);
+    assert_eq!(tracked1[0].text, Some("粤B12345".to_string()));
+
+    // Frame 2: text updated or preserved
+    let frame2 = vec![DetectionInput {
+        class_id: Some(1),
+        label: Some("license_plate".to_string()),
+        text: Some("粤B12345".to_string()),
+        confidence: 0.96,
+        rel_box: [0.11, 0.11, 0.21, 0.21],
+        box_coord: vec![110.0, 110.0, 210.0, 210.0],
+    }];
+    let tracked2 = tracker.update(frame2);
+    assert_eq!(tracked2.len(), 1);
+    assert_eq!(tracked2[0].text, Some("粤B12345".to_string()));
+    assert_eq!(tracked2[0].track_id, tracked1[0].track_id);
 }

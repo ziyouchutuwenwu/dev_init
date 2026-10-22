@@ -1,5 +1,4 @@
-use server::config::AppConfig;
-use server::prepare::{init_detector, resolve_config_path, start_initial_streams};
+use server::prepare::{init_detector, start_initial_streams};
 use server::web_rtc::WebRtcServer;
 use std::sync::Arc;
 
@@ -11,12 +10,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ),
     )
     .try_init();
-    let config_path = resolve_config_path()?;
-    server::config::set_global_config_path(&config_path);
+    let config_path = server::config::get_config_path();
     server::updater::init_alert_config_from_config(&config_path);
-    let config = AppConfig::load_from_file(&config_path)?;
-    let streams = config.input.get_streams();
-    let http_addr = config.server.http_addr();
+    let streams = server::config::input::load_config();
+    let server_cfg = server::config::server::load_config();
+    let http_addr = format!("{}:{}", server_cfg.host, server_cfg.port);
     let listener = match tokio::net::TcpListener::bind(&http_addr).await {
         Ok(l) => l,
         Err(e) => {

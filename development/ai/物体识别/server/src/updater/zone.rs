@@ -1,4 +1,4 @@
-use crate::object_tracker::ZoneConfig;
+use crate::config::{channel, ZoneConfig};
 
 pub async fn update_zone(
     stream_id: &str,
@@ -10,11 +10,10 @@ pub async fn update_zone(
         *w = new_cfg.clone();
     }
 
-    let cfg_path = crate::config::get_global_config_path();
-    if let Err(e) = ZoneConfig::save_to_yaml_file(&cfg_path, stream_id, &new_cfg) {
-        log::warn!("[updater:zone] 保存流 [{stream_id}] 区域配置到 {cfg_path} 异常: {e}");
+    if let Err(e) = channel::save_config(stream_id, &new_cfg) {
+        log::warn!("[updater:zone] 保存流 [{stream_id}] 通道配置异常: {e}");
     }
 
-    log::info!("[updater:zone] 成功热更新流 [{stream_id}] 触发区域配置并持久化到 {cfg_path}");
+    log::info!("[updater:zone] 成功热更新流 [{stream_id}] 通道配置并持久化");
     Ok(new_cfg)
 }

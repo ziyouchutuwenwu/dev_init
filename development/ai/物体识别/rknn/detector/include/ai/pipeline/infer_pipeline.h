@@ -1,58 +1,76 @@
-#ifndef INFER_PIPELINE_H
-#define INFER_PIPELINE_H
+#ifndef AI_INFER_PIPELINE_H
+#define AI_INFER_PIPELINE_H
 
-#include "ai/model/model_infer.h"
-#include "ai/pipeline/detect_result.h"
-#include <string>
+#include "ai/infer_manager/model_infer.h"
+#include "ai/infer_manager/detect_result.h"
 #include <memory>
+#include <string>
 #include <vector>
-#include <utility>
+#include <mutex>
+#include <initializer_list>
 
-class InferPipeline {
+/**
+ * @brief 通用多阶段推理流水线 (InferPipeline)
+ * 
+ * 适用于任何 N 阶段 (N >= 1) 级联与组合推理场景：
+ * - Stage 0: 初始检测/定位 (整帧/整图推理，产出候选目标)
+ * - Stage 1 .. N-1: 级联推理 (依次对候选目标进行 ROI 裁剪 ➔ 缩放 ➔ 下阶段推理 ➔ 属性回填或区域精细化)
+ * 
+ * 完全不涉及具体业务，不绑定车牌、人脸或任何垂直行业。
+ */
+class InferPipeline : public IModelInfer, public std::enable_shared_from_this<InferPipeline> {
 public:
-    explicit InferPipeline(bool auto_register = true);
-    explicit InferPipeline(std::shared_ptr<IModelInfer> model);
-    ~InferPipeline();
+    InferPipeline(const std::string& name,
+                  std::vector<std::shared_ptr<IModelInfer>> stages = {});
+    InferPipeline(const std::string& name,
+                  std::initializer_list<std::shared_ptr<IModelInfer>> stages);
+    InferPipeline(const std::string& name,
+                  std::shared_ptr<IModelInfer> first_stage,
+                  std::shared_ptr<IModelInfer> second_stage);
+    ~InferPipeline() override;
 
-    bool init(const std::string& model_path = "", const std::string& label_path = "");
-    void release();
-    bool is_initialized() const;
+    const std::string& name() const override { return _name; }
 
-    InferPipeline& add(std::shared_ptr<IModelInfer> model);
+    bool init(const std::string& model_path = "", const std::string& label_path = "") override;
+    void release() override;
+    bool is_initialized() const override;
 
-    template <typename T, typename... Args>
-    InferPipeline& add(Args&&... args) {
-        return add(std::make_shared<T>(std::forward<Args>(args)...));
+    int model_width() const override;
+    int model_height() const override;
+    int model_channel() const override;
+
+    const char* get_label_name(int cls_id) override;
+    const std::vector<std::string>& get_labels() const override;
+
+    void* input_buf() override;
+
+    bool infer(image_buffer_t& img, DetectResult& result) override;
+    bool infer_frame(const std::shared_ptr<VpuDecoder::FrameBuffer>& frame, DetectResult& result) override;
+
+    std::shared_ptr<IModelInfer> clone(uint32_t core_mask = 0) override;
+
+    // 动态添加/管理流水线阶段
+    InferPipeline& add_stage(std::shared_ptr<IModelInfer> stage);
+    const std::vector<std::shared_ptr<IModelInfer>>& stages() const { return _stages; }
+    size_t stage_count() const { return _stages.size(); }
+    std::shared_ptr<IModelInfer> stage(size_t index) const {
+        return index < _stages.size() ? _stages[index] : nullptr;
     }
-
-    void clear();
-
-    const std::vector<std::shared_ptr<IModelInfer>>& models() const { return _models; }
-    std::shared_ptr<IModelInfer> model(size_t index = 0) const {
-        return (index < _models.size()) ? _models[index] : nullptr;
-    }
-    std::shared_ptr<IModelInfer> find_model(const std::string& name) const {
-        for (const auto& m : _models) {
-            if (m && m->name() == name) return m;
-        }
-        return nullptr;
-    }
-    size_t model_count() const { return _models.size(); }
-
-    std::shared_ptr<InferPipeline> clone(uint32_t core_mask = 0);
-
-    void* input_buf() const;
-    int input_width() const;
-    int input_height() const;
-    int input_channel() const;
-    const char* get_label_name(int cls_id) const;
-    const char* get_label_name(const std::string& model_name, int cls_id) const;
-
-    bool process(const std::shared_ptr<VpuDecoder::FrameBuffer>& frame, DetectResult& result);
-    bool process(image_buffer_t& img, DetectResult& result);
 
 private:
-    std::vector<std::shared_ptr<IModelInfer>> _models;
+    bool process_stage_from_frame(size_t stage_idx,
+                                 const std::shared_ptr<VpuDecoder::FrameBuffer>& frame,
+                                 YoloDetectObject& obj);
+    bool process_stage_from_img(size_t stage_idx,
+                               image_buffer_t& img,
+                               YoloDetectObject& obj);
+
+    std::recursive_mutex _mutex;
+    std::string _name;
+    std::vector<std::shared_ptr<IModelInfer>> _stages;
 };
 
-#endif
+// 保持别名兼容
+using Pipeline = InferPipeline;
+
+#endif // AI_INFER_PIPELINE_H

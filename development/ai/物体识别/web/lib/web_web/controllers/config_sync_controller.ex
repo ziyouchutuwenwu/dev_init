@@ -82,7 +82,7 @@ defmodule WebWeb.ConfigSyncController do
             json(conn, %{
               success: true,
               hardware_synced: true,
-              message: "保存成功，已同步到硬件网关",
+              message: "保存成功",
               gateway_url: gateway_url,
               alert_callback_url: alert_callback_url,
               alert_cooldown_sec: alert_cooldown_sec,
@@ -92,9 +92,9 @@ defmodule WebWeb.ConfigSyncController do
 
           {:error, reason} ->
             json(conn, %{
-              success: true,
+              success: false,
               hardware_synced: false,
-              message: "已保存到本地数据库，但网关同步失败: #{reason}",
+              message: "保存失败: #{reason}",
               gateway_url: gateway_url,
               alert_callback_url: alert_callback_url,
               alert_cooldown_sec: alert_cooldown_sec,
@@ -150,7 +150,15 @@ defmodule WebWeb.ConfigSyncController do
         str when is_binary(str) ->
           case Jason.decode(str) do
             {:ok, map} when is_map(map) ->
-              synced = if Map.has_key?(map, "enabled"), do: Map.put(map, "enabled", target_enabled), else: map
+              synced =
+                if Map.has_key?(map, "enabled"), do: Map.put(map, "enabled", target_enabled), else: map
+
+              synced =
+                if Map.has_key?(synced, "rules") and is_list(synced["rules"]) and length(synced["rules"]) > 0 do
+                  synced
+                else
+                  Map.put(synced, "rules", [])
+                end
               {:ok, Jason.encode!(synced)}
 
             {:ok, _} ->
@@ -161,7 +169,15 @@ defmodule WebWeb.ConfigSyncController do
           end
 
         map when is_map(map) ->
-          synced = if Map.has_key?(map, "enabled") or Map.has_key?(map, :enabled), do: Map.put(map, "enabled", target_enabled), else: map
+          synced =
+            if Map.has_key?(map, "enabled") or Map.has_key?(map, :enabled), do: Map.put(map, "enabled", target_enabled), else: map
+
+          synced =
+            if Map.has_key?(synced, "rules") and is_list(synced["rules"]) and length(synced["rules"]) > 0 do
+              synced
+            else
+              Map.put(synced, "rules", [])
+            end
           case Jason.encode(synced) do
             {:ok, encoded} ->
               {:ok, encoded}
@@ -171,7 +187,14 @@ defmodule WebWeb.ConfigSyncController do
           end
 
         _ ->
-          {:ok, "{}"}
+          {:ok,
+           Jason.encode!(%{
+             "enabled" => true,
+             "trigger_box" => [0.05, 0.05, 0.95, 0.95],
+             "roi" => %{"type" => "rect", "coords" => [0.05, 0.05, 0.95, 0.95]},
+             "target_classes" => Web.ModelLoader.default_classes_for_model("industry"),
+             "rules" => []
+           })}
       end
 
     case zone_res do
@@ -263,6 +286,7 @@ defmodule WebWeb.ConfigSyncController do
         rtsp_url: s.rtsp_url,
         enabled: s.enabled,
         position: s.position,
+        model: s.model || "industry",
         zone_config: s.zone_config
       }
     end)

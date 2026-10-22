@@ -70,14 +70,13 @@ pub async fn run_rtsp_loop(
         }
 
         let current_epoch = detector.as_ref().map(|d| d.flush_epoch()).unwrap_or(0);
-        if let Some(ref feed_tx) = vpu_feed_tx {
-            if let Some(retina::codec::ParametersRef::Video(v)) =
+        if let Some(ref feed_tx) = vpu_feed_tx
+            && let Some(retina::codec::ParametersRef::Video(v)) =
                 session.streams()[stream_idx].parameters()
-            {
-                let extra = v.extra_data();
-                if !extra.is_empty() {
-                    let _ = feed_tx.send((Bytes::copy_from_slice(extra), u64::MAX, -1, current_epoch)).await;
-                }
+        {
+            let extra = v.extra_data();
+            if !extra.is_empty() {
+                let _ = feed_tx.send((Bytes::copy_from_slice(extra), u64::MAX, -1, current_epoch)).await;
             }
         }
 
@@ -186,7 +185,7 @@ pub async fn run_rtsp_loop(
 
                         let to_send = sample_data.clone();
 
-                        match feed_tx.try_send((to_send, frame_seq, pts_ms as i64, current_epoch)) {
+                        match feed_tx.try_send((to_send, frame_seq, pts_ms, current_epoch)) {
                             Ok(()) => {}
                             Err(tokio::sync::mpsc::error::TrySendError::Full(_)) => {
                                 dropped_feed_frames += 1;

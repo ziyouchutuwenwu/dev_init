@@ -89,6 +89,9 @@ impl ObjectTracker {
             if det.label.is_some() {
                 track.label = det.label.clone();
             }
+            if det.text.is_some() {
+                track.text = det.text.clone();
+            }
             track.center = new_center;
             track.trajectory.push(new_center);
             if track.trajectory.len() > self.config.max_trajectory_len {
@@ -121,6 +124,7 @@ impl ObjectTracker {
                     track_id,
                     class_id: det.class_id,
                     label: det.label,
+                    text: det.text,
                     confidence: det.confidence,
                     rel_box: det.rel_box,
                     box_coord: det.box_coord,

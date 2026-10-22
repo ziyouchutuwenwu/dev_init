@@ -19,6 +19,7 @@ fn map_type(fn_name: []const u8, param_name: []const u8, zig_type: []const u8) [
     }
     if (std.mem.eql(u8, zig_type, "[*]const [*:0]const u8") or
         std.mem.eql(u8, zig_type, "[*]const ?[*:0]const u8") or
+        std.mem.eql(u8, zig_type, "?[*]const ?[*:0]const u8") or
         std.mem.eql(u8, zig_type, "[*c]const ?[*:0]const u8") or
         std.mem.eql(u8, zig_type, "[*c]const [*:0]const u8") or
         std.mem.eql(u8, zig_type, "[*]const [*c]const u8") or
@@ -189,15 +190,13 @@ pub fn main(init: std.process.Init.Minimal) !void {
 
     var file_buf: [32768]u8 = undefined;
 
-    // C 接口源文件目录（由 build.zig 设置工作目录为 encrypter 根目录）
     const base_prefix: []const u8 = "src/c/";
 
-    // 需要提取并导出 C 接口函数（export fn）的 Zig 源码文件列表（对应 src/c/mod.zig）
     const file_names = [_][]const u8{
-        "hwid.zig",     // 硬件设备指纹获取接口 (get_hwid)
-        "label.zig",    // 模型目标类别标签读取接口 (get_model_labels_list, get_labels_list)
-        "license.zig",  // 授权证书校验与详情解析接口 (verify_license, inspect_license_details)
-        "model.zig",    // 模型解密与内存管理接口 (decrypt_model, get_model_id, free_model_memory)
+        "hwid.zig",
+        "label.zig",
+        "license.zig",
+        "model.zig",
     };
 
     for (file_names) |fname| {
@@ -219,13 +218,12 @@ pub fn main(init: std.process.Init.Minimal) !void {
         "#define MODEL_LICENSE_H\n\n" ++
         "#include <stddef.h>\n" ++
         "#include <stdint.h>\n\n" ++
-        "/* 授权校验状态码 (License Verification Status Codes) */\n" ++
-        "#define LICENSE_STATUS_OK               0   /* 验证通过 (Valid) */\n" ++
-        "#define LICENSE_STATUS_INVALID_FORMAT  -1   /* 格式损坏或签名认证失败 */\n" ++
-        "#define LICENSE_STATUS_HWID_MISMATCH   -2   /* 硬件机器码不匹配 */\n" ++
-        "#define LICENSE_STATUS_EXPIRED         -3   /* 证书已到期 */\n" ++
-        "#define LICENSE_STATUS_TIME_ROLLBACK   -4   /* 系统时钟异常或早于签发时间 */\n" ++
-        "#define LICENSE_STATUS_IO_ERROR        -5   /* 证书文件不存在或无法读取 */\n\n" ++
+        "#define LICENSE_STATUS_OK               0\n" ++
+        "#define LICENSE_STATUS_INVALID_FORMAT  -1\n" ++
+        "#define LICENSE_STATUS_HWID_MISMATCH   -2\n" ++
+        "#define LICENSE_STATUS_EXPIRED         -3\n" ++
+        "#define LICENSE_STATUS_TIME_ROLLBACK   -4\n" ++
+        "#define LICENSE_STATUS_IO_ERROR        -5\n\n" ++
         "#ifdef __cplusplus\n" ++
         "extern \"C\" {\n" ++
         "#endif\n\n"

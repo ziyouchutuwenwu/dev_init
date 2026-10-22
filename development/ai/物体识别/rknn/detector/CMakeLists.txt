@@ -8,9 +8,11 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ai
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ai/register
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/ai/infer_manager
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/ai/infer
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/ai/infer/yolo11
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/ai/infer/lprnet
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ai/pipeline
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/ai/model
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/ai/yolo11
     ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/model_license/include
     ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/mpp/inc
     ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/rknn_model_zoo/3rdparty/rknpu2/include
@@ -26,9 +28,12 @@ set(SRCS
     src/channel/channel.cc
     src/channel/channel_manager.cc
     src/ai/register/register.cc
+    src/ai/infer_manager/infer_manager.cc
+    src/ai/infer/yolo11/yolo11_infer.cc
+    src/ai/infer/yolo11/postprocess.cc
+    src/ai/infer/lprnet/lprnet_infer.cc
+    src/ai/infer/lprnet/postprocess.cc
     src/ai/pipeline/infer_pipeline.cc
-    src/ai/yolo11/yolo11_infer.cc
-    src/ai/yolo11/postprocess.cc
     src/hardware/npu_infer.cc
     src/hardware/npu_worker_pool.cc
     src/hardware/vpu_decoder.cc
