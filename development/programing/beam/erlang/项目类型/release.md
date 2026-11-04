@@ -15,21 +15,3 @@ cd xxx/apps
 rebar3 new app demo1
 rebar3 new app demo2
 ```
-
-## 注意
-
-rebar.config
-
-```erlang
-{relx, [
-  {release, {demo, "0.1.0"}, [
-    % 业务无关的，用 application:ensure_all_started 动态注册
-    % 这里放业务相关的子 app，自启动应用，具体见发布环节
-    sasl,
-    demo1,
-    demo2
-  ]},
-
-  {mode, dev}
-]}.
-```
