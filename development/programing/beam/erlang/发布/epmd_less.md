@@ -19,11 +19,4 @@ remote shell
 ```sh
 # 自动添加
 -dist_listen false
-
-# vm.args 里面提取的字段
-name/sname
-setcookie
-start_epmd
-proto_dist
-inet_dist_use_interface
 ```
