@@ -127,12 +127,18 @@ su $USER -c 'cp -rf $CURRENT_DIR/englih_user_dir/user-dirs.dirs ~/.config/'
 
 pkg install -y xfce4-terminal ripgrep wget freerdp
 
+# xfce 菜单里面，直接点击关机重启
+cp -rf $CURRENT_DIR/polkit/* /usr/local/etc/polkit-1/rules.d/
+
 # neovim
 su $USER -c 'sh $CURRENT_DIR/../../development/editor/nvim/install.sh'
 
-# qemu 下鼠标支持
-pkg install -y utouch-kmod
-sysrc -f /boot/loader.conf.local utouch_load="YES"
+# 鼠标增强
+# sysrc 不支持 aa.bb 这种 key
+# sysrc -f /boot/loader.conf.local kern.hz=1000
+echo 'kern.hz="1000"' >> /boot/loader.conf.local
+echo 'hw.psm.synaptics_support="1"' >> /boot/loader.conf.local
+echo 'hw.psm.trackpoint_support="1"' >> /boot/loader.conf.local
 
 # python
 pkg install -y uv
