@@ -134,18 +134,6 @@ def install_qt5ct():
     proc.run("yes | pacman --noconfirm -S qt5ct")
 
 
-def install_docker(user):
-    proc.run("yes | pacman --noconfirm -S docker")
-    cmd = "usermod -a -G docker %s" % user
-    proc.run(cmd)
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    cmd = "mkdir -p /etc/docker/; cp -rf %s/docker/daemon.json /etc/docker/" % (
-        current_dir
-    )
-    proc.run(cmd)
-    proc.run("systemctl enable docker.service")
-
-
 def disable_pc_beep():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cmd = "cp -rf %s/mod_blacklist/blacklist.conf /etc/modprobe.d/" % (current_dir)
@@ -518,7 +506,6 @@ if __name__ == "__main__":
     install_virt_manager(login_user)
     install_proxychains()
     install_privoxy()
-    install_docker(login_user)
     install_useful_tools()
     install_terminator(login_user)
     install_tmux()
