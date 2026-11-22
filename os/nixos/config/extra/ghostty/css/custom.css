@@ -12,85 +12,134 @@ scrollbar slider {
   background-color: rgba(235, 235, 235, 0.6);
 }
 
-/* 终端对话框美化 (Ctrl+Shift+R 更改终端标题等) */
+/* 半透明深色遮罩 */
 dialog-host > dimming,
 floating-sheet > dimming {
   background-color: rgba(0, 0, 0, 0.45);
 }
 
+/* Windows 10 原生经典白底弹窗卡片 */
 dialog-host > dialog.alert sheet,
 dialog.alert sheet,
 window.dialog-window.alert {
-  border-radius: 10px;
-  background-color: #fbfbfb;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #0078d7;
+  border-radius: 0px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+  padding: 0;
+  min-width: 360px;
+}
+
+dialog.alert .message-area {
   padding: 0;
 }
 
-dialog.alert .heading-bin label {
-  font-weight: 600;
-  font-size: 15px;
-  color: #1f2937;
+/* 顶部模拟 Win10 标题栏：浅灰底色独立标题栏，彻底消除双标题拥挤堆叠感 */
+dialog.alert .heading-bin {
+  background-color: #f3f3f3;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 8px 16px;
+  min-height: 32px;
 }
 
+dialog.alert .heading-bin label {
+  font-family: '文泉驿等宽微米黑', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #222222;
+}
+
+/* 提示说明文字：拥有充裕的上下呼吸间距，不再与主标题拥挤在一起 */
 dialog.alert .body {
+  font-family: '文泉驿等宽微米黑', 'Microsoft YaHei', 'Segoe UI', sans-serif;
   font-size: 12px;
-  color: #6b7280;
+  color: #666666;
+  padding: 16px 20px 8px 20px;
+}
+
+/* 输入框区域 */
+dialog.alert .child {
+  padding: 0 20px 20px 20px;
 }
 
 dialog.alert entry {
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 13px;
-  border: 1px solid #d1d5db;
+  background-image: none;
   background-color: #ffffff;
-  color: #111827;
-  min-height: 32px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  color: #000000;
+  border: 1px solid #767676;
+  border-radius: 0px;
+  padding: 4px 10px;
+  font-size: 13px;
+  min-height: 28px;
+  box-shadow: none;
 }
 
 dialog.alert entry:focus {
-  border-color: #0078d7;
-  box-shadow: 0 0 0 2px rgba(0, 120, 215, 0.25);
+  border: 2px solid #0078d7;
+  padding: 3px 9px;
+  outline: none;
 }
 
+dialog.alert entry selection {
+  background-color: #0078d7;
+  color: #ffffff;
+}
+
+/* 底部按钮栏：Windows 10 标准经典底栏，适中宽度，规整精细 */
 dialog.alert .response-area {
-  padding: 12px 18px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  background-color: rgba(0, 0, 0, 0.02);
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
+  padding: 12px 60px 14px 60px;
+  background-color: #f0f0f0;
+  border-top: 1px solid #e5e5e5;
+  border-spacing: 16px;
 }
 
+/* Windows 10 标准矩形桌面按钮 */
 dialog.alert .response-area > button {
-  border-radius: 6px;
-  min-height: 32px;
-  min-width: 76px;
+  border-radius: 0px;
+  min-height: 28px;
+  font-family: '文泉驿等宽微米黑', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+  font-size: 12px;
+  font-weight: normal;
   padding: 4px 16px;
-  font-weight: 500;
-  font-size: 13px;
+  box-shadow: none;
 }
 
+/* 次要按钮（取消） */
 dialog.alert .response-area > button:not(.suggested-action) {
-  background-color: #ffffff;
-  border: 1px solid #d1d5db;
-  color: #374151;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  background-image: none;
+  background-color: #e1e1e1;
+  border: 1px solid #adadad;
+  color: #000000;
 }
 
 dialog.alert .response-area > button:not(.suggested-action):hover {
-  background-color: #f3f4f6;
-  border-color: #9ca3af;
+  background-image: none;
+  background-color: #e5e5e5;
+  border-color: #707070;
 }
 
+dialog.alert .response-area > button:not(.suggested-action):active {
+  background-image: none;
+  background-color: #cccccc;
+  border-color: #707070;
+}
+
+/* 主要按钮（确认） */
 dialog.alert .response-area > button.suggested-action {
+  background-image: none;
   background-color: #0078d7;
-  border: 1px solid #0063b1;
+  border: 1px solid #005a9e;
   color: #ffffff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 dialog.alert .response-area > button.suggested-action:hover {
-  background-color: #106ebe;
+  background-image: none;
+  background-color: #1084d9;
+  border-color: #004e8c;
+}
+
+dialog.alert .response-area > button.suggested-action:active {
+  background-image: none;
+  background-color: #004e8c;
 }
