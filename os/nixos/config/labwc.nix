@@ -112,6 +112,8 @@
     XCURSOR_THEME = "Adwaita";
     XCURSOR_SIZE = "24";
     TERMINAL = "ghostty";
+    WLR_NO_HARDWARE_CURSORS = "1";
+    WLR_RENDERER_ALLOW_SOFTWARE = "1";
   };
 
   security.rtkit.enable = true;
@@ -517,6 +519,8 @@
     XMODIFIERS=@im=fcitx
     SDL_IM_MODULE=fcitx
     GLFW_IM_MODULE=ibus
+    WLR_NO_HARDWARE_CURSORS=1
+    WLR_RENDERER_ALLOW_SOFTWARE=1
   '';
 
   environment.etc."xdg/xsettingsd/xsettingsd.conf".text = ''
