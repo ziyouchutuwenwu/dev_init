@@ -34,21 +34,20 @@
         lcdfilter = "default";
       };
       defaultFonts = {
-        sansSerif = [ "Noto Sans CJK SC" "Source Han Sans SC" "文泉驿微米黑" "WenQuanYi Micro Hei" "DejaVu Sans" ];
-        serif = [ "Noto Serif CJK SC" "Source Han Serif SC" "文泉驿正黑" "WenQuanYi Zen Hei" "DejaVu Serif" ];
-        monospace = [ "Monaco" "Noto Sans Mono CJK SC" "文泉驿等宽微米黑" "WenQuanYi Micro Hei Mono" ];
+        sansSerif = [ "WenQuanYi Micro Hei Mono" "文泉驿等宽微米黑" "WenQuanYi Micro Hei" "文泉驿微米黑" ];
+        serif = [ "WenQuanYi Micro Hei Mono" "文泉驿等宽微米黑" "WenQuanYi Zen Hei" "文泉驿正黑" ];
+        monospace = [ "WenQuanYi Micro Hei Mono" "文泉驿等宽微米黑" "JetBrainsMono Nerd Font" ];
       };
     };
     packages = with pkgs; [
       wqy_microhei
       wqy_zenhei
-      noto-fonts-cjk-sans
-      noto-fonts-cjk-serif
-      lxgw-wenkai
-      corefonts
-
       nerd-fonts.jetbrains-mono
       font-awesome
+
+      (runCommand "monaco-font" {} ''
+        install -D -m644 ${./extra/fonts/Monaco-Linux.ttf} $out/share/fonts/truetype/Monaco-Linux.ttf
+      '')
     ];
   };
 }
