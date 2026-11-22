@@ -1109,6 +1109,72 @@
     </channel>
   '';
 
+  environment.etc."xdg/qt5ct/qt5ct.conf".text = ''
+    [Appearance]
+    custom_palette=false
+    standard_dialogs=default
+    style=Fusion
+
+    [Fonts]
+    fixed="\x6587\x6cc9\x9a7f\x7b49\x5bbd\x5fae\x7c73\x9ed1,10,-1,5,50,0,0,0,0,0,Regular"
+    general="\x6587\x6cc9\x9a7f\x7b49\x5bbd\x5fae\x7c73\x9ed1,10,-1,5,50,0,0,0,0,0,Regular"
+
+    [Interface]
+    activate_item_on_single_click=1
+    buttonbox_layout=0
+    cursor_flash_time=1000
+    dialog_buttons_have_icons=1
+    double_click_interval=400
+    gui_effects=@Invalid()
+    keyboard_scheme=2
+    menus_have_icons=true
+    show_shortcuts_in_context_menus=true
+    stylesheets=@Invalid()
+    toolbutton_style=4
+    underline_shortcut=1
+    wheel_scroll_lines=3
+
+    [SettingsWindow]
+    geometry=@ByteArray(\x1\xd9\xd0\xcb\0\x3\0\0\0\0\0\0\0\0\0\0\0\0\x2\xde\0\0\x2\x62\0\0\0\0\0\0\0\0\0\0\x2\xde\0\0\x2\x62\0\0\0\0\0\0\0\0\x4\0\0\0\0\0\0\0\0\0\0\0\x2\xde\0\0\x2\x62)
+
+    [Troubleshooting]
+    force_raster_widgets=1
+    ignored_applications=@Invalid()
+  '';
+
+  environment.etc."xdg/qt6ct/qt6ct.conf".text = ''
+    [Appearance]
+    custom_palette=false
+    standard_dialogs=default
+    style=Fusion
+
+    [Fonts]
+    fixed="文泉驿等宽微米黑,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1,Regular,0,0"
+    general="文泉驿等宽微米黑,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1,Regular,0,0"
+
+    [Interface]
+    activate_item_on_single_click=1
+    buttonbox_layout=0
+    cursor_flash_time=1000
+    dialog_buttons_have_icons=1
+    double_click_interval=400
+    gui_effects=@Invalid()
+    keyboard_scheme=2
+    menus_have_icons=true
+    show_shortcuts_in_context_menus=true
+    stylesheets=@Invalid()
+    toolbutton_style=4
+    underline_shortcut=1
+    wheel_scroll_lines=3
+
+    [SettingsWindow]
+    geometry=@ByteArray(\x1\xd9\xd0\xcb\0\x3\0\0\0\0\0\0\0\0\0\0\0\0\x2\xde\0\0\x2>\0\0\0\0\0\0\0\0\0\0\x2\xde\0\0\x2>\0\0\0\0\0\0\0\0\x4\0\0\0\0\0\0\0\0\0\0\0\x2\xde\0\0\x2>)
+
+    [Troubleshooting]
+    force_raster_widgets=1
+    ignored_applications=@Invalid()
+  '';
+
   system.activationScripts.userGtkSettings = {
     text = ''
     if [ -d "/home/mmc" ]; then
@@ -1125,19 +1191,21 @@
         cp -f /etc/nixos/extra/tmux/tmux.conf /etc/tmux.conf 2>/dev/null || true
       fi
 
-      mkdir -p /home/mmc/.config/Thunar /home/mmc/.config/xfce4/xfconf/xfce-perchannel-xml
+      mkdir -p /home/mmc/.config/Thunar /home/mmc/.config/xfce4/xfconf/xfce-perchannel-xml /home/mmc/.config/qt5ct /home/mmc/.config/qt6ct
       cp -n /etc/xdg/Thunar/uca.xml /home/mmc/.config/Thunar/uca.xml 2>/dev/null || true
       cp -n /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/thunar.xml /home/mmc/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml 2>/dev/null || true
       if [ -f "/home/mmc/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml" ] && ! grep -q "shortcuts-icon-size" /home/mmc/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml; then
         sed -i '/<\/channel>/i \  <property name="shortcuts-icon-size" type="string" value="THUNAR_ICON_SIZE_16"/>' /home/mmc/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml
       fi
+      cp -n /etc/xdg/qt5ct/qt5ct.conf /home/mmc/.config/qt5ct/qt5ct.conf 2>/dev/null || true
+      cp -n /etc/xdg/qt6ct/qt6ct.conf /home/mmc/.config/qt6ct/qt6ct.conf 2>/dev/null || true
 
       mkdir -p /home/mmc/desktop /home/mmc/downloads /home/mmc/.templates /home/mmc/.config/gtk-3.0
       ln -sf /etc/xdg/user-dirs.dirs /home/mmc/.config/user-dirs.dirs
       if [ ! -f "/home/mmc/.config/gtk-3.0/bookmarks" ] || ! grep -q "/home/mmc/downloads" /home/mmc/.config/gtk-3.0/bookmarks; then
         echo "file:///home/mmc/downloads" >> /home/mmc/.config/gtk-3.0/bookmarks
       fi
-      chown -R mmc:users /home/mmc/desktop /home/mmc/downloads /home/mmc/.templates /home/mmc/.config/gtk-3.0 /home/mmc/.config/user-dirs.dirs 2>/dev/null || true
+      chown -R mmc:users /home/mmc/desktop /home/mmc/downloads /home/mmc/.templates /home/mmc/.config/gtk-3.0 /home/mmc/.config/user-dirs.dirs /home/mmc/.config/qt5ct /home/mmc/.config/qt6ct 2>/dev/null || true
 
       if [ -f "/home/mmc/.config/ghostty/config" ]; then
         sed -i 's/^window-width = .*/window-width = 80/; s/^window-height = .*/window-height = 21/' /home/mmc/.config/ghostty/config 2>/dev/null || true
@@ -1200,6 +1268,16 @@
           cp -rf $EXTRA_DIR/fcitx5/config/conf/* /home/mmc/.config/fcitx5/conf/ 2>/dev/null || true
           cp -rf $EXTRA_DIR/fcitx5/local/themes/custom/* /home/mmc/.local/share/fcitx5/themes/custom/ 2>/dev/null || true
           cp -rf $EXTRA_DIR/fcitx5/local/pinyin/* /home/mmc/.local/share/fcitx5/pinyin/ 2>/dev/null || true
+        fi
+
+        if [ -d "$EXTRA_DIR/qt5ct" ]; then
+          mkdir -p /home/mmc/.config/qt5ct
+          cp -rf $EXTRA_DIR/qt5ct/* /home/mmc/.config/qt5ct/ 2>/dev/null || true
+        fi
+
+        if [ -d "$EXTRA_DIR/qt6ct" ]; then
+          mkdir -p /home/mmc/.config/qt6ct
+          cp -rf $EXTRA_DIR/qt6ct/* /home/mmc/.config/qt6ct/ 2>/dev/null || true
         fi
 
       fi
