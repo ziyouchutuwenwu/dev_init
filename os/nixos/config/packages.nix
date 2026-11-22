@@ -21,6 +21,7 @@
     killall
     tree
     jq
+    ghostty
 
     chromium
     wpsoffice-cn

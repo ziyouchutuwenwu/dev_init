@@ -1184,7 +1184,8 @@
     </channel>
   '';
 
-  system.activationScripts.userGtkSettings = ''
+  system.activationScripts.userGtkSettings = {
+    text = ''
     if [ -d "/home/mmc" ]; then
       rm -f /home/mmc/.config/gtk-3.0/settings.ini /home/mmc/.config/gtk-4.0/settings.ini
       rm -rf /home/mmc/.config/sfwbar
@@ -1561,4 +1562,5 @@ EOF
       chown -R mmc:users /home/mmc/.local /home/mmc/.themes /home/mmc/.config /home/mmc/.icons 2>/dev/null || true
     fi
   '';
+};
 }

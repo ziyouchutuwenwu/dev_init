@@ -36,7 +36,7 @@
       defaultFonts = {
         sansSerif = [ "WenQuanYi Micro Hei Mono" "文泉驿等宽微米黑" "WenQuanYi Micro Hei" "文泉驿微米黑" ];
         serif = [ "WenQuanYi Micro Hei Mono" "文泉驿等宽微米黑" "WenQuanYi Zen Hei" "文泉驿正黑" ];
-        monospace = [ "WenQuanYi Micro Hei Mono" "文泉驿等宽微米黑" "JetBrainsMono Nerd Font" ];
+        monospace = [ "Monaco" "WenQuanYi Micro Hei Mono" "文泉驿等宽微米黑" "JetBrainsMono Nerd Font" ];
       };
     };
     packages = with pkgs; [
