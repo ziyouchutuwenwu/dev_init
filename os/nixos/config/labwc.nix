@@ -237,7 +237,7 @@
         <icon>Faenza</icon>
         <cornerRadius>0</cornerRadius>
         <titlebar>
-          <layout>icon:iconify,max,close</layout>
+          <layout>:iconify,max,close</layout>
           <showTitle>yes</showTitle>
         </titlebar>
         <font place="ActiveWindow">
