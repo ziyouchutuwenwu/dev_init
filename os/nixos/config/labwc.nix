@@ -1298,7 +1298,7 @@ Terminal=false
 Categories=Office;Viewer;
 EOF
 
-      rm -f /home/mmc/.local/share/applications/qview.desktop /home/mmc/.local/share/applications/mousepad.desktop /home/mmc/.local/share/applications/btop.desktop /home/mmc/.local/share/applications/xnviewmp.desktop /home/mmc/.local/share/applications/*wps*
+      rm -f /home/mmc/.local/share/applications/qview.desktop /home/mmc/.local/share/applications/mousepad.desktop /home/mmc/.local/share/applications/btop.desktop /home/mmc/.local/share/applications/xnviewmp.desktop /home/mmc/.local/share/applications/*wps* /home/mmc/.local/share/applications/chromium.desktop
 
       cat <<EOF > /home/mmc/.local/share/applications/gpicview.desktop
 [Desktop Entry]
@@ -1372,7 +1372,7 @@ Terminal=false
 Categories=AudioVideo;Audio;Mixer;
 EOF
 
-      cat <<EOF > /home/mmc/.local/share/applications/chromium.desktop
+      cat <<EOF > /home/mmc/.local/share/applications/chromium-browser.desktop
 [Desktop Entry]
 Type=Application
 Name=Chromium
@@ -1471,9 +1471,9 @@ video/webm=mpv.desktop;
 video/x-matroska=mpv.desktop;
 audio/mpeg=mpv.desktop;
 audio/flac=mpv.desktop;
-text/html=chromium.desktop;
-x-scheme-handler/http=chromium.desktop;
-x-scheme-handler/https=chromium.desktop;
+text/html=chromium-browser.desktop;
+x-scheme-handler/http=chromium-browser.desktop;
+x-scheme-handler/https=chromium-browser.desktop;
 EOF
 
       chown -R mmc:users /home/mmc/.local /home/mmc/.themes /home/mmc/.config /home/mmc/.icons 2>/dev/null || true
