@@ -1104,6 +1104,8 @@
       <property name="last-window-height" type="int" value="484"/>
       <property name="last-window-maximized" type="bool" value="false"/>
       <property name="misc-date-style" type="string" value="THUNAR_DATE_STYLE_YYYYMMDD"/>
+      <property name="shortcuts-icon-size" type="string" value="THUNAR_ICON_SIZE_16"/>
+      <property name="misc-show-delete-action" type="bool" value="false"/>
     </channel>
   '';
 
@@ -1126,6 +1128,9 @@
       mkdir -p /home/mmc/.config/Thunar /home/mmc/.config/xfce4/xfconf/xfce-perchannel-xml
       cp -n /etc/xdg/Thunar/uca.xml /home/mmc/.config/Thunar/uca.xml 2>/dev/null || true
       cp -n /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/thunar.xml /home/mmc/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml 2>/dev/null || true
+      if [ -f "/home/mmc/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml" ] && ! grep -q "shortcuts-icon-size" /home/mmc/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml; then
+        sed -i '/<\/channel>/i \  <property name="shortcuts-icon-size" type="string" value="THUNAR_ICON_SIZE_16"/>' /home/mmc/.config/xfce4/xfconf/xfce-perchannel-xml/thunar.xml
+      fi
 
       mkdir -p /home/mmc/desktop /home/mmc/downloads /home/mmc/.templates /home/mmc/.config/gtk-3.0
       ln -sf /etc/xdg/user-dirs.dirs /home/mmc/.config/user-dirs.dirs
