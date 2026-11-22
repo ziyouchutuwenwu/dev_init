@@ -698,8 +698,8 @@
     }
 
     button#showdesktop image {
-      min-width: 16px;
-      min-height: 16px;
+      min-width: 22px;
+      min-height: 22px;
       -ScaleImage-symbolic: false;
       -GtkWidget-halign: center;
       -GtkWidget-valign: center;
@@ -740,8 +740,8 @@
     }
 
     button#taskbar_item image {
-      min-width: 16px;
-      min-height: 16px;
+      min-width: 22px;
+      min-height: 22px;
       padding-right: 4px;
       -ScaleImage-symbolic: false;
       -GtkWidget-valign: center;
@@ -790,8 +790,8 @@
     button#tray_active image,
     button#tray_passive image,
     button#tray_attention image {
-      min-width: 16px;
-      min-height: 16px;
+      min-width: 20px;
+      min-height: 20px;
       -ScaleImage-symbolic: true;
       -GtkWidget-halign: center;
       -GtkWidget-valign: center;
@@ -828,8 +828,8 @@
 
     button#net_wired image,
     button#net_wifi image {
-      min-width: 16px;
-      min-height: 16px;
+      min-width: 20px;
+      min-height: 20px;
       -ScaleImage-symbolic: true;
       color: #111111;
       -GtkWidget-halign: center;
@@ -857,8 +857,8 @@
 
     button#volume image,
     button#module image {
-      min-width: 16px;
-      min-height: 16px;
+      min-width: 20px;
+      min-height: 20px;
       -ScaleImage-symbolic: true;
       color: #111111;
       -GtkWidget-valign: center;
@@ -867,7 +867,7 @@
     label#clock {
       color: #111111;
       font-family: "文泉驿等宽微米黑", sans-serif;
-      font-size: 11px;
+      font-size: 12px;
       padding: 0 4px;
       margin: 0 2px;
       -GtkWidget-valign: center;
@@ -898,8 +898,8 @@
     }
 
     button#power_btn image {
-      min-width: 16px;
-      min-height: 16px;
+      min-width: 20px;
+      min-height: 20px;
       -ScaleImage-symbolic: true;
       color: #d93838;
       -GtkWidget-halign: center;
