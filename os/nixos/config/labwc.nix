@@ -568,7 +568,7 @@
   environment.etc."xdg/sfwbar/w10.config".text = ''
     #Api2
     Set ImagePath = "icons/misc"
-    Set ThicknessHint = "26px";
+    Set ThicknessHint = "36px";
 
     TriggerAction "SIGRTMIN+1", SwitcherEvent("forward");
     TriggerAction "SIGRTMIN+2", SwitcherEvent("back");
@@ -655,7 +655,7 @@
 
     window {
       -GtkWidget-direction: bottom;
-      min-height: 26px;
+      min-height: 36px;
       background-color: @bar_bg;
       border-top: 1px solid @bar_border;
     }
@@ -684,8 +684,8 @@
       border: 0;
       outline: none;
       border-radius: 0;
-      min-width: 26px;
-      min-height: 26px;
+      min-width: 36px;
+      min-height: 36px;
       margin: 0;
       padding: 0 4px;
       background: transparent;
@@ -711,7 +711,7 @@
       outline: none;
       box-shadow: none;
       background: linear-gradient(to bottom, #fcfcfc, #e2e2e2);
-      min-height: 20px;
+      min-height: 26px;
       padding: 0 6px;
       margin: 2px 2px;
       -GtkWidget-valign: center;
@@ -776,7 +776,7 @@
       padding: 0 2px;
       margin: 0;
       min-width: 18px;
-      min-height: 20px;
+      min-height: 24px;
       -GtkWidget-valign: center;
       -GtkWidget-vexpand: true;
     }
@@ -815,8 +815,8 @@
       background: transparent;
       padding: 0 2px;
       margin: 0 1px;
-      min-width: 20px;
-      min-height: 20px;
+      min-width: 22px;
+      min-height: 24px;
       -GtkWidget-valign: center;
       -GtkWidget-vexpand: true;
     }
@@ -845,8 +845,8 @@
       border-radius: 2px;
       background: transparent;
       padding: 0 2px;
-      min-width: 20px;
-      min-height: 20px;
+      min-width: 22px;
+      min-height: 24px;
       -GtkWidget-valign: center;
     }
 
@@ -887,7 +887,7 @@
       padding: 0 4px;
       margin: 0 2px 0 2px;
       min-width: 22px;
-      min-height: 20px;
+      min-height: 24px;
       border-left: 1px solid #d0d0d0;
       -GtkWidget-valign: center;
       -GtkWidget-vexpand: true;
