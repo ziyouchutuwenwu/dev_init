@@ -1375,16 +1375,16 @@ Terminal=false
 Categories=Office;Viewer;
 EOF
 
-      rm -f /home/mmc/.local/share/applications/qview.desktop /home/mmc/.local/share/applications/mousepad.desktop /home/mmc/.local/share/applications/btop.desktop
+      rm -f /home/mmc/.local/share/applications/qview.desktop /home/mmc/.local/share/applications/mousepad.desktop /home/mmc/.local/share/applications/btop.desktop /home/mmc/.local/share/applications/xnviewmp.desktop /home/mmc/.local/share/applications/*wps*
 
-      cat <<EOF > /home/mmc/.local/share/applications/xnviewmp.desktop
+      cat <<EOF > /home/mmc/.local/share/applications/gpicview.desktop
 [Desktop Entry]
 Type=Application
 Name=图片查看器
 Name[zh_CN]=图片查看器
-GenericName=图片浏览器 (XnView MP)
-Exec=xnviewmp %F
-Icon=xnviewmp
+GenericName=图片查看器 (GPicView)
+Exec=gpicview %F
+Icon=gpicview
 Terminal=false
 Categories=Graphics;Viewer;
 EOF
@@ -1535,19 +1535,13 @@ EOF
 [Default Applications]
 application/pdf=qpdfview.desktop;
 application/x-pdf=qpdfview.desktop;
-image/png=xnviewmp.desktop;
-image/jpeg=xnviewmp.desktop;
-image/gif=xnviewmp.desktop;
-image/webp=xnviewmp.desktop;
-image/bmp=xnviewmp.desktop;
-image/svg+xml=xnviewmp.desktop;
+image/png=gpicview.desktop;
+image/jpeg=gpicview.desktop;
+image/gif=gpicview.desktop;
+image/webp=gpicview.desktop;
+image/bmp=gpicview.desktop;
+image/svg+xml=gpicview.desktop;
 text/plain=nvim.desktop;
-application/msword=wps-office-wps.desktop;
-application/vnd.openxmlformats-officedocument.wordprocessingml.document=wps-office-wps.desktop;
-application/vnd.ms-excel=wps-office-et.desktop;
-application/vnd.openxmlformats-officedocument.spreadsheetml.sheet=wps-office-et.desktop;
-application/vnd.ms-powerpoint=wps-office-wpp.desktop;
-application/vnd.openxmlformats-officedocument.presentationml.presentation=wps-office-wpp.desktop;
 video/mp4=mpv.desktop;
 video/mkv=mpv.desktop;
 video/webm=mpv.desktop;

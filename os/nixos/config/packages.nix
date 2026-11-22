@@ -1,5 +1,19 @@
 { pkgs, ... }:
 
+let
+  gpicview = pkgs.stdenv.mkDerivation rec {
+    pname = "gpicview";
+    version = "0.2.5";
+    src = pkgs.fetchurl {
+      url = "mirror://sourceforge/lxde/${pname}-${version}.tar.xz";
+      sha256 = "0hi9v0rdx47nys0wvm9xasdrafa34r5kq6crb074a0ipwmc60iiq";
+    };
+    nativeBuildInputs = [ pkgs.pkg-config pkgs.intltool pkgs.wrapGAppsHook3 ];
+    buildInputs = [ pkgs.gtk3 pkgs.libjpeg ];
+    configureFlags = [ "--enable-gtk3" ];
+    NIX_CFLAGS_COMPILE = "-Wno-error=return-mismatch -Wno-return-mismatch -Wno-error";
+  };
+in
 {
   nixpkgs.config.allowUnfree = true;
 
@@ -24,9 +38,8 @@
     ghostty
 
     chromium
-    wpsoffice-cn
     qpdfview
-    xnviewmp
+    gpicview
     mpv
     qalculate-gtk
     xfce4-taskmanager
