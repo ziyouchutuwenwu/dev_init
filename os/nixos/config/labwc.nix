@@ -212,6 +212,7 @@
       <windowRules>
         <windowRule identifier="*ghostty*">
           <action name="AutoPlace" policy="center" />
+          <action name="ResizeTo" width="808" height="459" />
         </windowRule>
       </windowRules>
 
@@ -598,19 +599,8 @@
 
       include("showdesktop.widget")
 
-      pager {
-        style = "pager"
-        rows = 1
-        pins = "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"
-        preview = false
-        action[ScrollUp] = WorkspaceActivate("prev");
-        action[ScrollDown] = WorkspaceActivate("next");
-      }
-
       taskbar {
         rows = 1;
-        filter = workspace;
-        group = false;
         tooltips = true;
         icons = true;
         labels = true;
@@ -713,73 +703,6 @@
       -ScaleImage-symbolic: false;
       -GtkWidget-halign: center;
       -GtkWidget-valign: center;
-    }
-
-    grid#pager {
-      margin: 0;
-      padding: 0;
-      border-left: 1px solid #f0f0f0;
-      border-right: none;
-      border-top: none;
-      border-bottom: none;
-      -GtkWidget-valign: fill;
-      -GtkWidget-vexpand: true;
-    }
-
-    grid#pager button,
-    grid#pager button#pager_item,
-    button#pager_item,
-    button#pager_normal,
-    button#pager_visible,
-    button#pager_focused {
-      border: 0;
-      outline: none;
-      border-radius: 0;
-      box-shadow: none;
-      border-right: 1px solid #f0f0f0;
-      min-width: 45px;
-      min-height: 26px;
-      padding: 0;
-      margin: 0;
-      background-image: none;
-      background-color: #a8a8a8;
-      -GtkWidget-valign: fill;
-      -GtkWidget-vexpand: true;
-      -GtkWidget-hexpand: false;
-    }
-
-    grid#pager button.focused,
-    grid#pager button#pager_item.focused,
-    button#pager_focused,
-    button#pager_item.focused,
-    button#pager_item:checked {
-      background-image: none;
-      background-color: #767676;
-    }
-
-    grid#pager button:hover,
-    grid#pager button#pager_item:hover,
-    button#pager_item:hover,
-    button#pager_normal:hover {
-      background-image: none;
-      background-color: #949494;
-    }
-
-    grid#pager label,
-    grid#pager button label,
-    button#pager_item label,
-    button#pager_normal label,
-    button#pager_visible label,
-    button#pager_focused label {
-      font-size: 0px;
-      color: transparent;
-      opacity: 0;
-      min-width: 0px;
-      min-height: 0px;
-      padding: 0;
-      margin: 0;
-      border: none;
-      background: transparent;
     }
 
     button#taskbar_item {
@@ -1212,7 +1135,7 @@
       chown -R mmc:users /home/mmc/desktop /home/mmc/downloads /home/mmc/.templates /home/mmc/.config/gtk-3.0 /home/mmc/.config/user-dirs.dirs 2>/dev/null || true
 
       if [ -f "/home/mmc/.config/ghostty/config" ]; then
-        sed -i 's/^window-height = .*/window-height = 22/' /home/mmc/.config/ghostty/config 2>/dev/null || true
+        sed -i 's/^window-width = .*/window-width = 80/; s/^window-height = .*/window-height = 21/' /home/mmc/.config/ghostty/config 2>/dev/null || true
         grep -q "^command = zsh" /home/mmc/.config/ghostty/config 2>/dev/null || sed -i '/window-height =/a command = zsh' /home/mmc/.config/ghostty/config 2>/dev/null || true
       fi
 
