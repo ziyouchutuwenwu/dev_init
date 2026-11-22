@@ -50,6 +50,8 @@
 
   services.spice-vdagentd.enable = true;
 
+  hardware.graphics.enable = true;
+
   programs.thunar = {
     enable = true;
     plugins = with pkgs; [
@@ -394,13 +396,13 @@
           <mousebind button="Left" action="Click" />
           <mousebind button="Middle" action="Press" />
           <mousebind button="Middle" action="Click" />
-          <mousebind button="Right" action="Click">
+          <mousebind button="Right" action="Press">
             <action name="ShowMenu" menu="root-menu" />
           </mousebind>
-          <mousebind button="Up" action="Click">
+          <mousebind direction="Up" action="Scroll">
             <action name="GoToDesktop" to="left" wrap="yes" />
           </mousebind>
-          <mousebind button="Down" action="Click">
+          <mousebind direction="Down" action="Scroll">
             <action name="GoToDesktop" to="right" wrap="yes" />
           </mousebind>
         </context>
@@ -409,7 +411,7 @@
           <mousebind button="Left" action="Click" />
           <mousebind button="Middle" action="Press" />
           <mousebind button="Middle" action="Click" />
-          <mousebind button="Right" action="Click">
+          <mousebind button="Right" action="Press">
             <action name="ShowMenu" menu="root-menu" />
           </mousebind>
         </context>
