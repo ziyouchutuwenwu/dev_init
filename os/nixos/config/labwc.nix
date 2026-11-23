@@ -237,7 +237,7 @@
         <icon>Faenza</icon>
         <cornerRadius>0</cornerRadius>
         <titlebar>
-          <layout>:iconify,max,close</layout>
+          <layout>icon:iconify,max,close</layout>
           <showTitle>yes</showTitle>
         </titlebar>
         <font place="ActiveWindow">
@@ -740,8 +740,8 @@
     }
 
     button#taskbar_item image {
-      min-width: 22px;
-      min-height: 22px;
+      min-width: 20px;
+      min-height: 20px;
       padding-right: 4px;
       -ScaleImage-symbolic: false;
       -GtkWidget-valign: center;
@@ -1179,7 +1179,7 @@
     text = ''
     if [ -d "/home/mmc" ]; then
       rm -f /home/mmc/.config/gtk-3.0/settings.ini /home/mmc/.config/gtk-4.0/settings.ini
-      rm -rf /home/mmc/.config/sfwbar
+      rm -rf /home/mmc/.config/sfwbar /home/mmc/.config/labwc
 
       mkdir -p /home/mmc/.config/fcitx5
       cp -f /etc/xdg/fcitx5/profile /home/mmc/.config/fcitx5/profile 2>/dev/null || true
@@ -1251,8 +1251,31 @@
           mkdir -p /home/mmc/.local/share/icons /home/mmc/.icons
           cp -rf $EXTRA_DIR/icons/* /home/mmc/.local/share/icons/ 2>/dev/null || true
           cp -rf $EXTRA_DIR/icons/* /home/mmc/.icons/ 2>/dev/null || true
-          gtk-update-icon-cache /home/mmc/.local/share/icons/Faenza 2>/dev/null || true
-          gtk-update-icon-cache /home/mmc/.icons/Faenza 2>/dev/null || true
+          for base in /home/mmc/.local/share/icons/Faenza /home/mmc/.icons/Faenza /var/lib/lightdm/.icons/Faenza; do
+            for size in 16 22 24 32 48 64 96; do
+              rm -f "$base/apps/$size/Thunar.png" "$base/apps/$size/thunar.png" "$base/apps/$size/org.xfce.thunar.png" 2>/dev/null || true
+            done
+            BASE_DIR="$base" ${pkgs.python3}/bin/python3 - << 'PYEOF'
+import os
+base = os.environ.get("BASE_DIR", "")
+svg_src = os.path.join(base, "places/scalable/user-home.svg")
+dest_dir = os.path.join(base, "apps/scalable")
+try:
+    if os.path.exists(svg_src) and os.path.exists(dest_dir):
+        with open(svg_src, "r") as f:
+            c = f.read()
+        padded = c.replace('width="96"', 'width="96" viewBox="-12 -12 120 120"')
+        for name in ["Thunar.svg", "thunar.svg", "org.xfce.thunar.svg"]:
+            target_file = os.path.join(dest_dir, name)
+            if os.path.islink(target_file):
+                os.unlink(target_file)
+            with open(target_file, "w") as out:
+                out.write(padded)
+except Exception:
+    pass
+PYEOF
+            rm -f "$base/icon-theme.cache" 2>/dev/null || true
+          done
         fi
 
         if [ -d "$EXTRA_DIR/ghostty" ]; then
