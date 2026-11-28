@@ -86,12 +86,12 @@ defmodule Web.Orm.Query.Settings do
   def get_selected_classes do
     case get_setting("selected_classes") do
       nil ->
-        Web.ModelLoader.default_classes_for_model("industry")
+        Web.ModelLoader.default_classes_for_model(Web.ModelLoader.first_model_id())
 
       str when is_binary(str) ->
         case Jason.decode(str) do
           {:ok, list} when is_list(list) -> list
-          _ -> Web.ModelLoader.default_classes_for_model("industry")
+          _ -> Web.ModelLoader.default_classes_for_model(Web.ModelLoader.first_model_id())
         end
     end
   end

@@ -39,15 +39,29 @@ window.switchOrOpenTab = function (url, targetName) {
 };
 
 const STORAGE_KEY_CONNECTED = "web_stream_connected_state_map";
-try {
-  localStorage.removeItem(STORAGE_KEY_CONNECTED);
-} catch (e) {}
 
-export function getStreamConnectedState(_streamId) {
-  return false;
+export function getStreamConnectedState(streamId) {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_CONNECTED);
+    if (!raw) return false;
+    const map = JSON.parse(raw);
+    return !!map[streamId];
+  } catch (e) {
+    return false;
+  }
 }
 
-export function setStreamConnectedState(_streamId, _isConnected) {
+export function setStreamConnectedState(streamId, isConnected) {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_CONNECTED);
+    const map = raw ? JSON.parse(raw) : {};
+    if (isConnected) {
+      map[streamId] = true;
+    } else {
+      delete map[streamId];
+    }
+    localStorage.setItem(STORAGE_KEY_CONNECTED, JSON.stringify(map));
+  } catch (e) {}
 }
 
 export class Player {
@@ -133,6 +147,7 @@ export class Player {
   setConnectionState(connected, statusText = null) {
     const changed = this.isConnected !== connected;
     this.isConnected = connected;
+    setStreamConnectedState(this.streamId, connected);
     if (statusText) {
       this.setStatus(statusText, connected);
     }
@@ -160,7 +175,7 @@ export class Player {
 
   get targetClasses() {
     const cfg = this.zoneConfig;
-    if (cfg && Array.isArray(cfg.target_classes) && cfg.target_classes.length > 0) {
+    if (cfg && Array.isArray(cfg.target_classes)) {
       return cfg.target_classes;
     }
     if (this._cardEl && this._cardEl.dataset.selectedClasses) {
@@ -216,6 +231,12 @@ export class Player {
       this.videoEl.setAttribute("autoplay", "");
       this.videoEl.setAttribute("muted", "");
       this.videoEl.setAttribute("playsinline", "");
+      if (this.mediaStream) {
+        this.videoEl.srcObject = this.mediaStream;
+        if (this.isConnected) {
+          this.videoEl.play().catch(() => {});
+        }
+      }
     }
 
     this.setStatus(this.isConnected ? "已连接" : "未连接", this.isConnected);
@@ -390,17 +411,50 @@ export class Player {
     });
   }
 
-  renderOverlay() {
+  getBestMatchingDetection(metadata = null) {
+    if (!this.detectionQueue || this.detectionQueue.length === 0) return null;
+    const now = performance.now();
+
+    // 1. 如果支持 requestVideoFrameCallback 且提供 mediaTime，通过 pts_ms 寻找最佳对齐帧
+    if (metadata && typeof metadata.mediaTime === "number" && metadata.mediaTime > 0) {
+      const targetPtsMs = metadata.mediaTime * 1000;
+      let closestMsg = null;
+      let minDiff = Infinity;
+
+      for (let i = this.detectionQueue.length - 1; i >= 0; i--) {
+        const msg = this.detectionQueue[i];
+        if (msg.pts_ms !== undefined && msg.pts_ms !== null && msg.pts_ms > 0) {
+          const diff = Math.abs(msg.pts_ms - targetPtsMs);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestMsg = msg;
+          }
+        }
+      }
+      if (closestMsg && minDiff < 350) {
+        return closestMsg;
+      }
+    }
+
+    // 2. 默认获取最新未过期的检测结果（过滤超过 1500ms 的旧结果）
+    for (let i = this.detectionQueue.length - 1; i >= 0; i--) {
+      const msg = this.detectionQueue[i];
+      if ((now - (msg.localRecvTime || 0)) <= 1500) {
+        return msg;
+      }
+    }
+
+    return null;
+  }
+
+  renderOverlay(metadata = null) {
     if (!this.canvasEl) return;
     this.lastRenderTime = performance.now();
     try {
-      // 什么时候画框？在触发区域内，勾选了检测，并且已经连接以后
       if (this.isConnected && this.isDetectionActive && this.detectionQueue.length > 0) {
-        const bestMsg = this.detectionQueue[this.detectionQueue.length - 1];
+        const bestMsg = this.getBestMatchingDetection(metadata);
         if (bestMsg) {
-          const now = performance.now();
-          const isStale = (now - (bestMsg.localRecvTime || 0)) > 3000;
-          const detections = isStale ? [] : (bestMsg.detections || []);
+          const detections = bestMsg.detections || [];
           drawDetections(
             this.canvasEl,
             this.videoEl,
@@ -433,14 +487,14 @@ export class Player {
     if (!this.videoEl || this.renderLoopRunning) return;
     this.renderLoopRunning = true;
 
-    const renderLoop = () => {
+    const renderLoop = (now, metadata) => {
       if (!this.renderLoopRunning || !this.videoEl) {
         this.renderLoopRunning = false;
         return;
       }
 
       try {
-        this.renderOverlay();
+        this.renderOverlay(metadata);
       } catch (err) {
       } finally {
         if (this.renderLoopRunning && this.videoEl) {
@@ -464,6 +518,9 @@ export class Player {
 
   wakeUp() {
     if (!this.isConnected) return;
+    if (this.mediaStream && this.videoEl && this.videoEl.srcObject !== this.mediaStream) {
+      this.videoEl.srcObject = this.mediaStream;
+    }
     if (this.videoEl) {
       this.videoEl.muted = true;
       if (this.videoEl.paused) {
@@ -475,6 +532,7 @@ export class Player {
     } catch (e) {}
     this.renderLoopRunning = false;
     this.startSyncRenderer();
+    this.setStatus("已连接", true);
   }
 
   handleDataChannelMessage(ev) {
@@ -499,6 +557,9 @@ export class Player {
         this.detectionQueue = [];
         if (this.countEl && this.countEl.textContent !== "0") {
           this.countEl.textContent = "0";
+        }
+        if (this.listEl) {
+          renderDetectionList(this.listEl, []);
         }
         return;
       }
@@ -537,11 +598,32 @@ export class Player {
           Math.max(p1[1], p2[1]),
         ];
       }
+      const frameW = msg.frame_width || (this.videoEl && this.videoEl.videoWidth) || 1920;
+      const frameH = msg.frame_height || (this.videoEl && this.videoEl.videoHeight) || 1080;
       const targetClasses = this.targetClasses;
-      const validDetections = msg.detections.filter((d) =>
-        isDetectionInZone(d, activeZone, currentTriggerBox) &&
-        isDetectionTargetMatched(d, targetClasses)
-      );
+      const validDetections = msg.detections.filter((d) => {
+        let rx1 = null, ry1 = null, rx2 = null, ry2 = null;
+        if (d.rel_box && Array.isArray(d.rel_box) && d.rel_box.length >= 4) {
+          [rx1, ry1, rx2, ry2] = d.rel_box;
+        } else if (d.box && Array.isArray(d.box) && d.box.length >= 4) {
+          const [x1, y1, x2, y2] = d.box;
+          if (x1 <= 1.0 && y1 <= 1.0 && x2 <= 1.0 && y2 <= 1.0 && (x2 > 0 || y2 > 0)) {
+            rx1 = x1;
+            ry1 = y1;
+            rx2 = x2;
+            ry2 = y2;
+          } else {
+            rx1 = frameW > 0 ? x1 / frameW : 0;
+            ry1 = frameH > 0 ? y1 / frameH : 0;
+            rx2 = frameW > 0 ? x2 / frameW : 0;
+            ry2 = frameH > 0 ? y2 / frameH : 0;
+          }
+        }
+        return (
+          isDetectionInZone(d, activeZone, currentTriggerBox, rx1, ry1, rx2, ry2) &&
+          isDetectionTargetMatched(d, targetClasses)
+        );
+      });
 
       if (this.listEl) {
         renderDetectionList(this.listEl, validDetections);
@@ -738,7 +820,7 @@ export class Player {
   clearDetections() {
     this.detectionQueue = [];
     if (this.listEl) {
-      this.listEl.innerHTML = '<li class="text-zinc-400">' + (this.isConnected ? '检测未开启' : '未连接') + '</li>';
+      this.listEl.innerHTML = '<li class="text-zinc-400">' + (this.isConnected ? '检测未启用' : '未连接') + '</li>';
     }
     if (this.countEl) {
       this.countEl.textContent = "0";
@@ -940,11 +1022,12 @@ export class Player {
   }
 
   resetZoneToDefault() {
+    const existingClasses = (this.zoneConfig && Array.isArray(this.zoneConfig.target_classes)) ? this.zoneConfig.target_classes : (this.effectiveTargetClasses || []);
     this.zoneConfig = {
       enabled: true,
       trigger_box: [0.05, 0.05, 0.95, 0.95],
       roi: { type: "rect", coords: [0.05, 0.05, 0.95, 0.95] },
-      target_classes: [],
+      target_classes: existingClasses,
       _hasUnsaved: true,
     };
     this.hasUnsavedChanges = true;
@@ -962,6 +1045,9 @@ export class Player {
     };
     if (this._cardEl && this._cardEl.dataset.enabled !== undefined) {
       cfg.enabled = this._cardEl.dataset.enabled !== "false";
+    }
+    if (this._cardEl && this._cardEl.dataset.model) {
+      cfg.model = this._cardEl.dataset.model;
     }
     if (!cfg.trigger_box && cfg.roi && cfg.roi.coords) {
       cfg.trigger_box = cfg.roi.coords;

@@ -13,6 +13,8 @@ pub struct ZoneObject {
     #[serde(default = "default_true")]
     pub enabled: bool,
     #[serde(default)]
+    pub model: Option<String>,
+    #[serde(default)]
     pub roi: Option<RoiObject>,
     #[serde(default, alias = "trigger_area")]
     pub trigger_line: Option<ZoneLineConfig>,
@@ -26,6 +28,7 @@ impl From<ZoneConfig> for ZoneObject {
     fn from(c: ZoneConfig) -> Self {
         Self {
             enabled: c.enabled,
+            model: c.model,
             roi: c.roi.map(RoiObject::from),
             trigger_line: c.trigger_line,
             target_classes: c.target_classes,
@@ -44,6 +47,7 @@ impl TryFrom<ZoneObject> for ZoneConfig {
         };
         Ok(ZoneConfig {
             enabled: obj.enabled,
+            model: obj.model,
             roi,
             trigger_line: obj.trigger_line,
             target_classes: obj.target_classes,

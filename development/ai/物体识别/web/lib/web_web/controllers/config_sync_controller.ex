@@ -144,6 +144,7 @@ defmodule WebWeb.ConfigSyncController do
     raw_cfg = params["config"] || params["zone_config"] || Map.drop(params, ["stream_id"])
     stream = Streams.get_stream_by_stream_id(stream_id)
     target_enabled = if stream, do: stream.enabled, else: true
+    target_model = if stream && stream.model && String.trim(to_string(stream.model)) != "", do: stream.model, else: Web.ModelLoader.first_model_id()
 
     zone_res =
       case raw_cfg do
@@ -151,7 +152,9 @@ defmodule WebWeb.ConfigSyncController do
           case Jason.decode(str) do
             {:ok, map} when is_map(map) ->
               synced =
-                if Map.has_key?(map, "enabled"), do: Map.put(map, "enabled", target_enabled), else: map
+                map
+                |> Map.put("enabled", target_enabled)
+                |> Map.put("model", target_model)
 
               synced =
                 if Map.has_key?(synced, "rules") and is_list(synced["rules"]) and length(synced["rules"]) > 0 do
@@ -170,7 +173,9 @@ defmodule WebWeb.ConfigSyncController do
 
         map when is_map(map) ->
           synced =
-            if Map.has_key?(map, "enabled") or Map.has_key?(map, :enabled), do: Map.put(map, "enabled", target_enabled), else: map
+            map
+            |> Map.put("enabled", target_enabled)
+            |> Map.put("model", target_model)
 
           synced =
             if Map.has_key?(synced, "rules") and is_list(synced["rules"]) and length(synced["rules"]) > 0 do
@@ -189,10 +194,11 @@ defmodule WebWeb.ConfigSyncController do
         _ ->
           {:ok,
            Jason.encode!(%{
-             "enabled" => true,
+             "enabled" => target_enabled,
+             "model" => target_model,
              "trigger_box" => [0.05, 0.05, 0.95, 0.95],
              "roi" => %{"type" => "rect", "coords" => [0.05, 0.05, 0.95, 0.95]},
-             "target_classes" => Web.ModelLoader.default_classes_for_model("industry"),
+             "target_classes" => Web.ModelLoader.default_classes_for_model(target_model),
              "rules" => []
            })}
       end
@@ -212,7 +218,11 @@ defmodule WebWeb.ConfigSyncController do
               if is_binary(gateway_url) && String.trim(gateway_url) != "" do
                 gateway_payload =
                   case Jason.decode(zone_str) do
-                    {:ok, m} when is_map(m) -> Jason.encode!(Map.put(m, "enabled", target_enabled))
+                    {:ok, m} when is_map(m) ->
+                      m
+                      |> Map.put("enabled", target_enabled)
+                      |> Map.put("model", target_model)
+                      |> Jason.encode!()
                     _ -> zone_str
                   end
 
@@ -286,7 +296,7 @@ defmodule WebWeb.ConfigSyncController do
         rtsp_url: s.rtsp_url,
         enabled: s.enabled,
         position: s.position,
-        model: s.model || "industry",
+        model: s.model || Web.ModelLoader.first_model_id(),
         zone_config: s.zone_config
       }
     end)

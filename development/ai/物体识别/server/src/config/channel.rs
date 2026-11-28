@@ -91,10 +91,7 @@ pub fn from_yaml(cfg: &YamlConfig, stream_id: &str) -> ZoneConfig {
         {
             target_classes = classes;
         }
-    }
-    if target_classes.is_empty()
-        && let Some(gtc) = cfg.get_nested(&[KEY_TRIGGER, KEY_TARGET_CLASSES])
-    {
+    } else if let Some(gtc) = cfg.get_nested(&[KEY_TRIGGER, KEY_TARGET_CLASSES]) {
         if let Ok(classes) = serde_yaml::from_value::<Vec<String>>(gtc.clone()) {
             target_classes = classes;
         } else if let Some(tc_str) = gtc.as_str()
@@ -113,10 +110,7 @@ pub fn from_yaml(cfg: &YamlConfig, stream_id: &str) -> ZoneConfig {
         {
             rules = parsed_rules;
         }
-    }
-    if rules.is_empty()
-        && let Some(gr) = cfg.get_nested(&[KEY_TRIGGER, KEY_RULES])
-    {
+    } else if let Some(gr) = cfg.get_nested(&[KEY_TRIGGER, KEY_RULES]) {
         if let Ok(parsed_rules) = serde_yaml::from_value::<Vec<DetectionRule>>(gr.clone()) {
             rules = parsed_rules;
         } else if let Some(r_str) = gr.as_str()
@@ -126,8 +120,14 @@ pub fn from_yaml(cfg: &YamlConfig, stream_id: &str) -> ZoneConfig {
         }
     }
 
+    let model = stream_val
+        .get(KEY_MODEL)
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+
     ZoneConfig {
         enabled,
+        model,
         roi,
         trigger_line,
         target_classes,
@@ -153,12 +153,19 @@ pub fn apply_to_yaml(stream_id: &str, zone_cfg: &ZoneConfig, cfg: &mut YamlConfi
         .cloned();
 
     let mut val = super::zone::to_value(zone_cfg);
-    if let (Some(m), Some(m_map)) = (old_model, val.as_mapping_mut()) {
-        m_map.insert(Value::String(KEY_MODEL.to_string()), m);
+    let chosen_model = zone_cfg.model.as_ref().map(|m| Value::String(m.clone())).or(old_model);
+    if let (Some(m), Some(m_map)) = (&chosen_model, val.as_mapping_mut()) {
+        m_map.insert(Value::String(KEY_MODEL.to_string()), m.clone());
+        if let Ok(tc_val) = serde_yaml::to_value(&zone_cfg.target_classes) {
+            m_map.insert(Value::String(KEY_TARGET_CLASSES.to_string()), tc_val);
+        }
+        if let Ok(rules_val) = serde_yaml::to_value(&zone_cfg.rules) {
+            m_map.insert(Value::String(KEY_RULES.to_string()), rules_val);
+        }
     }
     trigger_map.insert(stream_key, val);
 
-    if !zone_cfg.target_classes.is_empty() || !zone_cfg.rules.is_empty() {
+    if chosen_model.is_none() && (!zone_cfg.target_classes.is_empty() || !zone_cfg.rules.is_empty()) {
         let tc_val = if !zone_cfg.target_classes.is_empty() {
             serde_yaml::to_value(&zone_cfg.target_classes).ok()
         } else {

@@ -33,7 +33,7 @@ pub fn from_yaml(cfg: &YamlConfig) -> Vec<StreamConfig> {
                 let model = cfg
                     .get_nested(&[KEY_TRIGGER, id, KEY_MODEL])
                     .and_then(|v| v.as_str())
-                    .unwrap_or(DEFAULT_MODEL)
+                    .unwrap_or_default()
                     .to_string();
                 list.push(StreamConfig {
                     id: id.to_string(),
@@ -163,7 +163,7 @@ pub fn update_input_streams_full(
             id: id.clone(),
             input: url.clone(),
             enabled: *en,
-            model: DEFAULT_MODEL.to_string(),
+            model: String::new(),
         })
         .collect();
     update_input_streams_configs(content, &configs)

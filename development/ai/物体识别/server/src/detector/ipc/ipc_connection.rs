@@ -12,6 +12,8 @@ pub const CMD_FLUSH_CHANNEL: u8 = 0x03;
 pub const CMD_FEED_PACKET: u8 = 0x04;
 pub const CMD_DETECT_LATEST: u8 = 0x05;
 pub const CMD_RELEASE_ALL: u8 = 0x06;
+pub const CMD_SET_CHANNEL_MODEL: u8 = 0x07;
+pub const CMD_LIST_MODELS: u8 = 0x08;
 
 pub const RESP_PONG: u8 = 0x80;
 pub const RESP_STATUS: u8 = 0x81;

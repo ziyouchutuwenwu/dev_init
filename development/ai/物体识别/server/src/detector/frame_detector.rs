@@ -1,12 +1,13 @@
 use std::sync::Arc;
 use super::DetectWrapper;
 use super::detection_result::DetectionResult;
+use super::raw_detect_response::RawDetectResponse;
 
 pub struct FrameDetector {
     detect_wrapper: Arc<DetectWrapper>,
     channel_id: u32,
     stream_id: String,
-    model_name: String,
+    model_id: String,
     default_width: i32,
     default_height: i32,
     flush_epoch: std::sync::atomic::AtomicU64,
@@ -20,20 +21,20 @@ impl FrameDetector {
         channel_id: u32,
         stream_id: impl Into<String>,
     ) -> Self {
-        Self::with_channel_and_model(detect_wrapper, channel_id, stream_id, crate::config::DEFAULT_MODEL)
+        Self::with_channel_and_model(detect_wrapper, channel_id, stream_id, "")
     }
 
     pub fn with_channel_and_model(
         detect_wrapper: Arc<DetectWrapper>,
         channel_id: u32,
         stream_id: impl Into<String>,
-        model_name: impl Into<String>,
+        model_id: impl Into<String>,
     ) -> Self {
         Self {
             detect_wrapper,
             channel_id,
             stream_id: stream_id.into(),
-            model_name: model_name.into(),
+            model_id: model_id.into(),
             default_width: 1920,
             default_height: 1080,
             flush_epoch: std::sync::atomic::AtomicU64::new(0),
@@ -42,8 +43,12 @@ impl FrameDetector {
         }
     }
 
+    pub fn model_id(&self) -> &str {
+        &self.model_id
+    }
+
     pub fn model_name(&self) -> &str {
-        &self.model_name
+        &self.model_id
     }
 
     pub fn next_session_epoch(&self) -> u64 {
@@ -67,12 +72,12 @@ impl FrameDetector {
     }
 
     pub fn create_channel(&self) -> Result<(), String> {
-        let codec_and_model = format!("h264:{}", self.model_name);
+        let codec_and_model = format!("h264:{}", self.model_id);
         self.detect_wrapper.create_channel_with_codec(self.channel_id, &codec_and_model)
     }
 
     pub fn create_channel_with_codec(&self, codec: &str) -> Result<(), String> {
-        let codec_and_model = format!("{}:{}", codec, self.model_name);
+        let codec_and_model = format!("{}:{}", codec, self.model_id);
         self.detect_wrapper.create_channel_with_codec(self.channel_id, &codec_and_model)
     }
 
@@ -129,15 +134,6 @@ impl FrameDetector {
     }
 }
 
-#[derive(serde::Deserialize)]
-struct RawDetectResponse {
-    frame_width: Option<i32>,
-    frame_height: Option<i32>,
-    frame_idx: Option<u64>,
-    pts_ms: Option<i64>,
-    #[serde(default)]
-    detections: Vec<serde_json::Value>,
-}
 
 fn normalize_detection_box(detection: &mut serde_json::Value, fw_f: f64, fh_f: f64) {
     let det_obj = match detection {

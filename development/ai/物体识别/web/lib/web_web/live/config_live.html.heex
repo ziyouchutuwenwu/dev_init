@@ -115,7 +115,7 @@
                     <th class="py-2.5 px-3 w-36">流标识</th>
                     <th class="py-2.5 px-3">RTSP 视频流地址</th>
                     <th class="py-2.5 px-3 w-56">检测类型</th>
-                    <th class="py-2.5 px-3 w-24 text-center">启用</th>
+                    <th class="py-2.5 px-3 w-28 text-center" title="开启或关闭该通道的AI目标与事件检测">启用检测</th>
                     <th class="py-2.5 px-3 w-32 text-center">检测种类</th>
                     <th class="py-2.5 px-3 w-20 text-center">操作</th>
                   </tr>
@@ -145,9 +145,12 @@
                           name={"streams[#{idx}][model]"}
                           class="w-full rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs font-semibold text-zinc-800 bg-white shadow-inner focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer"
                         >
+                          <option value="" selected={stream.model == "" or is_nil(stream.model)}>
+                            全部
+                          </option>
                           <%= for m <- @all_models do %>
                             <option value={m.id} selected={stream.model == m.id}>
-                              {m.name}
+                              {if m.name != "" and m.name != m.id, do: "#{m.name} (#{m.id})", else: m.name}
                             </option>
                           <% end %>
                         </select>
@@ -176,7 +179,7 @@
                               else: "bg-zinc-100 text-zinc-700 hover:bg-blue-50 hover:text-blue-700 border border-zinc-200"
                             )}
                         >
-                          <span>{if is_current, do: "正在配置", else: "配置类别"}</span>
+                          <span>配置类别</span>
                           <span class={"text-[10px] px-1 rounded " <> if(is_current, do: "bg-blue-700", else: "bg-zinc-200")}>
                             {length(stream.selected_classes || [])}项
                           </span>
@@ -201,102 +204,128 @@
           </div>
         </div>
 
-        <% current_stream = Enum.at(@config_streams, @current_stream_idx) %>
-        <% current_model_meta = Web.ModelLoader.get_model(@active_model) %>
-        <div
-          id="industrial-classes-panel"
+        <%= if is_integer(@current_stream_idx) and @current_stream_idx < length(@config_streams) do %>
+          <% current_stream = Enum.at(@config_streams, @current_stream_idx) %>
+          <% current_model_meta = Web.ModelLoader.get_model(@active_model) %>
+          <div
+            id="industrial-classes-panel"
           class="mb-5 bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden"
         >
           <div class="px-5 py-3.5 bg-zinc-50 border-b border-zinc-200 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-2.5 flex-wrap">
-              <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+              <span class={"w-2.5 h-2.5 rounded-full " <> if(current_model_meta, do: "bg-blue-600", else: "bg-amber-500")}></span>
               <h2 class="text-sm sm:text-base font-bold text-zinc-800">
                 通道 <span class="text-blue-700 font-mono">{current_stream.stream_id}</span>
               </h2>
-              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
-                <span>{current_model_meta.name}</span>
-              </span>
-            </div>
-
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-mono font-semibold px-2.5 py-1 rounded bg-zinc-200/70 text-zinc-700">
-                已选 {length(@selected_classes)} / {length(@all_classes)} 项
-              </span>
-              <button
-                type="button"
-                phx-click="select_all_classes"
-                class="inline-flex items-center rounded-md bg-blue-50 border border-blue-200 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer"
-              >
-                全选
-              </button>
-              <button
-                type="button"
-                phx-click="clear_all_classes"
-                class="inline-flex items-center rounded-md bg-zinc-100 border border-zinc-300 px-2.5 py-1 text-xs font-semibold text-zinc-600 hover:bg-zinc-200 transition-colors cursor-pointer"
-              >
-                清空
-              </button>
-            </div>
-          </div>
-
-          <div class="px-5 py-2 bg-blue-50/60 border-b border-blue-100 text-xs text-blue-900 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="font-bold">模型说明:</span>
-              <span>{current_model_meta.desc}</span>
-            </div>
-            <span class="text-[11px] text-blue-600 font-mono hidden md:inline">垂直模型仅检测所列目标，告警规则已针对该模型自动匹配</span>
-          </div>
-
-          <div class="px-5 pt-3.5 pb-2.5 bg-white border-b border-zinc-100 flex flex-wrap items-center justify-between gap-3">
-            <div class="relative flex-1 min-w-[240px] max-w-md">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400">
-                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                name="class_search"
-                id="class-search-input"
-                value={@class_search}
-                phx-change="search_classes"
-                phx-keyup="search_classes"
-                phx-debounce="100"
-                placeholder="搜索当前模型的检测类别..."
-                autocomplete="off"
-                class="w-full pl-9 pr-8 py-1.5 text-xs text-zinc-800 placeholder-zinc-400 bg-zinc-50 border border-zinc-300 rounded-lg focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-              />
-              <%= if @class_search != "" do %>
-                <button
-                  type="button"
-                  phx-click="clear_search"
-                  title="清空搜索"
-                  class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-zinc-400 hover:text-zinc-600 cursor-pointer"
-                >
-                  <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                  </svg>
-                </button>
+              <%= if current_model_meta && current_stream.model != "" do %>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                  <span>{current_model_meta.name}</span>
+                </span>
+              <% else %>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
+                  <span>全部</span>
+                </span>
               <% end %>
             </div>
 
-            <%= if @class_search != "" do %>
+            <%= if current_model_meta do %>
               <div class="flex items-center gap-2">
-                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-700 bg-zinc-100 px-2.5 py-1 rounded-md border border-zinc-200">
-                  找到 <span class="font-bold font-mono text-zinc-900">{MapSet.size(@matched_class_ids)}</span> 项
+                <span class="text-xs font-mono font-semibold px-2.5 py-1 rounded bg-zinc-200/70 text-zinc-700">
+                  已选 {length(@selected_classes)} / {length(@all_classes)} 项
                 </span>
                 <button
                   type="button"
-                  phx-click="clear_search"
-                  class="text-xs text-zinc-500 hover:text-zinc-700 underline cursor-pointer"
+                  phx-click="select_all_classes"
+                  class="inline-flex items-center rounded-md bg-blue-50 border border-blue-200 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer"
                 >
-                  清除
+                  全选
+                </button>
+                <button
+                  type="button"
+                  phx-click="clear_all_classes"
+                  class="inline-flex items-center rounded-md bg-zinc-100 border border-zinc-300 px-2.5 py-1 text-xs font-semibold text-zinc-600 hover:bg-zinc-200 transition-colors cursor-pointer"
+                >
+                  清空
                 </button>
               </div>
+            <% else %>
+              <span class="text-xs font-mono text-zinc-500">
+                全部检测算法轮流调度
+              </span>
             <% end %>
           </div>
 
+          <%= if current_model_meta do %>
+            <div class="px-5 py-2 bg-blue-50/60 border-b border-blue-100 text-xs text-blue-900 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="font-bold">模型说明:</span>
+                <span>{current_model_meta.desc}</span>
+              </div>
+              <span class="text-[11px] text-blue-600 font-mono hidden md:inline">垂直模型仅检测所列目标，告警规则已针对该模型自动匹配</span>
+            </div>
+          <% else %>
+            <div class="px-5 py-2 bg-amber-50/60 border-b border-amber-100 text-xs text-amber-900 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="font-bold">检测说明:</span>
+                <span>所有的检测都会应用在这个通道上</span>
+              </div>
+              <span class="text-[11px] text-amber-700 font-mono hidden md:inline">全部检测</span>
+            </div>
+          <% end %>
+
+          <%= if current_model_meta do %>
+            <div class="px-5 pt-3.5 pb-2.5 bg-white border-b border-zinc-100 flex flex-wrap items-center justify-between gap-3">
+              <div class="relative flex-1 min-w-[240px] max-w-md">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400">
+                  <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  name="class_search"
+                  id="class-search-input"
+                  value={@class_search}
+                  phx-change="search_classes"
+                  phx-keyup="search_classes"
+                  phx-debounce="100"
+                  placeholder="搜索当前模型的检测类别..."
+                  autocomplete="off"
+                  class="w-full pl-9 pr-8 py-1.5 text-xs text-zinc-800 placeholder-zinc-400 bg-zinc-50 border border-zinc-300 rounded-lg focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                />
+                <%= if @class_search != "" do %>
+                  <button
+                    type="button"
+                    phx-click="clear_search"
+                    title="清空搜索"
+                    class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-zinc-400 hover:text-zinc-600 cursor-pointer"
+                  >
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                  </button>
+                <% end %>
+              </div>
+
+              <%= if @class_search != "" do %>
+                <div class="flex items-center gap-2">
+                  <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-700 bg-zinc-100 px-2.5 py-1 rounded-md border border-zinc-200">
+                    找到 <span class="font-bold font-mono text-zinc-900">{MapSet.size(@matched_class_ids)}</span> 项
+                  </span>
+                  <button
+                    type="button"
+                    phx-click="clear_search"
+                    class="text-xs text-zinc-500 hover:text-zinc-700 underline cursor-pointer"
+                  >
+                    清除
+                  </button>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+
           <div class="p-5">
+            <%= if length(@all_classes) > 0 do %>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-2.5">
               <%= for cls <- @all_classes do %>
                 <%
@@ -350,8 +379,33 @@
                 </button>
               <% end %>
             </div>
+            <% else %>
+              <div class="py-10 text-center flex flex-col items-center justify-center text-zinc-400">
+                <svg class="w-10 h-10 mb-2 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span class="text-sm font-medium text-zinc-600">通道处于全部检测模式</span>
+                <span class="text-xs text-zinc-400 mt-1">所有的检测都会应用在这个通道上，无需限定特定检测类别</span>
+              </div>
+            <% end %>
           </div>
         </div>
+        <% else %>
+          <div
+            id="industrial-classes-panel"
+            class="mb-5 bg-white rounded-xl border border-dashed border-zinc-300 p-8 text-center text-zinc-500 shadow-sm"
+          >
+            <div class="flex flex-col items-center justify-center py-6">
+              <div class="w-12 h-12 mb-3 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+              </div>
+              <span class="text-sm font-semibold text-zinc-700">未选择要配置类别的通道</span>
+              <span class="text-xs text-zinc-400 mt-1 max-w-sm">请点击上方通道列表中对应行的【配置类别】按钮，即可在此处精细化勾选或检索该通道启用的检测种类</span>
+            </div>
+          </div>
+        <% end %>
 
         <div class="pt-2 flex items-center justify-end">
           <button
@@ -359,7 +413,7 @@
             id="btn-global-save"
             class="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-sm hover:shadow active:scale-[0.99]"
           >
-            保存
+            应用
           </button>
         </div>
       </div>

@@ -54,31 +54,47 @@ pub fn apply_to_yaml(
     timeout_sec: Option<u64>,
     cfg: &mut YamlConfig,
 ) {
+    let existing = from_yaml(cfg);
+
     cfg.remove(KEY_ALERT_URL);
     cfg.remove(KEY_ALERT_CALLBACK_URL);
     cfg.remove(KEY_ALERT_COOLDOWN_SEC);
     cfg.remove(KEY_ALERT_TIMEOUT_SEC);
 
-    let url_clean = alert_url.filter(|s| !s.trim().is_empty());
-    if url_clean.is_none() && cooldown_sec.is_none() && timeout_sec.is_none() {
+    let final_url = match alert_url {
+        Some(s) => {
+            let t = s.trim();
+            if t.is_empty() {
+                None
+            } else {
+                Some(t.to_string())
+            }
+        }
+        None => existing.url,
+    };
+
+    let final_cooldown = cooldown_sec.or(existing.cooldown_sec);
+    let final_timeout = timeout_sec.or(existing.timeout_sec);
+
+    if final_url.is_none() && final_cooldown.is_none() && final_timeout.is_none() {
         cfg.remove(KEY_ALERT);
         return;
     }
 
     let mut alert_map = Mapping::new();
-    if let Some(url) = url_clean {
+    if let Some(ref url) = final_url {
         alert_map.insert(
             Value::String(KEY_URL.to_string()),
-            Value::String(url.to_string()),
+            Value::String(url.clone()),
         );
     }
-    if let Some(cd) = cooldown_sec {
+    if let Some(cd) = final_cooldown {
         alert_map.insert(
             Value::String(KEY_COOLDOWN_SEC.to_string()),
             Value::Number(cd.into()),
         );
     }
-    if let Some(to) = timeout_sec {
+    if let Some(to) = final_timeout {
         alert_map.insert(
             Value::String(KEY_TIMEOUT_SEC.to_string()),
             Value::Number(to.into()),

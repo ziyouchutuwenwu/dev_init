@@ -25,7 +25,7 @@ pub async fn setup_single_stream(
     ch_idx: u32,
     stream_cfg: StreamConfig,
     detect_wrapper: Arc<DetectWrapper>,
-) -> Result<(StreamContext, tokio::task::JoinHandle<()>), Box<dyn std::error::Error>> {
+) -> Result<(StreamContext, tokio::task::JoinHandle<()>, Option<Arc<FrameDetector>>), Box<dyn std::error::Error>> {
     let stream_id = stream_cfg.id;
     let input_url = stream_cfg.input;
     let ai_enabled = stream_cfg.enabled;
@@ -55,7 +55,10 @@ pub async fn setup_single_stream(
         let raw_dispatcher = Arc::new(DetectedDispatcher::new());
         let processed_dispatcher = Arc::new(DetectedDispatcher::new());
 
-        let initial_zone_cfg = crate::config::channel::load_config(&stream_id);
+        let mut initial_zone_cfg = crate::config::channel::load_config(&stream_id);
+        if initial_zone_cfg.model.is_none() {
+            initial_zone_cfg.model = Some(model.clone());
+        }
         ObjectTrackHandler::start(
             &stream_id,
             raw_dispatcher.subscribe(),
@@ -79,12 +82,17 @@ pub async fn setup_single_stream(
     let streamer = RtspStreamer::new(
         stream_id.clone(),
         input_url.clone(),
-        detector,
+        detector.clone(),
         raw_dispatcher,
     );
 
-    let handle = streamer.start_stream(stream_ctx.tx_video.clone()).await?;
-    Ok((stream_ctx, handle))
+    let handle = streamer
+        .start_stream(
+            stream_ctx.tx_video.clone(),
+            Some(Arc::clone(&stream_ctx.video_encoding)),
+        )
+        .await?;
+    Ok((stream_ctx, handle, detector))
 }
 
 pub async fn start_initial_streams(
@@ -98,7 +106,7 @@ pub async fn start_initial_streams(
         let input_url = st.input.clone();
         let ai_enabled = st.enabled;
         let model = st.model.clone();
-        let (ctx, handle) = setup_single_stream(
+        let (ctx, handle, detector) = setup_single_stream(
             ch_idx as u32,
             st,
             Arc::clone(&detect_wrapper),
@@ -112,6 +120,7 @@ pub async fn start_initial_streams(
             model,
             context: ctx,
             handle,
+            detector,
         });
     }
 
@@ -126,7 +135,7 @@ pub async fn start_all_streams(
     let mut streamer_handles = Vec::new();
 
     for (ch_idx, st) in streams.into_iter().enumerate() {
-        let (ctx, handle) = setup_single_stream(
+        let (ctx, handle, _detector) = setup_single_stream(
             ch_idx as u32,
             st,
             Arc::clone(&detect_wrapper),

@@ -8,7 +8,7 @@ defmodule WebWeb.PlayerComponent do
   attr :zone_config, :string, default: nil
   attr :enabled, :boolean, default: true
   attr :selected_classes, :list, default: []
-  attr :model, :string, default: "industry"
+  attr :model, :string, default: nil
 
   def stream_card(assigns) do
     ~H"""
@@ -24,49 +24,52 @@ defmodule WebWeb.PlayerComponent do
       data-model={@model}
       data-keep-alive="true"
     >
-      <% model_meta = Web.ModelLoader.get_model(@model) %>
-      <div class="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-zinc-100">
-        <div class="flex items-center gap-1.5 shrink-0">
-          <label class="text-xs font-semibold text-zinc-600 whitespace-nowrap">流标识:</label>
-          <input
-            type="text"
-            id={"url-input-" <> @id}
-            value={@id}
-            class="w-24 sm:w-28 rounded border border-zinc-300 px-2 py-1 text-xs font-mono font-semibold text-zinc-800 bg-zinc-50 shadow-inner focus:border-blue-500 focus:outline-none"
-          />
-          <button
-            type="button"
-            id={"btn-connect-" <> @id}
-            class="rounded bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-700 transition-colors cursor-pointer shadow-sm whitespace-nowrap"
-          >
-            连接
-          </button>
-          <span
-            class="hidden sm:inline-flex items-center gap-1 rounded bg-blue-50 border border-blue-200/80 px-2 py-0.5 text-[11px] font-semibold text-blue-700 whitespace-nowrap"
-            title={model_meta.desc}
-          >
-            <span>{model_meta.name}</span>
-          </span>
-        </div>
+      <% model_meta = Web.ModelLoader.get_model(@model) || %{name: if(@model == "" or is_nil(@model), do: "全部", else: to_string(@model)), desc: "全部检测"} %>
+      <div class="flex items-center gap-1.5 pb-2 mb-2 border-b border-zinc-100 flex-wrap">
+        <label class="text-xs font-semibold text-zinc-600 whitespace-nowrap">流标识:</label>
+        <input
+          type="text"
+          id={"url-input-" <> @id}
+          value={@id}
+          class="w-24 sm:w-28 rounded border border-zinc-300 px-2 py-1 text-xs font-mono font-semibold text-zinc-800 bg-zinc-50 shadow-inner focus:border-blue-500 focus:outline-none"
+        />
+        <button
+          type="button"
+          id={"btn-connect-" <> @id}
+          class="rounded bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-700 transition-colors cursor-pointer shadow-sm whitespace-nowrap"
+        >
+          连接
+        </button>
+        <span
+          class="inline-flex items-center gap-1 rounded bg-blue-50 border border-blue-200/80 px-2 py-0.5 text-[11px] font-semibold text-blue-700 whitespace-nowrap"
+          title={model_meta.desc}
+        >
+          <span>{model_meta.name}</span>
+        </span>
+      </div>
 
-        <div class="flex flex-1 items-center justify-between gap-2.5 text-xs w-full sm:w-auto min-w-[270px]">
+      <div class="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-zinc-100 text-xs">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <%= if @enabled do %>
+            <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 whitespace-nowrap" title="检测已启用">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>检测已启用</span>
+            </span>
+          <% else %>
+            <span class="inline-flex items-center gap-1 rounded-full bg-zinc-100 border border-zinc-200 px-2 py-0.5 text-[11px] font-medium text-zinc-500 whitespace-nowrap" title="检测未启用（请在配置页面开启）">
+              <span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
+              <span>检测未启用</span>
+            </span>
+          <% end %>
           <span
             id={"status-" <> @id}
             class="rounded-full bg-zinc-200 px-2 py-0.5 font-medium text-zinc-700 transition-colors whitespace-nowrap"
           >
             未连接
           </span>
-          <label class="inline-flex items-center gap-1.5 cursor-pointer select-none text-xs text-zinc-700 font-medium whitespace-nowrap">
-            <input
-              type="checkbox"
-              id={"check-enabled-" <> @id}
-              checked={@enabled}
-              phx-click="toggle_stream_enabled"
-              phx-value-stream_id={@id}
-              class="checkbox checkbox-sm checkbox-success cursor-pointer"
-            />
-            <span>检测</span>
-          </label>
+        </div>
+
+        <div class="flex items-center gap-2.5 text-xs flex-wrap">
           <span class="text-zinc-500 whitespace-nowrap">
             帧率: <b id={"rate-" <> @id} class="font-mono text-blue-600">0</b> fps
           </span>
@@ -141,7 +144,7 @@ defmodule WebWeb.PlayerComponent do
           实时检测与目标状态
         </summary>
         <div class="mt-1.5 max-h-32 overflow-y-auto pr-1">
-          <ul id={"det-list-" <> @id} class="space-y-1">
+          <ul id={"det-list-" <> @id} class="space-y-1" data-empty-state="true">
             <li class="text-zinc-400">暂无目标</li>
           </ul>
         </div>

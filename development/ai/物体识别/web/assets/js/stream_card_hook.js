@@ -1,4 +1,4 @@
-import { Player } from "./player";
+import { Player, getStreamConnectedState } from "./player";
 
 export const StreamCard = {
   mounted() {
@@ -21,19 +21,12 @@ export const StreamCard = {
     const rateEl = this.el.querySelector(`#rate-${streamId}`);
 
     window._players = window._players || new Map();
-    const activeStreamIds = new Set(
-      Array.from(document.querySelectorAll("[data-stream-id]")).map((el) => el.dataset.streamId)
-    );
-    window._players.forEach((p, id) => {
-      if (!activeStreamIds.has(id)) {
-        p.destroy();
-        window._players.delete(id);
-      }
-    });
-
     let player = window._players.get(streamId);
 
     if (player) {
+      if (streamUrl && player.url !== streamUrl) {
+        player.updateUrl(streamUrl);
+      }
       player.bindElements({ videoEl, canvasEl, connectBtnEl, statusEl, countEl, rateEl });
       if (zoneConfig && !player.hasUnsavedChanges) {
         player.zoneConfig = zoneConfig;
@@ -41,6 +34,8 @@ export const StreamCard = {
       player.enabled = this.el.dataset.enabled !== "false";
       if (player.isConnected) {
         player.wakeUp();
+      } else if (getStreamConnectedState(streamId)) {
+        player.connect();
       } else {
         player.setStatus("未连接", false);
       }
@@ -50,7 +45,11 @@ export const StreamCard = {
     } else {
       player = new Player({ streamId, url: streamUrl, videoEl, canvasEl, connectBtnEl, statusEl, countEl, rateEl, zoneConfig });
       player.enabled = this.el.dataset.enabled !== "false";
-      player.setStatus("未连接", false);
+      if (getStreamConnectedState(streamId)) {
+        player.connect();
+      } else {
+        player.setStatus("未连接", false);
+      }
       window._players.set(streamId, player);
     }
 
@@ -58,7 +57,7 @@ export const StreamCard = {
       this.pushEvent("stream_connected_state", { stream_id: streamId, connected: isConnected });
     };
 
-    if (player.isConnected) {
+    if (player.isConnected || getStreamConnectedState(streamId)) {
       this.pushEvent("stream_connected_state", { stream_id: streamId, connected: true });
     }
 
@@ -96,13 +95,8 @@ export const StreamCard = {
   },
 
   destroyed() {
-    const streamId = this.el.dataset.streamId;
     if (this.player) {
       this.player.unbindElements();
-      if (!this.el.dataset.keepAlive) {
-        this.player.destroy();
-        window._players.delete(streamId);
-      }
     }
   }
 };

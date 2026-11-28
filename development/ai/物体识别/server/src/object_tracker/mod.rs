@@ -9,7 +9,7 @@ pub use config::{
     update_channel_zone, update_global_detection, update_input_streams,
     update_input_streams_full, update_stream_zone, ZoneConfig,
 };
-pub use rules::{DetectionRule, RuleAlert, RuleOperator, evaluate_rules};
+pub use rules::{DetectionRule, RuleAlert, RuleOperator, evaluate_rules, label_matches};
 pub use tracker::{DetectionInput, ObjectTracker, TrackedObject, TrackerConfig};
 pub use zone::{
     roi, AreaTriggerConfig, AreaTriggerDirection, CrossingDirection, RoiConfig,

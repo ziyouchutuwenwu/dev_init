@@ -12,6 +12,8 @@ pub struct ZoneConfig {
     #[serde(default = "default_true")]
     pub enabled: bool,
     #[serde(default)]
+    pub model: Option<String>,
+    #[serde(default)]
     pub roi: Option<RoiConfig>,
     #[serde(default, alias = "trigger_area")]
     pub trigger_line: Option<ZoneLineConfig>,
@@ -25,7 +27,8 @@ impl Default for ZoneConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            roi: Some(RoiConfig::Rect([0.10, 0.20, 0.90, 0.80])),
+            model: None,
+            roi: None,
             trigger_line: None,
             target_classes: Vec::new(),
             rules: Vec::new(),

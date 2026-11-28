@@ -93,9 +93,32 @@ pub fn calc_center_dist(c1: [f64; 2], c2: [f64; 2]) -> f64 {
     (dx * dx + dy * dy).sqrt()
 }
 
+pub fn label_matches(label: &str, target: &str) -> bool {
+    if label.eq_ignore_ascii_case(target) {
+        return true;
+    }
+    let is_person = |s: &str| s.eq_ignore_ascii_case("person") || s == "人员目标" || s == "人";
+    let is_forklift = |s: &str| s.eq_ignore_ascii_case("forklift") || s == "工业搬运叉车" || s == "叉车";
+    let is_helmet = |s: &str| s.eq_ignore_ascii_case("hardhat") || s.eq_ignore_ascii_case("helmet") || s == "佩戴安全帽" || s == "安全帽";
+    let is_no_helmet = |s: &str| s.eq_ignore_ascii_case("no-hardhat") || s.eq_ignore_ascii_case("no-helmet") || s == "未戴安全帽";
+    let is_vest = |s: &str| s.eq_ignore_ascii_case("safety-vest") || s.eq_ignore_ascii_case("vest") || s == "反光工作服" || s == "穿戴反光衣" || s == "反光衣";
+    let is_no_vest = |s: &str| s.eq_ignore_ascii_case("no-safety-vest") || s.eq_ignore_ascii_case("no-vest") || s == "未穿反光衣";
+    let is_plate = |s: &str| s.eq_ignore_ascii_case("license_plate") || s.eq_ignore_ascii_case("plate") || s == "机动车车牌" || s == "车牌";
+    let is_vehicle = |s: &str| s.eq_ignore_ascii_case("vehicle") || s.eq_ignore_ascii_case("car") || s == "机动车辆" || s == "机动车" || s == "车辆";
+
+    (is_person(label) && is_person(target))
+        || (is_forklift(label) && is_forklift(target))
+        || (is_helmet(label) && is_helmet(target))
+        || (is_no_helmet(label) && is_no_helmet(target))
+        || (is_vest(label) && is_vest(target))
+        || (is_no_vest(label) && is_no_vest(target))
+        || (is_plate(label) && is_plate(target))
+        || (is_vehicle(label) && is_vehicle(target))
+}
+
 fn class_matches(track: &TrackedObject, target: &str) -> bool {
     if let Some(ref l) = track.label
-        && l.eq_ignore_ascii_case(target)
+        && label_matches(l, target)
     {
         return true;
     }
@@ -234,9 +257,13 @@ pub fn evaluate_rules(
                     }
                 }
 
+                let same_class_group = class_a.eq_ignore_ascii_case(class_b);
                 for obj_a in &group_a {
                     for obj_b in &group_b {
                         if obj_a.track_id == obj_b.track_id {
+                            continue;
+                        }
+                        if same_class_group && obj_a.track_id > obj_b.track_id {
                             continue;
                         }
 
@@ -248,6 +275,16 @@ pub fn evaluate_rules(
                                 obj_a.rel_box[2].max(obj_b.rel_box[2]),
                                 obj_a.rel_box[3].max(obj_b.rel_box[3]),
                             ];
+                            let union_box_coord = if obj_a.box_coord.len() >= 4 && obj_b.box_coord.len() >= 4 {
+                                vec![
+                                    obj_a.box_coord[0].min(obj_b.box_coord[0]),
+                                    obj_a.box_coord[1].min(obj_b.box_coord[1]),
+                                    obj_a.box_coord[2].max(obj_b.box_coord[2]),
+                                    obj_a.box_coord[3].max(obj_b.box_coord[3]),
+                                ]
+                            } else {
+                                obj_a.box_coord.clone()
+                            };
 
                             alerts.push(RuleAlert {
                                 rule_id: rule.id.clone(),
@@ -258,8 +295,8 @@ pub fn evaluate_rules(
                                 class_id: obj_a.class_id,
                                 confidence: obj_a.confidence.max(obj_b.confidence),
                                 rel_box: union_box,
-                                box_coord: obj_a.box_coord.clone(),
-                                center: obj_a.center,
+                                box_coord: union_box_coord,
+                                center: [(union_box[0] + union_box[2]) / 2.0, (union_box[1] + union_box[3]) / 2.0],
                                 detail: format!(
                                     "人车/目标距离过近危险: {} 与 {} 相对中心距 {:.3} (阈值: {:.3})",
                                     obj_a.label.as_deref().unwrap_or(class_a),

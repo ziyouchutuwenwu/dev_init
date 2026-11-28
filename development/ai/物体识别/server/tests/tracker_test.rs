@@ -100,7 +100,6 @@ fn test_tracker_preserves_text_attribute() {
     assert_eq!(tracked1.len(), 1);
     assert_eq!(tracked1[0].text, Some("粤B12345".to_string()));
 
-    // Frame 2: text updated or preserved
     let frame2 = vec![DetectionInput {
         class_id: Some(1),
         label: Some("license_plate".to_string()),
@@ -113,4 +112,17 @@ fn test_tracker_preserves_text_attribute() {
     assert_eq!(tracked2.len(), 1);
     assert_eq!(tracked2[0].text, Some("粤B12345".to_string()));
     assert_eq!(tracked2[0].track_id, tracked1[0].track_id);
+}
+
+#[test]
+fn test_detected_labels_unique_dedup() {
+    let detected_labels = vec!["person", "car", "person", "hardhat", "car", "vest"];
+    let mut unique_labels: Vec<&str> = Vec::new();
+    for label in detected_labels {
+        if !unique_labels.contains(&label) {
+            unique_labels.push(label);
+        }
+    }
+    assert_eq!(unique_labels, vec!["person", "car", "hardhat", "vest"]);
+    assert_eq!(unique_labels.join(", "), "person, car, hardhat, vest");
 }

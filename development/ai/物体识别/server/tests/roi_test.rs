@@ -52,6 +52,7 @@ fn test_polygon_roi_degenerate_fallback_false() {
 fn test_zone_object_rejects_insufficient_polygon_vertices() {
     let zone_obj = server::web::api::objects::ZoneObject {
         enabled: true,
+        model: None,
         roi: Some(server::web::api::objects::RoiObject::Polygon(vec![[0.0, 0.0], [1.0, 1.0]])),
         trigger_line: None,
         target_classes: vec![],

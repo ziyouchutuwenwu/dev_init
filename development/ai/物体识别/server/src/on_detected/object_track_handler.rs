@@ -1,30 +1,14 @@
 use crate::detector::detection_result::DetectionResult;
-use crate::object_tracker::{
-    DetectionInput, ObjectTracker, TrackedObject, ZoneConfig,
-};
+use crate::object_tracker::{DetectionInput, TrackedObject, ZoneConfig};
 use crate::on_detected::dispatcher::DetectedDispatcher;
 use std::collections::HashMap;
 use std::sync::{Arc, LazyLock, Mutex};
-use tokio::sync::{broadcast, RwLock};
+use tokio::sync::broadcast;
+
+use super::stream_track_context::StreamTrackContext;
 
 static GLOBAL_ZONE_HANDLERS: LazyLock<Mutex<HashMap<String, Arc<StreamTrackContext>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
-
-pub struct StreamTrackContext {
-    pub stream_id: String,
-    pub config: Arc<RwLock<ZoneConfig>>,
-    pub tracker: Arc<Mutex<ObjectTracker>>,
-}
-
-impl StreamTrackContext {
-    pub fn new(stream_id: &str, initial_config: ZoneConfig) -> Self {
-        Self {
-            stream_id: stream_id.to_string(),
-            config: Arc::new(RwLock::new(initial_config)),
-            tracker: Arc::new(Mutex::new(ObjectTracker::new())),
-        }
-    }
-}
 
 pub struct ObjectTrackHandler;
 
@@ -98,19 +82,6 @@ async fn process_frame(
     ctx: &StreamTrackContext,
 ) -> DetectionResult {
     let zone_cfg = ctx.config.read().await.clone();
-
-    if !zone_cfg.enabled {
-        return DetectionResult {
-            id: raw_result.id.clone(),
-            timestamp: raw_result.timestamp,
-            frame_idx: raw_result.frame_idx,
-            pts_ms: raw_result.pts_ms,
-            frame_width: raw_result.frame_width,
-            frame_height: raw_result.frame_height,
-            detections: Vec::new(),
-            zone_config: Some(serde_json::to_value(&zone_cfg).unwrap_or_default()),
-        };
-    }
 
     let mut detection_inputs = Vec::new();
     let fw = raw_result.frame_width.unwrap_or(1920) as f64;
@@ -186,25 +157,10 @@ async fn process_frame(
 
         let class_in_targets = |targets: &[String], label: Option<&str>, class_id: Option<i32>| -> bool {
             if targets.is_empty() {
-                return true;
+                return false;
             }
             if let Some(l) = label {
-                if targets.iter().any(|c| {
-                    c.eq_ignore_ascii_case(l)
-                        || (l.eq_ignore_ascii_case("person") && (c == "人员目标" || c.eq_ignore_ascii_case("person")))
-                        || (l.eq_ignore_ascii_case("forklift") && (c == "工业搬运叉车" || c == "叉车" || c.eq_ignore_ascii_case("forklift")))
-                        || (l.eq_ignore_ascii_case("hardhat") && (c == "佩戴安全帽" || c.eq_ignore_ascii_case("helmet")))
-                        || (l.eq_ignore_ascii_case("helmet") && (c == "佩戴安全帽" || c.eq_ignore_ascii_case("hardhat")))
-                        || (l.eq_ignore_ascii_case("no-hardhat") && (c == "未戴安全帽" || c.eq_ignore_ascii_case("no-helmet")))
-                        || (l.eq_ignore_ascii_case("no-helmet") && (c == "未戴安全帽" || c.eq_ignore_ascii_case("no-hardhat")))
-                        || (l.eq_ignore_ascii_case("safety-vest") && (c == "反光工作服" || c == "穿戴反光衣" || c.eq_ignore_ascii_case("vest")))
-                        || (l.eq_ignore_ascii_case("vest") && (c == "反光工作服" || c == "穿戴反光衣" || c.eq_ignore_ascii_case("safety-vest")))
-                        || (l.eq_ignore_ascii_case("no-safety-vest") && (c == "未穿反光衣" || c.eq_ignore_ascii_case("no-vest")))
-                        || (l.eq_ignore_ascii_case("no-vest") && (c == "未穿反光衣" || c.eq_ignore_ascii_case("no-safety-vest")))
-                        || (l.eq_ignore_ascii_case("license_plate") && (c == "机动车车牌" || c == "车牌" || c.eq_ignore_ascii_case("plate") || c.eq_ignore_ascii_case("license_plate")))
-                        || (l.eq_ignore_ascii_case("plate") && (c == "机动车车牌" || c == "车牌" || c.eq_ignore_ascii_case("plate") || c.eq_ignore_ascii_case("license_plate")))
-                        || (l.eq_ignore_ascii_case("vehicle") && (c == "机动车辆" || c == "机动车" || c == "车辆" || c.eq_ignore_ascii_case("vehicle") || c.eq_ignore_ascii_case("car")))
-                }) {
+                if targets.iter().any(|c| crate::object_tracker::label_matches(l, c)) {
                     return true;
                 }
             }
@@ -225,19 +181,7 @@ async fn process_frame(
                 c.eq_ignore_ascii_case(&alert.alert_type)
                     || c.eq_ignore_ascii_case(&alert.rule_id)
                     || c.eq_ignore_ascii_case(&alert.rule_name)
-                    || alert.label.as_ref().is_some_and(|l| {
-                        c.eq_ignore_ascii_case(l)
-                            || (l.eq_ignore_ascii_case("person") && (c == "人员目标" || c.eq_ignore_ascii_case("person")))
-                            || (l.eq_ignore_ascii_case("forklift") && (c == "工业搬运叉车" || c == "叉车" || c.eq_ignore_ascii_case("forklift")))
-                            || (l.eq_ignore_ascii_case("hardhat") && (c == "佩戴安全帽" || c.eq_ignore_ascii_case("helmet")))
-                            || (l.eq_ignore_ascii_case("helmet") && (c == "佩戴安全帽" || c.eq_ignore_ascii_case("hardhat")))
-                            || (l.eq_ignore_ascii_case("no-hardhat") && (c == "未戴安全帽" || c.eq_ignore_ascii_case("no-helmet")))
-                            || (l.eq_ignore_ascii_case("no-helmet") && (c == "未戴安全帽" || c.eq_ignore_ascii_case("no-hardhat")))
-                            || (l.eq_ignore_ascii_case("safety-vest") && (c == "反光工作服" || c == "穿戴反光衣" || c.eq_ignore_ascii_case("vest")))
-                            || (l.eq_ignore_ascii_case("vest") && (c == "反光工作服" || c == "穿戴反光衣" || c.eq_ignore_ascii_case("safety-vest")))
-                            || (l.eq_ignore_ascii_case("no-safety-vest") && (c == "未穿反光衣" || c.eq_ignore_ascii_case("no-vest")))
-                            || (l.eq_ignore_ascii_case("no-vest") && (c == "未穿反光衣" || c.eq_ignore_ascii_case("no-vest")))
-                    })
+                    || alert.label.as_ref().is_some_and(|l| crate::object_tracker::label_matches(l, c))
                     || (alert.rule_id == "rule_hardhat" && (c.eq_ignore_ascii_case("no-hardhat") || c.eq_ignore_ascii_case("hardhat") || c == "未戴安全帽"))
                     || (alert.rule_id == "rule_safety_vest" && (c.eq_ignore_ascii_case("no-safety-vest") || c.eq_ignore_ascii_case("safety-vest") || c == "未穿反光衣"))
                     || (alert.rule_id == "rule_forklift_collision" && (c.eq_ignore_ascii_case("forklift") || c == "叉车"))
@@ -256,11 +200,11 @@ async fn process_frame(
         for (idx, track) in tracked_objects.iter().enumerate() {
             let in_roi = in_roi_list[idx];
             let crossed = crossed_list[idx];
-            if !in_roi && !crossed {
-                continue;
-            }
 
             let is_direct_target = class_in_targets(&zone_cfg.target_classes, track.label.as_deref(), track.class_id);
+            if !is_direct_target && !zone_cfg.target_classes.is_empty() {
+                continue;
+            }
 
             if let Some(target_alerts) = alert_map.get(&track.track_id) {
                 let mut triggered_any = false;
@@ -268,7 +212,10 @@ async fn process_frame(
                     let alert_allowed = rule_alert_allowed(a, &zone_cfg.target_classes);
 
                     if alert_allowed {
-                        triggered_any = true;
+                        let triggered = zone_cfg.enabled && (in_roi || crossed);
+                        if triggered {
+                            triggered_any = true;
+                        }
                         let item_json = serde_json::json!({
                             "track_id": track.track_id,
                             "class_id": track.class_id,
@@ -277,34 +224,19 @@ async fn process_frame(
                             "confidence": track.confidence,
                             "rel_box": track.rel_box,
                             "box": track.box_coord,
-                            "center": track.center,
-                            "trajectory": track.trajectory,
-                            "hits": track.hits,
-                            "age": track.age,
                             "in_roi": in_roi,
                             "crossed": crossed,
-                            "triggered": true,
-                            "rule_id": a.rule_id,
-                            "rule_name": a.rule_name,
+                            "triggered": triggered,
                             "alert_type": a.alert_type,
-                            "detail": a.detail,
                         });
                         enriched_detections.push(item_json);
                     }
                 }
 
                 if !triggered_any {
-                    if !is_direct_target && !zone_cfg.target_classes.is_empty() {
-                        continue;
-                    }
-                    let triggered = is_direct_target;
-                    let alert_type = if is_direct_target {
+                    let triggered = zone_cfg.enabled && is_direct_target && (in_roi || crossed);
+                    let alert_type = if triggered {
                         track.label.clone().unwrap_or_else(|| "person".to_string())
-                    } else {
-                        String::new()
-                    };
-                    let detail = if is_direct_target {
-                        format!("检测到关注目标: {:?}", track.label)
                     } else {
                         String::new()
                     };
@@ -317,19 +249,20 @@ async fn process_frame(
                         "confidence": track.confidence,
                         "rel_box": track.rel_box,
                         "box": track.box_coord,
-                        "center": track.center,
-                        "trajectory": track.trajectory,
-                        "hits": track.hits,
-                        "age": track.age,
                         "in_roi": in_roi,
                         "crossed": crossed,
                         "triggered": triggered,
                         "alert_type": alert_type,
-                        "detail": detail,
                     });
                     enriched_detections.push(item_json);
                 }
             } else if is_direct_target && !zone_cfg.target_classes.is_empty() {
+                let triggered = zone_cfg.enabled && (in_roi || crossed);
+                let alert_type = if triggered {
+                    track.label.clone().unwrap_or_else(|| "target_detected".to_string())
+                } else {
+                    String::new()
+                };
                 let item_json = serde_json::json!({
                     "track_id": track.track_id,
                     "class_id": track.class_id,
@@ -338,21 +271,14 @@ async fn process_frame(
                     "confidence": track.confidence,
                     "rel_box": track.rel_box,
                     "box": track.box_coord,
-                    "center": track.center,
-                    "trajectory": track.trajectory,
-                    "hits": track.hits,
-                    "age": track.age,
                     "in_roi": in_roi,
                     "crossed": crossed,
-                    "triggered": true,
-                    "alert_type": track.label.clone().unwrap_or_else(|| "target_detected".to_string()),
-                    "detail": format!("检测到关注目标: {:?}", track.label),
+                    "triggered": triggered,
+                    "alert_type": alert_type,
                 });
                 enriched_detections.push(item_json);
             } else {
-                if !zone_cfg.target_classes.is_empty() {
-                    continue;
-                }
+                let triggered = zone_cfg.enabled && (in_roi || crossed);
                 let item_json = serde_json::json!({
                     "track_id": track.track_id,
                     "class_id": track.class_id,
@@ -361,13 +287,9 @@ async fn process_frame(
                     "confidence": track.confidence,
                     "rel_box": track.rel_box,
                     "box": track.box_coord,
-                    "center": track.center,
-                    "trajectory": track.trajectory,
-                    "hits": track.hits,
-                    "age": track.age,
                     "in_roi": in_roi,
                     "crossed": crossed,
-                    "triggered": false,
+                    "triggered": triggered,
                 });
                 enriched_detections.push(item_json);
             }
@@ -384,14 +306,10 @@ async fn process_frame(
                         "confidence": alert.confidence,
                         "rel_box": alert.rel_box,
                         "box": alert.box_coord,
-                        "center": alert.center,
                         "in_roi": true,
                         "crossed": false,
                         "triggered": true,
-                        "rule_id": alert.rule_id,
-                        "rule_name": alert.rule_name,
                         "alert_type": alert.alert_type,
-                        "detail": alert.detail,
                     });
                     enriched_detections.push(item_json);
                 }
@@ -407,20 +325,7 @@ async fn process_frame(
             } else {
                 match (&track.label, track.class_id) {
                     (Some(label), _) => zone_cfg.target_classes.iter().any(|c| {
-                        c.eq_ignore_ascii_case(label)
-                            || (label.eq_ignore_ascii_case("person") && (c == "人员目标" || c.eq_ignore_ascii_case("person")))
-                            || (label.eq_ignore_ascii_case("forklift") && (c == "工业搬运叉车" || c == "叉车" || c.eq_ignore_ascii_case("forklift")))
-                            || (label.eq_ignore_ascii_case("hardhat") && (c == "佩戴安全帽" || c.eq_ignore_ascii_case("helmet")))
-                            || (label.eq_ignore_ascii_case("helmet") && (c == "佩戴安全帽" || c.eq_ignore_ascii_case("hardhat")))
-                            || (label.eq_ignore_ascii_case("no-hardhat") && (c == "未戴安全帽" || c.eq_ignore_ascii_case("no-helmet")))
-                            || (label.eq_ignore_ascii_case("no-helmet") && (c == "未戴安全帽" || c.eq_ignore_ascii_case("no-hardhat")))
-                            || (label.eq_ignore_ascii_case("safety-vest") && (c == "反光工作服" || c == "穿戴反光衣" || c.eq_ignore_ascii_case("vest")))
-                            || (label.eq_ignore_ascii_case("vest") && (c == "反光工作服" || c == "穿戴反光衣" || c.eq_ignore_ascii_case("safety-vest")))
-                            || (label.eq_ignore_ascii_case("no-safety-vest") && (c == "未穿反光衣" || c.eq_ignore_ascii_case("no-vest")))
-                            || (label.eq_ignore_ascii_case("no-vest") && (c == "未穿反光衣" || c.eq_ignore_ascii_case("no-safety-vest")))
-                            || (label.eq_ignore_ascii_case("license_plate") && (c == "机动车车牌" || c == "车牌" || c.eq_ignore_ascii_case("plate") || c.eq_ignore_ascii_case("license_plate")))
-                            || (label.eq_ignore_ascii_case("plate") && (c == "机动车车牌" || c == "车牌" || c.eq_ignore_ascii_case("plate") || c.eq_ignore_ascii_case("license_plate")))
-                            || (label.eq_ignore_ascii_case("vehicle") && (c == "机动车辆" || c == "机动车" || c == "车辆" || c.eq_ignore_ascii_case("vehicle") || c.eq_ignore_ascii_case("car")))
+                        crate::object_tracker::label_matches(label, c)
                     }),
                     (None, Some(cid)) => {
                         let cid_str = cid.to_string();
@@ -429,6 +334,10 @@ async fn process_frame(
                     _ => false,
                 }
             };
+
+            if !class_matched && !zone_cfg.target_classes.is_empty() {
+                continue;
+            }
 
             let triggered = if !zone_cfg.enabled || !class_matched {
                 false
@@ -440,10 +349,6 @@ async fn process_frame(
                 in_roi
             };
 
-            if !triggered {
-                continue;
-            }
-
             let item_json = serde_json::json!({
                 "track_id": track.track_id,
                 "class_id": track.class_id,
@@ -452,10 +357,6 @@ async fn process_frame(
                 "confidence": track.confidence,
                 "rel_box": track.rel_box,
                 "box": track.box_coord,
-                "center": track.center,
-                "trajectory": track.trajectory,
-                "hits": track.hits,
-                "age": track.age,
                 "in_roi": in_roi,
                 "crossed": crossed,
                 "triggered": triggered,
@@ -472,7 +373,7 @@ async fn process_frame(
         frame_width: raw_result.frame_width,
         frame_height: raw_result.frame_height,
         detections: enriched_detections,
-        zone_config: Some(serde_json::to_value(&zone_cfg).unwrap_or_default()),
+        zone_config: None,
     }
 }
 

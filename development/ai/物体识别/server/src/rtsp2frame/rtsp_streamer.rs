@@ -39,6 +39,7 @@ impl RtspStreamer {
     pub async fn start_stream(
         &self,
         tx_video: tokio::sync::broadcast::Sender<Arc<Sample>>,
+        video_encoding: Option<Arc<tokio::sync::RwLock<String>>>,
     ) -> Result<tokio::task::JoinHandle<()>, String> {
         let parsed_url = match Url::parse(&self.rtsp_url) {
             Ok(u) => u,
@@ -74,6 +75,7 @@ impl RtspStreamer {
                 detector,
                 tx_video,
                 vpu_feed_tx,
+                video_encoding,
             ).await;
         });
 

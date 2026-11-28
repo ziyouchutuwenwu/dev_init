@@ -1,6 +1,0 @@
-Edge defect
-Corner defect
-White spot
-Light patch
-Dark spot/patch
-Halo

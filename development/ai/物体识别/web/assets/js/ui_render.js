@@ -154,7 +154,20 @@ export function isDetectionInZone(d, zoneConfig = null, overrideBox = null, rx1 
       if (d.rel_box && Array.isArray(d.rel_box) && d.rel_box.length >= 4) {
         [x1, y1, x2, y2] = d.rel_box;
       } else if (d.box && Array.isArray(d.box) && d.box.length >= 4) {
-        [x1, y1, x2, y2] = d.box;
+        const [bx1, by1, bx2, by2] = d.box;
+        if (bx1 <= 1.0 && by1 <= 1.0 && bx2 <= 1.0 && by2 <= 1.0 && (bx2 > 0 || by2 > 0)) {
+          x1 = bx1;
+          y1 = by1;
+          x2 = bx2;
+          y2 = by2;
+        } else {
+          const bw = (d.frame_width && d.frame_width > 0) ? d.frame_width : 1920;
+          const bh = (d.frame_height && d.frame_height > 0) ? d.frame_height : 1080;
+          x1 = bx1 / bw;
+          y1 = by1 / bh;
+          x2 = bx2 / bw;
+          y2 = by2 / bh;
+        }
       }
     }
 
@@ -164,6 +177,12 @@ export function isDetectionInZone(d, zoneConfig = null, overrideBox = null, rx1 
     } else if (d.center && Array.isArray(d.center) && d.center.length >= 2) {
       cx = d.center[0];
       cy = d.center[1];
+      if (cx > 1.0 || cy > 1.0) {
+        const bw = (d.frame_width && d.frame_width > 0) ? d.frame_width : 1920;
+        const bh = (d.frame_height && d.frame_height > 0) ? d.frame_height : 1080;
+        cx = cx / bw;
+        cy = cy / bh;
+      }
     }
 
     if (cx !== null && cy !== null) {
@@ -176,12 +195,39 @@ export function isDetectionInZone(d, zoneConfig = null, overrideBox = null, rx1 
   if (cfg?.roi?.type === "polygon" && Array.isArray(cfg.roi.coords)) {
     const pts = cfg.roi.coords;
     let cx = null, cy = null;
-    if (d.center && Array.isArray(d.center) && d.center.length >= 2) {
+    let x1 = rx1, y1 = ry1, x2 = rx2, y2 = ry2;
+    if (x1 === null || y1 === null || x2 === null || y2 === null) {
+      if (d.rel_box && Array.isArray(d.rel_box) && d.rel_box.length >= 4) {
+        [x1, y1, x2, y2] = d.rel_box;
+      } else if (d.box && Array.isArray(d.box) && d.box.length >= 4) {
+        const [bx1, by1, bx2, by2] = d.box;
+        if (bx1 <= 1.0 && by1 <= 1.0 && bx2 <= 1.0 && by2 <= 1.0 && (bx2 > 0 || by2 > 0)) {
+          x1 = bx1;
+          y1 = by1;
+          x2 = bx2;
+          y2 = by2;
+        } else {
+          const bw = (d.frame_width && d.frame_width > 0) ? d.frame_width : 1920;
+          const bh = (d.frame_height && d.frame_height > 0) ? d.frame_height : 1080;
+          x1 = bx1 / bw;
+          y1 = by1 / bh;
+          x2 = bx2 / bw;
+          y2 = by2 / bh;
+        }
+      }
+    }
+    if (x1 !== null && y1 !== null && x2 !== null && y2 !== null) {
+      cx = (x1 + x2) / 2;
+      cy = (y1 + y2) / 2;
+    } else if (d.center && Array.isArray(d.center) && d.center.length >= 2) {
       cx = d.center[0];
       cy = d.center[1];
-    } else if (d.rel_box && Array.isArray(d.rel_box) && d.rel_box.length >= 4) {
-      cx = (d.rel_box[0] + d.rel_box[2]) / 2;
-      cy = (d.rel_box[1] + d.rel_box[3]) / 2;
+      if (cx > 1.0 || cy > 1.0) {
+        const bw = (d.frame_width && d.frame_width > 0) ? d.frame_width : 1920;
+        const bh = (d.frame_height && d.frame_height > 0) ? d.frame_height : 1080;
+        cx = cx / bw;
+        cy = cy / bh;
+      }
     }
     if (cx !== null && cy !== null) {
       return isPointInPolygon(cx, cy, pts);
@@ -189,12 +235,11 @@ export function isDetectionInZone(d, zoneConfig = null, overrideBox = null, rx1 
     return false;
   }
 
-  // 若没有配置标定区域或标定区域未就绪，仅按触发状态判定（不在标定区内的一律不画框）
-  if (d.triggered !== undefined || d.crossed !== undefined) {
-    return Boolean(d.triggered || d.crossed);
+  if (d.in_roi !== undefined || d.triggered !== undefined || d.crossed !== undefined) {
+    return Boolean(d.in_roi || d.triggered || d.crossed);
   }
 
-  return false;
+  return true;
 }
 
 export function getSelectedClassesFromDom(canvas, video) {
@@ -225,9 +270,7 @@ export function getLabelDisplayName(label) {
 
 export function isDetectionTargetMatched(d, targetClasses) {
   if (!d) return false;
-  if (targetClasses === null || targetClasses === undefined) return true;
-  if (!Array.isArray(targetClasses)) return true;
-  if (targetClasses.length === 0) return false;
+  if (!targetClasses || !Array.isArray(targetClasses) || targetClasses.length === 0) return false;
 
   const label = (d.label || "").toString().toLowerCase().trim();
   const displayLabel = getLabelDisplayName(label).toLowerCase();
@@ -264,7 +307,7 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const parsedZone = normalizeZoneConfig(zoneConfig);
-  const targetClasses = (parsedZone && Array.isArray(parsedZone.target_classes) && parsedZone.target_classes.length > 0)
+  const targetClasses = (parsedZone && Array.isArray(parsedZone.target_classes))
     ? parsedZone.target_classes
     : getSelectedClassesFromDom(canvas, video);
 
@@ -290,7 +333,6 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
 
   const isDrawingActive = Boolean(drawingState && drawingState.active);
 
-  // 1. 若处于标定模式（无论是刚点击“重新标定”还是正在拖拽），原区域边框都立即显示为高辨识度的天蓝色虚线参考框
   if (isDrawingActive && origBox && origBox.length >= 4) {
     ctx.save();
     const rx = offsetX + Math.min(origBox[0], origBox[2]) * renderW;
@@ -316,7 +358,6 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
     ctx.restore();
   }
 
-  // 2. 确定当前需要高亮显示的区域（拖拽中的新区域，或非标定模式下的当前区域）
   let activeHighlightBox = null;
   if (isDraggingNow) {
     const p1 = drawingState.p1;
@@ -391,7 +432,7 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
 
       let defaultLabel = "触发区域";
       if (parsedZone && parsedZone.enabled === false) {
-        defaultLabel = "触发区域 (未开启检测)";
+        defaultLabel = "触发区域 (检测未启用)";
       }
       const labelText = isUnsaved
         ? "触发区域 (待保存)"
@@ -474,8 +515,6 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
     ctx.restore();
   }
 
-
-  // 什么时候画框？在触发区域内，勾选了检测，并且已经连接以后
   const canDraw =
     (isConnected === null || isConnected === undefined || isConnected) &&
     (isDetectionActive === null || isDetectionActive === undefined || isDetectionActive) &&
@@ -516,13 +555,11 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
 
     if (!hasCoords) continue;
 
-    // 仅在标定/触发区域内的目标才画框，标定区域之外的不画框！
-    if (!isDetectionInZone(d, parsedZone, activeDetectionBox, rx1, ry1, rx2, ry2)) {
+    if (!isDetectionTargetMatched(d, targetClasses)) {
       continue;
     }
 
-    // 如果触发区域内，识别出来的，不是勾选的目标，不要画框！！！
-    if (!isDetectionTargetMatched(d, targetClasses)) {
+    if (!isDetectionInZone(d, parsedZone, activeDetectionBox, rx1, ry1, rx2, ry2)) {
       continue;
     }
 
@@ -538,8 +575,7 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
 
     if (bw <= 0 || bh <= 0) continue;
 
-    // 正常画框统一使用浅绿色，不再使用红色
-    const boxColor = "#22c55e";
+    const boxColor = "#4ade80";
 
     ctx.strokeStyle = boxColor;
     ctx.lineWidth = 2.0;
@@ -562,8 +598,54 @@ export function drawDetections(canvas, video, detections, frameW, frameH, zoneCo
     ctx.fillStyle = boxColor;
     ctx.fillRect(bx, by - labelHeight >= 0 ? by - labelHeight : by, textWidth, labelHeight);
 
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = "#0f291e";
     ctx.fillText(labelText, bx + 4, (by - labelHeight >= 0 ? by - labelHeight : by) + 13);
+
+    // 绘制姿态估计关节点与骨骼连线
+    if (d.keypoints && Array.isArray(d.keypoints) && d.keypoints.length >= 3) {
+      const baseW = frameW || intrinsicW;
+      const baseH = frameH || intrinsicH;
+      if (baseW > 0 && baseH > 0) {
+        const kpts = [];
+        for (let i = 0; i + 2 < d.keypoints.length; i += 3) {
+          const kx = offsetX + (d.keypoints[i] / baseW) * renderW;
+          const ky = offsetY + (d.keypoints[i + 1] / baseH) * renderH;
+          const score = d.keypoints[i + 2];
+          kpts.push({ x: kx, y: ky, score: score });
+        }
+
+        const SKELETON = [
+          [0, 1], [0, 2], [1, 3], [2, 4],
+          [5, 6], [5, 7], [7, 9], [6, 8], [8, 10],
+          [5, 11], [6, 12], [11, 12],
+          [11, 13], [13, 15], [12, 14], [14, 16]
+        ];
+        ctx.strokeStyle = "rgba(56, 189, 248, 0.85)";
+        ctx.lineWidth = 2.0;
+        for (const [p1, p2] of SKELETON) {
+          if (p1 < kpts.length && p2 < kpts.length) {
+            if (kpts[p1].score > 0.25 && kpts[p2].score > 0.25) {
+              ctx.beginPath();
+              ctx.moveTo(kpts[p1].x, kpts[p1].y);
+              ctx.lineTo(kpts[p2].x, kpts[p2].y);
+              ctx.stroke();
+            }
+          }
+        }
+
+        for (const pt of kpts) {
+          if (pt.score > 0.25) {
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 3.5, 0, 2 * Math.PI);
+            ctx.fillStyle = "#facc15";
+            ctx.fill();
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 1.0;
+            ctx.stroke();
+          }
+        }
+      }
+    }
   }
 }
 
@@ -576,7 +658,12 @@ export function renderDetectionList(listEl, detections) {
     return;
   }
 
-  if (listEl.dataset.emptyState === "true") {
+  const hasPlaceholder =
+    listEl.dataset.emptyState !== "false" ||
+    (listEl.firstElementChild && listEl.firstElementChild.classList.contains("text-zinc-400")) ||
+    listEl.textContent.includes("暂无目标");
+
+  if (hasPlaceholder) {
     listEl.innerHTML = "";
     listEl.dataset.emptyState = "false";
   }
@@ -598,6 +685,25 @@ export function renderDetectionList(listEl, detections) {
       dot = left ? left.firstElementChild : null;
       text = left ? left.lastElementChild : null;
       right = li.lastElementChild;
+
+      if (!left || !dot || !text || !right) {
+        li.innerHTML = "";
+        li.className =
+          "flex items-center justify-between rounded border border-zinc-100 bg-zinc-50 px-2.5 py-1.5 text-xs";
+        const newLeft = document.createElement("span");
+        newLeft.className = "font-medium text-zinc-800 flex items-center gap-1.5";
+
+        dot = document.createElement("span");
+        dot.className = "w-2.5 h-2.5 rounded-full inline-block";
+        newLeft.appendChild(dot);
+
+        text = document.createElement("span");
+        newLeft.appendChild(text);
+
+        right = document.createElement("span");
+        right.className = "font-mono text-zinc-500 text-xs";
+        li.append(newLeft, right);
+      }
     } else {
       li = document.createElement("li");
       li.className =
@@ -619,8 +725,8 @@ export function renderDetectionList(listEl, detections) {
     }
 
     if (dot) {
-      if (dot.style.backgroundColor !== "#22c55e") {
-        dot.style.backgroundColor = "#22c55e";
+      if (dot.style.backgroundColor !== "#4ade80") {
+        dot.style.backgroundColor = "#4ade80";
       }
     }
 
@@ -631,7 +737,10 @@ export function renderDetectionList(listEl, detections) {
       const alertPrefix = (d.alert_type && d.alert_type !== d.label && d.alert_type !== "person" && d.alert_type !== "人员目标" && d.alert_type !== "target_detected")
         ? `[${d.alert_type}] `
         : "";
-      const labelVal = alertPrefix + trackStr + displayLabel;
+      const textExtra = (d.text && typeof d.text === "string" && d.text.trim())
+        ? ` [${d.text.trim()}]`
+        : ((d.plate_text && typeof d.plate_text === "string" && d.plate_text.trim()) ? ` [${d.plate_text.trim()}]` : "");
+      const labelVal = alertPrefix + trackStr + displayLabel + textExtra;
       if (text.textContent !== labelVal) {
         text.textContent = labelVal;
       }
@@ -643,6 +752,8 @@ export function renderDetectionList(listEl, detections) {
       let coordStr = "";
       if (d.rel_box && Array.isArray(d.rel_box)) {
         coordStr = "[" + d.rel_box.map((v) => (v * 100).toFixed(0) + "%").join(",") + "]";
+      } else if (d.box && Array.isArray(d.box)) {
+        coordStr = "[" + d.box.join(",") + "]";
       }
       const rightVal = confStr + (coordStr ? " " + coordStr : "");
       if (right.textContent !== rightVal) {

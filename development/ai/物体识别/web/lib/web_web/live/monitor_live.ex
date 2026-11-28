@@ -3,7 +3,6 @@ defmodule WebWeb.MonitorLive do
 
   alias Web.Orm.Query.Settings
   alias Web.Orm.Query.Streams
-  alias Web.DataSync
 
   @impl true
   def mount(_params, _session, socket) do
@@ -13,12 +12,13 @@ defmodule WebWeb.MonitorLive do
 
     socket =
       socket
-      |> assign(:page_title, "视觉检测 - 工业检测AI监控")
+      |> assign(:page_title, "视觉检测 - AI监控")
       |> assign(:active_tab, :monitor)
       |> assign(:gateway_url, Settings.get_gateway_url() || "")
       |> assign(:selected_classes, Settings.get_selected_classes() || [])
       |> assign(:stream_list, Streams.list_streams())
       |> assign(:connected_streams, MapSet.new())
+      |> assign(:flash_timer, nil)
 
     {:ok, socket}
   end
@@ -32,51 +32,44 @@ defmodule WebWeb.MonitorLive do
     {:noreply, assign(socket, :connected_streams, MapSet.delete(socket.assigns.connected_streams, stream_id))}
   end
 
-  def handle_event("toggle_stream_enabled", %{"stream_id" => stream_id}, socket) do
-    case Streams.get_stream_by_stream_id(stream_id) do
-      nil ->
+  @impl true
+  def handle_info({:alert, %{stream_id: stream_id, alert_summary: summary} = alert_data}, socket) do
+    stream = Enum.find(socket.assigns.stream_list, &(&1.stream_id == stream_id))
+    is_connected = MapSet.member?(socket.assigns.connected_streams, stream_id)
+    is_enabled = is_nil(stream) or stream.enabled
+
+    if is_connected and is_enabled do
+      model_id = alert_data[:model] || (stream && stream.model)
+
+      if is_nil(model_id) or String.trim(to_string(model_id)) == "" do
+        require Logger
+        Logger.error("[monitor_live] 严重错误: 通道 [#{stream_id}] 缺失 model 配置，未展示告警")
         {:noreply, socket}
+      else
+        model_name =
+          case Web.ModelLoader.get_model(model_id) do
+            %{name: name} when is_binary(name) and name != "" -> name
+            _ ->
+              require Logger
+              Logger.error("[monitor_live] 通道 [#{stream_id}] 未知模型 [#{model_id}]")
+              to_string(model_id)
+          end
 
-      stream ->
-        new_enabled = !stream.enabled
-
-        case Streams.update_stream_enabled(stream_id, new_enabled) do
-          {:ok, _updated} ->
-            streams = Streams.list_streams()
-            gateway_url = socket.assigns.gateway_url
-
-            if is_binary(gateway_url) and String.trim(gateway_url) != "" do
-              Task.start(fn ->
-                DataSync.sync_to_gateway(
-                  gateway_url,
-                  streams,
-                  Settings.get_alert_callback_url() || "",
-                  Settings.get_alert_cooldown_sec() || "1",
-                  Settings.get_alert_timeout_sec() || "3"
-                )
-              end)
-            end
-
-            {:noreply, assign(socket, :stream_list, streams)}
-
-          {:error, _reason} ->
-            {:noreply, socket}
+        msg = "【通道 #{stream_id} #{model_name}】: #{summary}"
+        if timer = socket.assigns[:flash_timer] do
+          Process.cancel_timer(timer)
         end
+        timer = Process.send_after(self(), :clear_flash, 5000)
+        {:noreply, socket |> assign(:flash_timer, timer) |> put_flash(:error, msg)}
+      end
+    else
+      {:noreply, socket}
     end
   end
 
   @impl true
-  def handle_info({:industrial_alert, %{stream_id: stream_id, alert_summary: summary}}, socket) do
-    stream = Enum.find(socket.assigns.stream_list, &(&1.stream_id == stream_id))
-    is_connected = MapSet.member?(socket.assigns.connected_streams, stream_id)
-    is_enabled = stream && stream.enabled
-
-    if is_connected and is_enabled do
-      msg = "【通道 #{stream_id} 工业告警】: #{summary}"
-      {:noreply, put_flash(socket, :error, msg)}
-    else
-      {:noreply, socket}
-    end
+  def handle_info(:clear_flash, socket) do
+    {:noreply, socket |> assign(:flash_timer, nil) |> clear_flash()}
   end
 
   def handle_info(_msg, socket), do: {:noreply, socket}

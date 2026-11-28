@@ -16,6 +16,7 @@ pub async fn run_rtsp_loop(
     detector: Option<Arc<FrameDetector>>,
     tx_video: tokio::sync::broadcast::Sender<Arc<Sample>>,
     vpu_feed_tx: Option<tokio::sync::mpsc::Sender<(Bytes, u64, i64, u64)>>,
+    video_encoding: Option<Arc<tokio::sync::RwLock<String>>>,
 ) {
     loop {
         let mut frame_seq: u64 = 0;
@@ -57,6 +58,9 @@ pub async fn run_rtsp_loop(
 
         let encoding = session.streams()[stream_idx].encoding_name().to_ascii_lowercase();
         log::info!("[rtsp:{stream_id}] 视频轨编码识别 (sdp): {encoding}");
+        if let Some(ref enc_holder) = video_encoding {
+            *enc_holder.write().await = encoding.clone();
+        }
         async_create_channel(&detector, &encoding).await;
 
         let setup_opts = SetupOptions::default()
@@ -69,7 +73,7 @@ pub async fn run_rtsp_loop(
             continue;
         }
 
-        let current_epoch = detector.as_ref().map(|d| d.flush_epoch()).unwrap_or(0);
+        let mut current_epoch = detector.as_ref().map(|d| d.flush_epoch()).unwrap_or(0);
         if let Some(ref feed_tx) = vpu_feed_tx
             && let Some(retina::codec::ParametersRef::Video(v)) =
                 session.streams()[stream_idx].parameters()
@@ -173,6 +177,11 @@ pub async fn run_rtsp_loop(
                     let _ = tx_video.send(Arc::new(sample));
 
                     if let Some(ref feed_tx) = vpu_feed_tx {
+                        let cur_epoch = detector.as_ref().map(|d| d.flush_epoch()).unwrap_or(0);
+                        if cur_epoch != current_epoch {
+                            current_epoch = cur_epoch;
+                            waiting_for_keyframe = true;
+                        }
                         if waiting_for_keyframe {
                             if is_key {
                                 waiting_for_keyframe = false;

@@ -1,7 +1,7 @@
 use super::peer_manager::PeerManager;
 use super::signaling_server::SignalingServer;
 use super::stream_context::StreamContext;
-use crate::detector::DetectWrapper;
+use crate::detector::{DetectWrapper, FrameDetector};
 use std::collections::HashMap;
 use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
@@ -16,6 +16,7 @@ pub struct RunningStream {
     pub model: String,
     pub context: StreamContext,
     pub handle: tokio::task::JoinHandle<()>,
+    pub detector: Option<Arc<FrameDetector>>,
 }
 
 pub struct WebRtcServer {
@@ -25,6 +26,7 @@ pub struct WebRtcServer {
     stream_order: Arc<std::sync::RwLock<Vec<String>>>,
     active_connections: Arc<Mutex<HashMap<u64, Arc<dyn PeerConnection>>>>,
     next_conn_id: AtomicU64,
+    update_lock: Arc<Mutex<()>>,
 }
 
 impl WebRtcServer {
@@ -48,6 +50,7 @@ impl WebRtcServer {
             stream_order: Arc::new(std::sync::RwLock::new(order)),
             active_connections: Arc::new(Mutex::new(HashMap::new())),
             next_conn_id: AtomicU64::new(1),
+            update_lock: Arc::new(Mutex::new(())),
         }
     }
 
@@ -111,6 +114,10 @@ impl WebRtcServer {
         running.get(stream_id).map(|s| s.model.clone())
     }
 
+    pub fn list_models(&self) -> Vec<crate::detector::ipc::detect_wrapper::ModelItem> {
+        self.detect_wrapper.list_models().unwrap_or_default()
+    }
+
     pub fn stop_all_streams(&self) {
         let mut map = self.running_streams.write().unwrap();
         for (_, s) in map.drain() {
@@ -124,6 +131,7 @@ impl WebRtcServer {
         &self,
         new_streams_list: Vec<crate::config::StreamConfig>,
     ) -> Result<(), String> {
+        let _lock = self.update_lock.lock().await;
         let mut to_stop = Vec::new();
         let mut to_start = Vec::new();
 
@@ -158,15 +166,26 @@ impl WebRtcServer {
             }
         }
 
+        let mut used_channels: std::collections::HashSet<u32> = {
+            let running = self.running_streams.read().unwrap();
+            running.values().map(|s| s.channel_id).collect()
+        };
+
         for id in to_stop {
             let removed = {
                 let mut running = self.running_streams.write().unwrap();
                 running.remove(&id)
             };
             if let Some(stream) = removed {
+                used_channels.remove(&stream.channel_id);
                 log::info!("[stream_manager] 热更新停止流 [{}] (ch={}, model={})", stream.stream_id, stream.channel_id, stream.model);
+                if let Some(ref det) = stream.detector {
+                    let _ = det.release_channel();
+                } else {
+                    let _ = self.detect_wrapper.release_channel(stream.channel_id);
+                }
                 stream.handle.abort();
-                let _ = self.detect_wrapper.release_channel(stream.channel_id);
+                let _ = stream.handle.await;
                 crate::on_detected::ObjectTrackHandler::remove_context(&stream.stream_id);
             }
         }
@@ -177,13 +196,11 @@ impl WebRtcServer {
 
         for stream_cfg in to_start {
             let ch_idx = {
-                let running = self.running_streams.read().unwrap();
-                let used: std::collections::HashSet<u32> =
-                    running.values().map(|s| s.channel_id).collect();
                 let mut c = 0u32;
-                while used.contains(&c) {
+                while used_channels.contains(&c) {
                     c += 1;
                 }
+                used_channels.insert(c);
                 c
             };
 
@@ -201,7 +218,7 @@ impl WebRtcServer {
             )
             .await
             {
-                Ok((stream_ctx, handle)) => {
+                Ok((stream_ctx, handle, detector)) => {
                     let running_stream = RunningStream {
                         stream_id: id.clone(),
                         input_url: url,
@@ -210,6 +227,7 @@ impl WebRtcServer {
                         model,
                         context: stream_ctx,
                         handle,
+                        detector,
                     };
                     let mut running = self.running_streams.write().unwrap();
                     running.insert(id, running_stream);

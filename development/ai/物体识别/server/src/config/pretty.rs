@@ -148,7 +148,7 @@ pub fn prettify_sections(collapsed_lines: &[String]) -> String {
             if i > 0 && !out.ends_with("\n\n") && !out.is_empty() {
                 out.push('\n');
             }
-        } else if is_sub_block(line) && !out.ends_with("\n\n") {
+        } else if is_sub_block(line) && !out.ends_with("\n\n") && !out.ends_with(":\n") {
             out.push('\n');
         }
 

@@ -4,48 +4,29 @@ use std::time::Duration;
 
 use super::ipc_connection::{
     IpcConnection, CMD_CREATE_CHANNEL, CMD_DETECT_LATEST, CMD_FEED_PACKET, CMD_FLUSH_CHANNEL,
-    CMD_RELEASE_ALL, CMD_RELEASE_CHANNEL, RESP_DETECT_RESULT, RESP_STATUS,
+    CMD_LIST_MODELS, CMD_RELEASE_ALL, CMD_RELEASE_CHANNEL, CMD_SET_CHANNEL_MODEL,
+    RESP_DETECT_RESULT, RESP_STATUS,
 };
 
-use std::sync::atomic::{AtomicU64, Ordering};
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ModelItem {
+    pub id: String,
+    #[serde(default)]
+    pub name: String,
+    #[serde(default)]
+    pub classes: Vec<String>,
+}
 
-static LAST_SPAWN_TS: AtomicU64 = AtomicU64::new(0);
-
-fn try_spawn_detector() {
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or(0);
-    let last = LAST_SPAWN_TS.load(Ordering::Relaxed);
-    if now.saturating_sub(last) < 3 {
-        return;
-    }
-    if LAST_SPAWN_TS
-        .compare_exchange(last, now, Ordering::SeqCst, Ordering::Relaxed)
-        .is_err()
-    {
-        return;
-    }
-
-    let candidates = [
-        std::path::PathBuf::from("./detector"),
-        std::env::current_exe()
-            .ok()
-            .and_then(|p| p.parent().map(|d| d.join("detector")))
-            .unwrap_or_default(),
-    ];
-    for path in &candidates {
-        if path.is_file() {
-            log::debug!("[detect_wrapper] 尝试自动拉起算法进程: {}", path.display());
-            if let Ok(mut child) = std::process::Command::new(path).spawn() {
-                std::thread::spawn(move || {
-                    let _ = child.wait();
-                });
-            }
-            std::thread::sleep(Duration::from_millis(300));
-            break;
-        }
-    }
+#[derive(Debug, Clone, serde::Deserialize)]
+#[serde(untagged)]
+enum RawModelItem {
+    Simple(String),
+    Detailed {
+        id: String,
+        name: Option<String>,
+        #[serde(default)]
+        classes: Vec<String>,
+    },
 }
 
 #[derive(Clone, Default)]
@@ -64,7 +45,7 @@ impl DetectWrapper {
         let start = std::time::Instant::now();
         let timeout = Duration::from_secs(6);
         let mut last_err = String::new();
-        let mut spawned = false;
+        let mut tried_spawn = false;
 
         while start.elapsed() < timeout {
             match IpcConnection::connect() {
@@ -77,9 +58,17 @@ impl DetectWrapper {
                 }
                 Err(e) => {
                     last_err = e.to_string();
-                    if !spawned && start.elapsed() > Duration::from_millis(200) {
-                        spawned = true;
-                        try_spawn_detector();
+                    if !tried_spawn {
+                        tried_spawn = true;
+                        let detector_bin = std::env::current_exe()
+                            .ok()
+                            .and_then(|p| p.parent().map(|d| d.join("detector")))
+                            .unwrap_or_else(|| std::path::PathBuf::from("./detector"));
+                        if detector_bin.exists() {
+                            let _ = std::process::Command::new(&detector_bin)
+                                .stdin(std::process::Stdio::null())
+                                .spawn();
+                        }
                     }
                 }
             }
@@ -104,14 +93,7 @@ impl DetectWrapper {
         let conn = match ctrl.as_mut() {
             Some(c) => c,
             None => {
-                let new_conn = match IpcConnection::connect() {
-                    Ok(c) => c,
-                    Err(_) => {
-                        try_spawn_detector();
-                        std::thread::sleep(Duration::from_millis(200));
-                        IpcConnection::connect().map_err(|e| e.to_string())?
-                    }
-                };
+                let new_conn = IpcConnection::connect().map_err(|e| e.to_string())?;
                 *ctrl = Some(new_conn);
                 ctrl.as_mut().unwrap()
             }
@@ -159,14 +141,7 @@ impl DetectWrapper {
         let conn = match ctrl.as_mut() {
             Some(c) => c,
             None => {
-                let new_conn = match IpcConnection::connect() {
-                    Ok(c) => c,
-                    Err(_) => {
-                        try_spawn_detector();
-                        std::thread::sleep(Duration::from_millis(200));
-                        IpcConnection::connect().map_err(|e| e.to_string())?
-                    }
-                };
+                let new_conn = IpcConnection::connect().map_err(|e| e.to_string())?;
                 *ctrl = Some(new_conn);
                 ctrl.as_mut().unwrap()
             }
@@ -204,6 +179,107 @@ impl DetectWrapper {
             return Err(format!("算法命令 (CREATE_CHANNEL, ch={ch}, codec={codec}) 执行失败: {status}"));
         }
         Ok(())
+    }
+
+    pub fn set_channel_model(&self, ch: u32, model_id: &str) -> Result<(), String> {
+        let mut ctrl = self.control_client.lock().unwrap();
+        let conn = match ctrl.as_mut() {
+            Some(c) => c,
+            None => {
+                let new_conn = IpcConnection::connect().map_err(|e| e.to_string())?;
+                *ctrl = Some(new_conn);
+                ctrl.as_mut().unwrap()
+            }
+        };
+
+        let mut payload = Vec::with_capacity(4 + model_id.len());
+        payload.extend_from_slice(&ch.to_be_bytes());
+        payload.extend_from_slice(model_id.as_bytes());
+
+        if let Err(e) = conn.send_request(CMD_SET_CHANNEL_MODEL, &payload) {
+            *ctrl = None;
+            return Err(format!("ipc 发送命令失败: {e}"));
+        }
+
+        let (resp_cmd, resp_payload) = match conn.read_response() {
+            Ok(r) => r,
+            Err(e) => {
+                *ctrl = None;
+                return Err(format!("ipc 接收响应失败: {e}"));
+            }
+        };
+
+        if resp_cmd != RESP_STATUS || resp_payload.len() < 4 {
+            *ctrl = None;
+            return Err(format!("ipc 响应错误: cmd={resp_cmd:#x}"));
+        }
+
+        let status = i32::from_be_bytes([
+            resp_payload[0],
+            resp_payload[1],
+            resp_payload[2],
+            resp_payload[3],
+        ]);
+        if status < 0 {
+            return Err(format!("算法命令 (SET_CHANNEL_MODEL, ch={ch}, model={model_id}) 执行失败: {status}"));
+        }
+        Ok(())
+    }
+
+    pub fn list_models(&self) -> Result<Vec<ModelItem>, String> {
+        let mut ctrl = self.control_client.lock().unwrap();
+        let conn = match ctrl.as_mut() {
+            Some(c) => c,
+            None => {
+                let new_conn = IpcConnection::connect().map_err(|e| e.to_string())?;
+                *ctrl = Some(new_conn);
+                ctrl.as_mut().unwrap()
+            }
+        };
+
+        if let Err(e) = conn.send_request(CMD_LIST_MODELS, &[]) {
+            *ctrl = None;
+            return Err(format!("ipc 发送命令失败: {e}"));
+        }
+
+        let (resp_cmd, resp_payload) = match conn.read_response() {
+            Ok(r) => r,
+            Err(e) => {
+                *ctrl = None;
+                return Err(format!("ipc 接收响应失败: {e}"));
+            }
+        };
+
+        if resp_cmd != RESP_DETECT_RESULT || resp_payload.len() < 24 {
+            *ctrl = None;
+            return Err(format!("ipc 响应错误: cmd={resp_cmd:#x}"));
+        }
+
+        let json_len = u32::from_be_bytes([
+            resp_payload[20],
+            resp_payload[21],
+            resp_payload[22],
+            resp_payload[23],
+        ]) as usize;
+
+        if resp_payload.len() < 24 + json_len {
+            *ctrl = None;
+            return Err("ipc 响应截断".to_string());
+        }
+
+        let json_bytes = &resp_payload[24..24 + json_len];
+        let raw_items: Vec<RawModelItem> = serde_json::from_slice(json_bytes).unwrap_or_default();
+        let models: Vec<ModelItem> = raw_items
+            .into_iter()
+            .map(|item| match item {
+                RawModelItem::Simple(s) => ModelItem { id: s.clone(), name: s, classes: Vec::new() },
+                RawModelItem::Detailed { id, name, classes } => {
+                    let n = name.unwrap_or_else(|| id.clone());
+                    ModelItem { id, name: n, classes }
+                }
+            })
+            .collect();
+        Ok(models)
     }
 
     pub fn flush_channel(&self, ch: u32) -> Result<(), String> {
@@ -259,8 +335,7 @@ impl DetectWrapper {
                         Ok(c) => c,
                         Err(e) => {
                             if attempt == 0 {
-                                try_spawn_detector();
-                                std::thread::sleep(Duration::from_millis(200));
+                                std::thread::sleep(Duration::from_millis(150));
                                 continue;
                             }
                             return Err(format!("连接送帧通道 (ch={ch}) 失败: {e}"));
@@ -277,7 +352,6 @@ impl DetectWrapper {
                 drop(conn);
                 self.feed_clients.lock().unwrap().remove(&ch);
                 if attempt == 0 {
-                    try_spawn_detector();
                     std::thread::sleep(Duration::from_millis(150));
                     continue;
                 }
@@ -306,7 +380,6 @@ impl DetectWrapper {
                     drop(conn);
                     self.feed_clients.lock().unwrap().remove(&ch);
                     if attempt == 0 {
-                        try_spawn_detector();
                         std::thread::sleep(Duration::from_millis(150));
                         continue;
                     }
@@ -333,8 +406,7 @@ impl DetectWrapper {
                         Ok(c) => c,
                         Err(e) => {
                             if attempt == 0 {
-                                try_spawn_detector();
-                                std::thread::sleep(Duration::from_millis(200));
+                                std::thread::sleep(Duration::from_millis(150));
                                 continue;
                             }
                             return Err(format!("连接检测通道 (ch={ch}) 失败: {e}"));
@@ -351,7 +423,6 @@ impl DetectWrapper {
                 drop(conn);
                 self.detect_clients.lock().unwrap().remove(&ch);
                 if attempt == 0 {
-                    try_spawn_detector();
                     std::thread::sleep(Duration::from_millis(150));
                     continue;
                 }
@@ -433,7 +504,6 @@ impl DetectWrapper {
                     drop(conn);
                     self.detect_clients.lock().unwrap().remove(&ch);
                     if attempt == 0 {
-                        try_spawn_detector();
                         std::thread::sleep(Duration::from_millis(150));
                         continue;
                     }

@@ -116,3 +116,29 @@ fn test_license_plate_recognition() {
     assert_eq!(alerts[0].alert_type, "车牌抓拍与识别告警");
     assert_eq!(alerts[0].rule_id, "rule_license_plate_recognition");
 }
+
+#[test]
+fn test_multilingual_synonym_rules() {
+    let rule_bind = DetectionRule {
+        id: "r_vest".to_string(),
+        name: "穿戴反光衣检测".to_string(),
+        enabled: true,
+        operator: RuleOperator::Bind {
+            parent_class: "人员目标".to_string(),
+            child_class: "反光工作服".to_string(),
+            min_iou: 0.15,
+            trigger_on: "missing".to_string(),
+        },
+    };
+
+    let p1 = make_test_obj(1, "person", [0.1, 0.1, 0.3, 0.8]);
+    let v1 = make_test_obj(2, "safety-vest", [0.12, 0.2, 0.28, 0.6]);
+    let p2 = make_test_obj(3, "person", [0.5, 0.1, 0.7, 0.8]);
+
+    let objects = vec![p1, v1, p2];
+    let in_roi = vec![true, true, true];
+    let alerts = evaluate_rules(&objects, &in_roi, &[rule_bind]);
+
+    assert_eq!(alerts.len(), 1);
+    assert_eq!(alerts[0].track_id, Some(3));
+}

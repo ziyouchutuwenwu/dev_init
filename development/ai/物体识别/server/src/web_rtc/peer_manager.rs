@@ -255,19 +255,6 @@ impl PeerManager {
                 .map_err(|e| e.to_string())?,
         );
 
-        let (track, ssrc, payload_type) = match StreamContext::create_video_track(&stream_ctx.stream_id) {
-            Ok(res) => res,
-            Err(e) => {
-                let _ = pc.close().await;
-                return Err(e.to_string());
-            }
-        };
-
-        if let Err(e) = pc.add_track(Arc::clone(&track) as Arc<dyn TrackLocal>).await {
-            let _ = pc.close().await;
-            return Err(e.to_string());
-        }
-
         let json_extracted;
         let actual_sdp = if offer_sdp.trim_start().starts_with('{') {
             if let Ok(val) = serde_json::from_str::<serde_json::Value>(offer_sdp) {
@@ -283,6 +270,29 @@ impl PeerManager {
         } else {
             offer_sdp
         };
+
+        let is_h265 = {
+            let enc = stream_ctx.video_encoding.read().await;
+            enc.eq_ignore_ascii_case("h265") || enc.eq_ignore_ascii_case("hevc")
+        };
+        let mime = if is_h265 {
+            "video/H265"
+        } else {
+            "video/H264"
+        };
+
+        let (track, ssrc, payload_type) = match StreamContext::create_video_track_with_mime(&stream_ctx.stream_id, mime) {
+            Ok(res) => res,
+            Err(e) => {
+                let _ = pc.close().await;
+                return Err(e.to_string());
+            }
+        };
+
+        if let Err(e) = pc.add_track(Arc::clone(&track) as Arc<dyn TrackLocal>).await {
+            let _ = pc.close().await;
+            return Err(e.to_string());
+        }
 
         let cleaned_sdp: String = actual_sdp
             .lines()

@@ -15,6 +15,7 @@ pub struct StreamContext {
     pub tx_video: broadcast::Sender<Arc<Sample>>,
     pub tx_detection: broadcast::Sender<String>,
     pub latest_detection: Arc<RwLock<Option<String>>>,
+    pub video_encoding: Arc<RwLock<String>>,
 }
 
 impl StreamContext {
@@ -31,20 +32,34 @@ impl StreamContext {
             tx_video,
             tx_detection,
             latest_detection,
+            video_encoding: Arc::new(RwLock::new("h264".to_string())),
         }
     }
 
-    pub fn create_video_track(
+    pub fn create_video_track_with_mime(
         stream_id: &str,
+        mime_type: &str,
     ) -> Result<(Arc<TrackLocalStaticSample>, u32, PayloadType), webrtc::error::Error> {
         static NEXT_SSRC: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(10001);
         let ssrc = NEXT_SSRC.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-        let payload_type: PayloadType = 102;
+        let is_h265 = mime_type.eq_ignore_ascii_case("video/H265")
+            || mime_type.eq_ignore_ascii_case("video/HEVC")
+            || mime_type.eq_ignore_ascii_case("h265")
+            || mime_type.eq_ignore_ascii_case("hevc");
+        let (payload_type, chosen_mime, sdp_fmtp_line) = if is_h265 {
+            (104, "video/H265".to_string(), "".to_string())
+        } else {
+            (
+                102,
+                "video/H264".to_string(),
+                "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f".to_string(),
+            )
+        };
         let codec = RTCRtpCodec {
-            mime_type: "video/H264".to_owned(),
+            mime_type: chosen_mime,
             clock_rate: 90000,
             channels: 0,
-            sdp_fmtp_line: "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f".to_owned(),
+            sdp_fmtp_line,
             rtcp_feedback: vec![],
         };
 
@@ -64,5 +79,11 @@ impl StreamContext {
         ))?);
 
         Ok((track, ssrc, payload_type))
+    }
+
+    pub fn create_video_track(
+        stream_id: &str,
+    ) -> Result<(Arc<TrackLocalStaticSample>, u32, PayloadType), webrtc::error::Error> {
+        Self::create_video_track_with_mime(stream_id, "video/H264")
     }
 }

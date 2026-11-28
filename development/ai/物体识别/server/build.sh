@@ -4,7 +4,10 @@ set -e
 cd "$(dirname "$0")"
 
 ROOT_DIR="$(cd .. && pwd)"
-TOOLCHAIN_BIN="${ROOT_DIR}/extra/toolchain/bin"
+TOOLCHAIN_BIN="${ROOT_DIR}/../extra/toolchain/bin"
+if [ ! -d "${TOOLCHAIN_BIN}" ] && [ -d "${ROOT_DIR}/extra/toolchain/bin" ]; then
+    TOOLCHAIN_BIN="${ROOT_DIR}/extra/toolchain/bin"
+fi
 if [ -d "${TOOLCHAIN_BIN}" ]; then
     export PATH="${TOOLCHAIN_BIN}:$PATH"
     export CC_aarch64_unknown_linux_gnu="${TOOLCHAIN_BIN}/aarch64-none-linux-gnu-gcc"

@@ -20,12 +20,12 @@ defmodule Web.DataSync do
           nil ->
             1
 
-          v when is_integer(v) ->
-            v
+          seconds when is_integer(seconds) ->
+            seconds
 
-          v when is_binary(v) ->
-            case Integer.parse(String.trim(v)) do
-              {n, _} -> n
+          seconds_str when is_binary(seconds_str) ->
+            case Integer.parse(String.trim(seconds_str)) do
+              {parsed_seconds, _rest} -> parsed_seconds
               _ -> 1
             end
 
@@ -38,12 +38,12 @@ defmodule Web.DataSync do
           nil ->
             3
 
-          v when is_integer(v) ->
-            v
+          seconds when is_integer(seconds) ->
+            seconds
 
-          v when is_binary(v) ->
-            case Integer.parse(String.trim(v)) do
-              {n, _} -> n
+          seconds_str when is_binary(seconds_str) ->
+            case Integer.parse(String.trim(seconds_str)) do
+              {parsed_seconds, _rest} -> parsed_seconds
               _ -> 3
             end
 
@@ -61,19 +61,19 @@ defmodule Web.DataSync do
         alert_cooldown_sec: parsed_cooldown,
         alert_timeout_sec: parsed_timeout,
         streams:
-          Enum.map(streams, fn s ->
+          Enum.map(streams, fn stream ->
             id =
-              Map.get(s, :stream_id) || Map.get(s, "stream_id") || Map.get(s, :id) ||
-                Map.get(s, "id")
+              Map.get(stream, :stream_id) || Map.get(stream, "stream_id") || Map.get(stream, :id) ||
+                Map.get(stream, "id")
 
             url =
-              Map.get(s, :rtsp_url) || Map.get(s, "rtsp_url") || Map.get(s, :url) ||
-                Map.get(s, "url")
+              Map.get(stream, :rtsp_url) || Map.get(stream, "rtsp_url") || Map.get(stream, :url) ||
+                Map.get(stream, "url")
 
             enabled =
-              case Map.get(s, :enabled) do
+              case Map.get(stream, :enabled) do
                 nil ->
-                  case Map.get(s, "enabled") do
+                  case Map.get(stream, "enabled") do
                     nil -> true
                     val -> val not in [false, "false", 0, "0"]
                   end
@@ -83,7 +83,7 @@ defmodule Web.DataSync do
               end
 
             model =
-              Map.get(s, :model) || Map.get(s, "model") || "industry"
+              Map.get(stream, :model) || Map.get(stream, "model") || ""
 
             %{id: to_string(id), url: to_string(url), enabled: enabled, model: to_string(model)}
           end)
@@ -112,9 +112,9 @@ defmodule Web.DataSync do
             {:error, "无法连接网关 (#{Exception.message(exception)})"}
         end
       rescue
-        e ->
-          Logger.error("[data_sync] failed to connect to gateway: #{Exception.message(e)}")
-          {:error, "无法连接网关 (#{Exception.message(e)})"}
+        exception ->
+          Logger.error("[data_sync] failed to connect to gateway: #{Exception.message(exception)}")
+          {:error, "无法连接网关 (#{Exception.message(exception)})"}
       end
     end
   end
@@ -140,63 +140,74 @@ defmodule Web.DataSync do
         :error
     end
   rescue
-    e ->
+    exception ->
       Logger.warning(
-        "[data_sync] failed to connect to gateway for zone sync: #{Exception.message(e)}"
+        "[data_sync] failed to connect to gateway for zone sync: #{Exception.message(exception)}"
       )
 
       :error
   end
 
   def sync_all_zones(gateway_url, streams) do
-    Enum.each(streams, fn s ->
-      id =
-        Map.get(s, :stream_id) || Map.get(s, "stream_id") || Map.get(s, :id) || Map.get(s, "id")
+    Task.start(fn ->
+      Enum.each(streams, fn stream ->
+        id =
+          Map.get(stream, :stream_id) || Map.get(stream, "stream_id") || Map.get(stream, :id) ||
+            Map.get(stream, "id")
 
-      zone_cfg = Map.get(s, :zone_config) || Map.get(s, "zone_config")
-      model = Map.get(s, :model) || Map.get(s, "model") || "industry"
+        zone_cfg = Map.get(stream, :zone_config) || Map.get(stream, "zone_config")
+        model = Map.get(stream, :model) || Map.get(stream, "model") || ""
 
-      enabled =
-        case Map.get(s, :enabled) do
-          nil ->
-            case Map.get(s, "enabled") do
-              nil -> true
-              val -> val not in [false, "false", 0, "0"]
+        enabled =
+          case Map.get(stream, :enabled) do
+            nil ->
+              case Map.get(stream, "enabled") do
+                nil -> true
+                val -> val not in [false, "false", 0, "0"]
+              end
+
+            val ->
+              val not in [false, "false", 0, "0"]
+          end
+
+        if id do
+          base_cfg =
+            if zone_cfg && is_binary(zone_cfg) && String.trim(zone_cfg) != "" do
+              zone_cfg
+            else
+              nil
             end
 
-          val ->
-            val not in [false, "false", 0, "0"]
+          synced_cfg =
+            case Jason.decode(base_cfg || "{}") do
+              {:ok, map} when is_map(map) ->
+                classes =
+                  if Map.get(map, "model") == model and is_list(Map.get(map, "target_classes")) do
+                    map["target_classes"]
+                  else
+                    Web.ModelLoader.default_classes_for_model(model)
+                  end
+
+                map
+                |> Map.put("enabled", enabled)
+                |> Map.put("model", model)
+                |> Map.put("target_classes", classes)
+                |> Map.put_new("rules", [])
+                |> Jason.encode!()
+
+              _ ->
+                Jason.encode!(%{
+                  "enabled" => enabled,
+                  "model" => model,
+                  "target_classes" => Web.ModelLoader.default_classes_for_model(model),
+                  "rules" => []
+                })
+            end
+
+          sync_zone_to_gateway(gateway_url, id, synced_cfg)
+          Process.sleep(50)
         end
-
-      if id do
-        base_cfg =
-          if zone_cfg && is_binary(zone_cfg) && String.trim(zone_cfg) != "" do
-            zone_cfg
-          else
-            nil
-          end
-
-        synced_cfg =
-          case Jason.decode(base_cfg || "{}") do
-            {:ok, map} when is_map(map) ->
-              map
-              |> Map.put("enabled", enabled)
-              |> Map.put("model", model)
-              |> Map.put_new("target_classes", Web.ModelLoader.default_classes_for_model(model))
-              |> Map.put_new("rules", [])
-              |> Jason.encode!()
-
-            _ ->
-              Jason.encode!(%{
-                "enabled" => enabled,
-                "model" => model,
-                "target_classes" => Web.ModelLoader.default_classes_for_model(model),
-                "rules" => []
-              })
-          end
-
-        sync_zone_to_gateway(gateway_url, id, synced_cfg)
-      end
+      end)
     end)
   end
 end

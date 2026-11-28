@@ -26,4 +26,3 @@ pub const KEY_MODEL: &str = "model";
 
 pub const DEFAULT_SERVER_HOST: &str = "0.0.0.0";
 pub const DEFAULT_SERVER_PORT: u16 = 8181;
-pub const DEFAULT_MODEL: &str = "industry";

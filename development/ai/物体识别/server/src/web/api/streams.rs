@@ -25,10 +25,20 @@ pub async fn get_streams(State(server): State<Arc<WebRtcServer>>) -> Json<Value>
             });
         }
     } else {
+        let existing_configs: std::collections::HashMap<String, crate::config::StreamConfig> =
+            crate::config::input::load_config()
+                .into_iter()
+                .map(|s| (s.id.clone(), s))
+                .collect();
         for id in server.stream_order() {
-            let url = server.get_stream_context(&id).map(|c| c.input_url).unwrap_or_default();
-            let enabled = server.get_stream_ai_enabled(&id).unwrap_or(true);
-            let model = server.get_stream_model(&id).unwrap_or_else(|| crate::config::DEFAULT_MODEL.to_string());
+            let url = server.get_stream_context(&id)
+                .map(|c| c.input_url)
+                .filter(|u| !u.is_empty())
+                .unwrap_or_else(|| existing_configs.get(&id).map(|s| s.input.clone()).unwrap_or_default());
+            let enabled = server.get_stream_ai_enabled(&id)
+                .unwrap_or_else(|| existing_configs.get(&id).map(|s| s.enabled).unwrap_or(true));
+            let model = server.get_stream_model(&id)
+                .unwrap_or_else(|| existing_configs.get(&id).map(|s| s.model.clone()).unwrap_or_default());
             stream_ids.push(id.clone());
             streams_data.push(super::objects::StreamObject {
                 id,
@@ -114,7 +124,7 @@ pub async fn post_streams(
                         .and_then(|x| x.as_str())
                         .map(|s| s.trim())
                         .filter(|s| !s.is_empty())
-                        .unwrap_or(crate::config::DEFAULT_MODEL)
+                        .unwrap_or_default()
                         .to_string();
                     if !id.is_empty() && !url.is_empty() {
                         list.push(crate::config::StreamConfig { id, input: url, enabled, model });
@@ -129,10 +139,10 @@ pub async fn post_streams(
                 let (url, enabled, model) = if let Some(obj) = val.as_object() {
                     let u = obj.get("url").or_else(|| obj.get("input")).or_else(|| obj.get("rtsp_url")).and_then(|x| x.as_str()).unwrap_or("").trim().to_string();
                     let en = parse_bool_value(obj.get("enabled").or_else(|| obj.get("ai_enabled")));
-                    let m = obj.get("model").and_then(|x| x.as_str()).map(|s| s.trim()).filter(|s| !s.is_empty()).unwrap_or(crate::config::DEFAULT_MODEL).to_string();
+                    let m = obj.get("model").and_then(|x| x.as_str()).map(|s| s.trim()).filter(|s| !s.is_empty()).unwrap_or_default().to_string();
                     (u, en, m)
                 } else {
-                    (val.as_str().unwrap_or("").trim().to_string(), true, crate::config::DEFAULT_MODEL.to_string())
+                    (val.as_str().unwrap_or("").trim().to_string(), true, String::new())
                 };
                 if !id.is_empty() && !url.is_empty() {
                     list.push(crate::config::StreamConfig { id, input: url, enabled, model });
@@ -150,7 +160,7 @@ pub async fn post_streams(
                         .and_then(|x| x.as_str())
                         .map(|s| s.trim())
                         .filter(|s| !s.is_empty())
-                        .unwrap_or(crate::config::DEFAULT_MODEL)
+                        .unwrap_or_default()
                         .to_string();
                     if !id.is_empty() && !url.is_empty() {
                         list.push(crate::config::StreamConfig { id, input: url, enabled, model });
@@ -177,10 +187,20 @@ pub async fn post_streams(
                 crate::updater::update_streams(&server, streams_list).await
                     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({ "error": e }))))?
             } else {
+                let existing_configs: std::collections::HashMap<String, crate::config::StreamConfig> =
+                    crate::config::input::load_config()
+                        .into_iter()
+                        .map(|s| (s.id.clone(), s))
+                        .collect();
                 server.stream_order().into_iter().map(|id| {
-                    let url = server.get_stream_context(&id).map(|c| c.input_url).unwrap_or_default();
-                    let enabled = server.get_stream_ai_enabled(&id).unwrap_or(true);
-                    let model = server.get_stream_model(&id).unwrap_or_else(|| crate::config::DEFAULT_MODEL.to_string());
+                    let url = server.get_stream_context(&id)
+                        .map(|c| c.input_url)
+                        .filter(|u| !u.is_empty())
+                        .unwrap_or_else(|| existing_configs.get(&id).map(|s| s.input.clone()).unwrap_or_default());
+                    let enabled = server.get_stream_ai_enabled(&id)
+                        .unwrap_or_else(|| existing_configs.get(&id).map(|s| s.enabled).unwrap_or(true));
+                    let model = server.get_stream_model(&id)
+                        .unwrap_or_else(|| existing_configs.get(&id).map(|s| s.model.clone()).unwrap_or_default());
                     crate::config::StreamConfig {
                         id,
                         input: url,

@@ -76,7 +76,7 @@ defmodule Web.Orm.Query.Streams do
                 nil
             end
 
-          model = item["model"] || item[:model] || "industry"
+          model = item["model"] || item[:model] || Web.ModelLoader.first_model_id()
 
           attrs = %{
             stream_id: String.trim(to_string(id)),

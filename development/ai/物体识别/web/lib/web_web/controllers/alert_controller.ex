@@ -2,11 +2,9 @@ defmodule WebWeb.AlertController do
   use WebWeb, :controller
   require Logger
 
-  alias Web.Orm.Query.Settings
   alias Web.Orm.Query.Streams
 
   def create(conn, params) do
-    # 打印接口请求参数（Method, URL, Query, Body JSON）便于直观调试
     method = conn.method
     req_url = Plug.Conn.request_url(conn)
     query_str = conn.query_string
@@ -28,49 +26,71 @@ defmodule WebWeb.AlertController do
     stream_id = params["stream_id"] || "unknown"
     stream = Streams.get_stream_by_stream_id(stream_id)
 
-    # 1. 勾选了检测：通道必须开启检测功能
     if stream && !stream.enabled do
       conn
       |> put_status(:ok)
       |> json(%{status: "ignored", reason: "stream detection disabled"})
     else
-      # 2. 识别出来的目标校验 (垂直模型与通用检测直接由底层驱动，默认不过滤)
-      stream_model = (stream && stream.model) || params["model"] || "industry"
-      selected_classes = Settings.get_selected_classes() || []
-      raw_detections = params["detections"] || []
+      stream_model = (stream && stream.model) || params["model_id"] || params["model"]
 
-      valid_detections =
-        if stream_model != "industry" or selected_classes == [] or not is_list(raw_detections) do
-          raw_detections
-        else
-          Enum.filter(raw_detections, fn d ->
-            label = to_string(d["label"] || d["class"] || "")
-            alert_type = to_string(d["alert_type"] || "")
-            rule_id = to_string(d["rule_id"] || (is_map(d["extra"]) && d["extra"]["rule_id"]) || "")
-            rule_name = to_string(d["rule_name"] || (is_map(d["extra"]) && d["extra"]["rule_name"]) || "")
+      if is_nil(stream_model) or String.trim(to_string(stream_model)) == "" do
+        Logger.error("[alert_controller] 严重错误: 通道 [#{stream_id}] 缺失 model 配置且严禁默认兜底，拒绝处理！")
 
-            Enum.any?(selected_classes, fn sc ->
-              sc = to_string(sc)
+        conn
+        |> put_status(:bad_request)
+        |> json(%{status: "error", reason: "missing model configuration"})
+      else
+        selected_classes =
+          case stream do
+            %{zone_config: zc} when is_binary(zc) and zc != "" ->
+              case Jason.decode(zc) do
+                {:ok, %{"target_classes" => tc}} when is_list(tc) -> tc
+                _ -> []
+              end
+            _ ->
+              []
+          end
+        raw_detections = params["detections"] || []
 
-              label == sc or
-                alert_type == sc or
-                String.contains?(alert_type, sc) or
-                rule_id == sc or
-                rule_name == sc or
-                (sc in ["person", "人员目标"] and label in ["person", "0", "人员", "人员目标"]) or
-                (sc in ["no-hardhat", "hardhat", "未戴安全帽"] and (String.contains?(alert_type, "安全帽") or rule_id == "rule_hardhat" or label in ["hardhat", "helmet"])) or
-                (sc in ["no-safety-vest", "safety-vest", "未穿反光衣"] and (String.contains?(alert_type, "反光衣") or rule_id == "rule_safety_vest" or label in ["safety-vest", "vest"])) or
-                (sc in ["forklift", "叉车"] and (label == "forklift" or String.contains?(alert_type, "叉车") or rule_id == "rule_forklift_collision")) or
-                (sc in ["smoking", "抽烟"] and (label in ["smoking", "cigarette"] or String.contains?(alert_type, "抽烟") or rule_id == "rule_smoking_phone")) or
-                (sc in ["phone-call", "打电话"] and (label in ["phone-call", "cellphone"] or String.contains?(alert_type, "电话") or rule_id == "rule_smoking_phone")) or
-                (sc in ["fire", "明火"] and (label == "fire" or String.contains?(alert_type, "火") or rule_id == "rule_fire_smoke")) or
-                (sc in ["smoke", "烟雾"] and (label == "smoke" or String.contains?(alert_type, "烟") or rule_id == "rule_fire_smoke")) or
-                (sc in ["fall-down", "倒地"] and (label == "fall-down" or String.contains?(alert_type, "倒地") or rule_id == "rule_falldown_sleep")) or
-                (sc in ["sleeping", "睡岗"] and (label == "sleeping" or String.contains?(alert_type, "睡岗") or rule_id == "rule_falldown_sleep")) or
-                (sc in ["license_plate", "车牌", "车牌识别"] and (label in ["license_plate", "plate"] or rule_id == "rule_license_plate" or (is_map(d["extra"]) && is_binary(d["extra"]["plate_text"]))))
+        label_map = Web.ModelLoader.label_display_map()
+
+        valid_detections =
+          if selected_classes == [] or not is_list(raw_detections) do
+            raw_detections
+          else
+            Enum.filter(raw_detections, fn d ->
+              label = to_string(d["label"] || d["class"] || "")
+              alert_type = to_string(d["alert_type"] || "")
+              rule_id = to_string(d["rule_id"] || (is_map(d["extra"]) && d["extra"]["rule_id"]) || "")
+
+              l_label = String.downcase(label)
+              l_alert_type = String.downcase(alert_type)
+              l_rule_id = String.downcase(rule_id)
+
+              has_text =
+                (is_binary(d["text"]) and d["text"] != "") or
+                  (is_binary(d["plate_text"]) and d["plate_text"] != "") or
+                  (is_map(d["extra"]) and is_binary(d["extra"]["plate_text"]))
+
+              Enum.any?(selected_classes, fn sc ->
+                sc_str = to_string(sc)
+                l_sc = String.downcase(sc_str)
+                norm_sc = String.replace(l_sc, "-", "_")
+                norm_label = String.replace(l_label, "-", "_")
+                norm_alert = String.replace(l_alert_type, "-", "_")
+                disp_name = String.downcase(to_string(label_map[sc_str] || label_map[l_sc] || ""))
+
+                norm_label == norm_sc or
+                  l_label == l_sc or
+                  l_alert_type == l_sc or
+                  norm_alert == norm_sc or
+                  (disp_name != "" and (l_label == disp_name or l_alert_type == disp_name or String.contains?(l_alert_type, disp_name))) or
+                  (l_sc != "" and String.contains?(l_alert_type, l_sc)) or
+                  l_rule_id == l_sc or
+                  (has_text and norm_sc in ["license_plate", "plate", "lprnet"])
+              end)
             end)
-          end)
-        end
+          end
 
       count = if is_list(valid_detections), do: length(valid_detections), else: 0
 
@@ -81,13 +101,19 @@ defmodule WebWeb.AlertController do
       else
         alert_summary =
           cond do
+            is_binary(params["alert"]) and params["alert"] != "" and params["alert"] != "检测到目标" ->
+              params["alert"]
+
             is_binary(params["alert_name"]) and params["alert_name"] != "" and params["alert_name"] != "检测到目标" ->
               params["alert_name"]
 
             is_list(valid_detections) and count > 0 ->
               valid_detections
               |> Enum.map(fn d ->
-                (is_map(d["extra"]) && (d["extra"]["plate_text"] || d["extra"]["rule_name"])) ||
+                d["text"] ||
+                  d["plate_text"] ||
+                  (is_map(d["extra"]) && (d["extra"]["plate_text"] || d["extra"]["rule_name"])) ||
+                  d["detail"] ||
                   d["name"] ||
                   d["label"] ||
                   d["alert_type"] ||
@@ -97,22 +123,39 @@ defmodule WebWeb.AlertController do
               |> Enum.join(", ")
 
             true ->
-              params["alert_name"] || "常规目标"
+              params["alert"] || params["alert_name"] || "常规目标"
           end
 
-        model_name = params["model_name"] || "工业检测"
+        alert_level =
+          cond do
+            is_binary(params["alert_level"]) and params["alert_level"] != "" ->
+              params["alert_level"]
+
+            String.contains?(alert_summary, ["预警", "未戴", "未穿", "缺陷", "火", "烟", "违规", "crash", "collision"]) ->
+              "warning"
+
+            true ->
+              "info"
+          end
+
+        model_name =
+          case Web.ModelLoader.get_model(stream_model) do
+            %{name: name} when is_binary(name) and name != "" -> name
+            _ -> stream_model
+          end
+
         Logger.info("[alert_controller] 收到通道 [#{stream_id}] #{model_name}告警: 【#{alert_summary}】 (目标数: #{count})")
 
         Phoenix.PubSub.broadcast(Web.PubSub, "alerts", {
-          :industrial_alert,
+          :alert,
           %{
-            event_id: params["event_id"],
+            event_id: params["event_id"] || "evt_#{stream_id}_#{params["timestamp"] || System.system_time(:millisecond)}",
             stream_id: stream_id,
-            model: params["model"],
+            model: stream_model,
             model_name: model_name,
-            alert_type: params["alert_type"],
-            alert_name: params["alert_name"] || alert_summary,
-            alert_level: params["alert_level"] || "info",
+            alert_type: params["alert"] || params["alert_type"] || alert_summary,
+            alert_name: params["alert"] || params["alert_name"] || alert_summary,
+            alert_level: alert_level,
             count: count,
             alert_summary: alert_summary,
             detections: valid_detections,
@@ -127,4 +170,5 @@ defmodule WebWeb.AlertController do
       end
     end
   end
+end
 end

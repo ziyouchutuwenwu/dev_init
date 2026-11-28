@@ -7,9 +7,17 @@ defmodule WebWeb.ConfigLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    gateway_url = Settings.get_gateway_url() || ""
+    all_models = Web.ModelLoader.load_model_label_info()
+
+    if connected?(socket) and is_binary(gateway_url) and String.trim(gateway_url) != "" do
+      send(self(), :async_load_remote_models)
+    end
+
     streams =
       case Streams.list_streams() do
         [] ->
+          first_id = case all_models do [first | _] -> first.id; _ -> "anfang" end
           [
             %{
               stream_id: "stream_1",
@@ -17,8 +25,8 @@ defmodule WebWeb.ConfigLive do
               title: "通道 1: stream_1",
               enabled: true,
               position: 1,
-              model: "industry",
-              selected_classes: Web.ModelLoader.default_classes_for_model("industry"),
+              model: first_id,
+              selected_classes: Web.ModelLoader.default_classes_for_model(first_id),
               zone_config: nil
             }
           ]
@@ -27,18 +35,16 @@ defmodule WebWeb.ConfigLive do
           Enum.map(list, &normalize_stream/1)
       end
 
-    current_idx = 0
-    current_stream = Enum.at(streams, current_idx)
-    active_model = current_stream.model || "industry"
-    all_classes = Web.ModelLoader.classes_for_model(active_model)
-    selected_classes = current_stream.selected_classes || Web.ModelLoader.default_classes_for_model(active_model)
-    all_models = Web.ModelLoader.load_model_label_info()
+    current_idx = nil
+    active_model = ""
+    all_classes = []
+    selected_classes = []
 
     socket =
       socket
       |> assign(:page_title, "视觉检测 - 系统配置")
       |> assign(:active_tab, :config)
-      |> assign(:gateway_url, Settings.get_gateway_url() || "")
+      |> assign(:gateway_url, gateway_url)
       |> assign(:alert_callback_url, Settings.get_alert_callback_url() || "")
       |> assign(:alert_cooldown_sec, Settings.get_alert_cooldown_sec() || "1")
       |> assign(:alert_timeout_sec, Settings.get_alert_timeout_sec() || "3")
@@ -63,9 +69,9 @@ defmodule WebWeb.ConfigLive do
       end
 
     stream = Enum.at(socket.assigns.config_streams, idx)
-    model = stream.model || "industry"
+    model = (stream && stream.model) || ""
     classes = Web.ModelLoader.classes_for_model(model)
-    selected = stream.selected_classes || Web.ModelLoader.default_classes_for_model(model)
+    selected = (stream && stream.selected_classes) || Web.ModelLoader.default_classes_for_model(model)
     matched = compute_matched_ids(classes, socket.assigns.class_search)
 
     {:noreply,
@@ -85,7 +91,6 @@ defmodule WebWeb.ConfigLive do
         socket.assigns.config_streams
       )
 
-    # 检查是否有通道的模型被用户切换了，若有则自动将详细配置面板切到该通道
     changed_model_idx =
       Enum.find_index(Enum.with_index(streams), fn {s, i} ->
         old_s = Enum.at(socket.assigns.config_streams, i)
@@ -95,16 +100,20 @@ defmodule WebWeb.ConfigLive do
     current_idx =
       case changed_model_idx do
         nil ->
-          max(0, min(socket.assigns.current_stream_idx, max(0, length(streams) - 1)))
+          if is_integer(socket.assigns.current_stream_idx) do
+            max(0, min(socket.assigns.current_stream_idx, max(0, length(streams) - 1)))
+          else
+            nil
+          end
 
         idx ->
           idx
       end
 
-    current_stream = Enum.at(streams, current_idx)
-    active_model = (current_stream && current_stream.model) || "industry"
-    classes = Web.ModelLoader.classes_for_model(active_model)
-    selected = (current_stream && current_stream.selected_classes) || Web.ModelLoader.default_classes_for_model(active_model)
+    current_stream = if is_integer(current_idx), do: Enum.at(streams, current_idx), else: nil
+    active_model = (current_stream && (current_stream[:model] || current_stream["model"])) || (if is_nil(current_idx), do: "", else: socket.assigns.active_model)
+    classes = if active_model != "", do: Web.ModelLoader.classes_for_model(active_model), else: []
+    selected = (current_stream && (current_stream[:selected_classes] || current_stream["selected_classes"])) || []
 
     class_search =
       case params["class_search"] do
@@ -170,27 +179,31 @@ defmodule WebWeb.ConfigLive do
     idx = socket.assigns.current_stream_idx
     streams = socket.assigns.config_streams
 
-    case Enum.at(streams, idx) do
-      nil ->
-        {:noreply, socket}
+    if is_nil(idx) do
+      {:noreply, socket}
+    else
+      case Enum.at(streams, idx) do
+        nil ->
+          {:noreply, socket}
 
-      stream ->
-        current = stream.selected_classes || []
+        stream ->
+          current = stream.selected_classes || []
 
-        updated_classes =
-          if class_id in current do
-            List.delete(current, class_id)
-          else
-            current ++ [class_id]
-          end
+          updated_classes =
+            if class_id in current do
+              List.delete(current, class_id)
+            else
+              current ++ [class_id]
+            end
 
-        updated_stream = Map.put(stream, :selected_classes, updated_classes)
-        updated_streams = List.replace_at(streams, idx, updated_stream)
+          updated_stream = Map.put(stream, :selected_classes, updated_classes)
+          updated_streams = List.replace_at(streams, idx, updated_stream)
 
-        {:noreply,
-         socket
-         |> assign(:config_streams, updated_streams)
-         |> assign(:selected_classes, updated_classes)}
+          {:noreply,
+           socket
+           |> assign(:config_streams, updated_streams)
+           |> assign(:selected_classes, updated_classes)}
+      end
     end
   end
 
@@ -199,19 +212,23 @@ defmodule WebWeb.ConfigLive do
     idx = socket.assigns.current_stream_idx
     streams = socket.assigns.config_streams
 
-    case Enum.at(streams, idx) do
-      nil ->
-        {:noreply, socket}
+    if is_nil(idx) do
+      {:noreply, socket}
+    else
+      case Enum.at(streams, idx) do
+        nil ->
+          {:noreply, socket}
 
-      stream ->
-        all = Enum.map(socket.assigns.all_classes, & &1.id)
-        updated_stream = Map.put(stream, :selected_classes, all)
-        updated_streams = List.replace_at(streams, idx, updated_stream)
+        stream ->
+          all = Enum.map(socket.assigns.all_classes, & &1.id)
+          updated_stream = Map.put(stream, :selected_classes, all)
+          updated_streams = List.replace_at(streams, idx, updated_stream)
 
-        {:noreply,
-         socket
-         |> assign(:config_streams, updated_streams)
-         |> assign(:selected_classes, all)}
+          {:noreply,
+           socket
+           |> assign(:config_streams, updated_streams)
+           |> assign(:selected_classes, all)}
+      end
     end
   end
 
@@ -220,66 +237,104 @@ defmodule WebWeb.ConfigLive do
     idx = socket.assigns.current_stream_idx
     streams = socket.assigns.config_streams
 
-    case Enum.at(streams, idx) do
-      nil ->
-        {:noreply, socket}
+    if is_nil(idx) do
+      {:noreply, socket}
+    else
+      case Enum.at(streams, idx) do
+        nil ->
+          {:noreply, socket}
 
-      stream ->
-        updated_stream = Map.put(stream, :selected_classes, [])
-        updated_streams = List.replace_at(streams, idx, updated_stream)
+        stream ->
+          updated_stream = Map.put(stream, :selected_classes, [])
+          updated_streams = List.replace_at(streams, idx, updated_stream)
 
-        {:noreply,
-         socket
-         |> assign(:config_streams, updated_streams)
-         |> assign(:selected_classes, [])}
+          {:noreply,
+           socket
+           |> assign(:config_streams, updated_streams)
+           |> assign(:selected_classes, [])}
+      end
     end
   end
 
   @impl true
-  def handle_event("add_stream", _params, socket) do
-    count = length(socket.assigns.config_streams) + 1
+  def handle_event("add_stream", params, socket) do
+    current_streams =
+      parse_streams(
+        params["streams"] || get_in(params, ["config", "streams"]),
+        socket.assigns.config_streams
+      )
+
+    existing_ids =
+      current_streams
+      |> Enum.map(&to_string(&1[:stream_id] || &1["stream_id"] || ""))
+      |> MapSet.new()
+
+    next_idx =
+      Stream.iterate(1, &(&1 + 1))
+      |> Enum.find(fn i -> !MapSet.member?(existing_ids, "stream_#{i}") end)
+
+    new_id = "stream_#{next_idx}"
 
     new_stream = %{
-      stream_id: "stream_#{count}",
+      stream_id: new_id,
       rtsp_url: "rtsp://192.168.88.20:8554/live",
-      title: "通道 #{count}: stream_#{count}",
+      title: "通道 #{next_idx}: #{new_id}",
       enabled: true,
-      position: count,
-      model: "industry",
-      selected_classes: Web.ModelLoader.default_classes_for_model("industry"),
+      position: next_idx,
+      model: Web.ModelLoader.first_model_id(),
+      selected_classes: Web.ModelLoader.default_classes_for_model(Web.ModelLoader.first_model_id()),
       zone_config: nil
     }
 
-    updated_streams = socket.assigns.config_streams ++ [new_stream]
+    updated_streams = current_streams ++ [new_stream]
     new_idx = length(updated_streams) - 1
 
-    classes = Web.ModelLoader.classes_for_model("industry")
+    classes = Web.ModelLoader.classes_for_model(Web.ModelLoader.first_model_id())
     matched = compute_matched_ids(classes, socket.assigns.class_search)
 
     {:noreply,
      socket
      |> assign(:config_streams, updated_streams)
      |> assign(:current_stream_idx, new_idx)
-     |> assign(:active_model, "industry")
+     |> assign(:active_model, Web.ModelLoader.first_model_id())
      |> assign(:all_classes, classes)
      |> assign(:selected_classes, new_stream.selected_classes)
      |> assign(:matched_class_ids, matched)}
   end
 
   @impl true
-  def handle_event("remove_stream", %{"index" => idx_str}, socket) do
+  def handle_event("remove_stream", %{"index" => idx_str} = params, socket) do
     idx = String.to_integer(idx_str)
-    streams = socket.assigns.config_streams
+    streams =
+      parse_streams(
+        params["streams"] || get_in(params, ["config", "streams"]),
+        socket.assigns.config_streams
+      )
 
     if length(streams) <= 1 do
       {:noreply, put_flash(socket, :error, "请至少保留一路摄像头通道")}
     else
       updated = List.delete_at(streams, idx)
-      new_idx = max(0, min(socket.assigns.current_stream_idx, length(updated) - 1))
-      current_stream = Enum.at(updated, new_idx)
-      model = current_stream.model || "industry"
-      classes = Web.ModelLoader.classes_for_model(model)
-      selected = current_stream.selected_classes || Web.ModelLoader.default_classes_for_model(model)
+      new_idx =
+        cond do
+          is_nil(socket.assigns.current_stream_idx) ->
+            nil
+
+          socket.assigns.current_stream_idx == idx ->
+            nil
+
+          socket.assigns.current_stream_idx > idx ->
+            socket.assigns.current_stream_idx - 1
+
+          true ->
+            socket.assigns.current_stream_idx
+        end
+
+      current_stream = if is_integer(new_idx), do: Enum.at(updated, new_idx), else: nil
+      model = (current_stream && (current_stream[:model] || current_stream["model"])) || ""
+      classes = if model != "", do: Web.ModelLoader.classes_for_model(model), else: []
+      selected =
+        (current_stream && (current_stream[:selected_classes] || current_stream["selected_classes"])) || []
       matched = compute_matched_ids(classes, socket.assigns.class_search)
 
       {:noreply,
@@ -327,11 +382,15 @@ defmodule WebWeb.ConfigLive do
         Settings.set_alert_cooldown_sec(alert_cooldown_sec)
         Settings.set_alert_timeout_sec(alert_timeout_sec)
 
-        # 按照各路通道各自绑定的 AI 模型，分别写入独立的 target_classes 与 rules
         updated_streams =
           Enum.map(raw_streams, fn s ->
-            model = s[:model] || s["model"] || "industry"
-            classes_for_this = s[:selected_classes] || Web.ModelLoader.default_classes_for_model(model)
+            model = s[:model] || s["model"] || ""
+            classes_for_this =
+              cond do
+                is_list(s[:selected_classes]) -> s[:selected_classes]
+                is_list(s["selected_classes"]) -> s["selected_classes"]
+                true -> Web.ModelLoader.default_classes_for_model(model)
+              end
             current_zone = s[:zone_config] || s["zone_config"]
 
             new_zone =
@@ -377,33 +436,90 @@ defmodule WebWeb.ConfigLive do
             end)
 
             normalized_saved = Enum.map(saved_streams, &normalize_stream/1)
-            current_idx = max(0, min(socket.assigns.current_stream_idx, length(normalized_saved) - 1))
-            current_stream = Enum.at(normalized_saved, current_idx)
+            current_idx =
+              if is_integer(socket.assigns.current_stream_idx) do
+                max(0, min(socket.assigns.current_stream_idx, length(normalized_saved) - 1))
+              else
+                nil
+              end
+            current_stream = if is_integer(current_idx), do: Enum.at(normalized_saved, current_idx), else: nil
+            active_model = (current_stream && current_stream.model) || (if is_nil(current_idx), do: "", else: socket.assigns.active_model)
+            selected_classes =
+              cond do
+                current_stream && is_list(current_stream.selected_classes) ->
+                  current_stream.selected_classes
+
+                is_nil(current_idx) ->
+                  []
+
+                true ->
+                  socket.assigns.selected_classes
+              end
 
             {:noreply,
              socket
              |> assign(:gateway_url, gateway_url)
              |> assign(:config_streams, normalized_saved)
              |> assign(:current_stream_idx, current_idx)
-             |> assign(:active_model, current_stream.model)
-             |> assign(:selected_classes, current_stream.selected_classes)
-             |> put_flash(:info, "正在保存各通道垂直模型与检测配置...")}
+             |> assign(:active_model, active_model)
+             |> assign(:selected_classes, selected_classes)
+             |> put_flash(:info, "正在应用配置...")}
 
           {:error, db_err} ->
-            {:noreply, put_flash(socket, :error, "保存失败: #{inspect(db_err)}")}
+            {:noreply, put_flash(socket, :error, "应用失败: #{inspect(db_err)}")}
         end
     end
   end
 
   @impl true
+  def handle_event("stream_connected_state", _params, socket) do
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(:async_load_remote_models, socket) do
+    gateway_url = socket.assigns.gateway_url
+    parent = self()
+
+    Task.start(fn ->
+      remote_models = Web.ModelLoader.load_available_models(gateway_url)
+      send(parent, {:remote_models_loaded, remote_models})
+    end)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:remote_models_loaded, remote_models}, socket) do
+    if is_list(remote_models) and remote_models != [] and remote_models != socket.assigns.all_models do
+      current_idx = socket.assigns.current_stream_idx
+      streams = socket.assigns.config_streams
+      current_stream = if is_integer(current_idx), do: Enum.at(streams, current_idx), else: nil
+      active_model = (current_stream && (current_stream[:model] || current_stream["model"])) || socket.assigns.active_model
+      classes = if active_model != "", do: Web.ModelLoader.classes_for_model(active_model), else: []
+      selected = (current_stream && (current_stream[:selected_classes] || current_stream["selected_classes"])) || (if active_model != "", do: Web.ModelLoader.default_classes_for_model(active_model), else: [])
+      matched = compute_matched_ids(classes, socket.assigns.class_search)
+
+      {:noreply,
+       socket
+       |> assign(:all_models, remote_models)
+       |> assign(:all_classes, classes)
+       |> assign(:selected_classes, selected)
+       |> assign(:matched_class_ids, matched)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
   def handle_info({:gateway_sync_result, {:ok, _}}, socket) do
-    Process.send_after(self(), :clear_flash, 3000)
-    {:noreply, put_flash(socket, :info, "所有通道检测配置保存成功并已动态生效")}
+    Process.send_after(self(), :clear_flash, 2500)
+    {:noreply, put_flash(socket, :info, "应用成功")}
   end
 
   def handle_info({:gateway_sync_result, {:error, sync_err}}, socket) do
     Process.send_after(self(), :clear_flash, 4000)
-    {:noreply, put_flash(socket, :error, "网关同步异常: #{sync_err}")}
+    {:noreply, put_flash(socket, :error, "同步失败: #{sync_err}")}
   end
 
   def handle_info(:clear_flash, socket) do
@@ -460,19 +576,23 @@ defmodule WebWeb.ConfigLive do
         end
 
       orig = Enum.at(current, idx) || %{}
-      orig_model = orig[:model] || orig["model"] || "industry"
-      new_model = attrs["model"] || attrs[:model] || orig_model
+      orig_model = orig[:model] || orig["model"] || ""
 
-      # 若在下拉框中切换了模型，自动切换选中的类别为新模型的默认类别
+      new_model =
+        case attrs["model"] || attrs[:model] do
+          nil -> orig_model
+          val -> to_string(val || "")
+        end
+
       selected_classes =
         cond do
           to_string(new_model) != to_string(orig_model) ->
             Web.ModelLoader.default_classes_for_model(new_model)
 
-          orig[:selected_classes] ->
+          is_list(orig[:selected_classes]) ->
             orig[:selected_classes]
 
-          orig["selected_classes"] ->
+          is_list(orig["selected_classes"]) ->
             orig["selected_classes"]
 
           true ->
@@ -517,11 +637,11 @@ defmodule WebWeb.ConfigLive do
   defp parse_streams(list, _) when is_list(list), do: Enum.map(list, &normalize_stream/1)
 
   defp normalize_stream(%Web.Orm.Entity.Stream{} = s) do
-    model = s.model || "industry"
+    model = to_string(s.model || "")
 
     selected_classes =
       case Jason.decode(s.zone_config || "{}") do
-        {:ok, %{"target_classes" => tc}} when is_list(tc) and length(tc) > 0 ->
+        {:ok, %{"target_classes" => tc}} when is_list(tc) ->
           tc
 
         _ ->
@@ -561,7 +681,8 @@ defmodule WebWeb.ConfigLive do
 
     pos = Map.get(map, "position") || Map.get(map, :position) || 1
     title = Map.get(map, "title") || Map.get(map, :title) || "通道: #{id}"
-    model = Map.get(map, "model") || Map.get(map, :model) || "industry"
+    raw_model = Map.get(map, "model") || Map.get(map, :model) || ""
+    model = to_string(raw_model || "")
 
     enabled =
       cond do
@@ -589,7 +710,7 @@ defmodule WebWeb.ConfigLive do
 
         is_binary(zone) && zone != "" ->
           case Jason.decode(zone) do
-            {:ok, %{"target_classes" => tc}} when is_list(tc) and length(tc) > 0 ->
+            {:ok, %{"target_classes" => tc}} when is_list(tc) ->
               tc
 
             _ ->

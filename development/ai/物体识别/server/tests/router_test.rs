@@ -188,7 +188,6 @@ async fn test_api_detection() {
 
     let client = reqwest::Client::new();
 
-    // 1. POST /api/detection
     let res = client
         .post(format!("http://{addr}/api/detection"))
         .header("Content-Type", "application/json")
@@ -198,7 +197,6 @@ async fn test_api_detection() {
         .unwrap();
     assert_eq!(res.status(), reqwest::StatusCode::OK);
 
-    // 2. GET /api/detection
     let get_res = client
         .get(format!("http://{addr}/api/detection"))
         .send()

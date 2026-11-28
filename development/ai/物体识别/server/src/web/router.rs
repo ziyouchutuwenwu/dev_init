@@ -13,6 +13,8 @@ pub fn create_router(server: Arc<WebRtcServer>) -> Router {
     Router::new()
         .route("/health", get(api::health_check))
         .route("/api/streams", get(api::get_streams).post(api::post_streams))
+        .route("/api/models", get(api::get_models))
+        .route("/api/groups", get(api::get_models))
         .route("/api/zone/{stream_id}", get(api::get_zone).post(api::post_zone))
         .route("/api/detection", get(api::get_detection).post(api::post_detection))
         .route("/api/alert", get(api::get_alert).post(api::post_alert))

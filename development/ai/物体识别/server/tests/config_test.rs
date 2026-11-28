@@ -265,6 +265,7 @@ trigger:
 "#;
 
     let cfg1 = server::config::ZoneConfig {
+        model: Some("yolo_raw".to_string()),
         target_classes: vec!["smoking".to_string()],
         roi: Some(server::object_tracker::RoiConfig::Rect([0.1, 0.2, 0.8, 0.9])),
         ..Default::default()
@@ -273,6 +274,7 @@ trigger:
     let s1 = server::config::channel::update_channel_zone(original, "cam1", &cfg1);
 
     let cfg2 = server::config::ZoneConfig {
+        model: Some("yolo_raw".to_string()),
         roi: Some(server::object_tracker::RoiConfig::Rect([0.3, 0.4, 0.5, 0.6])),
         ..Default::default()
     };
@@ -280,7 +282,7 @@ trigger:
     let s2 = server::config::channel::update_channel_zone(&s1, "cam2", &cfg2);
 
     println!("FORMATTED MULTI-CHANNEL YAML:\n{}", s2);
-    assert!(s2.contains("\n\n  cam1:"));
+    assert!(s2.contains("trigger:\n  cam1:"));
     assert!(s2.contains("\n\n  cam2:"));
 }
 
@@ -374,46 +376,40 @@ fn test_domain_config_modules() {
 }
 
 #[test]
-fn test_multi_model_stream_config() {
-    use ::server::config::{self, YamlConfig};
-    let tmp_path = "test_multi_model_tmp.yaml";
+fn test_multi_model_channel_zones_isolation() {
+    use ::server::config::{self, YamlConfig, ZoneConfig};
+    let tmp_path = "target/test_multi_model_zones_isolation.yaml";
     let _ = std::fs::remove_file(tmp_path);
 
     let mut cfg = YamlConfig::new(tmp_path);
-    let streams = vec![
-        config::StreamConfig {
-            id: "camera_ppe".to_string(),
-            input: "rtsp://192.168.1.10:8554/ppe".to_string(),
-            enabled: true,
-            model: "safety_ppe".to_string(),
-        },
-        config::StreamConfig {
-            id: "camera_forklift".to_string(),
-            input: "rtsp://192.168.1.11:8554/forklift".to_string(),
-            enabled: true,
-            model: "forklift_collision".to_string(),
-        },
-        config::StreamConfig {
-            id: "camera_steel".to_string(),
-            input: "rtsp://192.168.1.12:8554/steel".to_string(),
-            enabled: false,
-            model: "steel_defect".to_string(),
-        },
-    ];
 
-    config::input::apply_to_yaml(&streams, &mut cfg);
+    let ppe_zone = ZoneConfig {
+        enabled: true,
+        model: Some("safety_ppe".to_string()),
+        target_classes: vec!["person".to_string(), "helmet".to_string()],
+        ..Default::default()
+    };
+    config::channel::apply_to_yaml("cam_ppe", &ppe_zone, &mut cfg);
+
+    let steel_zone = ZoneConfig {
+        enabled: true,
+        model: Some("steel_defect".to_string()),
+        target_classes: vec!["crack".to_string(), "scratch".to_string()],
+        ..Default::default()
+    };
+    config::channel::apply_to_yaml("cam_steel", &steel_zone, &mut cfg);
+
     assert!(cfg.save().is_ok());
 
     let loaded = YamlConfig::load_from_file(tmp_path).unwrap();
-    let loaded_streams = config::input::from_yaml(&loaded);
-    assert_eq!(loaded_streams.len(), 3);
-    assert_eq!(loaded_streams[0].id, "camera_forklift");
-    assert_eq!(loaded_streams[0].model, "forklift_collision");
-    assert_eq!(loaded_streams[1].id, "camera_ppe");
-    assert_eq!(loaded_streams[1].model, "safety_ppe");
-    assert_eq!(loaded_streams[2].id, "camera_steel");
-    assert_eq!(loaded_streams[2].model, "steel_defect");
-    assert!(!loaded_streams[2].enabled);
+    let loaded_ppe = config::channel::from_yaml(&loaded, "cam_ppe");
+    let loaded_steel = config::channel::from_yaml(&loaded, "cam_steel");
+
+    assert_eq!(loaded_ppe.model.as_deref(), Some("safety_ppe"));
+    assert_eq!(loaded_ppe.target_classes, vec!["person", "helmet"]);
+
+    assert_eq!(loaded_steel.model.as_deref(), Some("steel_defect"));
+    assert_eq!(loaded_steel.target_classes, vec!["crack", "scratch"]);
 
     let _ = std::fs::remove_file(tmp_path);
 }

@@ -62,15 +62,15 @@
         <%= for {stream, idx} <- Enum.with_index(@stream_list) do %>
           <% stream_classes =
                case Jason.decode(stream.zone_config || "{}") do
-                 {:ok, %{"target_classes" => tc}} when is_list(tc) and length(tc) > 0 -> tc
-                 _ -> Web.ModelLoader.default_classes_for_model(stream.model || "industry")
+                 {:ok, %{"target_classes" => tc}} when is_list(tc) -> tc
+                 _ -> Web.ModelLoader.default_classes_for_model(stream.model || Web.ModelLoader.first_model_id())
                end
           %>
           <WebWeb.PlayerComponent.stream_card
             id={stream.stream_id}
             title={stream.title || "通道 #{idx + 1}: #{stream.stream_id}"}
             enabled={stream.enabled}
-            model={stream.model || "industry"}
+            model={stream.model || Web.ModelLoader.first_model_id()}
             default_url={
               if is_binary(@gateway_url) and String.trim(@gateway_url) != "" do
                 "#{String.trim_trailing(String.trim(@gateway_url), "/")}/api/webrtc/#{stream.stream_id}"
